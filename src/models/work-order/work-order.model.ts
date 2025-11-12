@@ -1,0 +1,185 @@
+import {
+  Customer,
+  CustomerSerializableDTO,
+} from '@/src/models/customer/customer.model'
+import { Product } from '@/src/models/product/product.model'
+import {
+  PaymentOrder,
+  PaymentOrderSerializableDTO,
+} from '@/src/models/work-order/payment-order.model'
+import {
+  WorkOrderItem,
+  WorkOrderItemSerializableDTO,
+} from '@/src/models/work-order/work-order-item.model'
+import {
+  WorkOrderResult,
+  WorkOrderResultSerializableDTO,
+} from '@/src/models/work-order/work-order-result.model'
+import { UUID } from 'crypto'
+
+export enum WorkOrderStatus {
+  PENDING = 'PENDING',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  PARTIAL = 'PARTIAL',
+  CANCELLED = 'CANCELLED',
+  FAILED = 'FAILED',
+}
+
+export type WorkOrderSerializableDTO = {
+  id: UUID
+  customer: CustomerSerializableDTO
+  createdAt: string
+  updatedAt: string
+  scheduledDate: string
+  paymentOrder: PaymentOrderSerializableDTO
+  products: WorkOrderItemSerializableDTO[]
+  status: WorkOrderStatus
+  result?: WorkOrderResultSerializableDTO
+  visitDate?: string
+  notes?: string
+}
+
+export class WorkOrder {
+  constructor(
+    public id: UUID,
+    public customer: Customer,
+    public createdAt: Date,
+    public updatedAt: Date,
+    public scheduledDate: Date,
+    public paymentOrder: PaymentOrder,
+    public products: WorkOrderItem[] = [],
+    public status: WorkOrderStatus = WorkOrderStatus.PENDING,
+    public result?: WorkOrderResult,
+    public visitDate?: Date,
+    public notes?: string
+  ) {}
+
+  addProduct(product: Product, quantity: number) {
+    if (quantity <= 0) throw new Error('Quantity must be greater than zero')
+    const existing = this.products.find((p) => p.productId === product.id)
+    if (existing) {
+      existing.quantity += quantity
+    } else {
+      this.products.push(
+        new WorkOrderItem(product.id, product.name, product.salePrice, quantity)
+      )
+    }
+    this.updatedAt = new Date()
+  }
+
+  removeProduct(product: Product, quantity: number) {
+    if (quantity <= 0) throw new Error('Quantity must be greater than zero')
+    const existing = this.products.find((p) => p.productId === product.id)
+    if (!existing) return
+    existing.quantity -= quantity
+    if (existing.quantity <= 0) {
+      this.products = this.products.filter((p) => p.productId !== product.id)
+    }
+    this.updatedAt = new Date()
+  }
+
+  get totalAmount(): number {
+    return this.products.reduce((sum, p) => sum + p.total, 0)
+  }
+
+  isLate(
+    referenceDate: Date = new Date(),
+    toleranceMinutes: number = 15
+  ): boolean {
+    if (this.visitDate) return false
+    return (
+      this.scheduledDate.getTime() + toleranceMinutes * 60000 <
+      referenceDate.getTime()
+    )
+  }
+
+  public resolveStatusFromResult(result: WorkOrderResult): WorkOrderStatus {
+    const exchanged = result.exchangedProducts.length
+    const removed = result.removedProducts?.length ?? 0
+    const added = result.addedProducts?.length ?? 0
+
+    if (exchanged === 0 && added === 0) return WorkOrderStatus.FAILED
+    if (removed > 0 || exchanged < this.products.length)
+      return WorkOrderStatus.PARTIAL
+    return WorkOrderStatus.COMPLETED
+  }
+
+  applyResult(result: WorkOrderResult) {
+    this.result = result
+    this.status = this.resolveStatusFromResult(result)
+    this.updatedAt = new Date()
+  }
+
+  syncPaymentWithResult() {
+    if (!this.result) return
+    this.paymentOrder.totalValue = this.result.totalValue
+  }
+
+  startVisit() {
+    if (this.status !== WorkOrderStatus.PENDING)
+      throw new Error('Cannot start a non-pending work order.')
+    this.status = WorkOrderStatus.IN_PROGRESS
+    this.visitDate = new Date()
+  }
+
+  setStatus(newStatus: WorkOrderStatus) {
+    const validTransitions: Record<WorkOrderStatus, WorkOrderStatus[]> = {
+      [WorkOrderStatus.PENDING]: [
+        WorkOrderStatus.IN_PROGRESS,
+        WorkOrderStatus.CANCELLED,
+      ],
+      [WorkOrderStatus.IN_PROGRESS]: [
+        WorkOrderStatus.COMPLETED,
+        WorkOrderStatus.PARTIAL,
+        WorkOrderStatus.FAILED,
+      ],
+      [WorkOrderStatus.COMPLETED]: [],
+      [WorkOrderStatus.PARTIAL]: [],
+      [WorkOrderStatus.CANCELLED]: [],
+      [WorkOrderStatus.FAILED]: [],
+    }
+
+    if (!validTransitions[this.status]?.includes(newStatus))
+      throw new Error(
+        `Invalid status transition: ${this.status} → ${newStatus}`
+      )
+
+    this.status = newStatus
+    this.updatedAt = new Date()
+  }
+
+  toDTO(): WorkOrderSerializableDTO {
+    return {
+      id: this.id,
+      customer: this.customer?.toDTO ? this.customer.toDTO() : this.customer,
+      createdAt: this.createdAt.toISOString(),
+      updatedAt: this.updatedAt.toISOString(),
+      scheduledDate: this.scheduledDate.toISOString(),
+      paymentOrder: this.paymentOrder?.toDTO
+        ? this.paymentOrder.toDTO()
+        : this.paymentOrder,
+      products: this.products?.map((p) => (p.toDTO ? p.toDTO() : p)),
+      status: this.status,
+      result: this.result?.toDTO(),
+      visitDate: this.visitDate?.toISOString(),
+      notes: this.notes,
+    }
+  }
+
+  static fromDTO(dto: WorkOrderSerializableDTO): WorkOrder {
+    return new WorkOrder(
+      dto.id,
+      Customer.fromDTO(dto.customer),
+      new Date(dto.createdAt),
+      new Date(dto.updatedAt),
+      new Date(dto.scheduledDate),
+      PaymentOrder.fromDTO(dto.paymentOrder),
+      dto.products?.map((p) => WorkOrderItem.fromDTO(p)) ?? [],
+      dto.status,
+      dto.result ? WorkOrderResult.fromDTO(dto.result) : undefined,
+      dto.visitDate ? new Date(dto.visitDate) : undefined,
+      dto.notes
+    )
+  }
+}

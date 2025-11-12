@@ -1,0 +1,44 @@
+import {
+  WorkOrderResultItem,
+  WorkOrderResultItemSerializableDTO,
+} from '@/src/models/work-order/work-order-result-item.model'
+import { UUID } from 'crypto'
+
+export type WorkOrderResultSerializableDTO = {
+  id: UUID
+  totalValue: number
+  exchangedProducts: WorkOrderResultItemSerializableDTO[]
+  addedProducts?: WorkOrderResultItemSerializableDTO[]
+  removedProducts?: WorkOrderResultItemSerializableDTO[]
+}
+
+export class WorkOrderResult {
+  constructor(
+    public id: UUID,
+    public totalValue: number,
+
+    public exchangedProducts: WorkOrderResultItem[],
+    public addedProducts?: WorkOrderResultItem[],
+    public removedProducts?: WorkOrderResultItem[]
+  ) {}
+
+  toDTO(): WorkOrderResultSerializableDTO {
+    return {
+      id: this.id,
+      totalValue: this.totalValue,
+      exchangedProducts: this.exchangedProducts?.map((p) => p.toDTO()),
+      addedProducts: this.addedProducts?.map((p) => p.toDTO()),
+      removedProducts: this.removedProducts?.map((p) => p.toDTO()),
+    }
+  }
+
+  static fromDTO(dto: WorkOrderResultSerializableDTO): WorkOrderResult {
+    return new WorkOrderResult(
+      dto.id,
+      dto.totalValue,
+      dto.exchangedProducts?.map((p) => WorkOrderResultItem.fromDTO(p)) ?? [],
+      dto.addedProducts?.map((p) => WorkOrderResultItem.fromDTO(p)),
+      dto.removedProducts?.map((p) => WorkOrderResultItem.fromDTO(p))
+    )
+  }
+}
