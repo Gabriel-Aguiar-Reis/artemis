@@ -1,20 +1,20 @@
 import {
   Customer,
   CustomerSerializableDTO,
-} from '@/src/models/customer/customer.model'
-import { Product } from '@/src/models/product/product.model'
+} from '@/src/domain/entities/customer/customer.entity'
 import {
   PaymentOrder,
   PaymentOrderSerializableDTO,
-} from '@/src/models/work-order/payment-order.model'
+} from '@/src/domain/entities/payment-order/payment-order.entity'
+import { Product } from '@/src/domain/entities/product/product.entity'
 import {
   WorkOrderItem,
   WorkOrderItemSerializableDTO,
-} from '@/src/models/work-order/work-order-item.model'
+} from '@/src/domain/entities/work-order/work-order-item.entity'
 import {
   WorkOrderResult,
   WorkOrderResultSerializableDTO,
-} from '@/src/models/work-order/work-order-result.model'
+} from '@/src/domain/entities/work-order/work-order-result.entity'
 import { UUID } from 'crypto'
 
 export enum WorkOrderStatus {

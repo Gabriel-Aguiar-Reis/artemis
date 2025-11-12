@@ -1,7 +1,7 @@
 import {
   WorkOrderResultItem,
   WorkOrderResultItemSerializableDTO,
-} from '@/src/models/work-order/work-order-result-item.model'
+} from '@/src/domain/entities/work-order/work-order-result-item.entity'
 import { UUID } from 'crypto'
 
 export type WorkOrderResultSerializableDTO = {

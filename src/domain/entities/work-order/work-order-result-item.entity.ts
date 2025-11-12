@@ -1,4 +1,4 @@
-import { WorkOrderItemBase } from '@/src/models/work-order/work-order-item-base.model'
+import { WorkOrderItemBase } from '@/src/domain/entities/work-order/work-order-item-base.entity'
 import { UUID } from 'crypto'
 
 export type WorkOrderResultItemSerializableDTO = {

@@ -1,7 +1,7 @@
 import {
   Expiration,
   ExpirationSerializableDTO,
-} from '@/src/models/product/value-objects/expiration.vo'
+} from '@/src/domain/entities/product/value-objects/expiration.vo'
 import { UUID } from 'crypto'
 
 export type ProductSerializableDTO = {

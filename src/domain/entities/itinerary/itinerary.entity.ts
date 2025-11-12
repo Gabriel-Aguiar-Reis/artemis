@@ -1,11 +1,11 @@
 import {
   WorkOrderMapItem,
   WorkOrderMapItemSerializableDTO,
-} from '@/src/models/work-order/work-order-map-item.model'
+} from '@/src/domain/entities/work-order/work-order-map-item.entity'
 import {
   WorkOrder,
   WorkOrderStatus,
-} from '@/src/models/work-order/work-order.model'
+} from '@/src/domain/entities/work-order/work-order.entity'
 import { UUID } from 'crypto'
 
 export type ItinerarySerializableDTO = {

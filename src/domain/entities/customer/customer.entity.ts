@@ -1,11 +1,11 @@
 import {
   Address,
   AddressSerializableDTO,
-} from '@/src/models/customer/value-objects/address.vo'
+} from '@/src/domain/entities/customer/value-objects/address.vo'
 import {
   PhoneNumber,
   PhoneNumberSerializableDTO,
-} from '@/src/models/customer/value-objects/phone-number.vo'
+} from '@/src/domain/entities/customer/value-objects/phone-number.vo'
 import { UUID } from 'crypto'
 
 export type CustomerSerializableDTO = {

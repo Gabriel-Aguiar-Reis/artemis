@@ -1,7 +1,7 @@
 import {
   Coordinates,
   CoordinatesSerializableDTO,
-} from '@/src/models/customer/value-objects/coordinates.vo'
+} from '@/src/domain/entities/customer/value-objects/coordinates.vo'
 
 export type AddressSerializableDTO = {
   streetName: string

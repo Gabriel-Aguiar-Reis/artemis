@@ -1,7 +1,7 @@
 import {
   WorkOrder,
   WorkOrderSerializableDTO,
-} from '@/src/models/work-order/work-order.model'
+} from '@/src/domain/entities/work-order/work-order.entity'
 
 export type WorkOrderMapItemSerializableDTO = {
   position: number
