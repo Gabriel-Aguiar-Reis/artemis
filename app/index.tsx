@@ -6,6 +6,7 @@ import { MoonStarIcon, StarIcon, SunIcon } from 'lucide-react-native'
 import { useColorScheme } from 'nativewind'
 import * as React from 'react'
 import { Image, type ImageStyle, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 const LOGO = {
   light: require('@/assets/images/react-native-reusables-light.png'),
@@ -27,7 +28,7 @@ export default function Screen() {
   const { colorScheme } = useColorScheme()
 
   return (
-    <>
+    <SafeAreaView className="flex-1">
       <Stack.Screen options={SCREEN_OPTIONS} />
       <View className="flex-1 items-center justify-center gap-8 p-4">
         <Image
@@ -59,7 +60,7 @@ export default function Screen() {
           </Link>
         </View>
       </View>
-    </>
+    </SafeAreaView>
   )
 }
 
