@@ -45,6 +45,13 @@ export class PaymentOrder {
     this.paidInstallments = this.installments
   }
 
+  updateTotalValue(newValue: number) {
+    if (newValue < 0) {
+      throw new Error('Total value cannot be negative')
+    }
+    this.totalValue = newValue
+  }
+
   get remainingInstallments(): number {
     return this.installments - this.paidInstallments
   }

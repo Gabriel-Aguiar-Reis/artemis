@@ -1,0 +1,84 @@
+import { PaymentOrderMapper } from '@/src/domain/entities/payment-order/mapper/payment-order.mapper'
+import { PaymentOrder } from '@/src/domain/entities/payment-order/payment-order.entity'
+import { AddPaymentOrderDto } from '@/src/domain/repositories/payment-order/dtos/add-payment-order.dto'
+import { UpdatePaymentOrderDto } from '@/src/domain/repositories/payment-order/dtos/update-payment-order.dto'
+import { PaymentOrderRepository } from '@/src/domain/repositories/payment-order/payment-order.repository'
+import { db } from '@/src/infra/db/drizzle/drizzle-client'
+import { paymentOrder } from '@/src/infra/db/drizzle/schema/drizzle.payment-order.schema'
+import { UUID } from 'crypto'
+import { eq } from 'drizzle-orm'
+import uuid from 'react-native-uuid'
+
+export default class DrizzlePaymentOrderRepository
+  implements PaymentOrderRepository
+{
+  async getPaymentOrders(): Promise<PaymentOrder[]> {
+    const rows = await db.select().from(paymentOrder)
+    if (rows.length === 0) {
+      return []
+    }
+    return rows.map(PaymentOrderMapper.toDomain)
+  }
+
+  async addPaymentOrder(dto: AddPaymentOrderDto): Promise<void> {
+    const id = uuid.v4() as UUID
+
+    const po = new PaymentOrder(
+      id,
+      dto.method,
+      dto.totalValue,
+      dto.installments ?? 1,
+      false,
+      0
+    )
+
+    const data = PaymentOrderMapper.toPersistence(po)
+    await db.insert(paymentOrder).values(data).onConflictDoNothing()
+  }
+
+  async updatePaymentOrder(dto: UpdatePaymentOrderDto): Promise<void> {
+    const po = new PaymentOrder(
+      dto.id as UUID,
+      dto.method,
+      dto.totalValue,
+      dto.installments,
+      dto.isPaid,
+      dto.paidInstallments
+    )
+
+    const data = PaymentOrderMapper.toPersistence(po)
+
+    await db
+      .update(paymentOrder)
+      .set({
+        method: data.method,
+        totalValue: data.totalValue,
+        installments: data.installments,
+        isPaid: data.isPaid,
+        paidInstallments: data.paidInstallments,
+      })
+      .where(eq(paymentOrder.id, dto.id))
+  }
+
+  async deletePaymentOrder(id: UUID): Promise<void> {
+    await db.delete(paymentOrder).where(eq(paymentOrder.id, id))
+  }
+
+  async getPaymentOrder(id: UUID): Promise<PaymentOrder | null> {
+    const [row] = await db
+      .select()
+      .from(paymentOrder)
+      .where(eq(paymentOrder.id, id))
+
+    if (!row) return null
+    return PaymentOrderMapper.toDomain(row)
+  }
+
+  async getUnpaidPaymentOrders(): Promise<PaymentOrder[]> {
+    const rows = await db
+      .select()
+      .from(paymentOrder)
+      .where(eq(paymentOrder.isPaid, false))
+    return rows.map(PaymentOrderMapper.toDomain)
+  }
+}

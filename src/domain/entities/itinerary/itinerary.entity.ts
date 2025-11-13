@@ -1,7 +1,7 @@
 import {
   WorkOrderMapItem,
   WorkOrderMapItemSerializableDTO,
-} from '@/src/domain/entities/work-order/work-order-map-item.entity'
+} from '@/src/domain/entities/work-order-map-item/work-order-map-item.entity'
 import {
   WorkOrder,
   WorkOrderStatus,
@@ -74,7 +74,7 @@ export class Itinerary {
     this.markLateOrders()
     this.workOrdersMap.forEach((item) => {
       const wo = item.workOrder
-      if (wo.result) wo.status = wo.resolveStatusFromResult(wo.result)
+      if (wo.result) wo.status = wo.applyResult(wo.result)
       else if (item.isLate) wo.status = WorkOrderStatus.FAILED
     })
 

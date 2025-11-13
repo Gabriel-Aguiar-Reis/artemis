@@ -26,22 +26,27 @@ export default class DrizzleCategoryRepository implements CategoryRepository {
   }
 
   async updateCategory(dto: UpdateCategoryDto): Promise<void> {
-    await db
-      .update(category)
-      .set({
-        name: dto.name,
-        isActive: dto.isActive,
-      })
-      .where(eq(category.id, dto.id))
+    const cat = await this.getCategory(dto.id as UUID)
+    if (!cat) {
+      throw new Error('Category not found')
+    }
+
+    // Criar nova instância para validar através do constructor
+    const updated = new Category(dto.id as UUID, dto.name, dto.isActive)
+    const data = CategoryMapper.toPersistence(updated)
+
+    await db.update(category).set(data).where(eq(category.id, dto.id))
   }
 
   async deleteCategory(id: UUID): Promise<void> {
     await db.delete(category).where(eq(category.id, id))
   }
 
-  async getCategory(id: UUID): Promise<Category | undefined> {
+  async getCategory(id: UUID): Promise<Category | null> {
     const [row] = await db.select().from(category).where(eq(category.id, id))
-    return row ? CategoryMapper.toDomain(row) : undefined
+
+    if (!row) return null
+    return CategoryMapper.toDomain(row)
   }
 
   async getActiveCategories(): Promise<Category[]> {
@@ -53,13 +58,17 @@ export default class DrizzleCategoryRepository implements CategoryRepository {
   }
 
   async updateDisableCategory(id: UUID): Promise<void> {
-    const [row] = await db.select().from(category).where(eq(category.id, id))
-
-    if (row) {
-      await db
-        .update(category)
-        .set({ isActive: false })
-        .where(eq(category.id, id))
+    const cat = await this.getCategory(id)
+    if (!cat) {
+      return
     }
+
+    cat.isActive = false
+    const data = CategoryMapper.toPersistence(cat)
+
+    await db
+      .update(category)
+      .set({ isActive: data.isActive })
+      .where(eq(category.id, id))
   }
 }

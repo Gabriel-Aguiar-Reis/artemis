@@ -3,9 +3,13 @@ import {
   AddressSerializableDTO,
 } from '@/src/domain/entities/customer/value-objects/address.vo'
 import {
-  PhoneNumber,
-  PhoneNumberSerializableDTO,
-} from '@/src/domain/entities/customer/value-objects/phone-number.vo'
+  LandlinePhoneNumber,
+  LandlinePhoneNumberSerializableDTO,
+} from '@/src/domain/entities/customer/value-objects/landline-phone-number.vo'
+import {
+  SmartphoneNumber,
+  SmartphoneNumberSerializableDTO,
+} from '@/src/domain/entities/customer/value-objects/smartphone-number.vo'
 import { UUID } from 'crypto'
 
 export type CustomerSerializableDTO = {
@@ -13,8 +17,8 @@ export type CustomerSerializableDTO = {
   storeName: string
   storeAddress: AddressSerializableDTO
   contactName: string
-  phoneNumber: PhoneNumberSerializableDTO
-  landlineNumber?: PhoneNumberSerializableDTO
+  phoneNumber: SmartphoneNumberSerializableDTO
+  landlineNumber?: LandlinePhoneNumberSerializableDTO
 }
 
 export class Customer {
@@ -23,12 +27,12 @@ export class Customer {
     public storeName: string,
     public storeAddress: Address,
     public contactName: string,
-    public phoneNumber: PhoneNumber,
-    public landlineNumber?: PhoneNumber
+    public phoneNumber: SmartphoneNumber,
+    public landlineNumber?: LandlinePhoneNumber
   ) {}
 
   isActiveWhatsApp(): boolean {
-    return this.phoneNumber.isWhatsApp
+    return this.phoneNumber.isWhatsApp || !!this.landlineNumber?.isWhatsApp
   }
 
   toDTO(): CustomerSerializableDTO {
@@ -54,8 +58,10 @@ export class Customer {
       dto.storeName,
       Address.fromDTO(dto.storeAddress),
       dto.contactName,
-      PhoneNumber.fromDTO(dto.phoneNumber),
-      dto.landlineNumber ? PhoneNumber.fromDTO(dto.landlineNumber) : undefined
+      SmartphoneNumber.fromDTO(dto.phoneNumber),
+      dto.landlineNumber
+        ? LandlinePhoneNumber.fromDTO(dto.landlineNumber)
+        : undefined
     )
   }
 }

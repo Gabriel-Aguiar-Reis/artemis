@@ -10,11 +10,11 @@ import { Product } from '@/src/domain/entities/product/product.entity'
 import {
   WorkOrderItem,
   WorkOrderItemSerializableDTO,
-} from '@/src/domain/entities/work-order/work-order-item.entity'
+} from '@/src/domain/entities/work-order-item/work-order-item.entity'
 import {
   WorkOrderResult,
   WorkOrderResultSerializableDTO,
-} from '@/src/domain/entities/work-order/work-order-result.entity'
+} from '@/src/domain/entities/work-order-result/work-order-result.entity'
 import { UUID } from 'crypto'
 
 export enum WorkOrderStatus {
@@ -62,7 +62,7 @@ export class WorkOrder {
       existing.quantity += quantity
     } else {
       this.products.push(
-        new WorkOrderItem(product.id, product.name, product.salePrice, quantity)
+        WorkOrderItem.fromProduct(product, quantity, product.salePrice)
       )
     }
     this.updatedAt = new Date()
@@ -94,36 +94,7 @@ export class WorkOrder {
     )
   }
 
-  public resolveStatusFromResult(result: WorkOrderResult): WorkOrderStatus {
-    const exchanged = result.exchangedProducts.length
-    const removed = result.removedProducts?.length ?? 0
-    const added = result.addedProducts?.length ?? 0
-
-    if (exchanged === 0 && added === 0) return WorkOrderStatus.FAILED
-    if (removed > 0 || exchanged < this.products.length)
-      return WorkOrderStatus.PARTIAL
-    return WorkOrderStatus.COMPLETED
-  }
-
-  applyResult(result: WorkOrderResult) {
-    this.result = result
-    this.status = this.resolveStatusFromResult(result)
-    this.updatedAt = new Date()
-  }
-
-  syncPaymentWithResult() {
-    if (!this.result) return
-    this.paymentOrder.totalValue = this.result.totalValue
-  }
-
-  startVisit() {
-    if (this.status !== WorkOrderStatus.PENDING)
-      throw new Error('Cannot start a non-pending work order.')
-    this.status = WorkOrderStatus.IN_PROGRESS
-    this.visitDate = new Date()
-  }
-
-  setStatus(newStatus: WorkOrderStatus) {
+  setStatus(newStatus: WorkOrderStatus): WorkOrderStatus {
     const validTransitions: Record<WorkOrderStatus, WorkOrderStatus[]> = {
       [WorkOrderStatus.PENDING]: [
         WorkOrderStatus.IN_PROGRESS,
@@ -147,6 +118,38 @@ export class WorkOrder {
 
     this.status = newStatus
     this.updatedAt = new Date()
+    return this.status
+  }
+
+  private resolveStatusFromResult(result: WorkOrderResult): WorkOrderStatus {
+    const exchanged = result.exchangedProducts.length
+    const removed = result.removedProducts?.length ?? 0
+    const added = result.addedProducts?.length ?? 0
+
+    if (exchanged === 0 && added === 0)
+      return this.setStatus(WorkOrderStatus.FAILED)
+    if (removed > 0 || exchanged < this.products.length)
+      return this.setStatus(WorkOrderStatus.PARTIAL)
+    return this.setStatus(WorkOrderStatus.COMPLETED)
+  }
+
+  applyResult(result: WorkOrderResult): WorkOrderStatus {
+    this.result = result
+    this.status = this.resolveStatusFromResult(result)
+    this.updatedAt = new Date()
+    return this.status
+  }
+
+  syncPaymentWithResult() {
+    if (!this.result) return
+    this.paymentOrder.totalValue = this.result.totalValue
+  }
+
+  startVisit() {
+    if (this.status !== WorkOrderStatus.PENDING)
+      throw new Error('Cannot start a non-pending work order.')
+    this.status = WorkOrderStatus.IN_PROGRESS
+    this.visitDate = new Date()
   }
 
   toDTO(): WorkOrderSerializableDTO {

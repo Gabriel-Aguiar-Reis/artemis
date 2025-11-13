@@ -8,7 +8,7 @@ export abstract class CategoryRepository {
   abstract addCategory: (dto: AddCategoryDto) => Promise<void>
   abstract updateCategory: (dto: UpdateCategoryDto) => Promise<void>
   abstract deleteCategory: (id: UUID) => Promise<void>
-  abstract getCategory: (id: UUID) => Promise<Category | undefined>
+  abstract getCategory: (id: UUID) => Promise<Category | null>
   abstract getActiveCategories: () => Promise<Category[]>
   abstract updateDisableCategory: (id: UUID) => Promise<void>
 }

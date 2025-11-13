@@ -1,4 +1,4 @@
-import { Category } from '@/src/domain/models/category/category.model'
+import { Category } from '@/src/domain/entities/category/category.entity'
 import { CategoryTable } from '@/src/infra/db/drizzle/schema/drizzle.category.schema'
 import { UUID } from 'crypto'
 
