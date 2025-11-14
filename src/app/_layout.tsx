@@ -13,7 +13,7 @@ import { Stack } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { useColorScheme } from 'nativewind'
 import * as React from 'react'
-import { View } from 'react-native'
+import { Platform, View } from 'react-native'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 
 export {
@@ -65,7 +65,12 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider value={NAV_THEME[colorScheme ?? 'light']}>
           <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-          <Stack>
+          <Stack
+            screenOptions={{
+              animation:
+                Platform.OS === 'ios' ? 'ios_from_right' : 'slide_from_right',
+            }}
+          >
             <Stack.Screen name="index" options={{ title: 'Artemis' }} />
             <Stack.Screen
               name="categories/index"
