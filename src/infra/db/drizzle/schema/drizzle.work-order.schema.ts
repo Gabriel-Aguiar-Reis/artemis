@@ -2,11 +2,9 @@ import {
   WorkOrder,
   WorkOrderStatus,
 } from '@/src/domain/entities/work-order/work-order.entity'
-import {
-  customer,
-  paymentOrder,
-  workOrderResult,
-} from '@/src/infra/db/drizzle/schema'
+import { customer } from '@/src/infra/db/drizzle/schema/drizzle.customer.schema'
+import { paymentOrder } from '@/src/infra/db/drizzle/schema/drizzle.payment-order.schema'
+import { workOrderResult } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result.schema'
 import { InferInsertModel, InferSelectModel } from 'drizzle-orm'
 import { sqliteTable, text } from 'drizzle-orm/sqlite-core'
 

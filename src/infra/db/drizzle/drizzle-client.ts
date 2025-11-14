@@ -5,12 +5,17 @@ import { openDatabaseSync, type SQLiteDatabase } from 'expo-sqlite'
 let expoDb: SQLiteDatabase | null = null
 let drizzleInstance: ReturnType<typeof drizzle> | null = null
 
-export function initDrizzleClient() {
+export function getExpoDb() {
   if (!expoDb) {
     expoDb = openDatabaseSync('artemis.db')
   }
+  return expoDb
+}
+
+export function initDrizzleClient() {
+  const database = getExpoDb()
   if (!drizzleInstance) {
-    drizzleInstance = drizzle(expoDb, { schema })
+    drizzleInstance = drizzle(database, { schema })
   }
   return drizzleInstance
 }

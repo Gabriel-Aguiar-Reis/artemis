@@ -1,5 +1,5 @@
 import { Product } from '@/src/domain/entities/product/product.entity'
-import { category } from '@/src/infra/db/drizzle/schema'
+import { category } from '@/src/infra/db/drizzle/schema/drizzle.category.schema'
 import { InferInsertModel, InferSelectModel } from 'drizzle-orm'
 import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 

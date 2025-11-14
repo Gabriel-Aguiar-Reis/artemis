@@ -1,21 +1,27 @@
 import '@/global.css'
 import 'react-native-get-random-values'
 
-import { initDatabase } from '@/src/infra/db/drizzle/migrations'
+import { Text } from '@/src/components/ui/text'
+import { initDrizzleClient } from '@/src/infra/db/drizzle/drizzle-client'
+import migrations from '@/src/infra/db/drizzle/migrations'
 import { NAV_THEME } from '@/src/lib/theme'
 import { ThemeProvider } from '@react-navigation/native'
 import { PortalHost } from '@rn-primitives/portal'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator'
 import { Stack } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { useColorScheme } from 'nativewind'
 import * as React from 'react'
+import { View } from 'react-native'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 
 export {
   // Catch any errors thrown by the Layout component.
   ErrorBoundary,
 } from 'expo-router'
+
+const db = initDrizzleClient()
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,21 +37,27 @@ const queryClient = new QueryClient({
 
 export default function RootLayout() {
   const { colorScheme } = useColorScheme()
-  const [dbInitialized, setDbInitialized] = React.useState(false)
+  const { success, error } = useMigrations(db, migrations)
 
-  React.useEffect(() => {
-    initDatabase()
-      .then(() => {
-        console.log('Database initialized')
-        setDbInitialized(true)
-      })
-      .catch((error) => {
-        console.error('Failed to initialize database:', error)
-      })
-  }, [])
-
-  if (!dbInitialized) {
-    return null // Ou um componente de loading
+  if (error) {
+    return (
+      <View className="flex-1 items-center justify-center p-4">
+        <Text className="text-red-600 font-bold text-lg mb-2">
+          Erro de Migração
+        </Text>
+        <Text className="text-center">{error.message}</Text>
+        <Text className="text-sm text-muted-foreground mt-4 text-center">
+          Tente deletar o app do simulador e reinstalar
+        </Text>
+      </View>
+    )
+  }
+  if (!success) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <Text>Configurando banco de dados...</Text>
+      </View>
+    )
   }
 
   return (
