@@ -6,11 +6,11 @@ import { workOrder } from './drizzle.work-order.schema'
 export const workOrderItems = sqliteTable('work_order_items', {
   id: text('id').primaryKey(),
   workOrderId: text('work_order_id')
-    .notNull()
-    .references(() => workOrder.id, { onDelete: 'cascade' }),
+    .references(() => workOrder.id, { onDelete: 'cascade' })
+    .notNull(),
   productId: text('product_id')
-    .notNull()
-    .references(() => product.id),
+    .references(() => product.id)
+    .notNull(),
   quantity: integer('quantity').notNull(),
   priceSnapshot: real('price_snapshot').notNull(), // Preço congelado no momento
 })

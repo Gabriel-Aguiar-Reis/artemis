@@ -6,11 +6,11 @@ import { workOrder } from './drizzle.work-order.schema'
 export const itineraryWorkOrders = sqliteTable('itinerary_work_orders', {
   id: text('id').primaryKey(),
   itineraryId: text('itinerary_id')
-    .notNull()
-    .references(() => itinerary.id, { onDelete: 'cascade' }),
+    .references(() => itinerary.id, { onDelete: 'cascade' })
+    .notNull(),
   workOrderId: text('work_order_id')
-    .notNull()
-    .references(() => workOrder.id),
+    .references(() => workOrder.id)
+    .notNull(),
   position: integer('position').notNull(),
   isLate: integer('is_late', { mode: 'boolean' }).notNull().default(false),
 })

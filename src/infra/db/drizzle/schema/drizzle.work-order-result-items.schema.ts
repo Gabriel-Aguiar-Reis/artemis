@@ -12,11 +12,11 @@ export enum WorkOrderResultItemType {
 export const workOrderResultItems = sqliteTable('work_order_result_items', {
   id: text('id').primaryKey(),
   resultId: text('result_id')
-    .notNull()
-    .references(() => workOrderResult.id, { onDelete: 'cascade' }),
+    .references(() => workOrderResult.id, { onDelete: 'cascade' })
+    .notNull(),
   productId: text('product_id')
-    .notNull()
-    .references(() => product.id),
+    .references(() => product.id)
+    .notNull(),
   quantity: integer('quantity').notNull(),
   priceSnapshot: real('price_snapshot').notNull(),
   type: text('type').notNull().$type<WorkOrderResultItemType>(),
