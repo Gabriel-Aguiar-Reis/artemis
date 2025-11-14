@@ -1,6 +1,5 @@
 import * as schema from '@/src/infra/db/drizzle/schema'
 import { drizzle } from 'drizzle-orm/expo-sqlite'
-import { useDrizzleStudio } from 'expo-drizzle-studio-plugin'
 import { openDatabaseSync, type SQLiteDatabase } from 'expo-sqlite'
 
 let expoDb: SQLiteDatabase | null = null
@@ -18,7 +17,6 @@ export function initDrizzleClient() {
   if (!drizzleInstance) {
     drizzleInstance = drizzle(database, { schema })
   }
-  useDrizzleStudio(database)
   return drizzleInstance
 }
 
