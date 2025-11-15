@@ -1,4 +1,6 @@
 import '@/global.css'
+import '@/src/components/ui/action-sheet'
+import '@/src/components/ui/action-sheet/sheets'
 import 'react-native-get-random-values'
 
 import { Text } from '@/src/components/ui/text'
@@ -18,12 +20,11 @@ import { StatusBar } from 'expo-status-bar'
 import { useColorScheme } from 'nativewind'
 import * as React from 'react'
 import { Platform, View } from 'react-native'
+import { SheetProvider } from 'react-native-actions-sheet'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 
-export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
-} from 'expo-router'
+export { ErrorBoundary } from 'expo-router'
 
 const db = initDrizzleClient()
 
@@ -67,57 +68,63 @@ export default function RootLayout() {
   }
 
   return (
-    <SafeAreaProvider>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider value={NAV_THEME[colorScheme ?? 'light']}>
-          <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-          <Stack
-            screenOptions={{
-              animation:
-                Platform.OS === 'ios' ? 'ios_from_right' : 'slide_from_right',
-            }}
-          >
-            <Stack.Screen name="index" options={{ title: 'Artemis' }} />
-            <Stack.Screen
-              name="categories/index"
-              options={{ title: 'Categorias' }}
-            />
-            <Stack.Screen
-              name="categories/form"
-              options={{ title: 'Nova Categoria' }}
-            />
-            <Stack.Screen
-              name="customers/index"
-              options={{ title: 'Clientes' }}
-            />
-            <Stack.Screen
-              name="customers/form"
-              options={{ title: 'Cadastrar Cliente' }}
-            />
-            <Stack.Screen
-              name="products/index"
-              options={{ title: 'Produtos' }}
-            />
-            <Stack.Screen
-              name="products/form"
-              options={{ title: 'Cadastrar Produto' }}
-            />
-            <Stack.Screen
-              name="work-orders/index"
-              options={{ title: 'Ordens de Serviço' }}
-            />
-            <Stack.Screen
-              name="work-orders/form"
-              options={{ title: 'Criar Ordem' }}
-            />
-            <Stack.Screen
-              name="itinerary/index"
-              options={{ title: 'Itinerário' }}
-            />
-          </Stack>
-          <PortalHost />
-        </ThemeProvider>
-      </QueryClientProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider value={NAV_THEME[colorScheme ?? 'light']}>
+            <SheetProvider context="global">
+              <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+              <Stack
+                screenOptions={{
+                  animation:
+                    Platform.OS === 'ios'
+                      ? 'ios_from_right'
+                      : 'slide_from_right',
+                }}
+              >
+                <Stack.Screen name="index" options={{ title: 'Artemis' }} />
+                <Stack.Screen
+                  name="categories/index"
+                  options={{ title: 'Categorias' }}
+                />
+                <Stack.Screen
+                  name="categories/form"
+                  options={{ title: 'Nova Categoria' }}
+                />
+                <Stack.Screen
+                  name="customers/index"
+                  options={{ title: 'Clientes' }}
+                />
+                <Stack.Screen
+                  name="customers/form"
+                  options={{ title: 'Cadastrar Cliente' }}
+                />
+                <Stack.Screen
+                  name="products/index"
+                  options={{ title: 'Produtos' }}
+                />
+                <Stack.Screen
+                  name="products/form"
+                  options={{ title: 'Cadastrar Produto' }}
+                />
+                <Stack.Screen
+                  name="work-orders/index"
+                  options={{ title: 'Ordens de Serviço' }}
+                />
+                <Stack.Screen
+                  name="work-orders/form"
+                  options={{ title: 'Criar Ordem' }}
+                />
+                <Stack.Screen
+                  name="itinerary/index"
+                  options={{ title: 'Itinerário' }}
+                />
+              </Stack>
+              <PortalHost />
+            </SheetProvider>
+          </ThemeProvider>
+        </QueryClientProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   )
 }
