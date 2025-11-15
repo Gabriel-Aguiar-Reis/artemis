@@ -53,7 +53,7 @@ export default function RootLayout() {
         </Text>
         <Text className="text-center">{error.message}</Text>
         <Text className="text-sm text-muted-foreground mt-4 text-center">
-          Tente deletar o app do simulador e reinstalar
+          Tente deletar o app e reinstalar
         </Text>
       </View>
     )
