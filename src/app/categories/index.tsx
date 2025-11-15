@@ -55,8 +55,11 @@ export default function CategoriesScreen() {
           title: 'Categorias',
           headerRight: () => (
             <Link href="/categories/form" asChild>
-              <Button size="icon" variant="ghost">
-                <Plus size={24} />
+              <Button size="icon" variant="outline">
+                <Plus
+                  size={24}
+                  color={colorScheme === 'dark' ? 'white' : undefined}
+                />
               </Button>
             </Link>
           ),

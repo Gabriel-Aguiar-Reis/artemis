@@ -11,7 +11,7 @@ import {
 } from '@/src/components/ui/select'
 import { Text } from '@/src/components/ui/text'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Stack } from 'expo-router'
+import { router, Stack } from 'expo-router'
 import * as React from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { Platform, ScrollView, Switch, View } from 'react-native'
@@ -70,7 +70,7 @@ export default function ProductFormScreen() {
       {
         onSuccess: () => {
           console.log('✅ Produto criado com sucesso!')
-          // router.back()
+          router.back()
         },
         onError: (err) => {
           console.error('❌ Erro ao criar produto:', err)
@@ -118,12 +118,12 @@ export default function ProductFormScreen() {
                       insets={contentInsets}
                       className="w-full"
                     >
-                      {[1, 2, 3, 4]?.map((category) => (
+                      {categories?.map((category) => (
                         <SelectItem
-                          key={category}
-                          label={'teste'}
-                          value={category.toString()}
-                          onPress={() => onChange(category.toString())}
+                          key={category.id}
+                          label={category.name}
+                          value={category.id}
+                          onPress={() => onChange(category.id)}
                         />
                       ))}
                     </SelectContent>

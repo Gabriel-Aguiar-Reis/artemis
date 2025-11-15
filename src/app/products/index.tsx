@@ -58,8 +58,11 @@ export default function ProductsScreen() {
           title: 'Produtos',
           headerRight: () => (
             <Link href="/products/form" asChild>
-              <Button size="icon" variant="ghost">
-                <Plus size={24} />
+              <Button size="icon" variant="outline">
+                <Plus
+                  size={24}
+                  color={colorScheme === 'dark' ? 'white' : undefined}
+                />
               </Button>
             </Link>
           ),
