@@ -1,7 +1,18 @@
 import { NavigationButton } from '@/src/components/ui/navigation-button'
 import { LinkProps } from 'expo-router'
-import { Search } from 'lucide-react-native'
+import { Search, SearchCheck } from 'lucide-react-native'
 
-export const ButtonFilter = ({ href }: { href: LinkProps['href'] }) => {
-  return <NavigationButton href={href} icon={Search} />
+type ButtonFilterProps = {
+  href: LinkProps['href']
+  isActive?: boolean
+}
+
+export const ButtonFilter = ({ href, isActive }: ButtonFilterProps) => {
+  return (
+    <NavigationButton
+      href={href}
+      icon={isActive ? SearchCheck : Search}
+      color={isActive ? '#16a34a' : undefined}
+    />
+  )
 }

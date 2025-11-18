@@ -12,6 +12,7 @@ import { Pressable } from 'react-native'
 
 type ObjectCardRootProps = {
   children: React.ReactNode
+  className?: string
 }
 
 type ObjectCardHeaderProps = {
@@ -34,8 +35,8 @@ type ObjectCardContentProps = {
   children: React.ReactNode
 }
 
-function ObjectCardRoot({ children }: ObjectCardRootProps) {
-  return <Card>{children}</Card>
+function ObjectCardRoot({ children, className }: ObjectCardRootProps) {
+  return <Card className={className}>{children}</Card>
 }
 
 function ObjectCardHeader({ children }: ObjectCardHeaderProps) {

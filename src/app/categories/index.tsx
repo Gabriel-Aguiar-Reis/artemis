@@ -5,7 +5,9 @@ import { ButtonNew } from '@/src/components/ui/button-new'
 import { ConfirmDeleteDialog } from '@/src/components/ui/dialog/confirm-delete-dialog'
 import { ObjectCard } from '@/src/components/ui/object-card'
 import { Text } from '@/src/components/ui/text'
+import { Category } from '@/src/domain/entities/category/category.entity'
 import { cn } from '@/src/lib/utils'
+import { FlashList } from '@shopify/flash-list'
 import { UUID } from 'crypto'
 import { Stack, useLocalSearchParams } from 'expo-router'
 import { EditIcon, TrashIcon } from 'lucide-react-native'
@@ -95,42 +97,36 @@ export default function CategoriesScreen() {
     })
   }
 
+  const renderItem = (category: Category) => {
+    return (
+      <ObjectCard.Root key={category.id} className="mb-4">
+        <ObjectCard.Header>
+          <ObjectCard.Title>{category.name}</ObjectCard.Title>
+          <ObjectCard.Actions
+            onPress={() => handleCategoryOptions(category.id, category.name)}
+          />
+        </ObjectCard.Header>
+        <ObjectCard.Content>
+          <View className="flex-row items-center gap-2">
+            <View
+              className={cn(
+                'h-2 w-2 rounded-full',
+                category.isActive ? 'bg-green-500' : 'bg-gray-400'
+              )}
+            />
+            <Text className="text-sm text-muted-foreground">
+              {category.isActive ? 'Ativo' : 'Inativo'}
+            </Text>
+          </View>
+        </ObjectCard.Content>
+      </ObjectCard.Root>
+    )
+  }
+
   if (isLoading) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center">
         <Text>Carregando categorias...</Text>
-      </SafeAreaView>
-    )
-  }
-
-  if (!categories || categories.length === 0) {
-    return (
-      <SafeAreaView className="flex-1">
-        <Stack.Screen
-          options={{
-            title: 'Categorias',
-            headerRight: () => (
-              <View className="flex-row gap-2">
-                <ButtonFilter
-                  href={{
-                    pathname: '/categories/search',
-                    params: {
-                      search: params.search,
-                      status: params.status,
-                    },
-                  }}
-                />
-                <ButtonNew href="/categories/form" />
-              </View>
-            ),
-          }}
-        />
-        <View className="flex-1 items-center justify-center px-4">
-          <Text className="text-center text-muted-foreground">
-            Nenhuma categoria cadastrada.{' \n'}
-            Clique no + para adicionar.
-          </Text>
-        </View>
       </SafeAreaView>
     )
   }
@@ -150,66 +146,54 @@ export default function CategoriesScreen() {
                     status: params.status,
                   },
                 }}
+                isActive={hasActiveFilters}
               />
               <ButtonNew href="/categories/form" />
             </View>
           ),
         }}
       />
-      <ActiveFiltersBanner
-        filters={activeFilters}
-        clearFiltersHref="/categories"
-      />
-      <ScrollView className="flex-1">
-        <View className="gap-3 p-4">
-          {filteredCategories.length === 0 ? (
-            <View className="items-center py-12">
-              <Text className="text-center text-muted-foreground">
-                {hasActiveFilters
-                  ? 'Nenhuma categoria encontrada com os filtros aplicados.'
-                  : 'Nenhuma categoria cadastrada.'}
-              </Text>
-            </View>
-          ) : (
-            filteredCategories.map((category) => (
-              <ObjectCard.Root key={category.id}>
-                <ObjectCard.Header>
-                  <ObjectCard.Title>{category.name}</ObjectCard.Title>
-                  <ObjectCard.Actions
-                    onPress={() =>
-                      handleCategoryOptions(category.id, category.name)
-                    }
-                  />
-                </ObjectCard.Header>
-                <ObjectCard.Content>
-                  <View className="flex-row items-center gap-2">
-                    <View
-                      className={cn(
-                        'h-2 w-2 rounded-full',
-                        category.isActive ? 'bg-green-500' : 'bg-gray-400'
-                      )}
-                    />
-                    <Text className="text-sm text-muted-foreground">
-                      {category.isActive ? 'Ativo' : 'Inativo'}
-                    </Text>
-                  </View>
-                </ObjectCard.Content>
-              </ObjectCard.Root>
-            ))
-          )}
+      {!categories || categories.length === 0 ? (
+        <View className="flex-1 items-center justify-center px-4">
+          <Text className="text-center text-muted-foreground">
+            Nenhuma categoria cadastrada.{' \n'}
+            Clique no + para adicionar.
+          </Text>
         </View>
-      </ScrollView>
-
-      {selectedCategory && (
-        <ConfirmDeleteDialog
-          open={deleteDialogOpen}
-          onOpenChange={setDeleteDialogOpen}
-          title={`Excluir categoria "${selectedCategory.name}"?`}
-          handleDelete={() => {
-            deleteCategory(selectedCategory.id)
-            setDeleteDialogOpen(false)
-          }}
-        />
+      ) : (
+        <>
+          <ActiveFiltersBanner
+            filters={activeFilters}
+            clearFiltersHref="/categories"
+          />
+          <ScrollView className="flex-1">
+            <View className="gap-3 p-4">
+              {filteredCategories.length === 0 ? (
+                <View className="items-center py-12">
+                  <Text className="text-center text-muted-foreground">
+                    Nenhuma categoria encontrada com os filtros aplicados.
+                  </Text>
+                </View>
+              ) : (
+                <FlashList
+                  data={filteredCategories}
+                  renderItem={({ item }) => renderItem(item)}
+                />
+              )}
+            </View>
+          </ScrollView>
+          {selectedCategory && (
+            <ConfirmDeleteDialog
+              open={deleteDialogOpen}
+              onOpenChange={setDeleteDialogOpen}
+              title={`Excluir categoria "${selectedCategory.name}"?`}
+              handleDelete={() => {
+                deleteCategory(selectedCategory.id)
+                setDeleteDialogOpen(false)
+              }}
+            />
+          )}
+        </>
       )}
     </SafeAreaView>
   )
