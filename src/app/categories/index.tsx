@@ -1,26 +1,71 @@
 import { categoryHooks } from '@/src/application/hooks/category.hooks'
-import { Button } from '@/src/components/ui/button'
-import { Icon } from '@/src/components/ui/icon'
+import { ActiveFiltersBanner } from '@/src/components/ui/active-filters-banner'
+import { ButtonFilter } from '@/src/components/ui/button-filter'
+import { ButtonNew } from '@/src/components/ui/button-new'
+import { ConfirmDeleteDialog } from '@/src/components/ui/dialog/confirm-delete-dialog'
+import { ObjectCard } from '@/src/components/ui/object-card'
 import { Text } from '@/src/components/ui/text'
-import { Link, Stack } from 'expo-router'
-import {
-  EditIcon,
-  MoreVerticalIcon,
-  Plus,
-  TrashIcon,
-} from 'lucide-react-native'
-import { useColorScheme } from 'nativewind'
+import { cn } from '@/src/lib/utils'
+import { UUID } from 'crypto'
+import { Stack, useLocalSearchParams } from 'expo-router'
+import { EditIcon, TrashIcon } from 'lucide-react-native'
 import * as React from 'react'
-import { Pressable, ScrollView, View } from 'react-native'
+import { ScrollView, View } from 'react-native'
 import { SheetManager } from 'react-native-actions-sheet'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function CategoriesScreen() {
   const { data: categories, isLoading } = categoryHooks.getCategories()
-  const { colorScheme } = useColorScheme()
+  const { mutate: deleteCategory } = categoryHooks.deleteCategory()
+
+  const params = useLocalSearchParams<{
+    search?: string
+    status?: 'all' | 'active' | 'inactive'
+  }>()
+
+  const filteredCategories = React.useMemo(() => {
+    if (!categories) return []
+
+    return categories.filter((category) => {
+      const matchesSearch = params.search
+        ? category.name.toLowerCase().includes(params.search.toLowerCase())
+        : true
+
+      const matchesStatus =
+        !params.status ||
+        params.status === 'all' ||
+        (params.status === 'active' && category.isActive) ||
+        (params.status === 'inactive' && !category.isActive)
+
+      return matchesSearch && matchesStatus
+    })
+  }, [categories, params.search, params.status])
+
+  const hasActiveFilters =
+    !!params.search || (params.status && params.status !== 'all')
+
+  const activeFilters = React.useMemo(() => {
+    const filters = []
+    if (params.search) {
+      filters.push({ label: 'Pesquisa', value: params.search })
+    }
+    if (params.status && params.status !== 'all') {
+      filters.push({
+        label: 'Status',
+        value: params.status === 'active' ? 'Ativos' : 'Inativos',
+      })
+    }
+    return filters
+  }, [params.search, params.status])
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
+  const [selectedCategory, setSelectedCategory] = React.useState<{
+    id: UUID
+    name: string
+  } | null>(null)
 
   const handleCategoryOptions = async (
-    categoryId: string,
+    categoryId: UUID,
     categoryName: string
   ) => {
     await SheetManager.show('options-sheet', {
@@ -40,38 +85,14 @@ export default function CategoriesScreen() {
             label: 'Excluir',
             icon: TrashIcon,
             destructive: true,
-            onPress: async () => {
-              await handleDeleteCategory(categoryId, categoryName)
+            onPress: () => {
+              setSelectedCategory({ id: categoryId, name: categoryName })
+              setDeleteDialogOpen(true)
             },
           },
         ],
       },
     })
-  }
-
-  // TODO: Sheets aninhadas não estão funcionando corretamente
-  // (optar por usar apenas uma), possivelmente usar Alert do rn-reusable
-  const handleDeleteCategory = async (
-    categoryId: string,
-    categoryName: string
-  ) => {
-    console.log('handleDeleteCategory chamado para:', categoryId, categoryName)
-    try {
-      const result = await SheetManager.show('confirm-delete-sheet', {
-        payload: {
-          title: 'Excluir categoria?',
-          message: `Tem certeza que deseja excluir a categoria "${categoryName}"? Esta ação não pode ser desfeita.`,
-          onConfirm: () => {
-            console.log('Excluindo categoria:', categoryId)
-            // TODO: Adicionar a lógica de exclusão aqui
-            // deleteCategory.mutate(categoryId)
-          },
-        },
-      })
-      console.log('SheetManager.show result:', result)
-    } catch (error) {
-      console.error('Erro ao mostrar sheet:', error)
-    }
   }
 
   if (isLoading) {
@@ -89,20 +110,24 @@ export default function CategoriesScreen() {
           options={{
             title: 'Categorias',
             headerRight: () => (
-              <Link href="/categories/form" asChild>
-                <Button size="icon" variant="outline">
-                  <Plus
-                    size={24}
-                    color={colorScheme === 'dark' ? 'white' : undefined}
-                  />
-                </Button>
-              </Link>
+              <View className="flex-row gap-2">
+                <ButtonFilter
+                  href={{
+                    pathname: '/categories/search',
+                    params: {
+                      search: params.search,
+                      status: params.status,
+                    },
+                  }}
+                />
+                <ButtonNew href="/categories/form" />
+              </View>
             ),
           }}
         />
         <View className="flex-1 items-center justify-center px-4">
           <Text className="text-center text-muted-foreground">
-            Nenhuma categoria cadastrada.{'\n'}
+            Nenhuma categoria cadastrada.{' \n'}
             Clique no + para adicionar.
           </Text>
         </View>
@@ -116,57 +141,76 @@ export default function CategoriesScreen() {
         options={{
           title: 'Categorias',
           headerRight: () => (
-            <Link href="/categories/form" asChild>
-              <Button size="icon" variant="outline">
-                <Plus
-                  size={24}
-                  color={colorScheme === 'dark' ? 'white' : undefined}
-                />
-              </Button>
-            </Link>
+            <View className="flex-row gap-2">
+              <ButtonFilter
+                href={{
+                  pathname: '/categories/search',
+                  params: {
+                    search: params.search,
+                    status: params.status,
+                  },
+                }}
+              />
+              <ButtonNew href="/categories/form" />
+            </View>
           ),
         }}
       />
+      <ActiveFiltersBanner
+        filters={activeFilters}
+        clearFiltersHref="/categories"
+      />
       <ScrollView className="flex-1">
         <View className="gap-3 p-4">
-          {categories.length === 0 ? (
+          {filteredCategories.length === 0 ? (
             <View className="items-center py-12">
               <Text className="text-center text-muted-foreground">
-                Nenhuma categoria cadastrada.
+                {hasActiveFilters
+                  ? 'Nenhuma categoria encontrada com os filtros aplicados.'
+                  : 'Nenhuma categoria cadastrada.'}
               </Text>
             </View>
           ) : (
-            categories.map((category) => (
-              <View
-                key={category.id}
-                className="rounded-lg border border-border bg-card p-4"
-              >
-                <View className="flex-row items-start justify-between">
-                  <View className="flex-1">
-                    <Text className="text-lg font-semibold">
-                      {category.name}
-                    </Text>
-                    <Text className="text-sm text-muted-foreground">
-                      Status: {category.isActive ? 'Ativo' : 'Inativo'}
-                    </Text>
-                  </View>
-                  <Pressable
+            filteredCategories.map((category) => (
+              <ObjectCard.Root key={category.id}>
+                <ObjectCard.Header>
+                  <ObjectCard.Title>{category.name}</ObjectCard.Title>
+                  <ObjectCard.Actions
                     onPress={() =>
                       handleCategoryOptions(category.id, category.name)
                     }
-                    className="ml-2 rounded-md p-2 active:bg-accent"
-                  >
-                    <Icon
-                      as={MoreVerticalIcon}
-                      className="text-muted-foreground"
+                  />
+                </ObjectCard.Header>
+                <ObjectCard.Content>
+                  <View className="flex-row items-center gap-2">
+                    <View
+                      className={cn(
+                        'h-2 w-2 rounded-full',
+                        category.isActive ? 'bg-green-500' : 'bg-gray-400'
+                      )}
                     />
-                  </Pressable>
-                </View>
-              </View>
+                    <Text className="text-sm text-muted-foreground">
+                      {category.isActive ? 'Ativo' : 'Inativo'}
+                    </Text>
+                  </View>
+                </ObjectCard.Content>
+              </ObjectCard.Root>
             ))
           )}
         </View>
       </ScrollView>
+
+      {selectedCategory && (
+        <ConfirmDeleteDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          title={`Excluir categoria "${selectedCategory.name}"?`}
+          handleDelete={() => {
+            deleteCategory(selectedCategory.id)
+            setDeleteDialogOpen(false)
+          }}
+        />
+      )}
     </SafeAreaView>
   )
 }
