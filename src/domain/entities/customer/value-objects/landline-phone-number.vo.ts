@@ -9,7 +9,7 @@ export class LandlinePhoneNumber {
     public isWhatsApp: boolean = false
   ) {
     if (!/^\d+$/.test(value)) {
-      throw new Error('Landline phone number must contain only digits.')
+      throw new Error('O telefone fixo informado é inválido.')
     }
   }
 

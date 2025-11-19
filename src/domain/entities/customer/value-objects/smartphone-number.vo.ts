@@ -9,7 +9,7 @@ export class SmartphoneNumber {
     public isWhatsApp: boolean = false
   ) {
     if (!/^\d+$/.test(value)) {
-      throw new Error('Smartphone number must contain only digits.')
+      throw new Error('O número de celular informado é inválido.')
     }
   }
 

@@ -18,18 +18,19 @@ export class PaymentOrder {
     public isPaid: boolean = false,
     public paidInstallments: number = 0
   ) {
-    if (installments < 1) throw new Error('Installments must be at least 1')
-    if (totalValue < 0) throw new Error('Total value cannot be negative')
+    if (installments < 1)
+      throw new Error('O número de parcelas deve ser ao menos 1.')
+    if (totalValue < 0) throw new Error('O valor total não pode ser negativo.')
   }
 
   payInstallments(count: number = 1) {
     if (this.isPaid) {
-      throw new Error('Payment already completed.')
+      throw new Error('O pagamento já foi concluído.')
     }
 
     if (this.paidInstallments + count > this.installments) {
       throw new Error(
-        'Cannot pay more installments than the total number defined.'
+        'Não é possível pagar mais parcelas do que o total definido.'
       )
     }
 
@@ -47,7 +48,7 @@ export class PaymentOrder {
 
   updateTotalValue(newValue: number) {
     if (newValue < 0) {
-      throw new Error('Total value cannot be negative')
+      throw new Error('O valor total não pode ser negativo.')
     }
     this.totalValue = newValue
   }

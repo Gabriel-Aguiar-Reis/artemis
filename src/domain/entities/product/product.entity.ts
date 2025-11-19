@@ -22,7 +22,8 @@ export class Product {
     public isActive: boolean,
     public expiration: Expiration
   ) {
-    if (salePrice < 0) throw new Error('Sale price cannot be negative')
+    if (salePrice < 0)
+      throw new Error('O preço de venda não pode ser negativo.')
   }
 
   isExpired(referenceDate: Date = new Date()): boolean {

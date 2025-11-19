@@ -26,7 +26,7 @@ export class Itinerary {
   ) {
     if (this.finalItineraryDate < this.initialItineraryDate) {
       throw new Error(
-        'Final date of itinerary cannot be earlier than initial date'
+        'A data final do itinerário não pode ser anterior à data inicial.'
       )
     }
     this._distanceCache = {}
@@ -69,7 +69,7 @@ export class Itinerary {
   }
 
   finish() {
-    if (this.isFinished) throw new Error('Itinerary already finished')
+    if (this.isFinished) throw new Error('O itinerário já está finalizado.')
 
     this.markLateOrders()
     this.workOrdersMap.forEach((item) => {

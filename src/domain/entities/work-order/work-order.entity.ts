@@ -56,7 +56,7 @@ export class WorkOrder {
   ) {}
 
   addProduct(product: Product, quantity: number) {
-    if (quantity <= 0) throw new Error('Quantity must be greater than zero')
+    if (quantity <= 0) throw new Error('A quantidade deve ser maior que zero.')
     const existing = this.products.find((p) => p.productId === product.id)
     if (existing) {
       existing.quantity += quantity
@@ -69,7 +69,7 @@ export class WorkOrder {
   }
 
   removeProduct(product: Product, quantity: number) {
-    if (quantity <= 0) throw new Error('Quantity must be greater than zero')
+    if (quantity <= 0) throw new Error('A quantidade deve ser maior que zero.')
     const existing = this.products.find((p) => p.productId === product.id)
     if (!existing) return
     existing.quantity -= quantity
@@ -111,9 +111,18 @@ export class WorkOrder {
       [WorkOrderStatus.FAILED]: [],
     }
 
+    const statusLabels: Record<WorkOrderStatus, string> = {
+      [WorkOrderStatus.PENDING]: 'Pendente',
+      [WorkOrderStatus.IN_PROGRESS]: 'Em andamento',
+      [WorkOrderStatus.COMPLETED]: 'Concluída',
+      [WorkOrderStatus.PARTIAL]: 'Parcial',
+      [WorkOrderStatus.CANCELLED]: 'Cancelada',
+      [WorkOrderStatus.FAILED]: 'Falhada',
+    }
+
     if (!validTransitions[this.status]?.includes(newStatus))
       throw new Error(
-        `Invalid status transition: ${this.status} → ${newStatus}`
+        `Transição de status inválida: ${statusLabels[this.status]} → ${statusLabels[newStatus]}`
       )
 
     this.status = newStatus
@@ -147,7 +156,9 @@ export class WorkOrder {
 
   startVisit() {
     if (this.status !== WorkOrderStatus.PENDING)
-      throw new Error('Cannot start a non-pending work order.')
+      throw new Error(
+        'Não é possível iniciar uma ordem de serviço que não está pendente.'
+      )
     this.status = WorkOrderStatus.IN_PROGRESS
     this.visitDate = new Date()
   }
