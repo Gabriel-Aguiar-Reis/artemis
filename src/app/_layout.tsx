@@ -4,6 +4,7 @@ import '@/src/components/ui/action-sheet/sheets'
 import 'react-native-get-random-values'
 
 import { Text } from '@/src/components/ui/text'
+import { toastConfig } from '@/src/components/ui/toasts'
 import {
   getExpoDb,
   initDrizzleClient,
@@ -23,6 +24,7 @@ import { Platform, View } from 'react-native'
 import { SheetProvider } from 'react-native-actions-sheet'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
+import Toast from 'react-native-toast-message'
 
 export { ErrorBoundary } from 'expo-router'
 
@@ -122,6 +124,7 @@ export default function RootLayout() {
               </Stack>
               <PortalHost />
             </SheetProvider>
+            <Toast config={toastConfig} />
           </ThemeProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
