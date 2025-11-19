@@ -1,5 +1,5 @@
 import { Category } from '@/src/domain/entities/category/category.entity'
-import { InferInsertModel, InferSelectModel } from 'drizzle-orm'
+import { InferSelectModel } from 'drizzle-orm'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
 type CategoryModelShape = Pick<Category, 'id' | 'name' | 'isActive'>
@@ -11,4 +11,3 @@ export const category = sqliteTable('category', {
 }) satisfies Record<keyof CategoryModelShape, any>
 
 export type CategoryTable = InferSelectModel<typeof category>
-export type NewCategoryTable = InferInsertModel<typeof category>

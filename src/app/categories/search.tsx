@@ -28,7 +28,7 @@ export default function CategoriesSearchScreen() {
         search: searchQuery || undefined,
         status: statusFilter !== 'all' ? statusFilter : undefined,
       })
-    }, 100)
+    }, 200)
   }
 
   const clearFilters = () => {

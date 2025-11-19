@@ -6,10 +6,10 @@ import { ConfirmDeleteDialog } from '@/src/components/ui/dialog/confirm-delete-d
 import { ObjectCard } from '@/src/components/ui/object-card'
 import { Text } from '@/src/components/ui/text'
 import { Category } from '@/src/domain/entities/category/category.entity'
-import { cn } from '@/src/lib/utils'
+import { cn, smartSearch } from '@/src/lib/utils'
 import { FlashList } from '@shopify/flash-list'
 import { UUID } from 'crypto'
-import { Stack, useLocalSearchParams } from 'expo-router'
+import { router, Stack, useLocalSearchParams } from 'expo-router'
 import { EditIcon, TrashIcon } from 'lucide-react-native'
 import * as React from 'react'
 import { ScrollView, View } from 'react-native'
@@ -30,7 +30,7 @@ export default function CategoriesScreen() {
 
     return categories.filter((category) => {
       const matchesSearch = params.search
-        ? category.name.toLowerCase().includes(params.search.toLowerCase())
+        ? smartSearch(category.name, params.search)
         : true
 
       const matchesStatus =
@@ -78,9 +78,7 @@ export default function CategoriesScreen() {
             label: 'Editar',
             icon: EditIcon,
             onPress: () => {
-              console.log('Editar categoria:', categoryId)
-              // TODO: Navegar para tela de edição
-              // router.push(`/categories/form?id=${categoryId}`)
+              router.push(`/categories/${categoryId}/edit`)
             },
           },
           {
