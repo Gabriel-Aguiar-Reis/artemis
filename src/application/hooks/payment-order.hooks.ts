@@ -4,5 +4,6 @@ import DrizzlePaymentOrderRepository from '@/src/infra/repositories/drizzle/driz
 const paymentOrderRepo = new DrizzlePaymentOrderRepository()
 export const paymentOrderHooks = createRepositoryHooks(
   paymentOrderRepo,
-  'paymentOrders'
+  'paymentOrders',
+  'pedido de pagamento'
 )

@@ -4,5 +4,6 @@ import DrizzleItineraryRepository from '@/src/infra/repositories/drizzle/drizzle
 const itineraryRepo = new DrizzleItineraryRepository()
 export const itineraryHooks = createRepositoryHooks(
   itineraryRepo,
-  'itineraries'
+  'itineraries',
+  'itinerário'
 )
