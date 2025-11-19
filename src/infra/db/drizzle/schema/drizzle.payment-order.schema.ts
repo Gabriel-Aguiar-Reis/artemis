@@ -1,5 +1,5 @@
 import { PaymentOrder } from '@/src/domain/entities/payment-order/payment-order.entity'
-import { InferInsertModel, InferSelectModel } from 'drizzle-orm'
+import { InferInsertModel, InferSelectModel, sql } from 'drizzle-orm'
 import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
 type PaymentOrderModelShape = Pick<
@@ -13,7 +13,9 @@ type PaymentOrderModelShape = Pick<
 >
 
 export const paymentOrder = sqliteTable('payment_order', {
-  id: text('id').primaryKey(),
+  id: text('id')
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   method: text('method').notNull(),
   totalValue: real('total_value').notNull(),
   installments: integer('installments').notNull().default(1),

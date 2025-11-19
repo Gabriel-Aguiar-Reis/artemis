@@ -1,5 +1,5 @@
 import { Itinerary } from '@/src/domain/entities/itinerary/itinerary.entity'
-import { InferInsertModel, InferSelectModel } from 'drizzle-orm'
+import { InferInsertModel, InferSelectModel, sql } from 'drizzle-orm'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
 type ItineraryModelShape = Pick<Itinerary, 'id' | 'isFinished'> & {
@@ -8,7 +8,9 @@ type ItineraryModelShape = Pick<Itinerary, 'id' | 'isFinished'> & {
 }
 
 export const itinerary = sqliteTable('itinerary', {
-  id: text('id').primaryKey(),
+  id: text('id')
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   initialItineraryDate: text('initial_itinerary_date').notNull(),
   finalItineraryDate: text('final_itinerary_date').notNull(),
   isFinished: integer('is_finished', { mode: 'boolean' })

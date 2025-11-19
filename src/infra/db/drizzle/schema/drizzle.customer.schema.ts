@@ -1,5 +1,5 @@
 import { Customer } from '@/src/domain/entities/customer/customer.entity'
-import { InferInsertModel, InferSelectModel } from 'drizzle-orm'
+import { InferInsertModel, InferSelectModel, sql } from 'drizzle-orm'
 import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
 export type CustomerModelShape = Pick<
@@ -20,7 +20,9 @@ export type CustomerModelShape = Pick<
 }
 
 export const customer = sqliteTable('customer', {
-  id: text('id').primaryKey(),
+  id: text('id')
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   storeName: text('store_name').notNull(),
   contactName: text('contact_name').notNull(),
   phoneNumber: text('phone_number').notNull(),

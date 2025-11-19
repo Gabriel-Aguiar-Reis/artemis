@@ -1,6 +1,6 @@
 import { Product } from '@/src/domain/entities/product/product.entity'
 import { category } from '@/src/infra/db/drizzle/schema/drizzle.category.schema'
-import { InferInsertModel, InferSelectModel } from 'drizzle-orm'
+import { InferInsertModel, InferSelectModel, sql } from 'drizzle-orm'
 import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
 type ProductModelShape = Pick<
@@ -11,7 +11,9 @@ type ProductModelShape = Pick<
 }
 
 export const product = sqliteTable('product', {
-  id: text('id').primaryKey(),
+  id: text('id')
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   name: text('name').notNull(),
   categoryId: text('category_id')
     .references(() => category.id)

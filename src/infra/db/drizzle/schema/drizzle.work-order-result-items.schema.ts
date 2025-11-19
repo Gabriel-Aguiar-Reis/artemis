@@ -1,4 +1,4 @@
-import { InferInsertModel, InferSelectModel } from 'drizzle-orm'
+import { InferInsertModel, InferSelectModel, sql } from 'drizzle-orm'
 import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { product } from './drizzle.product.schema'
 import { workOrderResult } from './drizzle.work-order-result.schema'
@@ -10,7 +10,9 @@ export enum WorkOrderResultItemType {
 }
 
 export const workOrderResultItems = sqliteTable('work_order_result_items', {
-  id: text('id').primaryKey(),
+  id: text('id')
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   resultId: text('result_id')
     .references(() => workOrderResult.id, { onDelete: 'cascade' })
     .notNull(),

@@ -5,7 +5,7 @@ import {
 import { customer } from '@/src/infra/db/drizzle/schema/drizzle.customer.schema'
 import { paymentOrder } from '@/src/infra/db/drizzle/schema/drizzle.payment-order.schema'
 import { workOrderResult } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result.schema'
-import { InferInsertModel, InferSelectModel } from 'drizzle-orm'
+import { InferInsertModel, InferSelectModel, sql } from 'drizzle-orm'
 import { sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
 type WorkOrderModelShape = Pick<WorkOrder, 'id' | 'status' | 'notes'> & {
@@ -19,7 +19,9 @@ type WorkOrderModelShape = Pick<WorkOrder, 'id' | 'status' | 'notes'> & {
 }
 
 export const workOrder = sqliteTable('work_order', {
-  id: text('id').primaryKey(),
+  id: text('id')
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   customerId: text('customer_id')
     .references(() => customer.id)
     .notNull(),
