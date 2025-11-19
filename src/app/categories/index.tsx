@@ -1,5 +1,6 @@
 import { categoryHooks } from '@/src/application/hooks/category.hooks'
 import { ActiveFiltersBanner } from '@/src/components/ui/active-filters-banner'
+import { BackToTopButton } from '@/src/components/ui/back-to-top-button'
 import { ButtonFilter } from '@/src/components/ui/button-filter'
 import { ButtonNew } from '@/src/components/ui/button-new'
 import { ConfirmDeleteDialog } from '@/src/components/ui/dialog/confirm-delete-dialog'
@@ -12,8 +13,13 @@ import { UUID } from 'crypto'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
 import { EditIcon, TrashIcon } from 'lucide-react-native'
 import * as React from 'react'
-import { useMemo, useState } from 'react'
-import { ScrollView, View } from 'react-native'
+import { useMemo, useRef, useState } from 'react'
+import {
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  ScrollView,
+  View,
+} from 'react-native'
 import { SheetManager } from 'react-native-actions-sheet'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -127,6 +133,15 @@ export default function CategoriesScreen() {
     )
   }
 
+  // Adicionado useRef e useState para ScrollView e botão de voltar ao topo
+  const scrollRef = useRef<ScrollView>(null)
+  const [showScrollBtn, setShowScrollBtn] = useState(false)
+
+  const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetY = e.nativeEvent.contentOffset.y
+    setShowScrollBtn(offsetY > 0)
+  }
+
   if (isLoading) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center">
@@ -170,7 +185,12 @@ export default function CategoriesScreen() {
             filters={activeFilters}
             clearFiltersHref="/categories"
           />
-          <ScrollView className="flex-1">
+          <ScrollView
+            className="flex-1"
+            ref={scrollRef}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+          >
             <View className="gap-3 p-4">
               {filteredCategories.length === 0 ? (
                 <View className="items-center py-12">
@@ -182,10 +202,14 @@ export default function CategoriesScreen() {
                 <FlashList
                   data={filteredCategories}
                   renderItem={({ item }) => renderItem(item)}
+                  ListFooterComponent={<View className="h-16" />}
                 />
               )}
             </View>
           </ScrollView>
+
+          {/* Botão de voltar ao topo */}
+          <BackToTopButton isVisible={showScrollBtn} scrollRef={scrollRef} />
           {selectedCategory && (
             <ConfirmDeleteDialog
               open={deleteDialogOpen}
