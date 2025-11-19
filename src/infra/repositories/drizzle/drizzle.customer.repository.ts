@@ -74,7 +74,7 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
   async getCustomer(id: UUID): Promise<Customer | null> {
     const [row] = await db.select().from(customer).where(eq(customer.id, id))
 
-    if (!row) return null
+    if (!row) throw new Error('O cliente não foi encontrado.')
     return CustomerMapper.toDomain(row)
   }
 }

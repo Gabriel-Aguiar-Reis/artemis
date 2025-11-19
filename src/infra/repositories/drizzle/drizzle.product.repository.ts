@@ -38,9 +38,7 @@ export default class DrizzleProductRepository implements ProductRepository {
 
   async updateProduct(dto: UpdateProductDto): Promise<void> {
     const existing = await this.getProduct(dto.id as UUID)
-    if (!existing) {
-      throw new Error('Product not found')
-    }
+    if (!existing) throw new Error('O produto não foi encontrado.')
 
     const expiration = new Expiration(dto.expiration)
 
@@ -65,7 +63,7 @@ export default class DrizzleProductRepository implements ProductRepository {
   async getProduct(id: UUID): Promise<Product | null> {
     const [row] = await db.select().from(product).where(eq(product.id, id))
 
-    if (!row) return null
+    if (!row) throw new Error('O produto não foi encontrado.')
     return ProductMapper.toDomain(row)
   }
 
@@ -87,9 +85,7 @@ export default class DrizzleProductRepository implements ProductRepository {
 
   async updateDisableProduct(id: UUID): Promise<void> {
     const prod = await this.getProduct(id)
-    if (!prod) {
-      return
-    }
+    if (!prod) throw new Error('O produto não foi encontrado.')
 
     prod.isActive = false
     const data = ProductMapper.toPersistence(prod)

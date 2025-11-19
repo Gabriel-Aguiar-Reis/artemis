@@ -275,7 +275,7 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
 
   async getItinerary(id: UUID): Promise<Itinerary | null> {
     const [row] = await db.select().from(itinerary).where(eq(itinerary.id, id))
-    if (!row) return null
+    if (!row) throw new Error('O itinerário não foi encontrado.')
 
     const workOrdersMap = await this.loadItineraryWorkOrders(id)
     return ItineraryMapper.toDomain(row, workOrdersMap)
@@ -288,7 +288,7 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
       .where(eq(itinerary.isFinished, false))
       .limit(1)
 
-    if (!row) return null
+    if (!row) throw new Error('O itinerário ativo não foi encontrado.')
 
     const workOrdersMap = await this.loadItineraryWorkOrders(row.id as UUID)
     return ItineraryMapper.toDomain(row, workOrdersMap)
@@ -323,7 +323,7 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
 
   async finishItinerary(id: UUID): Promise<void> {
     const itin = await this.getItinerary(id)
-    if (!itin) throw new Error('Itinerary not found')
+    if (!itin) throw new Error('O itinerário não foi encontrado.')
 
     itin.finish()
 

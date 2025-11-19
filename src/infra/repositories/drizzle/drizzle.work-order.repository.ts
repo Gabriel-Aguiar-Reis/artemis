@@ -71,7 +71,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
     const workOrders = await Promise.all(
       rows.map(async (row) => {
         if (!row.customer || !row.paymentOrder) {
-          throw new Error('Work order with missing relations')
+          throw new Error('A ordem de serviço está com dados incompletos.')
         }
         const cust = CustomerMapper.toDomain(row.customer)
         const po = PaymentOrderMapper.toDomain(row.paymentOrder)
@@ -116,7 +116,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       .where(eq(customer.id, dto.customerId))
 
     if (!customerRow) {
-      throw new Error('Customer not found')
+      throw new Error('O cliente não foi encontrado.')
     }
 
     const cust = CustomerMapper.toDomain(customerRow)
@@ -160,7 +160,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
   async updateWorkOrder(dto: UpdateWorkOrderDto): Promise<void> {
     const wo = await this.getWorkOrder(dto.id as UUID)
     if (!wo) {
-      throw new Error('Work order not found')
+      throw new Error('A ordem de serviço não foi encontrada.')
     }
 
     // Atualizar customer se mudou
@@ -171,7 +171,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
         .where(eq(customer.id, dto.customerId))
 
       if (!customerRow) {
-        throw new Error('Customer not found')
+        throw new Error('O cliente não foi encontrado.')
       }
 
       wo.customer = CustomerMapper.toDomain(customerRow)
@@ -247,7 +247,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
   async updateWorkOrderStart(id: UUID): Promise<void> {
     const wo = await this.getWorkOrder(id)
     if (!wo) {
-      throw new Error('Work order not found')
+      throw new Error('A ordem de serviço não foi encontrada.')
     }
 
     wo.startVisit()
@@ -269,7 +269,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
   ): Promise<void> {
     const wo = await this.getWorkOrder(id)
     if (!wo) {
-      throw new Error('Work order not found')
+      throw new Error('A ordem de serviço não foi encontrada.')
     }
 
     wo.applyResult(result)

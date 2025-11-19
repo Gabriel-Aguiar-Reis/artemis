@@ -70,7 +70,7 @@ export default class DrizzlePaymentOrderRepository
       .from(paymentOrder)
       .where(eq(paymentOrder.id, id))
 
-    if (!row) return null
+    if (!row) throw new Error('A ordem de pagamento não foi encontrada.')
     return PaymentOrderMapper.toDomain(row)
   }
 
