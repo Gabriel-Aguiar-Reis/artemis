@@ -10,7 +10,7 @@ import { CircleQuestionMark } from 'lucide-react-native'
 import { useForm } from 'react-hook-form'
 
 export default function CategoryFormScreen() {
-  const { mutate: addCategory } = categoryHooks.addCategory()
+  const { mutate: addCategory, isPending } = categoryHooks.addCategory()
   const form = useForm<CategoryInsertDTO>({
     resolver: zodResolver(categoryInsertSchema),
     defaultValues: { name: '', isActive: true },
@@ -32,6 +32,7 @@ export default function CategoryFormScreen() {
       nameIcon={CircleQuestionMark}
       nameIconTooltip="Escolha um nome que represente bem os itens que serão agrupados nesta categoria."
       submitLabel="Salvar Categoria"
+      loading={isPending}
     />
   )
 }
