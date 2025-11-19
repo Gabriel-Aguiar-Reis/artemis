@@ -16,6 +16,7 @@ import { useMemo, useState } from 'react'
 import { ScrollView, View } from 'react-native'
 import { SheetManager } from 'react-native-actions-sheet'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import Toast from 'react-native-toast-message'
 
 export default function CategoriesScreen() {
   const { data: categories, isLoading } = categoryHooks.getCategories()
@@ -93,6 +94,16 @@ export default function CategoriesScreen() {
           },
         ],
       },
+    })
+  }
+
+  const handleDeleteCategory = (categoryId: UUID) => {
+    deleteCategory(categoryId)
+    setDeleteDialogOpen(false)
+    Toast.show({
+      type: 'success',
+      text1: 'Categoria excluída com sucesso!',
+      props: { icon: TrashIcon },
     })
   }
 
@@ -187,8 +198,7 @@ export default function CategoriesScreen() {
               onOpenChange={setDeleteDialogOpen}
               title={`Excluir categoria "${selectedCategory.name}"?`}
               handleDelete={() => {
-                deleteCategory(selectedCategory.id)
-                setDeleteDialogOpen(false)
+                handleDeleteCategory(selectedCategory.id)
               }}
             />
           )}

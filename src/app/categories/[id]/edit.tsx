@@ -20,7 +20,7 @@ export default function EditCategoryScreen() {
   }>()
 
   const { data: category, isLoading } = categoryHooks.getCategory(params.id)
-  const { mutate: updateCategory } = categoryHooks.updateCategory()
+  const { mutate: updateCategory, isPending } = categoryHooks.updateCategory()
 
   const form = useForm<CategoryUpdateDTO>({
     resolver: zodResolver(categoryUpdateSchema),
@@ -78,6 +78,7 @@ export default function EditCategoryScreen() {
       alternate={{ nameIcon: PencilOff, type: 'toDisabled' }}
       nameIcon={Pencil}
       submitLabel="Editar Categoria"
+      loading={isPending}
     />
   )
 }

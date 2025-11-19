@@ -1,7 +1,7 @@
-import { Button } from '@/src/components/ui/button'
 import { FloatingLabelInput } from '@/src/components/ui/floating-label-input'
 import { Label } from '@/src/components/ui/label'
 import { Text } from '@/src/components/ui/text'
+import { ButtonSubmit } from '@/src/components/ui/toasts/button-submit'
 import { Stack } from 'expo-router'
 import { LucideIcon } from 'lucide-react-native'
 import { BaseSyntheticEvent } from 'react'
@@ -28,6 +28,7 @@ type CategoryFormProps<T extends FieldValues> = {
   }
   nameIconTooltip?: string
   submitLabel: string
+  loading?: boolean
 }
 
 export function CategoryForm<T extends FieldValues>({
@@ -39,6 +40,7 @@ export function CategoryForm<T extends FieldValues>({
   nameIconTooltip,
   submitLabel,
   alternate,
+  loading,
 }: CategoryFormProps<T>) {
   const renderItem = (field: ControllerRenderProps<T>) => {
     const baseProps = {
@@ -113,9 +115,9 @@ export function CategoryForm<T extends FieldValues>({
             <Label className="ml-2">Categoria Ativa</Label>
           </View>
 
-          <Button onPress={onSubmit} className="mt-4">
+          <ButtonSubmit onPress={onSubmit} className="mt-4" loading={loading}>
             <Text>{submitLabel}</Text>
-          </Button>
+          </ButtonSubmit>
         </View>
       </ScrollView>
     </SafeAreaView>
