@@ -8,7 +8,8 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod'
 import { UUID } from 'crypto'
 import { router, useLocalSearchParams } from 'expo-router'
-import { Pencil } from 'lucide-react-native'
+import { Pencil, PencilOff } from 'lucide-react-native'
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -23,8 +24,8 @@ export default function EditCategoryScreen() {
   const form = useForm<CategoryUpdateDTO>({
     resolver: zodResolver(categoryUpdateSchema),
     defaultValues: {
-      name: category?.name ?? '',
-      isActive: category?.isActive ?? true,
+      name: '',
+      isActive: true,
     },
     mode: 'onBlur',
     reValidateMode: 'onBlur',
@@ -38,6 +39,15 @@ export default function EditCategoryScreen() {
     })
     router.back()
   })
+
+  useEffect(() => {
+    if (category) {
+      form.reset({
+        name: category.name ?? '',
+        isActive: category.isActive ?? true,
+      })
+    }
+  }, [category, form])
 
   if (isLoading) {
     return (
@@ -61,8 +71,8 @@ export default function EditCategoryScreen() {
       onSubmit={onSubmit}
       errors={form.formState.errors}
       control={form.control}
+      alternate={{ nameIcon: PencilOff, type: 'toDisabled' }}
       nameIcon={Pencil}
-      nameIconTooltip={undefined}
       submitLabel="Editar Categoria"
     />
   )

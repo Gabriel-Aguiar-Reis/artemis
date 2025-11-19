@@ -13,7 +13,7 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import { Animated, Easing, TextInputProps, View } from 'react-native'
+import { Animated, BlurEvent, Easing, TextInputProps, View } from 'react-native'
 
 import {
   HoverCard,
@@ -78,13 +78,8 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
     ...rest
   } = props
 
-  // Só pega as props de estado inicial se alternateRightIcon estiver presente
-  const startSecreted = alternateRightIcon
-    ? (props as any).startSecreted
-    : undefined
-  const startDisabled = alternateRightIcon
-    ? (props as any).startDisabled
-    : undefined
+  const startSecreted = alternateRightIcon ? props.startSecreted : undefined
+  const startDisabled = alternateRightIcon ? props.startDisabled : undefined
   const [isFocused, setIsFocused] = useState(false)
   const [secure, setSecure] = useState(!!startSecreted)
   const [disabled, setDisabled] = useState(!!startDisabled)
@@ -98,8 +93,22 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
   const activeIcon = useMemo(() => {
     if (!rightIcon) return null
     if (!alternateRightIcon) return rightIcon
-    return secure || disabled ? alternateRightIcon : rightIcon
-  }, [rightIcon, alternateRightIcon, secure, disabled])
+
+    if (alternateToSecret) {
+      return secure ? alternateRightIcon : rightIcon
+    }
+    if (alternateToDisabled) {
+      return disabled ? alternateRightIcon : rightIcon
+    }
+    return rightIcon
+  }, [
+    rightIcon,
+    alternateRightIcon,
+    secure,
+    disabled,
+    alternateToSecret,
+    alternateToDisabled,
+  ])
 
   const handleIconPress = useCallback(() => {
     onPressRightIcon?.()
@@ -132,7 +141,7 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
     }),
   }
 
-  const handleBlur = (e: any) => {
+  const handleBlur = (e: BlurEvent) => {
     setIsFocused(false)
     onBlur?.(e)
   }
@@ -142,7 +151,14 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
       <Animated.Text
         style={labelStyle}
         numberOfLines={1}
-        className={cn('bg-background text-ring', error && 'text-red-500')}
+        className={cn(
+          'bg-background',
+          error
+            ? 'text-red-500'
+            : disabled
+              ? 'text-ring'
+              : 'text-muted-foreground'
+        )}
       >
         {label}
       </Animated.Text>
@@ -169,35 +185,35 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
           {...rest}
         />
 
-        {activeIcon && !alternateRightIcon && rightIconTooltip ? (
-          <HoverCard>
-            <HoverCardTrigger asChild>
-              <Toggle
-                pressed
-                onPress={handleIconPress}
-                onPressedChange={() => {}}
-                variant="outline"
-                className="justify-center items-center rounded-tl-none rounded-bl-none rounded-r-md"
-                style={{ height: 40 }}
+        {activeIcon &&
+          (rightIconTooltip && !alternateRightIcon ? (
+            <HoverCard>
+              <HoverCardTrigger asChild>
+                <Toggle
+                  pressed
+                  onPress={handleIconPress}
+                  onPressedChange={() => {}}
+                  variant="outline"
+                  className="justify-center items-center rounded-tl-none rounded-bl-none rounded-r-md"
+                  style={{ height: 40 }}
+                >
+                  <Icon
+                    as={activeIcon}
+                    height={20}
+                    width={20}
+                    color={colorScheme === 'dark' ? '#737373' : '#a1a1a1'}
+                  />
+                </Toggle>
+              </HoverCardTrigger>
+              <HoverCardContent
+                align={alignTooltip}
+                side={sideTooltip}
+                sideOffset={sideOffsetTooltip}
               >
-                <Icon
-                  as={activeIcon}
-                  height={20}
-                  width={20}
-                  color={colorScheme === 'dark' ? '#737373' : '#a1a1a1'}
-                />
-              </Toggle>
-            </HoverCardTrigger>
-            <HoverCardContent
-              align={alignTooltip}
-              side={sideTooltip}
-              sideOffset={sideOffsetTooltip}
-            >
-              <Text className="text-xs">{rightIconTooltip}</Text>
-            </HoverCardContent>
-          </HoverCard>
-        ) : (
-          activeIcon && (
+                <Text className="text-xs">{rightIconTooltip}</Text>
+              </HoverCardContent>
+            </HoverCard>
+          ) : (
             <Toggle
               pressed
               onPress={handleIconPress}
@@ -213,8 +229,7 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
                 color={colorScheme === 'dark' ? '#737373' : '#a1a1a1'}
               />
             </Toggle>
-          )
-        )}
+          ))}
       </View>
 
       <View style={{ minHeight: 20, justifyContent: 'center' }}>
