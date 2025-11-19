@@ -47,7 +47,8 @@ export function CategoryForm<T extends FieldValues>({
       label: 'Nome da Categoria',
       placeholder: 'Ex. Documentos',
       error: errors?.name?.message as string,
-      ...field,
+      value: field.value,
+      onChangeText: field.onChange,
     }
 
     if (!nameIcon) {
