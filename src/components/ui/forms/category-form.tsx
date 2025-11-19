@@ -103,7 +103,11 @@ export function CategoryForm<T extends FieldValues>({
               control={control}
               name={'isActive' as Path<T>}
               render={({ field: { onChange, value } }) => (
-                <Switch value={value} onValueChange={onChange} />
+                <Switch
+                  key={value ? 'on' : 'off'}
+                  value={!!value}
+                  onValueChange={onChange}
+                />
               )}
             />
             <Label className="ml-2">Categoria Ativa</Label>

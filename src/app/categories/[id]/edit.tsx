@@ -12,6 +12,7 @@ import { Pencil, PencilOff } from 'lucide-react-native'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import Toast from 'react-native-toast-message'
 
 export default function EditCategoryScreen() {
   const params = useLocalSearchParams<{
@@ -37,17 +38,20 @@ export default function EditCategoryScreen() {
       name: data.name ?? '',
       isActive: data.isActive ?? true,
     })
+    Toast.show({
+      type: 'success',
+      text1: 'Categoria atualizada com sucesso!',
+    })
     router.back()
   })
 
   useEffect(() => {
-    if (category) {
-      form.reset({
-        name: category.name ?? '',
-        isActive: category.isActive ?? true,
-      })
-    }
-  }, [category, form])
+    category && form.reset(category)
+  }, [category])
+
+  useEffect(() => {
+    form.reset()
+  }, [])
 
   if (isLoading) {
     return (
