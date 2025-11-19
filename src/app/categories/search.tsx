@@ -5,6 +5,7 @@ import { Text } from '@/src/components/ui/text'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import { Search, X } from 'lucide-react-native'
 import * as React from 'react'
+import { useState } from 'react'
 import { KeyboardAvoidingView, Platform, Pressable, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -15,8 +16,8 @@ export default function CategoriesSearchScreen() {
     status?: 'all' | 'active' | 'inactive'
   }>()
 
-  const [searchQuery, setSearchQuery] = React.useState(params.search || '')
-  const [statusFilter, setStatusFilter] = React.useState<
+  const [searchQuery, setSearchQuery] = useState(params.search || '')
+  const [statusFilter, setStatusFilter] = useState<
     'all' | 'active' | 'inactive'
   >(params.status || 'all')
 

@@ -1,9 +1,10 @@
 import { useColorScheme } from 'nativewind'
+import { ReactNode } from 'react'
 import ActionSheet, { SheetProps, Sheets } from 'react-native-actions-sheet'
 
 export type CustomActionSheetProps<T extends keyof Sheets = any> = {
   sheetProps: SheetProps<T>
-  children: React.ReactNode
+  children: ReactNode
 }
 
 export function DefaultActionSheet(props: CustomActionSheetProps) {

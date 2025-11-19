@@ -1,6 +1,6 @@
 import { Button } from '@/src/components/ui/button'
 import { Text } from '@/src/components/ui/text'
-import { Link, Stack } from 'expo-router'
+import { Link, LinkProps, Stack } from 'expo-router'
 import {
   ClipboardList,
   FolderTree,
@@ -12,6 +12,7 @@ import {
 } from 'lucide-react-native'
 import { useColorScheme } from 'nativewind'
 import * as React from 'react'
+import { ReactNode } from 'react'
 import { ScrollView, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -42,8 +43,8 @@ const SCREEN_OPTIONS = {
 interface MenuItemProps {
   title: string
   description: string
-  href: any
-  icon: React.ReactNode
+  href: LinkProps['href']
+  icon: ReactNode
 }
 
 function MenuItem({ title, description, href, icon }: MenuItemProps) {

@@ -12,6 +12,7 @@ import { UUID } from 'crypto'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
 import { EditIcon, TrashIcon } from 'lucide-react-native'
 import * as React from 'react'
+import { useMemo, useState } from 'react'
 import { ScrollView, View } from 'react-native'
 import { SheetManager } from 'react-native-actions-sheet'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -25,7 +26,7 @@ export default function CategoriesScreen() {
     status?: 'all' | 'active' | 'inactive'
   }>()
 
-  const filteredCategories = React.useMemo(() => {
+  const filteredCategories = useMemo(() => {
     if (!categories) return []
 
     return categories.filter((category) => {
@@ -46,7 +47,7 @@ export default function CategoriesScreen() {
   const hasActiveFilters =
     !!params.search || (params.status && params.status !== 'all')
 
-  const activeFilters = React.useMemo(() => {
+  const activeFilters = useMemo(() => {
     const filters = []
     if (params.search) {
       filters.push({ label: 'Pesquisa', value: params.search })
@@ -60,8 +61,8 @@ export default function CategoriesScreen() {
     return filters
   }, [params.search, params.status])
 
-  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
-  const [selectedCategory, setSelectedCategory] = React.useState<{
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState<{
     id: UUID
     name: string
   } | null>(null)

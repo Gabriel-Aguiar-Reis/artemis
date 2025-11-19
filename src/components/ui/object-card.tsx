@@ -8,23 +8,24 @@ import {
 import { Icon } from '@/src/components/ui/icon'
 import { MoreVerticalIcon } from 'lucide-react-native'
 import * as React from 'react'
+import { ReactNode } from 'react'
 import { Pressable } from 'react-native'
 
 type ObjectCardRootProps = {
-  children: React.ReactNode
+  children: ReactNode
   className?: string
 }
 
 type ObjectCardHeaderProps = {
-  children: React.ReactNode
+  children: ReactNode
 }
 
 type ObjectCardTitleProps = {
-  children: React.ReactNode
+  children: ReactNode
 }
 
 type ObjectCardDescriptionProps = {
-  children: React.ReactNode
+  children: ReactNode
 }
 
 type ObjectCardActionsProps = {
@@ -32,7 +33,7 @@ type ObjectCardActionsProps = {
 }
 
 type ObjectCardContentProps = {
-  children: React.ReactNode
+  children: ReactNode
 }
 
 function ObjectCardRoot({ children, className }: ObjectCardRootProps) {

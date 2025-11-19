@@ -4,13 +4,14 @@ import { Label } from '@/src/components/ui/label'
 import { Text } from '@/src/components/ui/text'
 import { Stack } from 'expo-router'
 import { LucideIcon } from 'lucide-react-native'
+import { BaseSyntheticEvent } from 'react'
 import { Control, Controller, FieldErrors, FieldValues } from 'react-hook-form'
 import { ScrollView, Switch, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 type CategoryFormProps<T extends FieldValues> = {
   title: string
-  onSubmit: (e?: React.BaseSyntheticEvent) => void
+  onSubmit: (e?: BaseSyntheticEvent) => void
   errors: FieldErrors<T>
   control: Control<T>
   nameIcon?: LucideIcon

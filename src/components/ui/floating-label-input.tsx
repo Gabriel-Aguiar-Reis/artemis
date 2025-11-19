@@ -5,7 +5,14 @@ import { Toggle } from '@/src/components/ui/toggle'
 import { cn } from '@/src/lib/utils'
 import { LucideIcon } from 'lucide-react-native'
 import { useColorScheme } from 'nativewind'
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { Animated, Easing, TextInputProps, View } from 'react-native'
 
 import {
@@ -19,7 +26,7 @@ type BaseProps = {
   error?: string
   className?: string
   rightIcon?: LucideIcon
-  rightIconTooltip?: React.ReactNode
+  rightIconTooltip?: ReactNode
   onPressRightIcon?: () => void
   alignTooltip?: 'start' | 'center' | 'end'
   sideTooltip?: 'top' | 'bottom'
