@@ -1,3 +1,4 @@
+import { error } from '@/src/components/ui/toasts/error'
 import { success } from '@/src/components/ui/toasts/success'
 import { ReactNode } from 'react'
 import { ToastConfig, ToastConfigParams } from 'react-native-toast-message'
@@ -8,4 +9,5 @@ export type Toast = {
 
 export const toastConfig: ToastConfig = {
   success,
+  error,
 }

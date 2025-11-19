@@ -124,7 +124,7 @@ export default function RootLayout() {
               </Stack>
               <PortalHost />
             </SheetProvider>
-            <Toast config={toastConfig} />
+            <Toast config={toastConfig} visibilityTime={6000} />
           </ThemeProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
