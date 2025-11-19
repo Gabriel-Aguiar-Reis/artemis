@@ -16,11 +16,11 @@ export class Category {
     }
 
     if (!name || name.trim().length === 0) {
-      throw new Error('Category name cannot be empty.')
+      throw new Error('O nome da categoria é obrigatório.')
     }
 
     if (name.match(/^[^a-zA-Z0-9\s]*$/)) {
-      throw new Error('Category name contains invalid characters.')
+      throw new Error('O nome da categoria contém caracteres inválidos.')
     }
   }
 
