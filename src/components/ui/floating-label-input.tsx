@@ -232,7 +232,7 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
           ))}
       </View>
 
-      <View style={{ minHeight: 20, justifyContent: 'center' }}>
+      <View className="min-h-4 justify-center">
         {error && <Text className="ml-2 text-xs text-red-500">{error}</Text>}
       </View>
     </View>

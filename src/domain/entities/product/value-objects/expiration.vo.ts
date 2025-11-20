@@ -8,11 +8,12 @@ export class Expiration {
   }
 
   private parseToMilliseconds(value: string): number {
-    const match = value.match(/(\d+)\s*(month|year|day)s?/i)
+    const match = value.match(/(\d+)\s*(month|year|week|day)s?/i)
     if (!match) throw new Error('O formato de expiração é inválido.')
     const [, qty, unit] = match
     const ms = {
       day: 86400000,
+      week: 604800000,
       month: 2592000000,
       year: 31536000000,
     }[unit.toLowerCase()]
