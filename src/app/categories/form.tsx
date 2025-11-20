@@ -19,7 +19,7 @@ export default function CategoryFormScreen() {
   })
 
   const onSubmit = form.handleSubmit((data: CategoryInsertDTO) => {
-    addCategory({ name: data.name, isActive: data.isActive })
+    addCategory(data)
     router.back()
   })
 

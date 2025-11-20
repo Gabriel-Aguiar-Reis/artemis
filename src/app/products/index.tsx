@@ -6,7 +6,7 @@ import { ButtonNew } from '@/src/components/ui/button-new'
 import { ConfirmDeleteDialog } from '@/src/components/ui/dialog/confirm-delete-dialog'
 import { ObjectCard } from '@/src/components/ui/object-card'
 import { Text } from '@/src/components/ui/text'
-import { Product } from '@/src/domain/entities/product/product.entity'
+import { ProductWithCategoryDTO } from '@/src/domain/repositories/product/dtos/product-with-category.dto'
 import { cn } from '@/src/lib/utils'
 import { FlashList } from '@shopify/flash-list'
 import { UUID } from 'crypto'
@@ -24,7 +24,7 @@ import { SheetManager } from 'react-native-actions-sheet'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function ProductsScreen() {
-  const { data: products, isLoading } = productHooks.getProducts()
+  const { data: products, isLoading } = productHooks.getProductsWithCategory()
   const { mutate: deleteProduct } = productHooks.deleteProduct()
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -139,7 +139,7 @@ export default function ProductsScreen() {
     setDeleteDialogOpen(false)
   }
 
-  const renderItem = (product: Product) => {
+  const renderItem = (product: ProductWithCategoryDTO) => {
     return (
       <ObjectCard.Root key={product.id} className="mb-4">
         <ObjectCard.Header>
@@ -158,6 +158,9 @@ export default function ProductsScreen() {
             />
             <Text className="text-sm text-muted-foreground">
               {product.isActive ? 'Ativo' : 'Inativo'}
+            </Text>
+            <Text className="text-sm text-muted-foreground ml-2">
+              {product.categoryName}
             </Text>
           </View>
         </ObjectCard.Content>
