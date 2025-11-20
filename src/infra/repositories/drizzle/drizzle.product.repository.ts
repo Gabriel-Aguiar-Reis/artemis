@@ -1,10 +1,14 @@
 import { ProductMapper } from '@/src/domain/entities/product/mapper/product.mapper'
 import { Product } from '@/src/domain/entities/product/product.entity'
 import { Expiration } from '@/src/domain/entities/product/value-objects/expiration.vo'
-import { AddProductDto } from '@/src/domain/repositories/product/dtos/add-product.dto'
-import { UpdateProductDto } from '@/src/domain/repositories/product/dtos/update-product.dto'
+import { ProductWithCategoryDTO } from '@/src/domain/repositories/product/dtos/product-with-category.dto'
 import { ProductRepository } from '@/src/domain/repositories/product/product.repository'
+import {
+  ProductInsertDTO,
+  ProductUpdateDTO,
+} from '@/src/domain/validations/product.schema'
 import { db } from '@/src/infra/db/drizzle/drizzle-client'
+import { category } from '@/src/infra/db/drizzle/schema/drizzle.category.schema'
 import { product } from '@/src/infra/db/drizzle/schema/drizzle.product.schema'
 import { UUID } from 'crypto'
 import { eq } from 'drizzle-orm'
@@ -19,7 +23,32 @@ export default class DrizzleProductRepository implements ProductRepository {
     return rows.map(ProductMapper.toDomain)
   }
 
-  async addProduct(dto: AddProductDto): Promise<void> {
+  async getProductsWithCategory(): Promise<ProductWithCategoryDTO[]> {
+    const rows = await db
+      .select({
+        id: product.id,
+        name: product.name,
+        categoryId: product.categoryId,
+        salePrice: product.salePrice,
+        isActive: product.isActive,
+        expiration: product.expiration,
+        categoryName: category.name,
+      })
+      .from(product)
+      .leftJoin(category, eq(product.categoryId, category.id))
+
+    return rows.map((row) => ({
+      id: row.id as UUID,
+      name: row.name,
+      categoryId: row.categoryId as UUID,
+      salePrice: row.salePrice,
+      isActive: row.isActive,
+      expiration: row.expiration,
+      categoryName: row.categoryName || 'Categoria Desconhecida',
+    }))
+  }
+
+  async addProduct(dto: ProductInsertDTO): Promise<void> {
     const id = uuid.v4()
     const expiration = new Expiration(dto.expiration)
 
@@ -36,24 +65,31 @@ export default class DrizzleProductRepository implements ProductRepository {
     await db.insert(product).values(data).onConflictDoNothing()
   }
 
-  async updateProduct(dto: UpdateProductDto): Promise<void> {
+  async updateProduct(dto: ProductUpdateDTO): Promise<void> {
     const existing = await this.getProduct(dto.id as UUID)
     if (!existing) throw new Error('O produto não foi encontrado.')
 
-    const expiration = new Expiration(dto.expiration)
+    let expiration = existing.expiration
+    dto.expiration && (expiration = new Expiration(dto.expiration))
 
     const prod = new Product(
       dto.id as UUID,
-      dto.name,
+      dto.name ?? existing.name,
       dto.categoryId as UUID,
-      dto.salePrice,
-      dto.isActive,
+      dto.salePrice ?? existing.salePrice,
+      dto.isActive ?? existing.isActive,
       expiration
     )
 
     const data = ProductMapper.toPersistence(prod)
 
-    await db.update(product).set(data).where(eq(product.id, dto.id))
+    if (!dto.id)
+      throw new Error('O ID do produto é obrigatório para atualização.')
+
+    await db
+      .update(product)
+      .set(data)
+      .where(eq(product.id, dto.id as string))
   }
 
   async deleteProduct(id: UUID): Promise<void> {

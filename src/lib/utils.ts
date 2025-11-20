@@ -15,3 +15,13 @@ function normalizeString(str: string) {
 export function smartSearch(haystack: string, needle: string) {
   return normalizeString(haystack).includes(normalizeString(needle))
 }
+
+export function getErrorMessage(err: unknown): string | undefined {
+  if (!err) return undefined
+  if (typeof err === 'string') return err
+  if (typeof err === 'object' && 'message' in err) {
+    const msg = (err as any).message
+    return typeof msg === 'string' ? msg : undefined
+  }
+  return undefined
+}
