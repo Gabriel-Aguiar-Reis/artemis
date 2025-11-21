@@ -3,8 +3,9 @@ import { Label } from '@/src/components/ui/label'
 import { Text } from '@/src/components/ui/text'
 import { ButtonSubmit } from '@/src/components/ui/toasts/button-submit'
 import { Stack } from 'expo-router'
-import { ReactNode } from 'react'
-import { Controller, FieldValues, Path } from 'react-hook-form'
+import { LucideIcon } from 'lucide-react-native'
+import { BaseSyntheticEvent, ReactNode } from 'react'
+import { Control, Controller, FieldValues, Path } from 'react-hook-form'
 import { ScrollView, Switch, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -23,15 +24,22 @@ function Root({ title, children }: RootProps) {
   )
 }
 
+const PERIODS = [
+  { nome: 'dias', range: Array.from({ length: 31 }, (_, i) => i + 1) },
+  { nome: 'semanas', range: Array.from({ length: 4 }, (_, i) => i + 1) },
+  { nome: 'meses', range: Array.from({ length: 100 }, (_, i) => i + 1) },
+  { nome: 'anos', range: Array.from({ length: 20 }, (_, i) => i + 1) },
+]
+
 type InputProps<T extends FieldValues> = {
-  control: any
+  control: Control<T>
   name: Path<T>
   label: string
   placeholder?: string
   error?: string
-  icon?: any
+  icon?: LucideIcon
   alternate?: {
-    icon: any
+    icon: LucideIcon
     type: 'toSecret' | 'toDisabled'
   }
   iconTooltip?: string
@@ -39,8 +47,8 @@ type InputProps<T extends FieldValues> = {
   inputProps?: Record<string, any>
   isNumber?: boolean
   isCurrency?: boolean
+  isDialog?: boolean
 }
-
 function Input<T extends FieldValues>({
   control,
   name,
@@ -54,31 +62,77 @@ function Input<T extends FieldValues>({
   inputProps,
   isNumber,
   isCurrency,
+  isDialog = false,
 }: InputProps<T>) {
   return (
     <Controller
       control={control}
       name={name}
       rules={rules}
-      render={({ field }) => {
+      render={({ field: { onChange, onBlur, value } }) => {
+        let selectedPeriod = 'dias'
+        let selectedNumber = 1
+        if (typeof value === 'string') {
+          const match = value.match(/(\d+)\s*(dias|semanas|meses|anos)/)
+          if (match) {
+            selectedNumber = Number(match[1])
+            selectedPeriod = match[2]
+          }
+        }
         const baseProps = {
           label,
           placeholder,
           error,
-          value: field.value,
+          value: value,
           onChangeText: isCurrency
             ? (text: string) => {
                 let clean = text.replace(/[^\d,.-]/g, '')
                 const normalized = clean.replace(',', '.')
                 const num = Number(normalized)
-                field.onChange(normalized === '' || isNaN(num) ? 0 : num)
+                onChange(normalized === '' || isNaN(num) ? 0 : num)
               }
             : isNumber
               ? (text: string) =>
-                  field.onChange(text === '' ? undefined : Number(text))
-              : field.onChange,
-          onBlur: field.onBlur,
+                  onChange(text === '' ? undefined : Number(text))
+              : onChange,
+          onBlur: onBlur,
           ...inputProps,
+        }
+
+        if (isDialog) {
+          const dialogProps = {
+            ...baseProps,
+            isDialog: true,
+            period: selectedPeriod,
+            number: selectedNumber,
+            PERIODS,
+            onWheelChange: onChange,
+            value: value,
+            rightIcon: icon,
+            rightIconTooltip: iconTooltip,
+            alignTooltip: iconTooltip ? ('end' as const) : undefined,
+          }
+          if (alternate?.icon && alternate.type === 'toSecret') {
+            return (
+              <FloatingLabelInput
+                {...dialogProps}
+                alternateRightIcon={alternate.icon}
+                alternateToSecret={true}
+                startSecreted={false}
+              />
+            )
+          }
+          if (alternate?.icon && alternate.type === 'toDisabled') {
+            return (
+              <FloatingLabelInput
+                {...dialogProps}
+                alternateRightIcon={alternate.icon}
+                alternateToDisabled={true}
+                startDisabled={true}
+              />
+            )
+          }
+          return <FloatingLabelInput {...dialogProps} />
         }
 
         if (!icon) {
@@ -121,7 +175,7 @@ function Input<T extends FieldValues>({
 }
 
 type SwitchProps<T extends FieldValues> = {
-  control: any
+  control: Control<T>
   name: Path<T>
   label: string
 }
@@ -149,7 +203,7 @@ function SwitchField<T extends FieldValues>({
 }
 
 type SubmitButtonProps = {
-  onPress: (e?: any) => void
+  onPress: (e?: BaseSyntheticEvent) => void
   loading?: boolean
   children: ReactNode
 }

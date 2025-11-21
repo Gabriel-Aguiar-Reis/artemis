@@ -15,11 +15,22 @@ import React, {
 } from 'react'
 import { Animated, BlurEvent, Easing, TextInputProps, View } from 'react-native'
 
+import { Button } from '@/src/components/ui/button'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/src/components/ui/dialog'
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from '@/src/components/ui/hover-card'
+import WheelPicker from '@quidone/react-native-wheel-picker'
 
 type BaseProps = {
   label: string
@@ -55,7 +66,14 @@ type WithoutAlternate = {
   alternateToDisabled?: boolean
 }
 
-type FloatingLabelInputProps = BaseProps & (WithAlternate | WithoutAlternate)
+type FloatingLabelInputProps = BaseProps &
+  (WithAlternate | WithoutAlternate) & {
+    isDialog?: boolean
+    period?: string
+    number?: number
+    PERIODS?: { nome: string; range: number[] }[]
+    onWheelChange?: (value: string) => void
+  }
 
 export function FloatingLabelInput(props: FloatingLabelInputProps) {
   const {
@@ -75,6 +93,11 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
     alignTooltip,
     sideTooltip,
     sideOffsetTooltip,
+    isDialog,
+    period,
+    number,
+    PERIODS,
+    onWheelChange,
     ...rest
   } = props
 
@@ -174,16 +197,75 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
           onFocus={() => setIsFocused(true)}
           onBlur={handleBlur}
           secureTextEntry={secure}
-          editable={!disabled}
+          editable={!disabled && !isDialog}
           className={cn(
             'flex-1 border-border text-sm',
             activeIcon
               ? 'rounded-l-md rounded-tr-none rounded-br-none'
               : 'rounded-md',
+            isDialog && 'w-1/2',
             error && 'border-red-500'
           )}
           {...rest}
         />
+
+        {isDialog && (
+          <Dialog>
+            <DialogTrigger asChild className="w-40">
+              <Button className="rounded-none border-border" variant="outline">
+                <Text>Selecionar</Text>
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="w-80 m-4">
+              <DialogHeader>
+                <DialogTitle>{label}</DialogTitle>
+              </DialogHeader>
+              <View className="gap-2">
+                <View className="flex-row gap-4 justify-around">
+                  <WheelPicker
+                    data={(
+                      PERIODS?.find((p) => p.nome === period)?.range || [1]
+                    ).map((n) => ({
+                      value: n.toString(),
+                      label: n.toString(),
+                    }))}
+                    value={number?.toString() ?? '1'}
+                    onValueChanged={(event) => {
+                      const val = event?.item?.value
+                      const newValue = `${val} ${period}`
+                      onWheelChange?.(newValue)
+                    }}
+                    style={{ flex: 1 }}
+                    enableScrollByTapOnItem
+                  />
+                  <WheelPicker
+                    data={
+                      PERIODS?.map((p) => ({ value: p.nome, label: p.nome })) ??
+                      []
+                    }
+                    value={period ?? 'dias'}
+                    onValueChanged={(event) => {
+                      const nome = event?.item?.value
+                      const newRange =
+                        PERIODS?.find((p) => p.nome === nome)?.range[0] ?? 1
+                      const newValue = `${newRange} ${nome}`
+                      onWheelChange?.(newValue)
+                    }}
+                    enableScrollByTapOnItem
+                    style={{ flex: 1 }}
+                  />
+                </View>
+              </View>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button>
+                    <Text>Confirmar</Text>
+                  </Button>
+                </DialogClose>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
 
         {activeIcon &&
           (rightIconTooltip && !alternateRightIcon ? (

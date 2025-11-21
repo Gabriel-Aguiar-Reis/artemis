@@ -1,3 +1,4 @@
+import { EXPIRATION_REGEX } from '@/src/domain/entities/product/value-objects/expiration.vo'
 import { product } from '@/src/infra/db/drizzle/schema'
 import {
   createInsertSchema,
@@ -12,7 +13,6 @@ const NAME_CONSTRAINT_MESSAGE =
 const NON_NEGATIVE_PRICE_MESSAGE = 'O preço de venda não pode ser negativo'
 const NON_OPTIONAL_PRICE_MESSAGE = 'O preço de venda é obrigatório'
 
-const EXPIRATION_REGEX = /^\d+\s*(month|year|week|day)s?$/i
 const INVALID_EXPIRATION_MESSAGE = 'Formato de expiração inválido'
 
 export const productSelectSchema = createSelectSchema(product, {

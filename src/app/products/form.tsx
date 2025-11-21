@@ -19,7 +19,7 @@ export default function ProductFormScreen() {
       categoryId: '',
       salePrice: 0,
       isActive: true,
-      expiration: '30 days',
+      expiration: '30 dias',
     },
     mode: 'onBlur',
     reValidateMode: 'onBlur',
@@ -66,11 +66,12 @@ export default function ProductFormScreen() {
         },
         {
           name: 'expiration',
-          label: 'Validade',
-          placeholder: 'Ex: 30 days',
+          label: 'Prazo de validade',
+          placeholder: 'Ex: 30 dias',
           icon: CircleQuestionMark,
           iconTooltip:
-            'Período após o qual o produto expira. Utilize o formato "X days", "X months", etc.',
+            'Período após o qual o produto expira. Utilize o formato "X dias", "X meses", etc.',
+          isDialog: true,
         },
       ]}
     />

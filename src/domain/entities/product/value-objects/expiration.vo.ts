@@ -1,5 +1,7 @@
 export type ExpirationSerializableDTO = string
 
+export const EXPIRATION_REGEX =
+  /^\d+\s*(dia|dias|semana|semanas|mês|meses|ano|anos)$/i
 export class Expiration {
   private durationMs: number
 
@@ -8,7 +10,7 @@ export class Expiration {
   }
 
   private parseToMilliseconds(value: string): number {
-    const match = value.match(/(\d+)\s*(month|year|week|day)s?/i)
+    const match = value.match(EXPIRATION_REGEX)
     if (!match) throw new Error('O formato de expiração é inválido.')
     const [, qty, unit] = match
     const ms = {

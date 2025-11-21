@@ -33,6 +33,7 @@ export function ProductForm<T extends FieldValues>({
     inputProps?: Record<string, any>
     isNumber?: boolean
     isCurrency?: boolean
+    isDialog?: boolean
   }>
 }) {
   return (
@@ -40,7 +41,7 @@ export function ProductForm<T extends FieldValues>({
       {fields.map((fieldConfig) => {
         if (fieldConfig.isCurrency) {
           return (
-            <BaseForm.Input.Currency
+            <BaseForm.Input.Currency<T>
               key={String(fieldConfig.name)}
               control={control}
               name={fieldConfig.name}
@@ -52,12 +53,13 @@ export function ProductForm<T extends FieldValues>({
               iconTooltip={fieldConfig.iconTooltip}
               rules={fieldConfig.rules}
               inputProps={fieldConfig.inputProps}
+              isDialog={fieldConfig.isDialog}
             />
           )
         }
         if (fieldConfig.isNumber) {
           return (
-            <BaseForm.Input.Number
+            <BaseForm.Input.Number<T>
               key={String(fieldConfig.name)}
               control={control}
               name={fieldConfig.name}
@@ -69,11 +71,13 @@ export function ProductForm<T extends FieldValues>({
               iconTooltip={fieldConfig.iconTooltip}
               rules={fieldConfig.rules}
               inputProps={fieldConfig.inputProps}
+              isDialog={fieldConfig.isDialog}
             />
           )
         }
+
         return (
-          <BaseForm.Input
+          <BaseForm.Input<T>
             key={String(fieldConfig.name)}
             control={control}
             name={fieldConfig.name}
@@ -85,10 +89,11 @@ export function ProductForm<T extends FieldValues>({
             iconTooltip={fieldConfig.iconTooltip}
             rules={fieldConfig.rules}
             inputProps={fieldConfig.inputProps}
+            isDialog={fieldConfig.isDialog}
           />
         )
       })}
-      <BaseForm.Switch
+      <BaseForm.Switch<T>
         control={control}
         name={'isActive' as Path<T>}
         label="Produto Ativo"
