@@ -13,7 +13,14 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import { Animated, BlurEvent, Easing, TextInputProps, View } from 'react-native'
+import {
+  Animated,
+  BlurEvent,
+  Easing,
+  ScrollView,
+  TextInputProps,
+  View,
+} from 'react-native'
 
 import { Button } from '@/src/components/ui/button'
 import {
@@ -30,6 +37,12 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from '@/src/components/ui/hover-card'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from '@/src/components/ui/select'
 import WheelPicker from '@quidone/react-native-wheel-picker'
 
 type BaseProps = {
@@ -73,6 +86,9 @@ type FloatingLabelInputProps = BaseProps &
     number?: number
     PERIODS?: { nome: string; range: number[] }[]
     onWheelChange?: (value: string) => void
+    isSelect?: boolean
+    selectOptions?: { id: string; nome: string }[]
+    onSelectChange?: (id: string) => void
   }
 
 export function FloatingLabelInput(props: FloatingLabelInputProps) {
@@ -94,6 +110,9 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
     sideTooltip,
     sideOffsetTooltip,
     isDialog,
+    isSelect,
+    selectOptions,
+    onSelectChange,
     period,
     number,
     PERIODS,
@@ -168,6 +187,13 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
     setIsFocused(false)
     onBlur?.(e)
   }
+  // Quando for select, localizar opção selecionada para exibir o nome
+  const selectedOption = isSelect
+    ? (selectOptions || []).find((s) => s.id === value)
+    : undefined
+  const displayValue = isSelect
+    ? (selectedOption?.nome ?? '')
+    : ((value as any) ?? '')
 
   return (
     <View className={cn('relative', className)} style={{ paddingTop: 18 }}>
@@ -188,7 +214,7 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
 
       <View className="flex-row w-full">
         <Input
-          value={value}
+          value={displayValue}
           placeholder={placeholder}
           cursorColor={
             error ? '#ef4444' : colorScheme === 'dark' ? '#d4d4d4' : '#27272a'
@@ -197,23 +223,22 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
           onFocus={() => setIsFocused(true)}
           onBlur={handleBlur}
           secureTextEntry={secure}
-          editable={!disabled && !isDialog}
+          editable={!disabled && !isDialog && !isSelect}
           className={cn(
             'flex-1 border-border text-sm',
             activeIcon
               ? 'rounded-l-md rounded-tr-none rounded-br-none'
               : 'rounded-md',
-            isDialog && 'w-1/2',
+            (isDialog || isSelect) && 'w-1/2 text-primary bg-secondary',
             error && 'border-red-500'
           )}
           {...rest}
         />
-
-        {isDialog && (
+        {isDialog && !isSelect && (
           <Dialog>
             <DialogTrigger asChild className="w-40">
               <Button className="rounded-none border-border" variant="outline">
-                <Text>Selecionar</Text>
+                <Text className="text-sm font-semibold">Selecionar</Text>
               </Button>
             </DialogTrigger>
             <DialogContent className="w-80 m-4">
@@ -279,6 +304,32 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+        )}
+        {isSelect && (
+          <Select
+            value={
+              selectedOption
+                ? { value: selectedOption.id, label: selectedOption.nome }
+                : undefined
+            }
+            onValueChange={(opt) => {
+              if (opt && typeof opt.value === 'string')
+                onSelectChange?.(opt.value)
+            }}
+          >
+            <SelectTrigger className="w-40 rounded-none border-border">
+              <Text className="text-sm font-semibold">Selecionar</Text>
+            </SelectTrigger>
+            <SelectContent>
+              <ScrollView nestedScrollEnabled>
+                {(selectOptions || []).map((opt) => (
+                  <SelectItem key={opt.id} value={opt.id} label={opt.nome}>
+                    <Text>{opt.nome}</Text>
+                  </SelectItem>
+                ))}
+              </ScrollView>
+            </SelectContent>
+          </Select>
         )}
 
         {activeIcon &&

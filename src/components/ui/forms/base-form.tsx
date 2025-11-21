@@ -48,6 +48,7 @@ type InputProps<T extends FieldValues> = {
   isNumber?: boolean
   isCurrency?: boolean
   isDialog?: boolean
+  isSelect?: boolean
 }
 function Input<T extends FieldValues>({
   control,
@@ -63,6 +64,7 @@ function Input<T extends FieldValues>({
   isNumber,
   isCurrency,
   isDialog = false,
+  isSelect = false,
 }: InputProps<T>) {
   return (
     <Controller
@@ -98,6 +100,40 @@ function Input<T extends FieldValues>({
               : onChange,
           onBlur: onBlur,
           ...inputProps,
+        }
+
+        if (isSelect) {
+          const selectProps = {
+            ...baseProps,
+            isSelect: true,
+            selectOptions: inputProps?.selectOptions,
+            onSelectChange: onChange,
+            value: value,
+            rightIcon: icon,
+            rightIconTooltip: iconTooltip,
+            alignTooltip: iconTooltip ? ('end' as const) : undefined,
+          }
+          if (alternate?.icon && alternate.type === 'toSecret') {
+            return (
+              <FloatingLabelInput
+                {...selectProps}
+                alternateRightIcon={alternate!.icon}
+                alternateToSecret={true}
+                startSecreted={false}
+              />
+            )
+          }
+          if (alternate?.icon && alternate.type === 'toDisabled') {
+            return (
+              <FloatingLabelInput
+                {...selectProps}
+                alternateRightIcon={alternate!.icon}
+                alternateToDisabled={true}
+                startDisabled={true}
+              />
+            )
+          }
+          return <FloatingLabelInput {...selectProps} />
         }
 
         const renderDialog = () => {

@@ -34,6 +34,7 @@ export function ProductForm<T extends FieldValues>({
     isNumber?: boolean
     isCurrency?: boolean
     isDialog?: boolean
+    isSelect?: boolean
   }>
 }) {
   return (
@@ -54,6 +55,7 @@ export function ProductForm<T extends FieldValues>({
               rules={fieldConfig.rules}
               inputProps={fieldConfig.inputProps}
               isDialog={fieldConfig.isDialog}
+              isSelect={fieldConfig.isSelect}
             />
           )
         }
@@ -72,6 +74,7 @@ export function ProductForm<T extends FieldValues>({
               rules={fieldConfig.rules}
               inputProps={fieldConfig.inputProps}
               isDialog={fieldConfig.isDialog}
+              isSelect={fieldConfig.isSelect}
             />
           )
         }
@@ -90,6 +93,7 @@ export function ProductForm<T extends FieldValues>({
             rules={fieldConfig.rules}
             inputProps={fieldConfig.inputProps}
             isDialog={fieldConfig.isDialog}
+            isSelect={fieldConfig.isSelect}
           />
         )
       })}

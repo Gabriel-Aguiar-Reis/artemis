@@ -1,3 +1,4 @@
+import { categoryHooks } from '@/src/application/hooks/category.hooks'
 import { productHooks } from '@/src/application/hooks/product.hooks'
 import { ProductForm } from '@/src/components/ui/forms/product-form'
 import {
@@ -12,6 +13,8 @@ import { useForm } from 'react-hook-form'
 
 export default function ProductFormScreen() {
   const { mutate: addProduct, isPending } = productHooks.addProduct()
+  const { data: categories } = categoryHooks.getActiveCategories()
+
   const form = useForm<ProductInsertDTO>({
     resolver: zodResolver(productInsertSchema),
     defaultValues: {
@@ -27,6 +30,7 @@ export default function ProductFormScreen() {
 
   const onSubmit = form.handleSubmit((data: ProductInsertDTO) => {
     addProduct(data)
+    console.log(data)
     router.back()
   })
 
@@ -48,11 +52,15 @@ export default function ProductFormScreen() {
         },
         {
           name: 'categoryId',
-          label: 'ID da Categoria',
-          placeholder: 'Ex. 123e4567-e89b-12d3-a456-426614174000',
+          label: 'Nome da Categoria',
+          placeholder: 'Escolha a categoria...',
           icon: CircleQuestionMark,
-          iconTooltip:
-            'ID da categoria à qual este produto pertence. Verifique o ID na tela de categorias.',
+          iconTooltip: 'Escolha a categoria ao qual o produto pertence.',
+          isSelect: true,
+          inputProps: {
+            selectOptions:
+              categories?.map((c) => ({ id: c.id, nome: c.name })) ?? [],
+          },
         },
         {
           name: 'salePrice',
