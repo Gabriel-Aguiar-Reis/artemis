@@ -236,6 +236,13 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
                       onWheelChange?.(newValue)
                     }}
                     style={{ flex: 1 }}
+                    itemTextStyle={{
+                      color: colorScheme === 'dark' ? '#fafafa' : '#18181b',
+                    }}
+                    overlayItemStyle={{
+                      backgroundColor:
+                        colorScheme === 'dark' ? '#fafafa' : '#18181b',
+                    }}
                     enableScrollByTapOnItem
                   />
                   <WheelPicker
@@ -251,8 +258,15 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
                       const newValue = `${newRange} ${nome}`
                       onWheelChange?.(newValue)
                     }}
-                    enableScrollByTapOnItem
                     style={{ flex: 1 }}
+                    itemTextStyle={{
+                      color: colorScheme === 'dark' ? '#fafafa' : '#18181b',
+                    }}
+                    overlayItemStyle={{
+                      backgroundColor:
+                        colorScheme === 'dark' ? '#fafafa' : '#18181b',
+                    }}
+                    enableScrollByTapOnItem
                   />
                 </View>
               </View>
