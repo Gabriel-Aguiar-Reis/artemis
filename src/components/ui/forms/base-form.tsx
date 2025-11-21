@@ -79,6 +79,7 @@ function Input<T extends FieldValues>({
             selectedPeriod = match[2]
           }
         }
+
         const baseProps = {
           label,
           placeholder,
@@ -99,7 +100,7 @@ function Input<T extends FieldValues>({
           ...inputProps,
         }
 
-        if (isDialog) {
+        const renderDialog = () => {
           const dialogProps = {
             ...baseProps,
             isDialog: true,
@@ -116,7 +117,7 @@ function Input<T extends FieldValues>({
             return (
               <FloatingLabelInput
                 {...dialogProps}
-                alternateRightIcon={alternate.icon}
+                alternateRightIcon={alternate!.icon}
                 alternateToSecret={true}
                 startSecreted={false}
               />
@@ -126,7 +127,7 @@ function Input<T extends FieldValues>({
             return (
               <FloatingLabelInput
                 {...dialogProps}
-                alternateRightIcon={alternate.icon}
+                alternateRightIcon={alternate!.icon}
                 alternateToDisabled={true}
                 startDisabled={true}
               />
@@ -135,33 +136,32 @@ function Input<T extends FieldValues>({
           return <FloatingLabelInput {...dialogProps} />
         }
 
-        if (!icon) {
-          return <FloatingLabelInput {...baseProps} />
-        }
-        if (alternate) {
-          if (alternate.type === 'toSecret') {
+        const renderNoIcon = () => <FloatingLabelInput {...baseProps} />
+
+        const renderAlternate = () => {
+          if (alternate?.type === 'toSecret') {
             return (
               <FloatingLabelInput
                 {...baseProps}
                 rightIcon={icon}
-                alternateRightIcon={alternate.icon}
+                alternateRightIcon={alternate!.icon}
                 alternateToSecret={true}
                 startSecreted={false}
               />
             )
-          } else {
-            return (
-              <FloatingLabelInput
-                {...baseProps}
-                rightIcon={icon}
-                alternateRightIcon={alternate.icon}
-                alternateToDisabled={true}
-                startDisabled={true}
-              />
-            )
           }
+          return (
+            <FloatingLabelInput
+              {...baseProps}
+              rightIcon={icon}
+              alternateRightIcon={alternate!.icon}
+              alternateToDisabled={true}
+              startDisabled={true}
+            />
+          )
         }
-        return (
+
+        const renderDefault = () => (
           <FloatingLabelInput
             {...baseProps}
             rightIcon={icon}
@@ -169,6 +169,11 @@ function Input<T extends FieldValues>({
             alignTooltip="end"
           />
         )
+
+        if (isDialog) return renderDialog()
+        if (!icon) return renderNoIcon()
+        if (alternate) return renderAlternate()
+        return renderDefault()
       }}
     />
   )
