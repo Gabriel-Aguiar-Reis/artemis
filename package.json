@@ -2,6 +2,7 @@
   "name": "artemis",
   "main": "expo-router/entry",
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
     "dev": "expo start -c",
     "android": "expo start -c --android",
@@ -11,7 +12,8 @@
     "build:dev:android": "eas build --profile development --platform android",
     "build:dev:ios": "eas build --profile development --platform ios",
     "build:prod:android": "eas build --profile production --platform android",
-    "build:prod:ios": "eas build --profile production --platform ios"
+    "build:prod:ios": "eas build --profile production --platform ios",
+    "generate-xlsx": "node ./scripts/generate-entities-xlsx.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -34,6 +36,7 @@
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.44.7",
     "drizzle-zod": "^0.8.3",
+    "exceljs": "^4.4.0",
     "expo": "^54.0.0",
     "expo-dev-client": "~6.0.17",
     "expo-drizzle-studio-plugin": "^0.2.1",
