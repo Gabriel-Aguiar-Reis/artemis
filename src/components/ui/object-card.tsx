@@ -8,8 +8,8 @@ import {
 import { Icon } from '@/src/components/ui/icon'
 import { MoreVerticalIcon } from 'lucide-react-native'
 import * as React from 'react'
-import { ReactNode } from 'react'
-import { Pressable } from 'react-native'
+import { isValidElement, ReactElement, ReactNode } from 'react'
+import { Pressable, View } from 'react-native'
 
 type ObjectCardRootProps = {
   children: ReactNode
@@ -41,9 +41,43 @@ function ObjectCardRoot({ children, className }: ObjectCardRootProps) {
 }
 
 function ObjectCardHeader({ children }: ObjectCardHeaderProps) {
+  const childrenArray = React.Children.toArray(children)
+
+  const title = childrenArray.find(
+    (child): child is ReactElement =>
+      isValidElement(child) && child.type === ObjectCardTitle
+  )
+
+  const description = childrenArray.find(
+    (child): child is ReactElement =>
+      isValidElement(child) && child.type === ObjectCardDescription
+  )
+
+  const actions = childrenArray.find(
+    (child): child is ReactElement =>
+      isValidElement(child) && child.type === ObjectCardActions
+  )
+
   return (
-    <CardHeader className="flex-row items-center justify-between">
-      {children}
+    <CardHeader className="flex-row justify-between items-start">
+      <View className="flex-col">
+        {title && (
+          <ObjectCardTitle>
+            {(title as ReactElement<{ children: ReactNode }>).props.children}
+          </ObjectCardTitle>
+        )}
+
+        {description && (
+          <ObjectCardDescription>
+            {
+              (description as ReactElement<{ children: ReactNode }>).props
+                .children
+            }
+          </ObjectCardDescription>
+        )}
+      </View>
+
+      {actions}
     </CardHeader>
   )
 }
@@ -53,7 +87,7 @@ function ObjectCardTitle({ children }: ObjectCardTitleProps) {
 }
 
 function ObjectCardDescription({ children }: ObjectCardDescriptionProps) {
-  return <CardDescription>{children}</CardDescription>
+  return <CardDescription className="ml-2">{children}</CardDescription>
 }
 
 function ObjectCardActions({ onPress }: ObjectCardActionsProps) {

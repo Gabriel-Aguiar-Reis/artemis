@@ -4,6 +4,7 @@ import { BackToTopButton } from '@/src/components/ui/back-to-top-button'
 import { ButtonFilter } from '@/src/components/ui/button-filter'
 import { ButtonNew } from '@/src/components/ui/button-new'
 import { ConfirmDeleteDialog } from '@/src/components/ui/dialog/confirm-delete-dialog'
+import { Icon } from '@/src/components/ui/icon'
 import { ObjectCard } from '@/src/components/ui/object-card'
 import { Text } from '@/src/components/ui/text'
 import { ProductWithCategoryDTO } from '@/src/domain/repositories/product/dtos/product-with-category.dto'
@@ -11,7 +12,13 @@ import { cn } from '@/src/lib/utils'
 import { FlashList } from '@shopify/flash-list'
 import { UUID } from 'crypto'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
-import { EditIcon, TrashIcon } from 'lucide-react-native'
+import {
+  Banknote,
+  CalendarClock,
+  EditIcon,
+  FolderTree,
+  TrashIcon,
+} from 'lucide-react-native'
 import * as React from 'react'
 import { useMemo, useRef, useState } from 'react'
 import {
@@ -144,24 +151,50 @@ export default function ProductsScreen() {
       <ObjectCard.Root key={product.id} className="mb-4">
         <ObjectCard.Header>
           <ObjectCard.Title>{product.name}</ObjectCard.Title>
+          <ObjectCard.Description>
+            <View className="flex-row items-center gap-2">
+              <Icon as={FolderTree} size={16} className="text-ring" />
+              <Text className="text-ring">{product.categoryName}</Text>
+            </View>
+          </ObjectCard.Description>
           <ObjectCard.Actions
             onPress={() => handleProductOptions(product.id, product.name)}
           />
         </ObjectCard.Header>
         <ObjectCard.Content>
-          <View className="flex-row items-center gap-2">
-            <View
-              className={cn(
-                'h-2 w-2 rounded-full',
-                product.isActive ? 'bg-green-500' : 'bg-gray-400'
-              )}
-            />
-            <Text className="text-sm text-muted-foreground">
-              {product.isActive ? 'Ativo' : 'Inativo'}
-            </Text>
-            <Text className="text-sm text-muted-foreground ml-2">
-              {product.categoryName}
-            </Text>
+          <View className="flex-row items-center justify-between gap-2">
+            <View>
+              <View className="flex-row gap-2 items-center">
+                <Icon as={Banknote} size={20} className="text-green-600" />
+                <Text>
+                  R${' '}
+                  {product.salePrice.toLocaleString('pt-BR', {
+                    minimumFractionDigits: 2,
+                  })}
+                </Text>
+              </View>
+              <View className="flex-row gap-2 items-center">
+                <Icon
+                  as={CalendarClock}
+                  size={20}
+                  className="text-orange-600"
+                />
+                <Text>
+                  <Text>{product.expiration}</Text>
+                </Text>
+              </View>
+            </View>
+            <View className="flex-row items-center gap-2">
+              <View
+                className={cn(
+                  'h-2 w-2 rounded-full',
+                  product.isActive ? 'bg-green-500' : 'bg-gray-400'
+                )}
+              />
+              <Text className="text-sm text-muted-foreground">
+                {product.isActive ? 'Ativo' : 'Inativo'}
+              </Text>
+            </View>
           </View>
         </ObjectCard.Content>
       </ObjectCard.Root>
