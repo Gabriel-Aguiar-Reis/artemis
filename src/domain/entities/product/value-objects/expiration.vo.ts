@@ -5,11 +5,13 @@ export class Expiration {
   private durationMs: number
 
   constructor(public value: string) {
-    this.durationMs = this.parseToMilliseconds(value)
+    this.value = String(value).trim()
+    this.durationMs = this.parseToMilliseconds(this.value)
   }
 
   private parseToMilliseconds(value: string): number {
-    const match = value.match(EXPIRATION_REGEX)
+    const raw = String(value).trim()
+    const match = raw.match(EXPIRATION_REGEX)
     if (!match) throw new Error('O formato de expiração é inválido.')
     const [, qtyStr, unitRaw] = match
     const qty = Number(qtyStr)
@@ -39,7 +41,33 @@ export class Expiration {
   }
 
   toDTO(): ExpirationSerializableDTO {
-    return this.value
+    // Normaliza para salvar: quando a quantidade é 1, usa a forma singular
+    const raw = String(this.value).trim()
+    const match = raw.match(EXPIRATION_REGEX)
+    if (!match) return raw
+
+    const [, qtyStr, unitRaw] = match
+    const qty = Number(qtyStr)
+    if (Number.isNaN(qty)) return this.value
+
+    // Normaliza acentos e converte para lower (remover diacríticos)
+    const unit = String(unitRaw)
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+
+    // Determina a forma base da unidade (singular) preservando acentos
+    // Usamos o unit (normalizado sem diacríticos) apenas para identificar a unidade
+    // e retornamos a forma singular preferida com acento quando aplicável.
+    let singular = unit
+    if (unit.startsWith('dia')) singular = 'dia'
+    else if (unit.startsWith('semana')) singular = 'semana'
+    else if (unit.startsWith('mes')) singular = 'mês'
+    else if (unit.startsWith('ano')) singular = 'ano'
+
+    if (qty === 1) return `${qty} ${singular}`
+    // Se qty > 1, retorna a string trimmed para evitar espaços indesejados
+    return raw
   }
 
   static fromDTO(dto: ExpirationSerializableDTO): Expiration {
