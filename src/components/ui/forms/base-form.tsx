@@ -2,6 +2,7 @@ import { FloatingLabelInput } from '@/src/components/ui/floating-label-input'
 import { Label } from '@/src/components/ui/label'
 import { Text } from '@/src/components/ui/text'
 import { ButtonSubmit } from '@/src/components/ui/toasts/button-submit'
+import { PERIODS } from '@/src/lib/utils'
 import { Stack } from 'expo-router'
 import { LucideIcon } from 'lucide-react-native'
 import { BaseSyntheticEvent, ReactNode } from 'react'
@@ -23,13 +24,6 @@ function Root({ title, children }: RootProps) {
     </SafeAreaView>
   )
 }
-
-const PERIODS = [
-  { nome: 'dias', range: Array.from({ length: 31 }, (_, i) => i + 1) },
-  { nome: 'semanas', range: Array.from({ length: 4 }, (_, i) => i + 1) },
-  { nome: 'meses', range: Array.from({ length: 100 }, (_, i) => i + 1) },
-  { nome: 'anos', range: Array.from({ length: 20 }, (_, i) => i + 1) },
-]
 
 type InputProps<T extends FieldValues> = {
   control: Control<T>

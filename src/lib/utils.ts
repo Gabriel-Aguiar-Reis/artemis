@@ -25,3 +25,10 @@ export function getErrorMessage(err: unknown): string | undefined {
   }
   return undefined
 }
+
+export const PERIODS = [
+  { nome: 'dias', range: Array.from({ length: 31 }, (_, i) => i + 1) },
+  { nome: 'semanas', range: Array.from({ length: 4 }, (_, i) => i + 1) },
+  { nome: 'meses', range: Array.from({ length: 100 }, (_, i) => i + 1) },
+  { nome: 'anos', range: Array.from({ length: 20 }, (_, i) => i + 1) },
+]
