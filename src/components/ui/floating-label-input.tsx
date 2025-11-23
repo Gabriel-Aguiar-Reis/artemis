@@ -55,6 +55,7 @@ type BaseProps = {
   alignTooltip?: 'start' | 'center' | 'end'
   sideTooltip?: 'top' | 'bottom'
   sideOffsetTooltip?: number
+  gap?: number
 } & TextInputProps
 
 type WithAlternate =
@@ -117,6 +118,7 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
     number,
     PERIODS,
     onWheelChange,
+    gap = 0,
     ...rest
   } = props
 
@@ -212,7 +214,7 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
         {label}
       </Animated.Text>
 
-      <View className="flex-row w-full">
+      <View className={`flex-row w-full gap-${gap}`}>
         <Input
           value={displayValue}
           placeholder={placeholder}
