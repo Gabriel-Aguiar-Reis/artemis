@@ -45,6 +45,8 @@ export default function ProductsScreen() {
     salePriceMin?: string
     salePriceMax?: string
     status?: 'all' | 'active' | 'inactive'
+    categoryName?: string
+    expiration?: string
   }>()
 
   const filteredProducts = useMemo(() => {
@@ -52,6 +54,16 @@ export default function ProductsScreen() {
     return products.filter((product) => {
       const matchesSearch = params.search
         ? product.name.includes(params.search)
+        : true
+      const matchesCategory = params.categoryName
+        ? product.categoryName
+            ?.toLowerCase()
+            .includes(String(params.categoryName).toLowerCase())
+        : true
+      const matchesExpiration = params.expiration
+        ? product.expiration
+            ?.toLowerCase()
+            .includes(String(params.expiration).toLowerCase())
         : true
       const matchesSalePriceMin = params.salePriceMin
         ? product.salePrice >= Number(params.salePriceMin)
@@ -67,6 +79,8 @@ export default function ProductsScreen() {
         (params.status === 'inactive' && !product.isActive)
       return (
         matchesSearch &&
+        matchesCategory &&
+        matchesExpiration &&
         matchesSalePriceMin &&
         matchesSalePriceMax &&
         matchesStatus
@@ -78,33 +92,56 @@ export default function ProductsScreen() {
     params.salePriceMin,
     params.salePriceMax,
     params.status,
+    params.categoryName,
+    params.expiration,
   ])
 
   const hasActiveFilters =
     !!params.search ||
     !!params.salePriceMin ||
     !!params.salePriceMax ||
-    (params.status && params.status !== 'all')
+    (params.status && params.status !== 'all') ||
+    !!params.categoryName ||
+    !!params.expiration
 
   const activeFilters = useMemo(() => {
     const filters = []
     if (params.search) {
-      filters.push({ label: 'Search', value: params.search })
+      filters.push({ label: 'Pesquisa', value: params.search })
     }
     if (params.salePriceMin) {
-      filters.push({ label: 'Min Sale Price', value: params.salePriceMin })
+      filters.push({
+        label: 'Preço Mínimo',
+        value: `R$ ${Number(params.salePriceMin).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      })
     }
     if (params.salePriceMax) {
-      filters.push({ label: 'Max Sale Price', value: params.salePriceMax })
+      filters.push({
+        label: 'Preço Máximo',
+        value: `R$ ${Number(params.salePriceMax).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      })
+    }
+    if (params.categoryName) {
+      filters.push({ label: 'Categoria', value: params.categoryName })
+    }
+    if (params.expiration) {
+      filters.push({ label: 'Validade', value: params.expiration })
     }
     if (params.status && params.status !== 'all') {
       filters.push({
         label: 'Status',
-        value: params.status === 'active' ? 'Active' : 'Inactive',
+        value: params.status === 'active' ? 'Ativo' : 'Inativo',
       })
     }
     return filters
-  }, [params.search, params.salePriceMin, params.salePriceMax, params.status])
+  }, [
+    params.search,
+    params.salePriceMin,
+    params.salePriceMax,
+    params.status,
+    params.categoryName,
+    params.expiration,
+  ])
 
   // Adicionado useRef e useState para ScrollView e botão de voltar ao topo
   const scrollRef = useRef<ScrollView>(null)
@@ -221,7 +258,11 @@ export default function ProductsScreen() {
                   pathname: '/products/search',
                   params: {
                     search: params.search,
+                    salePriceMin: params.salePriceMin,
+                    salePriceMax: params.salePriceMax,
                     status: params.status,
+                    categoryName: params.categoryName,
+                    expiration: params.expiration,
                   },
                 }}
                 isActive={hasActiveFilters}
