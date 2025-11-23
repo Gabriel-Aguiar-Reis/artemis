@@ -238,7 +238,7 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
         />
         {isDialog && !isSelect && (
           <Dialog>
-            <DialogTrigger asChild className="w-40">
+            <DialogTrigger asChild className="w-40" disabled={disabled}>
               <Button className="rounded-none border-border" variant="outline">
                 <Text className="text-sm font-semibold">Selecionar</Text>
               </Button>
@@ -319,7 +319,10 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
                 onSelectChange?.(opt.value)
             }}
           >
-            <SelectTrigger className="w-40 rounded-none border-border">
+            <SelectTrigger
+              className="w-40 rounded-none border-border"
+              disabled={disabled}
+            >
               <Text className="text-sm font-semibold">Selecionar</Text>
             </SelectTrigger>
             <SelectContent>
