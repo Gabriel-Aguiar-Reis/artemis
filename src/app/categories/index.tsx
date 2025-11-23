@@ -61,7 +61,7 @@ export default function CategoriesScreen() {
     if (params.status && params.status !== 'all') {
       filters.push({
         label: 'Status',
-        value: params.status === 'active' ? 'Ativos' : 'Inativos',
+        value: params.status === 'active' ? 'Ativo' : 'Inativo',
       })
     }
     return filters
