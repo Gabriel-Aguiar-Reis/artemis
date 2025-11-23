@@ -80,7 +80,11 @@ function Input<T extends FieldValues>({
           label,
           placeholder,
           error,
-          value: value,
+          value: isCurrency
+            ? typeof value === 'number'
+              ? value.toFixed(2).replace('.', ',')
+              : value
+            : value,
           onChangeText: isCurrency
             ? (text: string) => {
                 let clean = text.replace(/[^\d,.-]/g, '')
@@ -201,8 +205,8 @@ function Input<T extends FieldValues>({
         )
 
         if (isDialog) return renderDialog()
-        if (!icon) return renderNoIcon()
         if (alternate) return renderAlternate()
+        if (!icon) return renderNoIcon()
         return renderDefault()
       }}
     />
