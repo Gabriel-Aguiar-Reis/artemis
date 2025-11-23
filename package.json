@@ -2,7 +2,6 @@
   "name": "artemis",
   "main": "expo-router/entry",
   "version": "1.0.0",
-  "type": "module",
   "scripts": {
     "dev": "expo start -c",
     "android": "expo start -c --android",
@@ -12,8 +11,7 @@
     "build:dev:android": "eas build --profile development --platform android",
     "build:dev:ios": "eas build --profile development --platform ios",
     "build:prod:android": "eas build --profile production --platform android",
-    "build:prod:ios": "eas build --profile production --platform ios",
-    "generate-xlsx": "node ./scripts/generate-entities-xlsx.ts"
+    "build:prod:ios": "eas build --profile production --platform ios"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
