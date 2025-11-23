@@ -50,7 +50,14 @@ export function ProductForm<T extends FieldValues>({
               placeholder={fieldConfig.placeholder}
               error={getErrorMessage(errors?.[fieldConfig.name]?.message)}
               icon={fieldConfig.icon}
-              alternate={fieldConfig.alternate}
+              alternate={
+                String(fieldConfig.name) === 'name' && fieldConfig.alternate
+                  ? {
+                      icon: fieldConfig.alternate.icon,
+                      type: fieldConfig.alternate.type,
+                    }
+                  : fieldConfig.alternate
+              }
               iconTooltip={fieldConfig.iconTooltip}
               rules={fieldConfig.rules}
               inputProps={fieldConfig.inputProps}
@@ -69,7 +76,14 @@ export function ProductForm<T extends FieldValues>({
               placeholder={fieldConfig.placeholder}
               error={getErrorMessage(errors?.[fieldConfig.name]?.message)}
               icon={fieldConfig.icon}
-              alternate={fieldConfig.alternate}
+              alternate={
+                String(fieldConfig.name) === 'name' && fieldConfig.alternate
+                  ? {
+                      icon: fieldConfig.alternate.icon,
+                      type: fieldConfig.alternate.type,
+                    }
+                  : fieldConfig.alternate
+              }
               iconTooltip={fieldConfig.iconTooltip}
               rules={fieldConfig.rules}
               inputProps={fieldConfig.inputProps}
@@ -88,7 +102,14 @@ export function ProductForm<T extends FieldValues>({
             placeholder={fieldConfig.placeholder}
             error={getErrorMessage(errors?.[fieldConfig.name]?.message)}
             icon={fieldConfig.icon}
-            alternate={fieldConfig.alternate}
+            alternate={
+              String(fieldConfig.name) === 'name' && fieldConfig.alternate
+                ? {
+                    icon: fieldConfig.alternate.icon,
+                    type: fieldConfig.alternate.type,
+                  }
+                : fieldConfig.alternate
+            }
             iconTooltip={fieldConfig.iconTooltip}
             rules={fieldConfig.rules}
             inputProps={fieldConfig.inputProps}
