@@ -5,7 +5,7 @@ import { ButtonSubmit } from '@/src/components/ui/toasts/button-submit'
 import { PERIODS } from '@/src/lib/utils'
 import { Stack } from 'expo-router'
 import { LucideIcon } from 'lucide-react-native'
-import { BaseSyntheticEvent, ReactNode } from 'react'
+import React, { BaseSyntheticEvent, ReactNode } from 'react'
 import { Control, Controller, FieldValues, Path } from 'react-hook-form'
 import { ScrollView, Switch, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -76,27 +76,48 @@ function Input<T extends FieldValues>({
           }
         }
 
+        // Keep a local string state for currency inputs so user can type freely
+        // (including commas). We only update the form value with a number on blur.
+        const [localCurrency, setLocalCurrency] = React.useState<string>(() => {
+          if (!isCurrency) return ''
+          if (typeof value === 'number')
+            return value.toFixed(2).replace('.', ',')
+          return (value as any) ?? ''
+        })
+
+        React.useEffect(() => {
+          if (!isCurrency) return
+          const v =
+            typeof value === 'number'
+              ? value.toFixed(2).replace('.', ',')
+              : ((value as any) ?? '')
+          if (v !== localCurrency) setLocalCurrency(v)
+        }, [value])
+
         const baseProps = {
           label,
           placeholder,
           error,
-          value: isCurrency
-            ? typeof value === 'number'
-              ? value.toFixed(2).replace('.', ',')
-              : value
-            : value,
+          value: isCurrency ? localCurrency : value,
           onChangeText: isCurrency
             ? (text: string) => {
-                let clean = text.replace(/[^\d,.-]/g, '')
-                const normalized = clean.replace(',', '.')
-                const num = Number(normalized)
-                onChange(normalized === '' || isNaN(num) ? 0 : num)
+                setLocalCurrency(text)
               }
             : isNumber
               ? (text: string) =>
                   onChange(text === '' ? undefined : Number(text))
               : onChange,
-          onBlur: onBlur,
+          onBlur: () => {
+            if (isCurrency) {
+              let clean = (localCurrency || '').replace(/[^\d,.-]/g, '')
+              const normalized = clean.replace(',', '.')
+              const num = Number(normalized)
+              onChange(normalized === '' || isNaN(num) ? 0 : num)
+              onBlur?.()
+            } else {
+              onBlur?.()
+            }
+          },
           ...inputProps,
         }
 
