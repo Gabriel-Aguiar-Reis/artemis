@@ -49,7 +49,7 @@ export default function ProductsEditScreen() {
       categoryId: product.categoryId as unknown as string,
       salePrice: product.salePrice,
       isActive: product.isActive,
-      expiration: product.expiration.value,
+      expiration: product.expiration.toDTO(),
     }
 
     form.reset(formValues)

@@ -20,7 +20,7 @@ export default function ProductFormScreen() {
     defaultValues: {
       name: '',
       categoryId: '',
-      salePrice: 0,
+      salePrice: undefined,
       isActive: true,
       expiration: '30 dias',
     },
@@ -30,7 +30,6 @@ export default function ProductFormScreen() {
 
   const onSubmit = form.handleSubmit((data: ProductInsertDTO) => {
     addProduct(data)
-    console.log(data)
     router.back()
   })
 
