@@ -24,7 +24,7 @@ export class ProductMapper {
       categoryId: entity.categoryId,
       salePrice: entity.salePrice,
       isActive: entity.isActive,
-      expiration: entity.expiration.value,
+      expiration: entity.expiration.toDTO(),
     }
   }
 }
