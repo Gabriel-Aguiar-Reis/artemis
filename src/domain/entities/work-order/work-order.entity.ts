@@ -20,6 +20,7 @@ import { UUID } from 'crypto'
 
 export enum WorkOrderStatus {
   PENDING = 'PENDING',
+  COMMITTED = 'COMMITTED',
   IN_PROGRESS = 'IN_PROGRESS',
   COMPLETED = 'COMPLETED',
   PARTIAL = 'PARTIAL',
@@ -103,6 +104,10 @@ export class WorkOrder {
   setStatus(newStatus: WorkOrderStatus): WorkOrderStatus {
     const validTransitions: Record<WorkOrderStatus, WorkOrderStatus[]> = {
       [WorkOrderStatus.PENDING]: [
+        WorkOrderStatus.COMMITTED,
+        WorkOrderStatus.CANCELLED,
+      ],
+      [WorkOrderStatus.COMMITTED]: [
         WorkOrderStatus.IN_PROGRESS,
         WorkOrderStatus.CANCELLED,
       ],
@@ -119,6 +124,7 @@ export class WorkOrder {
 
     const statusLabels: Record<WorkOrderStatus, string> = {
       [WorkOrderStatus.PENDING]: 'Pendente',
+      [WorkOrderStatus.COMMITTED]: 'Comprometida',
       [WorkOrderStatus.IN_PROGRESS]: 'Em andamento',
       [WorkOrderStatus.COMPLETED]: 'Concluída',
       [WorkOrderStatus.PARTIAL]: 'Parcial',
