@@ -1,4 +1,5 @@
 import { clsx, type ClassValue } from 'clsx'
+import { parsePhoneNumberFromString } from 'libphonenumber-js'
 import { twMerge } from 'tailwind-merge'
 
 export function cn(...inputs: ClassValue[]) {
@@ -24,6 +25,17 @@ export function getErrorMessage(err: unknown): string | undefined {
     return typeof msg === 'string' ? msg : undefined
   }
   return undefined
+}
+
+export function formatPhoneBrazil(raw?: string) {
+  try {
+    if (!raw) return ''
+    const parsed = parsePhoneNumberFromString(raw, 'BR')
+    if (!parsed || !parsed.isValid()) return raw
+    return parsed.formatNational()
+  } catch (e) {
+    return raw ?? ''
+  }
 }
 
 export const PERIODS = [
