@@ -25,13 +25,11 @@ export const workOrder = sqliteTable('work_order', {
   customerId: text('customer_id')
     .references(() => customer.id)
     .notNull(),
-  createdAt: text('created_at').notNull(),
-  updatedAt: text('updated_at').notNull(),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
   scheduledDate: text('scheduled_date').notNull(),
   visitDate: text('visit_date'),
-  paymentOrderId: text('payment_order_id')
-    .references(() => paymentOrder.id)
-    .notNull(),
+  paymentOrderId: text('payment_order_id').references(() => paymentOrder.id),
   status: text('status').notNull().$type<WorkOrderStatus>(),
   resultId: text('result_id').references(() => workOrderResult.id),
   notes: text('notes'),
