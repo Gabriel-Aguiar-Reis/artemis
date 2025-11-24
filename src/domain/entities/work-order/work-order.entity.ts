@@ -7,6 +7,7 @@ import {
   PaymentOrderSerializableDTO,
 } from '@/src/domain/entities/payment-order/payment-order.entity'
 import { Product } from '@/src/domain/entities/product/product.entity'
+import { ProductSnapshot } from '@/src/domain/entities/work-order-item/value-objects/product-snapshot.vo'
 import {
   WorkOrderItem,
   WorkOrderItemSerializableDTO,
@@ -32,7 +33,7 @@ export type WorkOrderSerializableDTO = {
   createdAt: string
   updatedAt: string
   scheduledDate: string
-  paymentOrder: PaymentOrderSerializableDTO
+  paymentOrder?: PaymentOrderSerializableDTO
   products: WorkOrderItemSerializableDTO[]
   status: WorkOrderStatus
   result?: WorkOrderResultSerializableDTO
@@ -47,7 +48,7 @@ export class WorkOrder {
     public createdAt: Date,
     public updatedAt: Date,
     public scheduledDate: Date,
-    public paymentOrder: PaymentOrder,
+    public paymentOrder?: PaymentOrder,
     public products: WorkOrderItem[] = [],
     public status: WorkOrderStatus = WorkOrderStatus.PENDING,
     public result?: WorkOrderResult,
@@ -61,8 +62,13 @@ export class WorkOrder {
     if (existing) {
       existing.quantity += quantity
     } else {
+      const snapshot = new ProductSnapshot(
+        product.id,
+        product.name,
+        product.salePrice
+      )
       this.products.push(
-        WorkOrderItem.fromProduct(product, quantity, product.salePrice)
+        WorkOrderItem.fromProductSnapshot(snapshot, quantity, product.salePrice)
       )
     }
     this.updatedAt = new Date()
@@ -151,6 +157,7 @@ export class WorkOrder {
 
   syncPaymentWithResult() {
     if (!this.result) return
+    if (!this.paymentOrder) return
     this.paymentOrder.totalValue = this.result.totalValue
   }
 
@@ -188,7 +195,7 @@ export class WorkOrder {
       new Date(dto.createdAt),
       new Date(dto.updatedAt),
       new Date(dto.scheduledDate),
-      PaymentOrder.fromDTO(dto.paymentOrder),
+      dto.paymentOrder ? PaymentOrder.fromDTO(dto.paymentOrder) : undefined,
       dto.products?.map((p) => WorkOrderItem.fromDTO(p)) ?? [],
       dto.status,
       dto.result ? WorkOrderResult.fromDTO(dto.result) : undefined,
