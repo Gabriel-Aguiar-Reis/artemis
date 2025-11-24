@@ -13,17 +13,17 @@ export class WorkOrderMapper {
   static toDomain(
     table: WorkOrderTable,
     customer: Customer,
-    paymentOrder: PaymentOrder,
     items: WorkOrderItem[],
+    paymentOrder?: PaymentOrder,
     result?: WorkOrderResult
   ): WorkOrder {
     return new WorkOrder(
       table.id as UUID,
       customer,
-      new Date(table.createdAt),
-      new Date(table.updatedAt),
-      new Date(table.scheduledDate),
-      paymentOrder,
+      table.createdAt ? new Date(table.createdAt) : new Date(),
+      table.updatedAt ? new Date(table.updatedAt) : new Date(),
+      table.scheduledDate ? new Date(table.scheduledDate) : new Date(),
+      paymentOrder ?? undefined,
       items,
       table.status as WorkOrderStatus,
       result,
@@ -40,7 +40,7 @@ export class WorkOrderMapper {
       updatedAt: entity.updatedAt.toISOString(),
       scheduledDate: entity.scheduledDate.toISOString(),
       visitDate: entity.visitDate?.toISOString() ?? null,
-      paymentOrderId: entity.paymentOrder.id,
+      paymentOrderId: entity.paymentOrder ? entity.paymentOrder.id : null,
       status: entity.status,
       resultId: entity.result?.id ?? null,
       notes: entity.notes ?? null,

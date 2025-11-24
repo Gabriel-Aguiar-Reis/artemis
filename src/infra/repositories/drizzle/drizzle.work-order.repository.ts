@@ -77,13 +77,18 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
 
     const workOrders = await Promise.all(
       rows.map(async (row) => {
-        if (!row.customer || !row.paymentOrder) {
-          throw new Error('A ordem de serviço está com dados incompletos.')
+        if (!row.customer) {
+          throw new Error(
+            'A ordem de serviço está com dados incompletos: cliente ausente.'
+          )
         }
         const cust = CustomerMapper.toDomain(row.customer)
-        const po = PaymentOrderMapper.toDomain(row.paymentOrder)
+        const po = row.paymentOrder
+          ? PaymentOrderMapper.toDomain(row.paymentOrder)
+          : undefined
         const items = await this.loadWorkOrderItems(row.workOrder.id as UUID)
-        return WorkOrderMapper.toDomain(row.workOrder, cust, po, items)
+        if (!po) return WorkOrderMapper.toDomain(row.workOrder, cust, items)
+        return WorkOrderMapper.toDomain(row.workOrder, cust, items, po)
       })
     )
 
@@ -297,14 +302,16 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       .leftJoin(paymentOrder, eq(workOrder.paymentOrderId, paymentOrder.id))
       .where(eq(workOrder.id, id))
 
-    if (!row || !row.customer || !row.paymentOrder) {
+    if (!row || !row.customer) {
       return null
     }
 
     const cust = CustomerMapper.toDomain(row.customer)
-    const po = PaymentOrderMapper.toDomain(row.paymentOrder)
+    const po = row.paymentOrder
+      ? PaymentOrderMapper.toDomain(row.paymentOrder)
+      : undefined
     const items = await this.loadWorkOrderItems(id)
-    return WorkOrderMapper.toDomain(row.workOrder, cust, po, items)
+    return WorkOrderMapper.toDomain(row.workOrder, cust, items, po)
   }
 
   async getWorkOrdersByCustomer(customerId: UUID): Promise<WorkOrder[]> {
@@ -326,7 +333,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
           const cust = CustomerMapper.toDomain(row.customer!)
           const po = PaymentOrderMapper.toDomain(row.paymentOrder!)
           const items = await this.loadWorkOrderItems(row.workOrder.id as UUID)
-          return WorkOrderMapper.toDomain(row.workOrder, cust, po, items)
+          return WorkOrderMapper.toDomain(row.workOrder, cust, items, po)
         })
     )
 
@@ -352,7 +359,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
           const cust = CustomerMapper.toDomain(row.customer!)
           const po = PaymentOrderMapper.toDomain(row.paymentOrder!)
           const items = await this.loadWorkOrderItems(row.workOrder.id as UUID)
-          return WorkOrderMapper.toDomain(row.workOrder, cust, po, items)
+          return WorkOrderMapper.toDomain(row.workOrder, cust, items, po)
         })
     )
 
@@ -383,7 +390,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
           const cust = CustomerMapper.toDomain(row.customer!)
           const po = PaymentOrderMapper.toDomain(row.paymentOrder!)
           const items = await this.loadWorkOrderItems(row.workOrder.id as UUID)
-          return WorkOrderMapper.toDomain(row.workOrder, cust, po, items)
+          return WorkOrderMapper.toDomain(row.workOrder, cust, items, po)
         })
     )
 
