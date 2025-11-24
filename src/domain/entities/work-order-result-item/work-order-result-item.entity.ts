@@ -1,5 +1,5 @@
-import { Product } from '@/src/domain/entities/product/product.entity'
 import { WorkOrderItemBase } from '@/src/domain/entities/work-order-item-base/work-order-item-base.entity'
+import { ProductSnapshot } from '@/src/domain/entities/work-order-item/value-objects/product-snapshot.vo'
 import { UUID } from 'crypto'
 
 export type WorkOrderResultItemSerializableDTO = {
@@ -12,20 +12,25 @@ export type WorkOrderResultItemSerializableDTO = {
 
 export class WorkOrderResultItem extends WorkOrderItemBase {
   constructor(
-    public product: Product,
+    public productSnapshot: ProductSnapshot,
     public quantity: number,
     public priceSnapshot: number,
     public observation?: string
   ) {
-    super(product.id, product.name, priceSnapshot, quantity)
+    super(
+      productSnapshot.productId,
+      productSnapshot.productName,
+      priceSnapshot,
+      quantity
+    )
   }
 
   get productId(): UUID {
-    return this.product.id
+    return this.productSnapshot.productId
   }
 
   get productName(): string {
-    return this.product.name
+    return this.productSnapshot.productName
   }
 
   get salePrice(): number {
@@ -34,38 +39,37 @@ export class WorkOrderResultItem extends WorkOrderItemBase {
 
   toDTO(): WorkOrderResultItemSerializableDTO {
     return {
-      productId: this.product.id,
-      productName: this.product.name,
+      productId: this.productSnapshot.productId,
+      productName: this.productSnapshot.productName,
       salePrice: this.priceSnapshot,
       quantity: this.quantity,
       observation: this.observation,
     }
   }
 
-  static fromProduct(
-    product: Product,
+  static fromProductSnapshot(
+    snapshot: ProductSnapshot,
     quantity: number,
     priceSnapshot?: number,
     observation?: string
   ): WorkOrderResultItem {
     return new WorkOrderResultItem(
-      product,
+      snapshot,
       quantity,
-      priceSnapshot ?? product.salePrice,
+      priceSnapshot ?? snapshot.salePrice,
       observation
     )
   }
 
   static fromDTO(dto: WorkOrderResultItemSerializableDTO): WorkOrderResultItem {
-    // Criar um produto "fantasma" para compatibilidade
-    const product = {
-      id: dto.productId,
-      name: dto.productName,
+    const snapshot = ProductSnapshot.fromDTO({
+      productId: dto.productId,
+      productName: dto.productName,
       salePrice: dto.salePrice,
-    } as Product
+    })
 
     return new WorkOrderResultItem(
-      product,
+      snapshot,
       dto.quantity,
       dto.salePrice,
       dto.observation
