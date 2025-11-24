@@ -4,15 +4,7 @@ import { BaseSyntheticEvent } from 'react'
 import { Control, FieldErrors, FieldValues, Path } from 'react-hook-form'
 import { BaseForm } from './base-form'
 
-export function ProductForm<T extends FieldValues>({
-  title,
-  onSubmit,
-  errors,
-  control,
-  submitLabel,
-  loading,
-  fields,
-}: {
+type ProductFormProps<T extends FieldValues> = {
   title: string
   onSubmit: (e?: BaseSyntheticEvent) => void
   errors: FieldErrors<T>
@@ -36,7 +28,17 @@ export function ProductForm<T extends FieldValues>({
     isDialog?: boolean
     isSelect?: boolean
   }>
-}) {
+}
+
+export function ProductForm<T extends FieldValues>({
+  title,
+  onSubmit,
+  errors,
+  control,
+  submitLabel,
+  loading,
+  fields,
+}: ProductFormProps<T>) {
   return (
     <BaseForm.Root title={title}>
       {fields.map((fieldConfig) => {
