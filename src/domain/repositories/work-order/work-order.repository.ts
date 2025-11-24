@@ -1,3 +1,4 @@
+import { PaymentOrderSerializableDTO } from '@/src/domain/entities/payment-order/payment-order.entity'
 import { WorkOrderResult } from '@/src/domain/entities/work-order-result/work-order-result.entity'
 import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
 import {
@@ -20,4 +21,9 @@ export abstract class WorkOrderRepository {
   abstract getWorkOrdersByCustomer: (customerId: UUID) => Promise<WorkOrder[]>
   abstract getPendingWorkOrders: () => Promise<WorkOrder[]>
   abstract getWorkOrdersByDate: (date: Date) => Promise<WorkOrder[]>
+  abstract addCreateFromFinished: (
+    originalId: UUID,
+    newScheduledDate: Date,
+    newPaymentOrder?: PaymentOrderSerializableDTO
+  ) => Promise<void>
 }

@@ -3,12 +3,16 @@ import { Itinerary } from '@/src/domain/entities/itinerary/itinerary.entity'
 import { ItineraryMapper } from '@/src/domain/entities/itinerary/mapper/itinerary.mapper'
 import { PaymentOrderMapper } from '@/src/domain/entities/payment-order/mapper/payment-order.mapper'
 import { ProductMapper } from '@/src/domain/entities/product/mapper/product.mapper'
+import { ProductSnapshot } from '@/src/domain/entities/work-order-item/value-objects/product-snapshot.vo'
 import { WorkOrderItem } from '@/src/domain/entities/work-order-item/work-order-item.entity'
 import { WorkOrderMapItem } from '@/src/domain/entities/work-order-map-item/work-order-map-item.entity'
 import { WorkOrderResultItem } from '@/src/domain/entities/work-order-result-item/work-order-result-item.entity'
 import { WorkOrderResultMapper } from '@/src/domain/entities/work-order-result/mapper/work-order-result.mapper'
 import { WorkOrderMapper } from '@/src/domain/entities/work-order/mapper/work-order.mapper'
-import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
+import {
+  WorkOrder,
+  WorkOrderStatus,
+} from '@/src/domain/entities/work-order/work-order.entity'
 import { AddItineraryDto } from '@/src/domain/repositories/itinerary/dtos/add-itinerary.dto'
 import { UpdateItineraryDto } from '@/src/domain/repositories/itinerary/dtos/update-itinerary.dto'
 import { ItineraryRepository } from '@/src/domain/repositories/itinerary/itinerary.repository'
@@ -46,8 +50,10 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
       .filter((row) => row.product)
       .map((row) => {
         const prod = ProductMapper.toDomain(row.product!)
-        return WorkOrderItem.fromProduct(
-          prod,
+        const snapshot = new ProductSnapshot(prod.id, prod.name, prod.salePrice)
+
+        return WorkOrderItem.fromProductSnapshot(
+          snapshot,
           row.item.quantity,
           row.item.priceSnapshot
         )
@@ -76,8 +82,9 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
       .filter((row) => row.product)
       .forEach((row) => {
         const prod = ProductMapper.toDomain(row.product!)
-        const resultItem = WorkOrderResultItem.fromProduct(
-          prod,
+        const snapshot = new ProductSnapshot(prod.id, prod.name, prod.salePrice)
+        const resultItem = WorkOrderResultItem.fromProductSnapshot(
+          snapshot,
           row.item.quantity,
           row.item.priceSnapshot,
           row.item.observation ?? undefined
@@ -124,10 +131,12 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
 
     const workOrderMapItems = await Promise.all(
       rows
-        .filter((row) => row.workOrder && row.customer && row.paymentOrder)
+        .filter((row) => row.workOrder && row.customer)
         .map(async (row) => {
           const cust = CustomerMapper.toDomain(row.customer!)
-          const po = PaymentOrderMapper.toDomain(row.paymentOrder!)
+          const po = row.paymentOrder
+            ? PaymentOrderMapper.toDomain(row.paymentOrder!)
+            : undefined
 
           let result = undefined
           if (row.workOrderResult) {
@@ -147,8 +156,8 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
           const wo = WorkOrderMapper.toDomain(
             row.workOrder!,
             cust,
-            po,
             items,
+            po,
             result
           )
 
@@ -213,6 +222,12 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
           position: item.position,
           isLate: item.isLate,
         })
+
+        // Marcar work order como COMMITTED quando adicionada ao itinerário
+        await tx
+          .update(workOrder)
+          .set({ status: WorkOrderStatus.COMMITTED })
+          .where(eq(workOrder.id, item.workOrder.id))
       }
     })
   }
@@ -372,10 +387,12 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
 
     const workOrders = await Promise.all(
       rows
-        .filter((row) => row.customer && row.paymentOrder)
+        .filter((row) => row.customer)
         .map(async (row) => {
           const cust = CustomerMapper.toDomain(row.customer!)
-          const po = PaymentOrderMapper.toDomain(row.paymentOrder!)
+          const po = row.paymentOrder
+            ? PaymentOrderMapper.toDomain(row.paymentOrder!)
+            : undefined
 
           let result = undefined
           if (row.workOrderResult) {
@@ -394,8 +411,8 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
           return WorkOrderMapper.toDomain(
             row.workOrder,
             cust,
-            po,
             items,
+            po,
             result
           )
         })

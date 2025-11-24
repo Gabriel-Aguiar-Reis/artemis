@@ -1,3 +1,4 @@
+import { PaymentService } from '@/src/application/services/payment.service'
 import { PaymentOrderMapper } from '@/src/domain/entities/payment-order/mapper/payment-order.mapper'
 import { PaymentOrder } from '@/src/domain/entities/payment-order/payment-order.entity'
 import { AddPaymentOrderDto } from '@/src/domain/repositories/payment-order/dtos/add-payment-order.dto'
@@ -37,27 +38,26 @@ export default class DrizzlePaymentOrderRepository
   }
 
   async updatePaymentOrder(dto: UpdatePaymentOrderDto): Promise<void> {
-    const po = new PaymentOrder(
-      dto.id as UUID,
-      dto.method,
-      dto.totalValue,
-      dto.installments,
-      dto.isPaid,
-      dto.paidInstallments
-    )
+    const po = PaymentOrder.fromDTO({ ...dto, id: dto.id as UUID })
 
     const data = PaymentOrderMapper.toPersistence(po)
 
-    await db
-      .update(paymentOrder)
-      .set({
-        method: data.method,
-        totalValue: data.totalValue,
-        installments: data.installments,
-        isPaid: data.isPaid,
-        paidInstallments: data.paidInstallments,
-      })
-      .where(eq(paymentOrder.id, dto.id))
+    await db.transaction(async (tx) => {
+      await tx
+        .update(paymentOrder)
+        .set({
+          method: data.method,
+          totalValue: data.totalValue,
+          installments: data.installments,
+          isPaid: data.isPaid,
+          paidInstallments: data.paidInstallments,
+        })
+        .where(eq(paymentOrder.id, dto.id))
+
+      if (data.isPaid) {
+        await PaymentService.finalizePayment(tx, dto.id)
+      }
+    })
   }
 
   async deletePaymentOrder(id: UUID): Promise<void> {

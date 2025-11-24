@@ -1,5 +1,6 @@
 import { CustomerMapper } from '@/src/domain/entities/customer/mapper/customer.mapper'
 import { PaymentOrderMapper } from '@/src/domain/entities/payment-order/mapper/payment-order.mapper'
+import { PaymentOrderSerializableDTO } from '@/src/domain/entities/payment-order/payment-order.entity'
 import { ProductMapper } from '@/src/domain/entities/product/mapper/product.mapper'
 import { ProductSnapshot } from '@/src/domain/entities/work-order-item/value-objects/product-snapshot.vo'
 import { WorkOrderItem } from '@/src/domain/entities/work-order-item/work-order-item.entity'
@@ -125,6 +126,10 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
     )
 
     const data = WorkOrderMapper.toPersistence(wo)
+    // Se caller passou paymentOrderId (Opção B), utilizar
+    if ((dto as any).paymentOrderId) {
+      data.paymentOrderId = (dto as any).paymentOrderId as string
+    }
 
     await db.insert(workOrder).values(data).onConflictDoNothing()
   }
@@ -259,12 +264,34 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
         }
       }
 
+      // Criar ou atualizar payment order, se aplicável
+      if (wo.paymentOrder) {
+        const poData = PaymentOrderMapper.toPersistence(wo.paymentOrder)
+        await tx
+          .update(paymentOrder)
+          .set(poData)
+          .where(eq(paymentOrder.id, wo.paymentOrder.id))
+      } else if (result.totalValue > 0) {
+        const newPoId = uuid.v4() as string
+        await tx.insert(paymentOrder).values({
+          id: newPoId,
+          method: 'Dinheiro',
+          totalValue: result.totalValue,
+          installments: 1,
+          isPaid: false,
+          paidInstallments: 0,
+        })
+        // set payment_order_id on work order persistence object
+        woData.paymentOrderId = newPoId
+      }
+
       // Atualizar work order
       await tx
         .update(workOrder)
         .set({
           status: woData.status,
           resultId: result.id,
+          paymentOrderId: woData.paymentOrderId,
           updatedAt: woData.updatedAt,
         })
         .where(eq(workOrder.id, id))
@@ -328,10 +355,12 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
 
     const workOrders = await Promise.all(
       rows
-        .filter((row) => row.customer && row.paymentOrder)
+        .filter((row) => row.customer)
         .map(async (row) => {
           const cust = CustomerMapper.toDomain(row.customer!)
-          const po = PaymentOrderMapper.toDomain(row.paymentOrder!)
+          const po = row.paymentOrder
+            ? PaymentOrderMapper.toDomain(row.paymentOrder)
+            : undefined
           const items = await this.loadWorkOrderItems(row.workOrder.id as UUID)
           return WorkOrderMapper.toDomain(row.workOrder, cust, items, po)
         })
@@ -354,10 +383,12 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
 
     const workOrders = await Promise.all(
       rows
-        .filter((row) => row.customer && row.paymentOrder)
+        .filter((row) => row.customer)
         .map(async (row) => {
           const cust = CustomerMapper.toDomain(row.customer!)
-          const po = PaymentOrderMapper.toDomain(row.paymentOrder!)
+          const po = row.paymentOrder
+            ? PaymentOrderMapper.toDomain(row.paymentOrder)
+            : undefined
           const items = await this.loadWorkOrderItems(row.workOrder.id as UUID)
           return WorkOrderMapper.toDomain(row.workOrder, cust, items, po)
         })
@@ -385,15 +416,83 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
 
     const workOrders = await Promise.all(
       filtered
-        .filter((row) => row.customer && row.paymentOrder)
+        .filter((row) => row.customer)
         .map(async (row) => {
           const cust = CustomerMapper.toDomain(row.customer!)
-          const po = PaymentOrderMapper.toDomain(row.paymentOrder!)
+          const po = row.paymentOrder
+            ? PaymentOrderMapper.toDomain(row.paymentOrder)
+            : undefined
           const items = await this.loadWorkOrderItems(row.workOrder.id as UUID)
           return WorkOrderMapper.toDomain(row.workOrder, cust, items, po)
         })
     )
 
     return workOrders
+  }
+
+  async addCreateFromFinished(
+    originalId: UUID,
+    newScheduledDate: Date,
+    newPaymentOrder?: PaymentOrderSerializableDTO
+  ): Promise<void> {
+    const original = await this.getWorkOrder(originalId)
+    if (!original) throw new Error('Ordem de serviço original não encontrada.')
+
+    if (
+      original.status !== WorkOrderStatus.COMPLETED &&
+      original.status !== WorkOrderStatus.PARTIAL
+    ) {
+      throw new Error(
+        'Só é possível criar nova OS a partir de uma OS finalizada ou parcial.'
+      )
+    }
+
+    // Criar payment order se fornecido
+    await db.transaction(async (tx) => {
+      let paymentOrderId: UUID | null = null
+      if (newPaymentOrder) {
+        paymentOrderId = crypto.randomUUID()
+        try {
+          await tx
+            .insert(paymentOrder)
+            .values({
+              id: paymentOrderId,
+              method: newPaymentOrder.method,
+              totalValue: newPaymentOrder.totalValue,
+              installments: newPaymentOrder.installments ?? 1,
+              isPaid: false,
+              paidInstallments: 0,
+            })
+            .onConflictDoNothing()
+        } catch {
+          throw new Error('Falha ao criar a ordem de pagamento.')
+        }
+      }
+
+      const newWo = original.createFromResult(newScheduledDate, newPaymentOrder)
+
+      const newWoData = WorkOrderMapper.toPersistence(newWo)
+
+      try {
+        await tx.insert(workOrder).values(newWoData).onConflictDoNothing()
+      } catch {
+        throw new Error('Falha ao criar a nova ordem de serviço.')
+      }
+
+      // inserir items
+      for (const item of newWo.products) {
+        try {
+          await tx.insert(workOrderItems).values({
+            id: crypto.randomUUID(),
+            workOrderId: newWo.id,
+            productId: item.productId,
+            quantity: item.quantity,
+            priceSnapshot: item.priceSnapshot,
+          })
+        } catch {
+          throw new Error('Falha ao criar os itens da nova ordem de serviço.')
+        }
+      }
+    })
   }
 }
