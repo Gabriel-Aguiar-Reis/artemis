@@ -1,7 +1,7 @@
 import { CustomerMapper } from '@/src/domain/entities/customer/mapper/customer.mapper'
 import { PaymentOrderMapper } from '@/src/domain/entities/payment-order/mapper/payment-order.mapper'
-import { PaymentOrder } from '@/src/domain/entities/payment-order/payment-order.entity'
 import { ProductMapper } from '@/src/domain/entities/product/mapper/product.mapper'
+import { ProductSnapshot } from '@/src/domain/entities/work-order-item/value-objects/product-snapshot.vo'
 import { WorkOrderItem } from '@/src/domain/entities/work-order-item/work-order-item.entity'
 import { WorkOrderResultMapper } from '@/src/domain/entities/work-order-result/mapper/work-order-result.mapper'
 import { WorkOrderResult } from '@/src/domain/entities/work-order-result/work-order-result.entity'
@@ -10,9 +10,11 @@ import {
   WorkOrder,
   WorkOrderStatus,
 } from '@/src/domain/entities/work-order/work-order.entity'
-import { AddWorkOrderDto } from '@/src/domain/repositories/work-order/dtos/add-work-order.dto'
-import { UpdateWorkOrderDto } from '@/src/domain/repositories/work-order/dtos/update-work-order.dto'
 import { WorkOrderRepository } from '@/src/domain/repositories/work-order/work-order.repository'
+import {
+  WorkOrderInsertDTO,
+  WorkOrderUpdateDTO,
+} from '@/src/domain/validations/work-order.schema'
 import { db } from '@/src/infra/db/drizzle/drizzle-client'
 import { customer } from '@/src/infra/db/drizzle/schema/drizzle.customer.schema'
 import { paymentOrder } from '@/src/infra/db/drizzle/schema/drizzle.payment-order.schema'
@@ -45,8 +47,13 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       .filter((row) => row.product)
       .map((row) => {
         const prod = ProductMapper.toDomain(row.product!)
-        return WorkOrderItem.fromProduct(
-          prod,
+        const snapshot = ProductSnapshot.fromDTO({
+          productId: prod.id,
+          productName: prod.name,
+          salePrice: prod.salePrice,
+        })
+        return WorkOrderItem.fromProductSnapshot(
+          snapshot,
           row.item.quantity,
           row.item.priceSnapshot
         )
@@ -83,31 +90,8 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
     return workOrders
   }
 
-  async addWorkOrder(dto: AddWorkOrderDto): Promise<void> {
+  async addWorkOrder(dto: WorkOrderInsertDTO): Promise<void> {
     const id = uuid.v4() as UUID
-    const paymentOrderId = uuid.v4() as UUID
-
-    // Buscar produtos para obter preços atuais
-    const productIds = dto.products.map((p) => p.productId)
-    const products = await db
-      .select()
-      .from(product)
-      .where(eq(product.id, productIds[0] as any))
-
-    // Calcular total value
-    const totalValue = dto.products.reduce(
-      (sum, p) => sum + p.salePrice * p.quantity,
-      0
-    )
-
-    const po = new PaymentOrder(
-      paymentOrderId,
-      dto.paymentMethod,
-      totalValue,
-      1,
-      false,
-      0
-    )
 
     // Buscar customer
     const [customerRow] = await db
@@ -127,37 +111,20 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       new Date(),
       new Date(),
       new Date(dto.scheduledDate),
-      po,
+      undefined,
       [],
       WorkOrderStatus.PENDING,
       undefined,
       undefined,
-      dto.notes
+      dto.notes ?? undefined
     )
 
     const data = WorkOrderMapper.toPersistence(wo)
 
-    await db.transaction(async (tx) => {
-      // Inserir payment order
-      await tx.insert(paymentOrder).values(PaymentOrderMapper.toPersistence(po))
-
-      // Inserir work order
-      await tx.insert(workOrder).values(data)
-
-      // Inserir items
-      for (const p of dto.products) {
-        await tx.insert(workOrderItems).values({
-          id: uuid.v4() as string,
-          workOrderId: id,
-          productId: p.productId,
-          quantity: p.quantity,
-          priceSnapshot: p.salePrice,
-        })
-      }
-    })
+    await db.insert(workOrder).values(data).onConflictDoNothing()
   }
 
-  async updateWorkOrder(dto: UpdateWorkOrderDto): Promise<void> {
+  async updateWorkOrder(dto: WorkOrderUpdateDTO): Promise<void> {
     const wo = await this.getWorkOrder(dto.id as UUID)
     if (!wo) {
       throw new Error('A ordem de serviço não foi encontrada.')
@@ -182,12 +149,9 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       wo.scheduledDate = new Date(dto.scheduledDate)
     }
 
-    // Atualizar produtos
-    if (dto.products) {
-      wo.products = dto.products.map((p) => WorkOrderItem.fromDTO(p))
-
-      const totalValue = wo.products.reduce((sum, p) => sum + p.total, 0)
-      wo.paymentOrder.updateTotalValue(totalValue)
+    // Atualizar data de visita
+    if (dto.visitDate) {
+      wo.visitDate = new Date(dto.visitDate)
     }
 
     // Usar setStatus()
@@ -196,7 +160,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
     }
 
     // Atualizar notas
-    if (dto.notes !== undefined) {
+    if (dto.notes) {
       wo.notes = dto.notes
     }
 
@@ -204,44 +168,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
 
     const data = WorkOrderMapper.toPersistence(wo)
 
-    await db.transaction(async (tx) => {
-      // Atualizar payment order
-      await tx
-        .update(paymentOrder)
-        .set(PaymentOrderMapper.toPersistence(wo.paymentOrder))
-        .where(eq(paymentOrder.id, wo.paymentOrder.id))
-
-      // Atualizar work order
-      await tx
-        .update(workOrder)
-        .set({
-          customerId: data.customerId,
-          scheduledDate: data.scheduledDate,
-          status: data.status,
-          notes: data.notes,
-          updatedAt: data.updatedAt,
-        })
-        .where(eq(workOrder.id, dto.id))
-
-      // Atualizar items se mudaram
-      if (dto.products) {
-        // Deletar items antigos
-        await tx
-          .delete(workOrderItems)
-          .where(eq(workOrderItems.workOrderId, dto.id))
-
-        // Inserir novos items
-        for (const p of dto.products) {
-          await tx.insert(workOrderItems).values({
-            id: uuid.v4() as string,
-            workOrderId: dto.id as UUID,
-            productId: p.productId,
-            quantity: p.quantity,
-            priceSnapshot: p.salePrice,
-          })
-        }
-      }
-    })
+    await db.insert(workOrder).values(data).onConflictDoNothing()
   }
 
   async updateWorkOrderStart(id: UUID): Promise<void> {
@@ -276,7 +203,6 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
     wo.syncPaymentWithResult()
 
     const woData = WorkOrderMapper.toPersistence(wo)
-    const poData = PaymentOrderMapper.toPersistence(wo.paymentOrder)
 
     await db.transaction(async (tx) => {
       // Salvar resultado primeiro
@@ -337,16 +263,6 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
           updatedAt: woData.updatedAt,
         })
         .where(eq(workOrder.id, id))
-
-      // Atualizar payment order com valores reais
-      await tx
-        .update(paymentOrder)
-        .set({
-          totalValue: poData.totalValue,
-          isPaid: poData.isPaid,
-          paidInstallments: poData.paidInstallments,
-        })
-        .where(eq(paymentOrder.id, wo.paymentOrder.id))
     })
   }
 
@@ -362,11 +278,6 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
         await tx
           .delete(workOrderItems)
           .where(eq(workOrderItems.workOrderId, id))
-
-        // Deletar payment order
-        await tx
-          .delete(paymentOrder)
-          .where(eq(paymentOrder.id, woRow.paymentOrderId))
 
         // Deletar work order
         await tx.delete(workOrder).where(eq(workOrder.id, id))
