@@ -88,7 +88,7 @@ export default function CustomersScreen() {
               </Text>
               <Text className="text-sm text-muted-foreground">
                 {customer.storeAddress.neighborhood} -{' '}
-                {customer.storeAddress.city}
+                {customer.storeAddress.city}, {customer.storeAddress.state}
               </Text>
             </View>
           ))}

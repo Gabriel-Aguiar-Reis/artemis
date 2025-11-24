@@ -8,6 +8,7 @@ export type AddressSerializableDTO = {
   streetNumber: number
   neighborhood: string
   city: string
+  state: string
   coordinates: CoordinatesSerializableDTO
   zipCode: string
 }
@@ -18,6 +19,7 @@ export class Address {
     public streetNumber: number,
     public neighborhood: string,
     public city: string,
+    public state: string,
     public coordinates: Coordinates,
     public zipCode: string
   ) {}
@@ -28,6 +30,7 @@ export class Address {
       streetNumber: this.streetNumber,
       neighborhood: this.neighborhood,
       city: this.city,
+      state: this.state,
       coordinates: this.coordinates?.toDTO
         ? this.coordinates.toDTO()
         : this.coordinates,
@@ -41,6 +44,7 @@ export class Address {
       dto.streetNumber,
       dto.neighborhood,
       dto.city,
+      dto.state,
       Coordinates.fromDTO(dto.coordinates),
       dto.zipCode
     )

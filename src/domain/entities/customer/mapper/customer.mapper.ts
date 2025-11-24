@@ -27,6 +27,7 @@ export class CustomerMapper {
         streetNumber: table.addressStreetNumber ?? 0,
         neighborhood: table.addressNeighborhood ?? '',
         city: table.addressCity ?? '',
+        state: table.addressState ?? '',
         coordinates: {
           latitude: table.addressLatitude,
           longitude: table.addressLongitude,
@@ -62,6 +63,7 @@ export class CustomerMapper {
       addressStreetNumber: entity.storeAddress.streetNumber,
       addressNeighborhood: entity.storeAddress.neighborhood,
       addressCity: entity.storeAddress.city,
+      addressState: entity.storeAddress.state,
       addressZipCode: entity.storeAddress.zipCode,
       addressLatitude: entity.storeAddress.coordinates.latitude,
       addressLongitude: entity.storeAddress.coordinates.longitude,

@@ -14,6 +14,7 @@ export type CustomerModelShape = Pick<
   addressStreetNumber: number
   addressNeighborhood: string
   addressCity: string
+  addressState: string
   addressZipCode: string
   addressLatitude: number
   addressLongitude: number
@@ -35,6 +36,7 @@ export const customer = sqliteTable('customer', {
   addressStreetNumber: integer('address_street_number').notNull(),
   addressNeighborhood: text('address_neighborhood').notNull(),
   addressCity: text('address_city').notNull(),
+  addressState: text('address_state').notNull(),
   addressZipCode: text('address_zip_code').notNull(),
   addressLatitude: real('address_latitude').notNull(),
   addressLongitude: real('address_longitude').notNull(),
