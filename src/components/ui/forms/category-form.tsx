@@ -1,7 +1,7 @@
+import { BaseForm } from '@/src/components/ui/forms/base-form'
 import { LucideIcon } from 'lucide-react-native'
 import { BaseSyntheticEvent } from 'react'
 import { Control, FieldErrors, FieldValues, Path } from 'react-hook-form'
-import { BaseForm } from './base-form'
 
 type CategoryFormProps<T extends FieldValues> = {
   title: string

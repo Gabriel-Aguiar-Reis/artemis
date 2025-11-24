@@ -10,6 +10,24 @@ import { Control, Controller, FieldValues, Path } from 'react-hook-form'
 import { ScrollView, Switch, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
+export type FormFieldProps<T extends FieldValues> = {
+  name: Path<T>
+  label: string
+  placeholder?: string
+  icon?: LucideIcon
+  alternate?: {
+    icon: LucideIcon
+    type: 'toSecret' | 'toDisabled'
+  }
+  iconTooltip?: string
+  rules?: object
+  inputProps?: Record<string, any>
+  isNumber?: boolean
+  isCurrency?: boolean
+  isDialog?: boolean
+  isSelect?: boolean
+}
+
 type RootProps = {
   title: string
   children: ReactNode

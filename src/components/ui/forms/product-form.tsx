@@ -1,8 +1,7 @@
+import { BaseForm, FormFieldProps } from '@/src/components/ui/forms/base-form'
 import { getErrorMessage } from '@/src/lib/utils'
-import { LucideIcon } from 'lucide-react-native'
 import { BaseSyntheticEvent } from 'react'
 import { Control, FieldErrors, FieldValues, Path } from 'react-hook-form'
-import { BaseForm } from './base-form'
 
 type ProductFormProps<T extends FieldValues> = {
   title: string
@@ -11,23 +10,7 @@ type ProductFormProps<T extends FieldValues> = {
   control: Control<T>
   submitLabel: string
   loading?: boolean
-  fields: Array<{
-    name: Path<T>
-    label: string
-    placeholder?: string
-    icon?: LucideIcon
-    alternate?: {
-      icon: LucideIcon
-      type: 'toSecret' | 'toDisabled'
-    }
-    iconTooltip?: string
-    rules?: object
-    inputProps?: Record<string, any>
-    isNumber?: boolean
-    isCurrency?: boolean
-    isDialog?: boolean
-    isSelect?: boolean
-  }>
+  fields: FormFieldProps<T>[]
 }
 
 export function ProductForm<T extends FieldValues>({
