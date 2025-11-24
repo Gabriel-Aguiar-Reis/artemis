@@ -1,9 +1,10 @@
-import { Address } from '@/src/domain/entities/customer/value-objects/address.vo'
+import { AddressSerializableDTO } from '@/src/domain/entities/customer/value-objects/address.vo'
+import { Coordinates } from '@/src/domain/entities/customer/value-objects/coordinates.vo'
 
 export class GeocodingService {
   static async getCoordinatesFromAddress(
-    address: Address
-  ): Promise<{ lat: number; lng: number }> {
+    address: Omit<AddressSerializableDTO, 'coordinates'>
+  ): Promise<Coordinates> {
     const formattedAddress = encodeURIComponent(
       `${address.streetName}, ${address.streetNumber}, ${address.city}, ${address.state}, ${address.zipCode}`
     )
@@ -17,6 +18,9 @@ export class GeocodingService {
       throw new Error('Endereço não encontrado na API de geocodificação.')
     }
 
-    return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) }
+    return Coordinates.fromDTO({
+      latitude: parseFloat(data[0].lat),
+      longitude: parseFloat(data[0].lon),
+    })
   }
 }
