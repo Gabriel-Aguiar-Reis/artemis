@@ -13,7 +13,7 @@ import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-export default function EditCategoryScreen() {
+export default function CategoriesEditScreen() {
   const params = useLocalSearchParams<{
     id: UUID
   }>()
