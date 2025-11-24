@@ -17,19 +17,19 @@ export class WorkOrderMapper {
     paymentOrder?: PaymentOrder,
     result?: WorkOrderResult
   ): WorkOrder {
-    return new WorkOrder(
-      table.id as UUID,
+    return WorkOrder.fromDTO({
+      id: table.id as UUID,
       customer,
-      table.createdAt ? new Date(table.createdAt) : new Date(),
-      table.updatedAt ? new Date(table.updatedAt) : new Date(),
-      table.scheduledDate ? new Date(table.scheduledDate) : new Date(),
-      paymentOrder ?? undefined,
-      items,
-      table.status as WorkOrderStatus,
+      createdAt: table.createdAt ?? new Date().toISOString(),
+      updatedAt: table.updatedAt ?? new Date().toISOString(),
+      scheduledDate: table.scheduledDate ?? new Date().toISOString(),
+      paymentOrder: paymentOrder ?? undefined,
+      products: items,
+      status: table.status as WorkOrderStatus,
       result,
-      table.visitDate ? new Date(table.visitDate) : undefined,
-      table.notes ?? undefined
-    )
+      visitDate: table.visitDate ?? undefined,
+      notes: table.notes ?? undefined,
+    })
   }
 
   static toPersistence(entity: WorkOrder): WorkOrderTable {

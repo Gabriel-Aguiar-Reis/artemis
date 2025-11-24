@@ -1,17 +1,12 @@
 import { Customer } from '@/src/domain/entities/customer/customer.entity'
-import { Address } from '@/src/domain/entities/customer/value-objects/address.vo'
-import { Coordinates } from '@/src/domain/entities/customer/value-objects/coordinates.vo'
-import { LandlinePhoneNumber } from '@/src/domain/entities/customer/value-objects/landline-phone-number.vo'
-import { SmartphoneNumber } from '@/src/domain/entities/customer/value-objects/smartphone-number.vo'
 import { CustomerTable } from '@/src/infra/db/drizzle/schema/drizzle.customer.schema'
 import { UUID } from 'crypto'
 
 export class CustomerMapper {
   static toDomain(table: CustomerTable): Customer {
-    // Validar dados obrigatórios
     if (!table.storeName || !table.contactName || !table.phoneNumber) {
       throw new Error(
-        'Customer must have store name, contact name, and phone number'
+        'Cliente deve ter nome da loja, nome do contato e número de telefone'
       )
     }
 
@@ -21,43 +16,37 @@ export class CustomerMapper {
       table.addressLongitude === null ||
       table.addressLongitude === undefined
     ) {
-      throw new Error('Customer must have valid coordinates')
+      throw new Error('Cliente deve ter coordenadas válidas')
     }
 
-    const coordinates = new Coordinates(
-      table.addressLatitude,
-      table.addressLongitude
-    )
+    const customer = Customer.fromDTO({
+      id: table.id as UUID,
+      storeName: table.storeName,
+      storeAddress: {
+        streetName: table.addressStreetName ?? '',
+        streetNumber: table.addressStreetNumber ?? 0,
+        neighborhood: table.addressNeighborhood ?? '',
+        city: table.addressCity ?? '',
+        coordinates: {
+          latitude: table.addressLatitude,
+          longitude: table.addressLongitude,
+        },
+        zipCode: table.addressZipCode ?? '',
+      },
+      contactName: table.contactName,
+      phoneNumber: {
+        value: table.phoneNumber,
+        isWhatsApp: table.phoneIsWhatsApp,
+      },
+      landlineNumber: table.landlineNumber
+        ? {
+            value: table.landlineNumber,
+            isWhatsApp: table.landlineIsWhatsApp ?? false,
+          }
+        : undefined,
+    })
 
-    const address = new Address(
-      table.addressStreetName ?? '',
-      table.addressStreetNumber ?? 0,
-      table.addressNeighborhood ?? '',
-      table.addressCity ?? '',
-      coordinates,
-      table.addressZipCode ?? ''
-    )
-
-    const phoneNumber = new SmartphoneNumber(
-      table.phoneNumber,
-      table.phoneIsWhatsApp
-    )
-
-    const landlineNumber = table.landlineNumber
-      ? new LandlinePhoneNumber(
-          table.landlineNumber,
-          table.landlineIsWhatsApp ?? false
-        )
-      : undefined
-
-    return new Customer(
-      table.id as UUID,
-      table.storeName,
-      address,
-      table.contactName,
-      phoneNumber,
-      landlineNumber
-    )
+    return customer
   }
 
   static toPersistence(entity: Customer): CustomerTable {

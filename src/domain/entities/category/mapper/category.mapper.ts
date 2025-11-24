@@ -4,7 +4,11 @@ import { UUID } from 'crypto'
 
 export class CategoryMapper {
   static toDomain(table: CategoryTable): Category {
-    return new Category(table.id as UUID, table.name, table.isActive)
+    return Category.fromDTO({
+      id: table.id as UUID,
+      name: table.name,
+      isActive: table.isActive,
+    })
   }
 
   static toPersistence(entity: Category): CategoryTable {

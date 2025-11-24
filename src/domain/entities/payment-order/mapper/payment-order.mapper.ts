@@ -4,14 +4,14 @@ import { UUID } from 'crypto'
 
 export class PaymentOrderMapper {
   static toDomain(table: PaymentOrderTable): PaymentOrder {
-    return new PaymentOrder(
-      table.id as UUID,
-      table.method,
-      table.totalValue,
-      table.installments,
-      table.isPaid,
-      table.paidInstallments
-    )
+    return PaymentOrder.fromDTO({
+      id: table.id as UUID,
+      method: table.method,
+      totalValue: table.totalValue,
+      installments: table.installments,
+      isPaid: table.isPaid,
+      paidInstallments: table.paidInstallments,
+    })
   }
 
   static toPersistence(entity: PaymentOrder): PaymentOrderTable {

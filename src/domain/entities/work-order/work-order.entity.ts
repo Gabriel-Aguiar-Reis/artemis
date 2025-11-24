@@ -176,6 +176,57 @@ export class WorkOrder {
     this.visitDate = new Date()
   }
 
+  createFromResult(
+    newScheduledDate: Date,
+    newPaymentOrder?: PaymentOrderSerializableDTO
+  ): WorkOrder {
+    if (
+      this.status !== WorkOrderStatus.COMPLETED &&
+      this.status !== WorkOrderStatus.PARTIAL
+    ) {
+      throw new Error(
+        'Só é possível criar uma nova ordem de serviço a partir de uma ordem concluída ou parcial.'
+      )
+    }
+
+    const paymentOrder = newPaymentOrder
+      ? PaymentOrder.fromDTO({
+          id: crypto.randomUUID() as UUID,
+          method: newPaymentOrder.method,
+          totalValue: newPaymentOrder.totalValue,
+          installments: newPaymentOrder.installments ?? 1,
+          paidInstallments: 0,
+          isPaid: false,
+        })
+      : undefined
+
+    const items = this.result?.getExchangedAndAddedProducts() ?? []
+
+    return WorkOrder.fromDTO({
+      id: crypto.randomUUID() as UUID,
+      customer: this.customer,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      scheduledDate: newScheduledDate.toISOString(),
+      paymentOrder,
+      products: items,
+      status: WorkOrderStatus.PENDING,
+      result: undefined,
+      visitDate: undefined,
+      notes: this.notes,
+    })
+  }
+
+  finalizeAfterPayment(): WorkOrderStatus {
+    if (!this.paymentOrder || !this.paymentOrder.isPaid)
+      throw new Error(
+        'Não é possível finalizar a ordem de serviço sem o pagamento concluído.'
+      )
+    this.status = WorkOrderStatus.COMPLETED
+    this.updatedAt = new Date()
+    return this.status
+  }
+
   toDTO(): WorkOrderSerializableDTO {
     return {
       id: this.id,

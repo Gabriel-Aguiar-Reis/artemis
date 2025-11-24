@@ -22,6 +22,10 @@ export class WorkOrderResult {
     public removedProducts?: WorkOrderResultItem[]
   ) {}
 
+  getExchangedAndAddedProducts(): WorkOrderResultItem[] {
+    return [...this.exchangedProducts, ...(this.addedProducts ?? [])]
+  }
+
   toDTO(): WorkOrderResultSerializableDTO {
     return {
       id: this.id,

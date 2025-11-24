@@ -10,13 +10,13 @@ export class WorkOrderResultMapper {
     addedProducts?: WorkOrderResultItem[],
     removedProducts?: WorkOrderResultItem[]
   ): WorkOrderResult {
-    return new WorkOrderResult(
-      table.id as UUID,
-      table.totalValue,
+    return WorkOrderResult.fromDTO({
+      id: table.id as UUID,
+      totalValue: table.totalValue,
       exchangedProducts,
       addedProducts,
-      removedProducts
-    )
+      removedProducts,
+    })
   }
 
   static toPersistence(entity: WorkOrderResult): WorkOrderResultTable {
