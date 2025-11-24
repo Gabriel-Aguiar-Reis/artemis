@@ -1,6 +1,6 @@
 import { Product } from '@/src/domain/entities/product/product.entity'
 import { category } from '@/src/infra/db/drizzle/schema/drizzle.category.schema'
-import { InferInsertModel, InferSelectModel, sql } from 'drizzle-orm'
+import { InferSelectModel, sql } from 'drizzle-orm'
 import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
 type ProductModelShape = Pick<
@@ -24,4 +24,3 @@ export const product = sqliteTable('product', {
 }) satisfies Record<keyof ProductModelShape, any>
 
 export type ProductTable = InferSelectModel<typeof product>
-export type NewProductTable = InferInsertModel<typeof product>

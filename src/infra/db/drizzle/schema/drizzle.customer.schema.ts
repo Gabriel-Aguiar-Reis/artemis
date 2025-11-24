@@ -1,5 +1,5 @@
 import { Customer } from '@/src/domain/entities/customer/customer.entity'
-import { InferInsertModel, InferSelectModel, sql } from 'drizzle-orm'
+import { InferSelectModel, sql } from 'drizzle-orm'
 import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
 export type CustomerModelShape = Pick<
@@ -43,4 +43,3 @@ export const customer = sqliteTable('customer', {
 }) satisfies Record<keyof CustomerModelShape, any>
 
 export type CustomerTable = InferSelectModel<typeof customer>
-export type NewCustomerTable = InferInsertModel<typeof customer>

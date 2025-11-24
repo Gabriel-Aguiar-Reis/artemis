@@ -1,3 +1,4 @@
+import { GeocodingService } from '@/src/application/services/geocoding.service'
 import { Customer } from '@/src/domain/entities/customer/customer.entity'
 import { CustomerMapper } from '@/src/domain/entities/customer/mapper/customer.mapper'
 import { Address } from '@/src/domain/entities/customer/value-objects/address.vo'
@@ -5,13 +6,14 @@ import { Coordinates } from '@/src/domain/entities/customer/value-objects/coordi
 import { LandlinePhoneNumber } from '@/src/domain/entities/customer/value-objects/landline-phone-number.vo'
 import { SmartphoneNumber } from '@/src/domain/entities/customer/value-objects/smartphone-number.vo'
 import { CustomerRepository } from '@/src/domain/repositories/customer/customer.repository'
-import { AddCustomerDto } from '@/src/domain/repositories/customer/dtos/add-customer.dto'
-import { UpdateCustomerDto } from '@/src/domain/repositories/customer/dtos/update-customer.dto'
+import {
+  CustomerInsertDTO,
+  CustomerUpdateDTO,
+} from '@/src/domain/validations/customer.schema'
 import { db } from '@/src/infra/db/drizzle/drizzle-client'
 import { customer } from '@/src/infra/db/drizzle/schema/drizzle.customer.schema'
 import { UUID } from 'crypto'
 import { eq } from 'drizzle-orm'
-import uuid from 'react-native-uuid'
 
 export default class DrizzleCustomerRepository implements CustomerRepository {
   async getCustomers(): Promise<Customer[]> {
@@ -22,15 +24,58 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
     return rows.map(CustomerMapper.toDomain)
   }
 
-  async addCustomer(dto: AddCustomerDto): Promise<void> {
-    const id = uuid.v4()
+  async addCustomer(dto: CustomerInsertDTO): Promise<void> {
+    const id = crypto.randomUUID()
 
-    const coordinates = Coordinates.fromDTO(dto.storeAddress.coordinates)
-    const address = Address.fromDTO({ ...dto.storeAddress, coordinates })
-    const smartphoneNumber = SmartphoneNumber.fromDTO(dto.phoneNumber)
-    const landlineNumber = dto.landlineNumber
-      ? LandlinePhoneNumber.fromDTO(dto.landlineNumber)
-      : undefined
+    let coord: Coordinates | undefined
+    let address: Address | undefined
+    if (
+      dto.addressStreetName &&
+      dto.addressStreetNumber &&
+      dto.addressNeighborhood &&
+      dto.addressCity &&
+      dto.addressState &&
+      dto.addressZipCode
+    ) {
+      coord = await GeocodingService.getCoordinatesFromAddress({
+        streetName: dto.addressStreetName,
+        streetNumber: Number(dto.addressStreetNumber),
+        neighborhood: dto.addressNeighborhood,
+        city: dto.addressCity,
+        state: dto.addressState,
+        zipCode: dto.addressZipCode,
+      })
+
+      address = Address.fromDTO({
+        streetName: dto.addressStreetName,
+        streetNumber: Number(dto.addressStreetNumber),
+        neighborhood: dto.addressNeighborhood,
+        city: dto.addressCity,
+        state: dto.addressState,
+        zipCode: dto.addressZipCode,
+        coordinates: coord,
+      })
+    } else {
+      throw new Error('Endereço incompleto para cadastro de cliente.')
+    }
+
+    let smartphoneNumber: SmartphoneNumber | undefined
+    if (dto.phoneNumber && dto.phoneIsWhatsApp !== undefined) {
+      smartphoneNumber = SmartphoneNumber.fromDTO({
+        value: dto.phoneNumber!,
+        isWhatsApp: dto.phoneIsWhatsApp,
+      })
+    } else {
+      throw new Error('Número de celular incompleto para cadastro de cliente.')
+    }
+
+    let landlineNumber: LandlinePhoneNumber | undefined
+    if (dto.landlineNumber && typeof dto.landlineIsWhatsApp === 'boolean') {
+      landlineNumber = LandlinePhoneNumber.fromDTO({
+        value: dto.landlineNumber!,
+        isWhatsApp: dto.landlineIsWhatsApp,
+      })
+    }
 
     const _customer = new Customer(
       id as UUID,
@@ -45,21 +90,68 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
     await db.insert(customer).values(data).onConflictDoNothing()
   }
 
-  async updateCustomer(dto: UpdateCustomerDto): Promise<void> {
-    const coordinates = Coordinates.fromDTO(dto.storeAddress.coordinates)
-    const address = Address.fromDTO({ ...dto.storeAddress, coordinates })
-    const smartphoneNumber = SmartphoneNumber.fromDTO(dto.phoneNumber)
-    const landlineNumber = dto.landlineNumber
-      ? LandlinePhoneNumber.fromDTO(dto.landlineNumber)
-      : undefined
+  async updateCustomer(dto: CustomerUpdateDTO): Promise<void> {
+    if (!dto.id)
+      throw new Error('O ID do cliente é obrigatório para atualização.')
+
+    const original = await this.getCustomer(dto.id as UUID)
+
+    if (!original)
+      throw new Error('O cliente que você está tentando atualizar não existe.')
+
+    let coord: Coordinates | undefined
+    let address: Address | undefined
+    if (
+      dto.addressStreetName &&
+      dto.addressStreetNumber &&
+      dto.addressNeighborhood &&
+      dto.addressCity &&
+      dto.addressState &&
+      dto.addressZipCode
+    ) {
+      coord = await GeocodingService.getCoordinatesFromAddress({
+        streetName: dto.addressStreetName,
+        streetNumber: Number(dto.addressStreetNumber),
+        neighborhood: dto.addressNeighborhood,
+        city: dto.addressCity,
+        state: dto.addressState,
+        zipCode: dto.addressZipCode,
+      })
+
+      address = Address.fromDTO({
+        streetName: dto.addressStreetName,
+        streetNumber: Number(dto.addressStreetNumber),
+        neighborhood: dto.addressNeighborhood,
+        city: dto.addressCity,
+        state: dto.addressState,
+        zipCode: dto.addressZipCode,
+        coordinates: coord,
+      })
+    }
+
+    let smartphoneNumber: SmartphoneNumber | undefined
+    if (dto.phoneNumber && dto.phoneIsWhatsApp !== undefined) {
+      smartphoneNumber = SmartphoneNumber.fromDTO({
+        value: dto.phoneNumber!,
+        isWhatsApp: dto.phoneIsWhatsApp,
+      })
+    }
+
+    let landlineNumber: LandlinePhoneNumber | undefined
+    if (dto.landlineNumber && typeof dto.landlineIsWhatsApp === 'boolean') {
+      landlineNumber = LandlinePhoneNumber.fromDTO({
+        value: dto.landlineNumber!,
+        isWhatsApp: dto.landlineIsWhatsApp,
+      })
+    }
 
     const _customer = new Customer(
       dto.id as UUID,
-      dto.storeName,
-      address,
-      dto.contactName,
-      smartphoneNumber,
-      landlineNumber
+      dto.storeName ?? original.storeName,
+      address ?? original.storeAddress,
+      dto.contactName ?? original.contactName,
+      smartphoneNumber ?? original.phoneNumber,
+      landlineNumber ?? original.landlineNumber
     )
 
     const data = CustomerMapper.toPersistence(_customer)
