@@ -100,10 +100,17 @@ export default function WorkOrdersScreen() {
                       Produtos: {wo.products.length}
                     </Text>
                     <Text className="text-sm text-muted-foreground">
-                      Pagamento: {wo.paymentOrder.method} -
-                      {wo.paymentOrder.isPaid
-                        ? ' Pago'
-                        : ` ${wo.paymentOrder.paidInstallments}/${wo.paymentOrder.installments} parcelas`}
+                      Pagamento:{' '}
+                      {wo.paymentOrder ? (
+                        <>
+                          {wo.paymentOrder.method} -{' '}
+                          {wo.paymentOrder.isPaid
+                            ? ' Pago'
+                            : ` ${wo.paymentOrder.paidInstallments}/${wo.paymentOrder.installments} parcelas`}
+                        </>
+                      ) : (
+                        'Não registrado'
+                      )}
                     </Text>
                     {wo.visitDate && (
                       <Text className="mt-1 text-sm text-green-600">
