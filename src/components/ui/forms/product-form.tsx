@@ -48,6 +48,9 @@ export function ProductForm<T extends FieldValues>({
               inputProps={fieldConfig.inputProps}
               isDialog={fieldConfig.isDialog}
               isSelect={fieldConfig.isSelect}
+              isSearch={fieldConfig.isSearch}
+              onSearchPress={fieldConfig.onSearchPress}
+              isSearchLoading={fieldConfig.isSearchLoading}
             />
           )
         }
@@ -74,6 +77,9 @@ export function ProductForm<T extends FieldValues>({
               inputProps={fieldConfig.inputProps}
               isDialog={fieldConfig.isDialog}
               isSelect={fieldConfig.isSelect}
+              isSearch={fieldConfig.isSearch}
+              onSearchPress={fieldConfig.onSearchPress}
+              isSearchLoading={fieldConfig.isSearchLoading}
             />
           )
         }
@@ -100,6 +106,9 @@ export function ProductForm<T extends FieldValues>({
             inputProps={fieldConfig.inputProps}
             isDialog={fieldConfig.isDialog}
             isSelect={fieldConfig.isSelect}
+            isSearch={fieldConfig.isSearch}
+            onSearchPress={fieldConfig.onSearchPress}
+            isSearchLoading={fieldConfig.isSearchLoading}
           />
         )
       })}

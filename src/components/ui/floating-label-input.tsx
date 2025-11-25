@@ -90,6 +90,9 @@ type FloatingLabelInputProps = BaseProps &
     isSelect?: boolean
     selectOptions?: { id: string; nome: string }[]
     onSelectChange?: (id: string) => void
+    isSearch?: boolean
+    onSearchPress?: () => void
+    isSearchLoading?: boolean
   }
 
 export function FloatingLabelInput(props: FloatingLabelInputProps) {
@@ -118,6 +121,9 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
     number,
     PERIODS,
     onWheelChange,
+    isSearch,
+    onSearchPress,
+    isSearchLoading,
     gap = 0,
     ...rest
   } = props
@@ -228,9 +234,7 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
           editable={!disabled && !isDialog && !isSelect}
           className={cn(
             'flex-1 border-border text-sm',
-            activeIcon
-              ? 'rounded-l-md rounded-tr-none rounded-br-none'
-              : 'rounded-md',
+            activeIcon ? 'rounded-l-md rounded-r-none' : 'rounded-md',
             (isDialog || isSelect) && 'w-1/2 text-primary bg-secondary',
             error && 'border-red-500'
           )}
@@ -365,13 +369,13 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
                 <Text className="text-xs">{rightIconTooltip}</Text>
               </HoverCardContent>
             </HoverCard>
-          ) : (
+          ) : alternateRightIcon ? (
             <Toggle
               pressed
               onPress={handleIconPress}
               onPressedChange={() => {}}
               variant="outline"
-              className="justify-center items-center h-full rounded-tl-none rounded-bl-none rounded-r-md"
+              className="justify-center items-center h-full rounded-l-none rounded-r-md"
               style={{ height: 40 }}
             >
               <Icon
@@ -380,6 +384,27 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
                 width={20}
                 color={colorScheme === 'dark' ? '#737373' : '#a1a1a1'}
               />
+            </Toggle>
+          ) : (
+            <Toggle
+              pressed
+              onPress={onSearchPress}
+              onPressedChange={() => {}}
+              variant="outline"
+              className="justify-center items-center h-full rounded-l-none rounded-r-md"
+              style={{ height: 40 }}
+              disabled={!!isSearchLoading}
+            >
+              {isSearchLoading ? (
+                <View className="w-5 h-5 border-2 border-t-transparent border-red-500 rounded-full animate-spin" />
+              ) : (
+                <Icon
+                  as={activeIcon}
+                  height={20}
+                  width={20}
+                  color={colorScheme === 'dark' ? '#737373' : '#a1a1a1'}
+                />
+              )}
             </Toggle>
           ))}
       </View>

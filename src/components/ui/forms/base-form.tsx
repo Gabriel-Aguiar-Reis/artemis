@@ -26,6 +26,9 @@ export type FormFieldProps<T extends FieldValues> = {
   isCurrency?: boolean
   isDialog?: boolean
   isSelect?: boolean
+  isSearch?: boolean
+  onSearchPress?: () => void
+  isSearchLoading?: boolean
 }
 
 type RootProps = {
@@ -61,6 +64,9 @@ type InputProps<T extends FieldValues> = {
   isCurrency?: boolean
   isDialog?: boolean
   isSelect?: boolean
+  isSearch?: boolean
+  onSearchPress?: () => void
+  isSearchLoading?: boolean
 }
 
 function Input<T extends FieldValues>({
@@ -78,6 +84,9 @@ function Input<T extends FieldValues>({
   isCurrency,
   isDialog = false,
   isSelect = false,
+  isSearch = false,
+  onSearchPress,
+  isSearchLoading,
 }: InputProps<T>) {
   return (
     <Controller
@@ -137,6 +146,9 @@ function Input<T extends FieldValues>({
               onBlur?.()
             }
           },
+          isSearch,
+          onSearchPress,
+          isSearchLoading,
           ...inputProps,
         }
 
