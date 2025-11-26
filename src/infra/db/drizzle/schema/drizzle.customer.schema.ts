@@ -7,8 +7,8 @@ export type CustomerModelShape = Pick<
   Customer,
   'id' | 'storeName' | 'contactName'
 > & {
-  phoneNumber: string
-  phoneIsWhatsApp: boolean
+  phoneNumber: string | null
+  phoneIsWhatsApp: boolean | null
   landlineNumber: string | null
   landlineIsWhatsApp: boolean | null
   addressStreetName: string
@@ -25,10 +25,8 @@ export const customer = sqliteTable('customer', {
     .$defaultFn(() => String(uuid.v4())),
   storeName: text('store_name').notNull(),
   contactName: text('contact_name').notNull(),
-  phoneNumber: text('phone_number').notNull(),
-  phoneIsWhatsApp: integer('phone_is_whatsapp', { mode: 'boolean' })
-    .notNull()
-    .default(false),
+  phoneNumber: text('phone_number'),
+  phoneIsWhatsApp: integer('phone_is_whatsapp', { mode: 'boolean' }),
   landlineNumber: text('landline_number'),
   landlineIsWhatsApp: integer('landline_is_whatsapp', { mode: 'boolean' }),
   addressStreetName: text('address_street_name').notNull(),

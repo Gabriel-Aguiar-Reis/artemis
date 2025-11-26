@@ -55,7 +55,9 @@ export default function CustomersScreen() {
         : true
 
       const matchesPhoneNumber = params.phoneNumber
-        ? smartSearch(customer.phoneNumber.value, params.phoneNumber)
+        ? customer.phoneNumber
+          ? smartSearch(customer.phoneNumber.value, params.phoneNumber)
+          : false
         : true
 
       const matchesLandlineNumber = params.landlineNumber
@@ -190,16 +192,18 @@ export default function CustomersScreen() {
           />
         </ObjectCard.Header>
         <ObjectCard.Content>
-          <View className="flex-row items-center gap-2 text-primary">
-            <Icon as={Phone} size={20} />
-            <Text>
-              {customer.contactName} -{' '}
-              {formatPhoneBrazil(customer.phoneNumber.value)}
-            </Text>
-            {customer.phoneNumber.isWhatsApp && (
-              <Icon as={WhatsAppIcon} size={20} className="text-green-600" />
-            )}
-          </View>
+          {customer.phoneNumber && (
+            <View className="flex-row items-center gap-2 text-primary">
+              <Icon as={Phone} size={20} />
+              <Text>
+                {customer.contactName} -{' '}
+                {formatPhoneBrazil(customer.phoneNumber.value)}
+              </Text>
+              {customer.phoneNumber.isWhatsApp && (
+                <Icon as={WhatsAppIcon} size={20} className="text-green-600" />
+              )}
+            </View>
+          )}
           {customer.landlineNumber && (
             <View className="flex-row items-center gap-2 text-primary">
               <Icon as={UtilityPole} size={20} />

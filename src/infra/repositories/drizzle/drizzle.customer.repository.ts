@@ -48,13 +48,11 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
     }
 
     let smartphoneNumber: SmartphoneNumber | undefined
-    if (dto.phoneNumber && dto.phoneIsWhatsApp !== undefined) {
+    if (dto.phoneNumber && typeof dto.phoneIsWhatsApp === 'boolean') {
       smartphoneNumber = SmartphoneNumber.fromDTO({
         value: dto.phoneNumber!,
         isWhatsApp: dto.phoneIsWhatsApp,
       })
-    } else {
-      throw new Error('Número de celular incompleto para cadastro de cliente.')
     }
 
     let landlineNumber: LandlinePhoneNumber | undefined
@@ -107,7 +105,7 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
     }
 
     let smartphoneNumber: SmartphoneNumber | undefined
-    if (dto.phoneNumber && dto.phoneIsWhatsApp !== undefined) {
+    if (dto.phoneNumber && typeof dto.phoneIsWhatsApp === 'boolean') {
       smartphoneNumber = SmartphoneNumber.fromDTO({
         value: dto.phoneNumber!,
         isWhatsApp: dto.phoneIsWhatsApp,

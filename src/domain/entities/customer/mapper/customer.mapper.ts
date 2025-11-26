@@ -22,10 +22,12 @@ export class CustomerMapper {
         zipCode: table.addressZipCode ?? '',
       },
       contactName: table.contactName,
-      phoneNumber: {
-        value: table.phoneNumber,
-        isWhatsApp: table.phoneIsWhatsApp,
-      },
+      phoneNumber: table.phoneNumber
+        ? {
+            value: table.phoneNumber,
+            isWhatsApp: table.phoneIsWhatsApp ?? false,
+          }
+        : undefined,
       landlineNumber: table.landlineNumber
         ? {
             value: table.landlineNumber,
@@ -42,8 +44,8 @@ export class CustomerMapper {
       id: entity.id,
       storeName: entity.storeName,
       contactName: entity.contactName,
-      phoneNumber: entity.phoneNumber.value,
-      phoneIsWhatsApp: entity.phoneNumber.isWhatsApp,
+      phoneNumber: entity.phoneNumber?.value ?? null,
+      phoneIsWhatsApp: entity.phoneNumber?.isWhatsApp ?? null,
       landlineNumber: entity.landlineNumber?.value ?? null,
       landlineIsWhatsApp: entity.landlineNumber?.isWhatsApp ?? null,
       addressStreetName: entity.storeAddress.streetName,

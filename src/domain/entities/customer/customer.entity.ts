@@ -17,7 +17,7 @@ export type CustomerSerializableDTO = {
   storeName: string
   storeAddress: AddressSerializableDTO
   contactName: string
-  phoneNumber: SmartphoneNumberSerializableDTO
+  phoneNumber?: SmartphoneNumberSerializableDTO
   landlineNumber?: LandlinePhoneNumberSerializableDTO
 }
 
@@ -27,12 +27,12 @@ export class Customer {
     public storeName: string,
     public storeAddress: Address,
     public contactName: string,
-    public phoneNumber: SmartphoneNumber,
+    public phoneNumber?: SmartphoneNumber,
     public landlineNumber?: LandlinePhoneNumber
   ) {}
 
   isActiveWhatsApp(): boolean {
-    return this.phoneNumber.isWhatsApp || !!this.landlineNumber?.isWhatsApp
+    return this.phoneNumber?.isWhatsApp || !!this.landlineNumber?.isWhatsApp
   }
 
   toDTO(): CustomerSerializableDTO {
@@ -58,7 +58,7 @@ export class Customer {
       dto.storeName,
       Address.fromDTO(dto.storeAddress),
       dto.contactName,
-      SmartphoneNumber.fromDTO(dto.phoneNumber),
+      dto.phoneNumber ? SmartphoneNumber.fromDTO(dto.phoneNumber) : undefined,
       dto.landlineNumber
         ? LandlinePhoneNumber.fromDTO(dto.landlineNumber)
         : undefined
