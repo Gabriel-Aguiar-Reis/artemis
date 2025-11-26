@@ -1,6 +1,6 @@
 import { Customer } from '@/src/domain/entities/customer/customer.entity'
 import { InferSelectModel, sql } from 'drizzle-orm'
-import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
 export type CustomerModelShape = Pick<
   Customer,
@@ -16,8 +16,6 @@ export type CustomerModelShape = Pick<
   addressCity: string
   addressState: string
   addressZipCode: string
-  addressLatitude: number
-  addressLongitude: number
 }
 
 export const customer = sqliteTable('customer', {
@@ -38,8 +36,6 @@ export const customer = sqliteTable('customer', {
   addressCity: text('address_city').notNull(),
   addressState: text('address_state').notNull(),
   addressZipCode: text('address_zip_code').notNull(),
-  addressLatitude: real('address_latitude').notNull(),
-  addressLongitude: real('address_longitude').notNull(),
 }) satisfies Record<keyof CustomerModelShape, any>
 
 export type CustomerTable = InferSelectModel<typeof customer>

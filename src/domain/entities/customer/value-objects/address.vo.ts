@@ -1,15 +1,9 @@
-import {
-  Coordinates,
-  CoordinatesSerializableDTO,
-} from '@/src/domain/entities/customer/value-objects/coordinates.vo'
-
 export type AddressSerializableDTO = {
   streetName: string
   streetNumber: number
   neighborhood: string
   city: string
   state: string
-  coordinates: CoordinatesSerializableDTO
   zipCode: string
 }
 
@@ -20,7 +14,6 @@ export class Address {
     public neighborhood: string,
     public city: string,
     public state: string,
-    public coordinates: Coordinates,
     public zipCode: string
   ) {}
 
@@ -31,9 +24,6 @@ export class Address {
       neighborhood: this.neighborhood,
       city: this.city,
       state: this.state,
-      coordinates: this.coordinates?.toDTO
-        ? this.coordinates.toDTO()
-        : this.coordinates,
       zipCode: this.zipCode,
     }
   }
@@ -45,7 +35,6 @@ export class Address {
       dto.neighborhood,
       dto.city,
       dto.state,
-      Coordinates.fromDTO(dto.coordinates),
       dto.zipCode
     )
   }

@@ -29,32 +29,6 @@ export class Itinerary {
         'A data final do itinerário não pode ser anterior à data inicial.'
       )
     }
-    this._distanceCache = {}
-  }
-
-  /**
-   * Cache de distâncias entre ordens (chave: 'idA-idB')
-   */
-  private _distanceCache: Record<string, number>
-
-  /**
-   * Retorna a distância entre duas ordens, usando cache
-   */
-  private getDistanceBetweenOrders(
-    orderA: WorkOrder,
-    orderB: WorkOrder
-  ): number {
-    const key = `${orderA.id}-${orderB.id}`
-    const reverseKey = `${orderB.id}-${orderA.id}`
-    if (this._distanceCache[key] !== undefined) return this._distanceCache[key]
-    if (this._distanceCache[reverseKey] !== undefined)
-      return this._distanceCache[reverseKey]
-    const distance = WorkOrderMapItem.prototype.getDistanceTo.call(
-      { workOrder: orderA },
-      orderB
-    )
-    this._distanceCache[key] = distance
-    return distance
   }
 
   addWorkOrder(workOrder: WorkOrder) {
@@ -83,49 +57,6 @@ export class Itinerary {
 
   get lateOrders(): WorkOrderMapItem[] {
     return this.workOrdersMap.filter((w) => w.isLate)
-  }
-
-  optimizeRoute(): void {
-    if (this.workOrdersMap.length <= 2) return
-
-    const start = this.workOrdersMap[0]
-    const remaining = this.workOrdersMap.slice(1)
-    const optimized: WorkOrderMapItem[] = [start]
-    let current = start
-
-    while (remaining.length) {
-      let nearestIndex = 0
-      let nearestDistance = Infinity
-
-      for (let i = 0; i < remaining.length; i++) {
-        const distance = this.getDistanceBetweenOrders(
-          current.workOrder,
-          remaining[i].workOrder
-        )
-        if (distance < nearestDistance) {
-          nearestDistance = distance
-          nearestIndex = i
-        }
-      }
-
-      current = remaining.splice(nearestIndex, 1)[0]
-      optimized.push(current)
-    }
-
-    this.workOrdersMap = optimized.map((item, i) => {
-      item.position = i + 1
-      return item
-    })
-  }
-
-  getTotalDistance(): number {
-    let total = 0
-    for (let i = 0; i < this.workOrdersMap.length - 1; i++) {
-      const current = this.workOrdersMap[i]
-      const next = this.workOrdersMap[i + 1]
-      total += current.getDistanceTo(next.workOrder)
-    }
-    return total
   }
 
   get totalOrders(): number {

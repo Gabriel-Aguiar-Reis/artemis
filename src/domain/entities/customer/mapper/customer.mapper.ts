@@ -10,15 +10,6 @@ export class CustomerMapper {
       )
     }
 
-    if (
-      table.addressLatitude === null ||
-      table.addressLatitude === undefined ||
-      table.addressLongitude === null ||
-      table.addressLongitude === undefined
-    ) {
-      throw new Error('Cliente deve ter coordenadas válidas')
-    }
-
     const customer = Customer.fromDTO({
       id: table.id as UUID,
       storeName: table.storeName,
@@ -28,10 +19,6 @@ export class CustomerMapper {
         neighborhood: table.addressNeighborhood ?? '',
         city: table.addressCity ?? '',
         state: table.addressState ?? '',
-        coordinates: {
-          latitude: table.addressLatitude,
-          longitude: table.addressLongitude,
-        },
         zipCode: table.addressZipCode ?? '',
       },
       contactName: table.contactName,
@@ -65,8 +52,6 @@ export class CustomerMapper {
       addressCity: entity.storeAddress.city,
       addressState: entity.storeAddress.state,
       addressZipCode: entity.storeAddress.zipCode,
-      addressLatitude: entity.storeAddress.coordinates.latitude,
-      addressLongitude: entity.storeAddress.coordinates.longitude,
     }
   }
 }
