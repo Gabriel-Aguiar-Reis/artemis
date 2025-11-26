@@ -1,7 +1,7 @@
+import { itinerary } from '@/src/infra/db/drizzle/schema/drizzle.itinerary.schema'
+import { workOrder } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
 import { InferInsertModel, InferSelectModel, sql } from 'drizzle-orm'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
-import { itinerary } from './drizzle.itinerary.schema'
-import { workOrder } from './drizzle.work-order.schema'
 
 export const itineraryWorkOrders = sqliteTable('itinerary_work_orders', {
   id: text('id')
