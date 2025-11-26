@@ -2,37 +2,28 @@ import {
   Address,
   AddressSerializableDTO,
 } from '@/src/domain/entities/customer/value-objects/address.vo'
-import { Coordinates } from '@/src/domain/entities/customer/value-objects/coordinates.vo'
 
 export class GeocodingService {
-  static async getCoordinatesFromAddress(
-    address: Omit<AddressSerializableDTO, 'coordinates'>
-  ): Promise<Coordinates> {
-    const formattedAddress = encodeURIComponent(
-      `${address.streetName}, ${address.streetNumber}, ${address.city}, ${address.state}, ${address.zipCode}`
-    )
-
-    const url = `https://nominatim.openstreetmap.org/search?q=${formattedAddress}&format=json&limit=1`
-    const res = await fetch(url, { headers: { 'User-Agent': 'artemis/1.0' } })
-    const data = await res.json()
-    console.log('GeocodingService data:', data)
-
-    if (!data || data.length === 0) {
-      throw new Error('Endereço não encontrado na API de geocodificação.')
-    }
-
-    return Coordinates.fromDTO({
-      latitude: parseFloat(data[0].lat),
-      longitude: parseFloat(data[0].lon),
-    })
-  }
-
   static async getAddressByZipCode(
     zipCode: string
   ): Promise<AddressSerializableDTO> {
-    const formattedZip = encodeURIComponent(zipCode)
+    const cleanedZip = zipCode.replace(/[-\s]/g, '')
+    const formattedZip = encodeURIComponent(cleanedZip)
     const url = `https://brasilapi.com.br/api/cep/v2/${formattedZip}`
-    const res = await fetch(url, { headers: { 'User-Agent': 'artemis/1.0' } })
+
+    let res: Response
+    try {
+      res = await fetch(url)
+    } catch (err) {
+      console.error('GeocodingService fetch error:', err)
+      throw new Error('Falha na requisição de CEP. Verifique conexão ou CORS.')
+    }
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => '')
+      console.error('GeocodingService bad response:', res.status, text)
+      throw new Error(`API de CEP retornou erro: ${res.status}`)
+    }
     const data = await res.json()
     console.log('GeocodingService data:', data)
 
@@ -47,7 +38,6 @@ export class GeocodingService {
       city: data.city,
       state: data.state,
       zipCode: data.cep,
-      coordinates: { latitude: 0, longitude: 0 },
     })
   }
 }
