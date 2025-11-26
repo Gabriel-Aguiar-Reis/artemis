@@ -396,7 +396,7 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
               disabled={!!isSearchLoading}
             >
               {isSearchLoading ? (
-                <View className="w-5 h-5 border-2 border-t-transparent border-red-500 rounded-full animate-spin" />
+                <View className="w-5 h-5 border-2 border-t-transparent border-ring rounded-full animate-spin" />
               ) : (
                 <Icon
                   as={activeIcon}
