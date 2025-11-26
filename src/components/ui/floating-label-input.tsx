@@ -231,7 +231,7 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
           onFocus={() => setIsFocused(true)}
           onBlur={handleBlur}
           secureTextEntry={secure}
-          editable={!disabled && !isDialog && !isSelect}
+          editable={!disabled && !isDialog && !isSelect && !isSearchLoading}
           className={cn(
             'flex-1 border-border text-sm',
             activeIcon ? 'rounded-l-md rounded-r-none' : 'rounded-md',
