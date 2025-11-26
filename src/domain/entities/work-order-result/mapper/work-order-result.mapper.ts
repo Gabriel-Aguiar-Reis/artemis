@@ -1,7 +1,7 @@
 import { WorkOrderResultItem } from '@/src/domain/entities/work-order-result-item/work-order-result-item.entity'
 import { WorkOrderResult } from '@/src/domain/entities/work-order-result/work-order-result.entity'
 import { WorkOrderResultTable } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result.schema'
-import { UUID } from 'crypto'
+import { UUID } from '@/src/lib/utils'
 
 export class WorkOrderResultMapper {
   static toDomain(

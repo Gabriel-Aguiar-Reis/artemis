@@ -1,11 +1,11 @@
 CREATE TABLE `category` (
-	`id` text PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	`id` text(36) PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
 	`is_active` integer DEFAULT true NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE `customer` (
-	`id` text PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	`id` text(36) PRIMARY KEY NOT NULL,
 	`store_name` text NOT NULL,
 	`contact_name` text NOT NULL,
 	`phone_number` text NOT NULL,
@@ -21,7 +21,7 @@ CREATE TABLE `customer` (
 );
 --> statement-breakpoint
 CREATE TABLE `itinerary_work_orders` (
-	`id` text PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	`id` text(36) PRIMARY KEY NOT NULL,
 	`itinerary_id` text NOT NULL,
 	`work_order_id` text NOT NULL,
 	`position` integer NOT NULL,
@@ -31,14 +31,14 @@ CREATE TABLE `itinerary_work_orders` (
 );
 --> statement-breakpoint
 CREATE TABLE `itinerary` (
-	`id` text PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	`id` text(36) PRIMARY KEY NOT NULL,
 	`initial_itinerary_date` text NOT NULL,
 	`final_itinerary_date` text NOT NULL,
 	`is_finished` integer DEFAULT false NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE `payment_order` (
-	`id` text PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	`id` text(36) PRIMARY KEY NOT NULL,
 	`method` text NOT NULL,
 	`total_value` real NOT NULL,
 	`installments` integer DEFAULT 1 NOT NULL,
@@ -47,7 +47,7 @@ CREATE TABLE `payment_order` (
 );
 --> statement-breakpoint
 CREATE TABLE `product` (
-	`id` text PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	`id` text(36) PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
 	`category_id` text NOT NULL,
 	`sale_price` real NOT NULL,
@@ -57,7 +57,7 @@ CREATE TABLE `product` (
 );
 --> statement-breakpoint
 CREATE TABLE `work_order_items` (
-	`id` text PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	`id` text(36) PRIMARY KEY NOT NULL,
 	`work_order_id` text NOT NULL,
 	`product_id` text NOT NULL,
 	`quantity` integer NOT NULL,
@@ -67,7 +67,7 @@ CREATE TABLE `work_order_items` (
 );
 --> statement-breakpoint
 CREATE TABLE `work_order_result_items` (
-	`id` text PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	`id` text(36) PRIMARY KEY NOT NULL,
 	`result_id` text NOT NULL,
 	`product_id` text NOT NULL,
 	`quantity` integer NOT NULL,
@@ -79,12 +79,12 @@ CREATE TABLE `work_order_result_items` (
 );
 --> statement-breakpoint
 CREATE TABLE `work_order_result` (
-	`id` text PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	`id` text(36) PRIMARY KEY NOT NULL,
 	`total_value` real NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE `work_order` (
-	`id` text PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	`id` text(36) PRIMARY KEY NOT NULL,
 	`customer_id` text NOT NULL,
 	`created_at` text DEFAULT CURRENT_TIMESTAMP,
 	`updated_at` text DEFAULT CURRENT_TIMESTAMP,

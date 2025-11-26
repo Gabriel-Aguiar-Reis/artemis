@@ -1,6 +1,6 @@
 import { WorkOrderItemBase } from '@/src/domain/entities/work-order-item-base/work-order-item-base.entity'
 import { ProductSnapshot } from '@/src/domain/entities/work-order-item/value-objects/product-snapshot.vo'
-import { UUID } from 'crypto'
+import { UUID } from '@/src/lib/utils'
 
 export type WorkOrderResultItemSerializableDTO = {
   productId: UUID

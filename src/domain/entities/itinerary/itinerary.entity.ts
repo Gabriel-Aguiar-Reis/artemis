@@ -6,7 +6,7 @@ import {
   WorkOrder,
   WorkOrderStatus,
 } from '@/src/domain/entities/work-order/work-order.entity'
-import { UUID } from 'crypto'
+import { UUID } from '@/src/lib/utils'
 
 export type ItinerarySerializableDTO = {
   id: UUID

@@ -1,8 +1,6 @@
-import { GeocodingService } from '@/src/application/services/geocoding.service'
 import { Customer } from '@/src/domain/entities/customer/customer.entity'
 import { CustomerMapper } from '@/src/domain/entities/customer/mapper/customer.mapper'
 import { Address } from '@/src/domain/entities/customer/value-objects/address.vo'
-import { Coordinates } from '@/src/domain/entities/customer/value-objects/coordinates.vo'
 import { LandlinePhoneNumber } from '@/src/domain/entities/customer/value-objects/landline-phone-number.vo'
 import { SmartphoneNumber } from '@/src/domain/entities/customer/value-objects/smartphone-number.vo'
 import { CustomerRepository } from '@/src/domain/repositories/customer/customer.repository'
@@ -12,8 +10,9 @@ import {
 } from '@/src/domain/validations/customer.schema'
 import { db } from '@/src/infra/db/drizzle/drizzle-client'
 import { customer } from '@/src/infra/db/drizzle/schema/drizzle.customer.schema'
-import { UUID } from 'crypto'
+import { UUID } from '@/src/lib/utils'
 import { eq } from 'drizzle-orm'
+import uuid from 'react-native-uuid'
 
 export default class DrizzleCustomerRepository implements CustomerRepository {
   async getCustomers(): Promise<Customer[]> {
@@ -25,9 +24,8 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
   }
 
   async addCustomer(dto: CustomerInsertDTO): Promise<void> {
-    const id = crypto.randomUUID()
+    const id = String(uuid.v4())
 
-    let coord: Coordinates | undefined
     let address: Address | undefined
     if (
       dto.addressStreetName &&
@@ -37,15 +35,6 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
       dto.addressState &&
       dto.addressZipCode
     ) {
-      coord = await GeocodingService.getCoordinatesFromAddress({
-        streetName: dto.addressStreetName,
-        streetNumber: Number(dto.addressStreetNumber),
-        neighborhood: dto.addressNeighborhood,
-        city: dto.addressCity,
-        state: dto.addressState,
-        zipCode: dto.addressZipCode,
-      })
-
       address = Address.fromDTO({
         streetName: dto.addressStreetName,
         streetNumber: Number(dto.addressStreetNumber),
@@ -53,7 +42,6 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
         city: dto.addressCity,
         state: dto.addressState,
         zipCode: dto.addressZipCode,
-        coordinates: coord,
       })
     } else {
       throw new Error('Endereço incompleto para cadastro de cliente.')
@@ -99,7 +87,6 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
     if (!original)
       throw new Error('O cliente que você está tentando atualizar não existe.')
 
-    let coord: Coordinates | undefined
     let address: Address | undefined
     if (
       dto.addressStreetName &&
@@ -109,15 +96,6 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
       dto.addressState &&
       dto.addressZipCode
     ) {
-      coord = await GeocodingService.getCoordinatesFromAddress({
-        streetName: dto.addressStreetName,
-        streetNumber: Number(dto.addressStreetNumber),
-        neighborhood: dto.addressNeighborhood,
-        city: dto.addressCity,
-        state: dto.addressState,
-        zipCode: dto.addressZipCode,
-      })
-
       address = Address.fromDTO({
         streetName: dto.addressStreetName,
         streetNumber: Number(dto.addressStreetNumber),
@@ -125,7 +103,6 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
         city: dto.addressCity,
         state: dto.addressState,
         zipCode: dto.addressZipCode,
-        coordinates: coord,
       })
     }
 

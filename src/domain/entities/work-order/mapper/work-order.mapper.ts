@@ -7,7 +7,7 @@ import {
   WorkOrderStatus,
 } from '@/src/domain/entities/work-order/work-order.entity'
 import { WorkOrderTable } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
-import { UUID } from 'crypto'
+import { UUID } from '@/src/lib/utils'
 
 export class WorkOrderMapper {
   static toDomain(

@@ -1,7 +1,7 @@
 import { Itinerary } from '@/src/domain/entities/itinerary/itinerary.entity'
 import { WorkOrderMapItem } from '@/src/domain/entities/work-order-map-item/work-order-map-item.entity'
 import { ItineraryTable } from '@/src/infra/db/drizzle/schema/drizzle.itinerary.schema'
-import { UUID } from 'crypto'
+import { UUID } from '@/src/lib/utils'
 
 export class ItineraryMapper {
   static toDomain(

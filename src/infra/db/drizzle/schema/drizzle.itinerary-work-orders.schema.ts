@@ -1,12 +1,13 @@
 import { itinerary } from '@/src/infra/db/drizzle/schema/drizzle.itinerary.schema'
 import { workOrder } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
-import { InferInsertModel, InferSelectModel, sql } from 'drizzle-orm'
+import { InferInsertModel, InferSelectModel } from 'drizzle-orm'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import uuid from 'react-native-uuid'
 
 export const itineraryWorkOrders = sqliteTable('itinerary_work_orders', {
-  id: text('id')
+  id: text('id', { length: 36 })
     .primaryKey()
-    .default(sql`gen_random_uuid()`),
+    .$defaultFn(() => String(uuid.v4())),
   itineraryId: text('itinerary_id')
     .references(() => itinerary.id, { onDelete: 'cascade' })
     .notNull(),

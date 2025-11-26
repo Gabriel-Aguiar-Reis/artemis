@@ -5,7 +5,7 @@ import {
   WorkOrderInsertDTO,
   WorkOrderUpdateDTO,
 } from '@/src/domain/validations/work-order.schema'
-import { UUID } from 'crypto'
+import { UUID } from '@/src/lib/utils'
 
 export abstract class WorkOrderRepository {
   abstract getWorkOrders: () => Promise<WorkOrder[]>

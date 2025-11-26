@@ -1,6 +1,6 @@
 import { Product } from '@/src/domain/entities/product/product.entity'
 import { ProductTable } from '@/src/infra/db/drizzle/schema/drizzle.product.schema'
-import { UUID } from 'crypto'
+import { UUID } from '@/src/lib/utils'
 
 export class ProductMapper {
   static toDomain(table: ProductTable): Product {

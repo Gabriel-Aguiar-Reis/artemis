@@ -6,8 +6,8 @@ import {
   ProductUpdateDTO,
   productUpdateSchema,
 } from '@/src/domain/validations/product.schema'
+import { UUID } from '@/src/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { UUID } from 'crypto'
 import { router, useLocalSearchParams } from 'expo-router'
 import { Pencil, PencilOff } from 'lucide-react-native'
 import { useEffect } from 'react'

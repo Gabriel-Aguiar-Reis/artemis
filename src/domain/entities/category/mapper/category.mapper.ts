@@ -1,6 +1,6 @@
 import { Category } from '@/src/domain/entities/category/category.entity'
 import { CategoryTable } from '@/src/infra/db/drizzle/schema/drizzle.category.schema'
-import { UUID } from 'crypto'
+import { UUID } from '@/src/lib/utils'
 
 export class CategoryMapper {
   static toDomain(table: CategoryTable): Category {

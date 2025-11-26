@@ -7,6 +7,7 @@ import { paymentOrder } from '@/src/infra/db/drizzle/schema/drizzle.payment-orde
 import { workOrderResult } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result.schema'
 import { InferInsertModel, InferSelectModel, sql } from 'drizzle-orm'
 import { sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import uuid from 'react-native-uuid'
 
 type WorkOrderModelShape = Pick<WorkOrder, 'id' | 'status' | 'notes'> & {
   customerId: string
@@ -19,9 +20,9 @@ type WorkOrderModelShape = Pick<WorkOrder, 'id' | 'status' | 'notes'> & {
 }
 
 export const workOrder = sqliteTable('work_order', {
-  id: text('id')
+  id: text('id', { length: 36 })
     .primaryKey()
-    .default(sql`gen_random_uuid()`),
+    .$defaultFn(() => String(uuid.v4())),
   customerId: text('customer_id')
     .references(() => customer.id)
     .notNull(),

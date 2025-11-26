@@ -1,7 +1,7 @@
 import { PaymentOrder } from '@/src/domain/entities/payment-order/payment-order.entity'
 import { AddPaymentOrderDto } from '@/src/domain/repositories/payment-order/dtos/add-payment-order.dto'
 import { UpdatePaymentOrderDto } from '@/src/domain/repositories/payment-order/dtos/update-payment-order.dto'
-import { UUID } from 'crypto'
+import { UUID } from '@/src/lib/utils'
 
 export abstract class PaymentOrderRepository {
   abstract getPaymentOrders: () => Promise<PaymentOrder[]>

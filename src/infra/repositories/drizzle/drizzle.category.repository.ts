@@ -7,7 +7,7 @@ import {
 } from '@/src/domain/validations/category.schema'
 import { db } from '@/src/infra/db/drizzle/drizzle-client'
 import { category } from '@/src/infra/db/drizzle/schema/drizzle.category.schema'
-import { UUID } from 'crypto'
+import { UUID } from '@/src/lib/utils'
 import { eq } from 'drizzle-orm'
 import uuid from 'react-native-uuid'
 

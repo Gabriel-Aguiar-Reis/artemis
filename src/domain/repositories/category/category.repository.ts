@@ -3,7 +3,7 @@ import {
   CategoryInsertDTO,
   CategoryUpdateDTO,
 } from '@/src/domain/validations/category.schema'
-import { UUID } from 'crypto'
+import { UUID } from '@/src/lib/utils'
 
 export abstract class CategoryRepository {
   abstract getCategories: () => Promise<Category[]>

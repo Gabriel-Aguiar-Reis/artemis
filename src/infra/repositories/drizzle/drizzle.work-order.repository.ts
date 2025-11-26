@@ -27,7 +27,7 @@ import {
 } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result-items.schema'
 import { workOrderResult } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result.schema'
 import { workOrder } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
-import { UUID } from 'crypto'
+import { UUID } from '@/src/lib/utils'
 import { eq } from 'drizzle-orm'
 import uuid from 'react-native-uuid'
 
@@ -451,7 +451,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
     await db.transaction(async (tx) => {
       let paymentOrderId: UUID | null = null
       if (newPaymentOrder) {
-        paymentOrderId = crypto.randomUUID()
+        paymentOrderId = String(uuid.v4()) as UUID
         try {
           await tx
             .insert(paymentOrder)
@@ -483,7 +483,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       for (const item of newWo.products) {
         try {
           await tx.insert(workOrderItems).values({
-            id: crypto.randomUUID(),
+            id: String(uuid.v4()),
             workOrderId: newWo.id,
             productId: item.productId,
             quantity: item.quantity,

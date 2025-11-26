@@ -1,6 +1,7 @@
 import { PaymentOrder } from '@/src/domain/entities/payment-order/payment-order.entity'
-import { InferInsertModel, InferSelectModel, sql } from 'drizzle-orm'
+import { InferInsertModel, InferSelectModel } from 'drizzle-orm'
 import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import uuid from 'react-native-uuid'
 
 type PaymentOrderModelShape = Pick<
   PaymentOrder,
@@ -13,9 +14,9 @@ type PaymentOrderModelShape = Pick<
 >
 
 export const paymentOrder = sqliteTable('payment_order', {
-  id: text('id')
+  id: text('id', { length: 36 })
     .primaryKey()
-    .default(sql`gen_random_uuid()`),
+    .$defaultFn(() => String(uuid.v4())),
   method: text('method').notNull(),
   totalValue: real('total_value').notNull(),
   installments: integer('installments').notNull().default(1),

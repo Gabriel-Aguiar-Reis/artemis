@@ -4,7 +4,7 @@ import {
   ProductInsertDTO,
   ProductUpdateDTO,
 } from '@/src/domain/validations/product.schema'
-import { UUID } from 'crypto'
+import { UUID } from '@/src/lib/utils'
 
 export abstract class ProductRepository {
   abstract getProducts: () => Promise<Product[]>

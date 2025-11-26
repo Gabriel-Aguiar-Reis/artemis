@@ -1,7 +1,7 @@
 import { Itinerary } from '@/src/domain/entities/itinerary/itinerary.entity'
 import { AddItineraryDto } from '@/src/domain/repositories/itinerary/dtos/add-itinerary.dto'
 import { UpdateItineraryDto } from '@/src/domain/repositories/itinerary/dtos/update-itinerary.dto'
-import { UUID } from 'crypto'
+import { UUID } from '@/src/lib/utils'
 
 export abstract class ItineraryRepository {
   abstract getItineraries: () => Promise<Itinerary[]>

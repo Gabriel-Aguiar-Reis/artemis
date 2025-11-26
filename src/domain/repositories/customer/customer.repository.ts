@@ -3,7 +3,7 @@ import {
   CustomerInsertDTO,
   CustomerUpdateDTO,
 } from '@/src/domain/validations/customer.schema'
-import { UUID } from 'crypto'
+import { UUID } from '@/src/lib/utils'
 
 export abstract class CustomerRepository {
   abstract getCustomers: () => Promise<Customer[]>

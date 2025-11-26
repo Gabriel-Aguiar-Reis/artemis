@@ -1,7 +1,8 @@
 import { Product } from '@/src/domain/entities/product/product.entity'
 import { category } from '@/src/infra/db/drizzle/schema/drizzle.category.schema'
-import { InferSelectModel, sql } from 'drizzle-orm'
+import { InferSelectModel } from 'drizzle-orm'
 import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import uuid from 'react-native-uuid'
 
 type ProductModelShape = Pick<
   Product,
@@ -11,9 +12,9 @@ type ProductModelShape = Pick<
 }
 
 export const product = sqliteTable('product', {
-  id: text('id')
+  id: text('id', { length: 36 })
     .primaryKey()
-    .default(sql`gen_random_uuid()`),
+    .$defaultFn(() => String(uuid.v4())),
   name: text('name').notNull(),
   categoryId: text('category_id')
     .references(() => category.id)

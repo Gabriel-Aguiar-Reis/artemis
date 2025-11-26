@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "8f6bf0f5-ba3a-4bf4-a2a1-6d5fcdcc08df",
+  "id": "fd060380-65f0-47ee-a137-66939ae75816",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "category": {
@@ -9,11 +9,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "text",
+          "type": "text(36)",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": false,
-          "default": "gen_random_uuid()"
+          "autoincrement": false
         },
         "name": {
           "name": "name",
@@ -42,11 +41,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "text",
+          "type": "text(36)",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": false,
-          "default": "gen_random_uuid()"
+          "autoincrement": false
         },
         "store_name": {
           "name": "store_name",
@@ -145,11 +143,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "text",
+          "type": "text(36)",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": false,
-          "default": "gen_random_uuid()"
+          "autoincrement": false
         },
         "itinerary_id": {
           "name": "itinerary_id",
@@ -219,11 +216,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "text",
+          "type": "text(36)",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": false,
-          "default": "gen_random_uuid()"
+          "autoincrement": false
         },
         "initial_itinerary_date": {
           "name": "initial_itinerary_date",
@@ -259,11 +255,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "text",
+          "type": "text(36)",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": false,
-          "default": "gen_random_uuid()"
+          "autoincrement": false
         },
         "method": {
           "name": "method",
@@ -315,11 +310,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "text",
+          "type": "text(36)",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": false,
-          "default": "gen_random_uuid()"
+          "autoincrement": false
         },
         "name": {
           "name": "name",
@@ -383,11 +377,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "text",
+          "type": "text(36)",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": false,
-          "default": "gen_random_uuid()"
+          "autoincrement": false
         },
         "work_order_id": {
           "name": "work_order_id",
@@ -456,11 +449,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "text",
+          "type": "text(36)",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": false,
-          "default": "gen_random_uuid()"
+          "autoincrement": false
         },
         "result_id": {
           "name": "result_id",
@@ -543,11 +535,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "text",
+          "type": "text(36)",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": false,
-          "default": "gen_random_uuid()"
+          "autoincrement": false
         },
         "total_value": {
           "name": "total_value",
@@ -568,11 +559,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "text",
+          "type": "text(36)",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": false,
-          "default": "gen_random_uuid()"
+          "autoincrement": false
         },
         "customer_id": {
           "name": "customer_id",

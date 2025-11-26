@@ -1,6 +1,7 @@
 import { Customer } from '@/src/domain/entities/customer/customer.entity'
-import { InferSelectModel, sql } from 'drizzle-orm'
+import { InferSelectModel } from 'drizzle-orm'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import uuid from 'react-native-uuid'
 
 export type CustomerModelShape = Pick<
   Customer,
@@ -19,9 +20,9 @@ export type CustomerModelShape = Pick<
 }
 
 export const customer = sqliteTable('customer', {
-  id: text('id')
+  id: text('id', { length: 36 })
     .primaryKey()
-    .default(sql`gen_random_uuid()`),
+    .$defaultFn(() => String(uuid.v4())),
   storeName: text('store_name').notNull(),
   contactName: text('contact_name').notNull(),
   phoneNumber: text('phone_number').notNull(),

@@ -1,7 +1,8 @@
 import { product } from '@/src/infra/db/drizzle/schema/drizzle.product.schema'
 import { workOrderResult } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result.schema'
-import { InferInsertModel, InferSelectModel, sql } from 'drizzle-orm'
+import { InferInsertModel, InferSelectModel } from 'drizzle-orm'
 import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import uuid from 'react-native-uuid'
 
 export enum WorkOrderResultItemType {
   EXCHANGED = 'exchanged',
@@ -10,9 +11,9 @@ export enum WorkOrderResultItemType {
 }
 
 export const workOrderResultItems = sqliteTable('work_order_result_items', {
-  id: text('id')
+  id: text('id', { length: 36 })
     .primaryKey()
-    .default(sql`gen_random_uuid()`),
+    .$defaultFn(() => String(uuid.v4())),
   resultId: text('result_id')
     .references(() => workOrderResult.id, { onDelete: 'cascade' })
     .notNull(),

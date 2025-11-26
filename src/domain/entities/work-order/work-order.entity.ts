@@ -16,7 +16,8 @@ import {
   WorkOrderResult,
   WorkOrderResultSerializableDTO,
 } from '@/src/domain/entities/work-order-result/work-order-result.entity'
-import { UUID } from 'crypto'
+import { UUID } from '@/src/lib/utils'
+import uuid from 'react-native-uuid'
 
 export enum WorkOrderStatus {
   PENDING = 'PENDING',
@@ -191,7 +192,7 @@ export class WorkOrder {
 
     const paymentOrder = newPaymentOrder
       ? PaymentOrder.fromDTO({
-          id: crypto.randomUUID() as UUID,
+          id: String(uuid.v4()) as UUID,
           method: newPaymentOrder.method,
           totalValue: newPaymentOrder.totalValue,
           installments: newPaymentOrder.installments ?? 1,
@@ -203,7 +204,7 @@ export class WorkOrder {
     const items = this.result?.getExchangedAndAddedProducts() ?? []
 
     return WorkOrder.fromDTO({
-      id: crypto.randomUUID() as UUID,
+      id: String(uuid.v4()) as UUID,
       customer: this.customer,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),

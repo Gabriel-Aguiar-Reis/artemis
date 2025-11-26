@@ -6,7 +6,7 @@ import { UpdatePaymentOrderDto } from '@/src/domain/repositories/payment-order/d
 import { PaymentOrderRepository } from '@/src/domain/repositories/payment-order/payment-order.repository'
 import { db } from '@/src/infra/db/drizzle/drizzle-client'
 import { paymentOrder } from '@/src/infra/db/drizzle/schema/drizzle.payment-order.schema'
-import { UUID } from 'crypto'
+import { UUID } from '@/src/lib/utils'
 import { eq } from 'drizzle-orm'
 import uuid from 'react-native-uuid'
 

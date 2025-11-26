@@ -1,4 +1,4 @@
-import { UUID } from 'crypto'
+import { UUID } from '@/src/lib/utils'
 
 export type PaymentOrderSerializableDTO = {
   id: UUID

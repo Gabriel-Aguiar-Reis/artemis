@@ -1,6 +1,6 @@
 import { Customer } from '@/src/domain/entities/customer/customer.entity'
 import { CustomerTable } from '@/src/infra/db/drizzle/schema/drizzle.customer.schema'
-import { UUID } from 'crypto'
+import { UUID } from '@/src/lib/utils'
 
 export class CustomerMapper {
   static toDomain(table: CustomerTable): Customer {

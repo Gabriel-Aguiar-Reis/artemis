@@ -10,7 +10,7 @@ import {
   SmartphoneNumber,
   SmartphoneNumberSerializableDTO,
 } from '@/src/domain/entities/customer/value-objects/smartphone-number.vo'
-import { UUID } from 'crypto'
+import { UUID } from '@/src/lib/utils'
 
 export type CustomerSerializableDTO = {
   id: UUID

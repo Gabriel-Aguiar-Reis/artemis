@@ -2,6 +2,8 @@ import { clsx, type ClassValue } from 'clsx'
 import { parsePhoneNumberFromString } from 'libphonenumber-js'
 import { twMerge } from 'tailwind-merge'
 
+export type UUID = `${string}-${string}-${string}-${string}-${string}`
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }

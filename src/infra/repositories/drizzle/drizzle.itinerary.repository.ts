@@ -29,7 +29,7 @@ import {
 } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result-items.schema'
 import { workOrderResult } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result.schema'
 import { workOrder } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
-import { UUID } from 'crypto'
+import { UUID } from '@/src/lib/utils'
 import { and, eq, gte, inArray, lte } from 'drizzle-orm'
 import uuid from 'react-native-uuid'
 

@@ -5,8 +5,8 @@ import {
   CategoryUpdateDTO,
   categoryUpdateSchema,
 } from '@/src/domain/validations/category.schema'
+import { UUID } from '@/src/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { UUID } from 'crypto'
 import { router, useLocalSearchParams } from 'expo-router'
 import { Pencil, PencilOff } from 'lucide-react-native'
 import { useEffect } from 'react'

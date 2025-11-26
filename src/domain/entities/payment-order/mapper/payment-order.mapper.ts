@@ -1,6 +1,6 @@
 import { PaymentOrder } from '@/src/domain/entities/payment-order/payment-order.entity'
 import { PaymentOrderTable } from '@/src/infra/db/drizzle/schema/drizzle.payment-order.schema'
-import { UUID } from 'crypto'
+import { UUID } from '@/src/lib/utils'
 
 export class PaymentOrderMapper {
   static toDomain(table: PaymentOrderTable): PaymentOrder {
