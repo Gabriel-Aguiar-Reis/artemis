@@ -1,3 +1,7 @@
+if (__DEV__) {
+  require('../../ReactotronConfig')
+}
+
 import { Button } from '@/src/components/ui/button'
 import { Text } from '@/src/components/ui/text'
 import { Link, LinkProps, Stack } from 'expo-router'
