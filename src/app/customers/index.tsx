@@ -9,9 +9,8 @@ import { ObjectCard } from '@/src/components/ui/object-card'
 import { Text } from '@/src/components/ui/text'
 import { WhatsAppIcon } from '@/src/components/ui/whatsapp-icon'
 import { Customer } from '@/src/domain/entities/customer/customer.entity'
-import { formatPhoneBrazil, smartSearch } from '@/src/lib/utils'
+import { formatPhoneBrazil, smartSearch, UUID } from '@/src/lib/utils'
 import { FlashList } from '@shopify/flash-list'
-import { UUID } from 'crypto'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
 import {
   EditIcon,
