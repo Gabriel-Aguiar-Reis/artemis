@@ -50,7 +50,7 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
     let smartphoneNumber: SmartphoneNumber | undefined
     if (dto.phoneNumber && typeof dto.phoneIsWhatsApp === 'boolean') {
       smartphoneNumber = SmartphoneNumber.fromDTO({
-        value: dto.phoneNumber!,
+        value: dto.phoneNumber!.replace(/\D/g, ''),
         isWhatsApp: dto.phoneIsWhatsApp,
       })
     }
@@ -58,7 +58,7 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
     let landlineNumber: LandlinePhoneNumber | undefined
     if (dto.landlineNumber && typeof dto.landlineIsWhatsApp === 'boolean') {
       landlineNumber = LandlinePhoneNumber.fromDTO({
-        value: dto.landlineNumber!,
+        value: dto.landlineNumber!.replace(/\D/g, ''),
         isWhatsApp: dto.landlineIsWhatsApp,
       })
     }
@@ -107,7 +107,7 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
     let smartphoneNumber: SmartphoneNumber | undefined
     if (dto.phoneNumber && typeof dto.phoneIsWhatsApp === 'boolean') {
       smartphoneNumber = SmartphoneNumber.fromDTO({
-        value: dto.phoneNumber!,
+        value: dto.phoneNumber!.replace(/\D/g, ''),
         isWhatsApp: dto.phoneIsWhatsApp,
       })
     }
@@ -115,7 +115,7 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
     let landlineNumber: LandlinePhoneNumber | undefined
     if (dto.landlineNumber && typeof dto.landlineIsWhatsApp === 'boolean') {
       landlineNumber = LandlinePhoneNumber.fromDTO({
-        value: dto.landlineNumber!,
+        value: dto.landlineNumber!.replace(/\D/g, ''),
         isWhatsApp: dto.landlineIsWhatsApp,
       })
     }
