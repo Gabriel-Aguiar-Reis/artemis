@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "9fd7b88d-50f8-494a-ad2f-7668e1737463",
+  "id": "8f6bf0f5-ba3a-4bf4-a2a1-6d5fcdcc08df",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "category": {
@@ -12,7 +12,8 @@
           "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": "gen_random_uuid()"
         },
         "name": {
           "name": "name",
@@ -44,7 +45,8 @@
           "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": "gen_random_uuid()"
         },
         "store_name": {
           "name": "store_name",
@@ -117,23 +119,16 @@
           "notNull": true,
           "autoincrement": false
         },
-        "address_zip_code": {
-          "name": "address_zip_code",
+        "address_state": {
+          "name": "address_state",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "address_latitude": {
-          "name": "address_latitude",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "address_longitude": {
-          "name": "address_longitude",
-          "type": "real",
+        "address_zip_code": {
+          "name": "address_zip_code",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -153,7 +148,8 @@
           "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": "gen_random_uuid()"
         },
         "itinerary_id": {
           "name": "itinerary_id",
@@ -226,7 +222,8 @@
           "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": "gen_random_uuid()"
         },
         "initial_itinerary_date": {
           "name": "initial_itinerary_date",
@@ -265,7 +262,8 @@
           "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": "gen_random_uuid()"
         },
         "method": {
           "name": "method",
@@ -320,7 +318,8 @@
           "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": "gen_random_uuid()"
         },
         "name": {
           "name": "name",
@@ -387,7 +386,8 @@
           "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": "gen_random_uuid()"
         },
         "work_order_id": {
           "name": "work_order_id",
@@ -459,7 +459,8 @@
           "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": "gen_random_uuid()"
         },
         "result_id": {
           "name": "result_id",
@@ -545,7 +546,8 @@
           "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": "gen_random_uuid()"
         },
         "total_value": {
           "name": "total_value",
@@ -569,7 +571,8 @@
           "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": "gen_random_uuid()"
         },
         "customer_id": {
           "name": "customer_id",
@@ -582,15 +585,17 @@
           "name": "created_at",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": false,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
         },
         "updated_at": {
           "name": "updated_at",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": false,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
         },
         "scheduled_date": {
           "name": "scheduled_date",
@@ -610,7 +615,7 @@
           "name": "payment_order_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "status": {
