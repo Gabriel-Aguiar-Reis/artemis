@@ -1,7 +1,7 @@
+import { product } from '@/src/infra/db/drizzle/schema/drizzle.product.schema'
+import { workOrderResult } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result.schema'
 import { InferInsertModel, InferSelectModel, sql } from 'drizzle-orm'
 import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
-import { product } from './drizzle.product.schema'
-import { workOrderResult } from './drizzle.work-order-result.schema'
 
 export enum WorkOrderResultItemType {
   EXCHANGED = 'exchanged',

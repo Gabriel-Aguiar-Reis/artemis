@@ -1,7 +1,7 @@
+import { product } from '@/src/infra/db/drizzle/schema/drizzle.product.schema'
+import { workOrder } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
 import { InferInsertModel, InferSelectModel, sql } from 'drizzle-orm'
 import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
-import { product } from './drizzle.product.schema'
-import { workOrder } from './drizzle.work-order.schema'
 
 export const workOrderItems = sqliteTable('work_order_items', {
   id: text('id')
