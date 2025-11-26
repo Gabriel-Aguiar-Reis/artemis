@@ -7,47 +7,35 @@ import {
 } from 'drizzle-zod'
 import z from 'zod'
 
-const NAME_CONSTRAINT_MESSAGE =
-  'O nome do produto deve ter no mínimo 2 caracteres'
-
-const NON_NEGATIVE_PRICE_MESSAGE = 'O preço de venda não pode ser negativo'
-const NON_OPTIONAL_PRICE_MESSAGE = 'O preço de venda é obrigatório'
-
-const INVALID_EXPIRATION_MESSAGE = 'Formato de expiração inválido'
-
-export const productSelectSchema = createSelectSchema(product, {
-  name: (schema) => schema.min(2, NAME_CONSTRAINT_MESSAGE),
-  salePrice: (schema) => schema.nonnegative(NON_NEGATIVE_PRICE_MESSAGE),
-  isActive: (schema) => schema.optional(),
-  categoryId: () => z.uuid(),
+const productSchemaWithoutId = {
+  name: () =>
+    z.string().min(2, 'O nome do produto deve ter no mínimo 2 caracteres'),
+  salePrice: () => z.number().min(0, 'O preço de venda não pode ser negativo'),
+  isActive: () => z.boolean().optional(),
+  categoryId: () => z.uuid().optional(),
   expiration: () =>
-    z.string().regex(EXPIRATION_REGEX, INVALID_EXPIRATION_MESSAGE),
-})
+    z
+      .string()
+      .regex(EXPIRATION_REGEX, 'Formato de expiração inválido')
+      .optional(),
+}
+
+const productSchema = {
+  id: () => z.uuid('UUID inválido.'),
+  ...productSchemaWithoutId,
+}
+
+export const productSelectSchema = createSelectSchema(product, productSchema)
 
 export type ProductSelectDTO = z.infer<typeof productSelectSchema>
 
-export const productInsertSchema = createInsertSchema(product, {
-  name: (schema) => schema.min(2, NAME_CONSTRAINT_MESSAGE),
-  salePrice: (schema) =>
-    schema
-      .refine((val) => val !== 0, { message: NON_OPTIONAL_PRICE_MESSAGE })
-      .nonnegative(NON_NEGATIVE_PRICE_MESSAGE),
-  isActive: (schema) => schema.optional(),
-  categoryId: () => z.uuid('UUID inválido'),
-  expiration: () =>
-    z.string().regex(EXPIRATION_REGEX, INVALID_EXPIRATION_MESSAGE),
-})
+export const productInsertSchema = createInsertSchema(product, productSchema)
 
 export type ProductInsertDTO = z.infer<typeof productInsertSchema>
 
-export const productUpdateSchema = createUpdateSchema(product, {
-  name: (schema) => schema.min(2, NAME_CONSTRAINT_MESSAGE).optional(),
-  isActive: (schema) => schema.optional(),
-  salePrice: (schema) =>
-    schema.nonnegative(NON_NEGATIVE_PRICE_MESSAGE).optional(),
-  categoryId: () => z.uuid().optional(),
-  expiration: () =>
-    z.string().regex(EXPIRATION_REGEX, INVALID_EXPIRATION_MESSAGE).optional(),
-})
+export const productUpdateSchema = createUpdateSchema(
+  product,
+  productSchemaWithoutId
+)
 
 export type ProductUpdateDTO = z.infer<typeof productUpdateSchema>

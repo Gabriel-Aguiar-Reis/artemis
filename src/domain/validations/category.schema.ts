@@ -6,25 +6,28 @@ import {
 } from 'drizzle-zod'
 import z from 'zod'
 
-const NAME_CONSTRAINT_MESSAGE =
-  'O nome da categoria deve ter no mínimo 2 caracteres'
+const categorySchemaWithoutId = {
+  name: () =>
+    z.string().min(2, 'O nome da categoria deve ter no mínimo 2 caracteres.'),
+  isActive: () => z.boolean().optional(),
+}
 
-export const categorySelectSchema = createSelectSchema(category, {
-  name: (schema) => schema.min(2, NAME_CONSTRAINT_MESSAGE),
-})
+const categorySchema = {
+  id: () => z.uuid('UUID inválido.'),
+  ...categorySchemaWithoutId,
+}
+
+export const categorySelectSchema = createSelectSchema(category, categorySchema)
 
 export type CategorySelectDTO = z.infer<typeof categorySelectSchema>
 
-export const categoryInsertSchema = createInsertSchema(category, {
-  name: (schema) => schema.min(2, NAME_CONSTRAINT_MESSAGE),
-  isActive: (schema) => schema.optional(),
-})
+export const categoryInsertSchema = createInsertSchema(category, categorySchema)
 
 export type CategoryInsertDTO = z.infer<typeof categoryInsertSchema>
 
-export const categoryUpdateSchema = createUpdateSchema(category, {
-  name: (schema) => schema.min(2, NAME_CONSTRAINT_MESSAGE),
-  isActive: (schema) => schema.optional(),
-})
+export const categoryUpdateSchema = createUpdateSchema(
+  category,
+  categorySchemaWithoutId
+)
 
 export type CategoryUpdateDTO = z.infer<typeof categoryUpdateSchema>
