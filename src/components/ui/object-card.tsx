@@ -58,24 +58,35 @@ function ObjectCardHeader({ children }: ObjectCardHeaderProps) {
       isValidElement(child) && child.type === ObjectCardActions
   )
 
-  return (
-    <CardHeader className="flex-row justify-between items-start">
-      <View className="flex-col">
-        {title && (
-          <ObjectCardTitle>
-            {(title as ReactElement<{ children: ReactNode }>).props.children}
-          </ObjectCardTitle>
-        )}
+  if (description)
+    return (
+      <CardHeader className="flex-row justify-between items-start">
+        <View className="flex-col">
+          {title && (
+            <ObjectCardTitle>
+              {(title as ReactElement<{ children: ReactNode }>).props.children}
+            </ObjectCardTitle>
+          )}
 
-        {description && (
           <ObjectCardDescription>
             {
               (description as ReactElement<{ children: ReactNode }>).props
                 .children
             }
           </ObjectCardDescription>
-        )}
-      </View>
+        </View>
+
+        {actions}
+      </CardHeader>
+    )
+
+  return (
+    <CardHeader className="flex-row justify-between items-center">
+      {title && (
+        <ObjectCardTitle>
+          {(title as ReactElement<{ children: ReactNode }>).props.children}
+        </ObjectCardTitle>
+      )}
 
       {actions}
     </CardHeader>
