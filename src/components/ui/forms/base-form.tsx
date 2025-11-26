@@ -29,6 +29,7 @@ export type FormFieldProps<T extends FieldValues> = {
   isSearch?: boolean
   onSearchPress?: () => void
   isSearchLoading?: boolean
+  isSwitch?: boolean
 }
 
 type RootProps = {
@@ -46,27 +47,9 @@ function Root({ title, children }: RootProps) {
   )
 }
 
-type InputProps<T extends FieldValues> = {
+type InputProps<T extends FieldValues> = FormFieldProps<T> & {
   control: Control<T>
-  name: Path<T>
-  label: string
-  placeholder?: string
   error?: string
-  icon?: LucideIcon
-  alternate?: {
-    icon: LucideIcon
-    type: 'toSecret' | 'toDisabled'
-  }
-  iconTooltip?: string
-  rules?: object
-  inputProps?: Record<string, any>
-  isNumber?: boolean
-  isCurrency?: boolean
-  isDialog?: boolean
-  isSelect?: boolean
-  isSearch?: boolean
-  onSearchPress?: () => void
-  isSearchLoading?: boolean
 }
 
 function Input<T extends FieldValues>({
@@ -265,10 +248,8 @@ function Input<T extends FieldValues>({
   )
 }
 
-type SwitchProps<T extends FieldValues> = {
+type SwitchProps<T extends FieldValues> = FormFieldProps<T> & {
   control: Control<T>
-  name: Path<T>
-  label: string
 }
 function SwitchField<T extends FieldValues>({
   control,
