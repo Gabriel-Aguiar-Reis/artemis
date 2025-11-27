@@ -139,7 +139,7 @@ export default function CustomersScreen() {
     customerId: UUID,
     customerName: string
   ) => {
-    await SheetManager.show('customer-options-sheet', {
+    await SheetManager.show('options-sheet', {
       payload: {
         title: customerName,
         options: [
