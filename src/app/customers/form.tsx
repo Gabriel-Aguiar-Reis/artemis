@@ -1,325 +1,185 @@
 import { customerHooks } from '@/src/application/hooks/customer.hooks'
-import { Button } from '@/src/components/ui/button'
-import { Input } from '@/src/components/ui/input'
-import { Text } from '@/src/components/ui/text'
+import { GeocodingService } from '@/src/application/services/geocoding.service'
+import { CustomerForm } from '@/src/components/ui/forms/customer-form'
+import {
+  CustomerInsertDTO,
+  customerInsertSchema,
+} from '@/src/domain/validations/customer.schema'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { router, Stack } from 'expo-router'
+import { router } from 'expo-router'
+import { CircleQuestionMark, Search } from 'lucide-react-native'
 import * as React from 'react'
-import { Controller, useForm } from 'react-hook-form'
-import { ScrollView, Switch, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { z } from 'zod'
-
-const customerSchema = z.object({
-  storeName: z.string().min(1, 'Digite o nome da loja'),
-  contactName: z.string().min(1, 'Digite o nome do contato'),
-  phoneNumber: z.string().min(1, 'Digite o telefone'),
-  phoneIsWhatsApp: z.boolean(),
-  landlineNumber: z.string().optional(),
-  streetName: z.string().min(1, 'Digite o nome da rua'),
-  streetNumber: z.string().min(1, 'Digite o número'),
-  neighborhood: z.string().min(1, 'Digite o bairro'),
-  city: z.string().min(1, 'Digite a cidade'),
-  zipCode: z.string().min(1, 'Digite o CEP'),
-  latitude: z.string().min(1, 'Digite a latitude'),
-  longitude: z.string().min(1, 'Digite a longitude'),
-})
-
-type CustomerFormValues = z.infer<typeof customerSchema>
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
 
 export default function CustomerFormScreen() {
-  const { mutate: addCustomer } = customerHooks.addCustomer()
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<CustomerFormValues>({
-    resolver: zodResolver(customerSchema),
+  const { mutate: addCustomer, isPending } = customerHooks.addCustomer()
+  const [isLoading, setIsLoading] = useState(false)
+
+  const form = useForm<CustomerInsertDTO>({
+    resolver: zodResolver(customerInsertSchema),
     defaultValues: {
       storeName: '',
       contactName: '',
-      phoneNumber: '',
-      phoneIsWhatsApp: true,
-      landlineNumber: '',
-      streetName: '',
-      streetNumber: '',
-      neighborhood: '',
-      city: '',
-      zipCode: '',
-      latitude: '',
-      longitude: '',
+      phoneNumber: undefined,
+      phoneIsWhatsApp: false,
+      landlineNumber: undefined,
+      landlineIsWhatsApp: false,
+      addressStreetName: '',
+      addressStreetNumber: '',
+      addressNeighborhood: '',
+      addressCity: '',
+      addressState: '',
+      addressZipCode: '',
     },
+    mode: 'onBlur',
+    reValidateMode: 'onBlur',
   })
 
-  const onSubmit = (data: CustomerFormValues) => {
-    addCustomer({
-      storeName: data.storeName,
-      contactName: data.contactName,
-      phoneNumber: {
-        value: data.phoneNumber,
-        isWhatsApp: data.phoneIsWhatsApp,
-      },
-      landlineNumber: data.landlineNumber
-        ? {
-            value: data.landlineNumber,
-            isWhatsApp: false,
-          }
-        : undefined,
-      storeAddress: {
-        streetName: data.streetName,
-        streetNumber: parseInt(data.streetNumber),
-        neighborhood: data.neighborhood,
-        city: data.city,
-        zipCode: data.zipCode,
-        coordinates: {
-          latitude: parseFloat(data.latitude),
-          longitude: parseFloat(data.longitude),
-        },
-      },
-    })
+  const onSubmit = form.handleSubmit((data: CustomerInsertDTO) => {
+    console.log('Submitting customer:', data)
+    addCustomer(data)
     router.back()
+  })
+
+  const handleSearchAddress = async (zipCode: string) => {
+    setIsLoading(true)
+    try {
+      const address = await GeocodingService.getAddressByZipCode(zipCode)
+      if (address) {
+        form.setValue('addressStreetName', address.streetName)
+        form.setValue('addressStreetNumber', address.streetNumber.toString())
+        form.setValue('addressNeighborhood', address.neighborhood)
+        form.setValue('addressCity', address.city)
+        form.setValue('addressState', address.state)
+      }
+      console.log(address)
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
-    <SafeAreaView className="flex-1">
-      <Stack.Screen options={{ title: 'Novo Cliente' }} />
-      <ScrollView className="flex-1">
-        <View className="gap-4 p-4">
-          <View>
-            <Text className="mb-2 font-medium">Nome da Loja</Text>
-            <Controller
-              control={control}
-              name="storeName"
-              render={({ field: { onChange, value } }) => (
-                <Input
-                  value={value}
-                  onChangeText={onChange}
-                  placeholder="Ex: Mercado Central"
-                />
-              )}
-            />
-            {errors.storeName && (
-              <Text className="mt-1 text-red-500">
-                {errors.storeName.message}
-              </Text>
-            )}
-          </View>
-
-          <View>
-            <Text className="mb-2 font-medium">Nome do Contato</Text>
-            <Controller
-              control={control}
-              name="contactName"
-              render={({ field: { onChange, value } }) => (
-                <Input
-                  value={value}
-                  onChangeText={onChange}
-                  placeholder="Ex: João Silva"
-                />
-              )}
-            />
-            {errors.contactName && (
-              <Text className="mt-1 text-red-500">
-                {errors.contactName.message}
-              </Text>
-            )}
-          </View>
-
-          <View>
-            <Text className="mb-2 font-medium">Telefone</Text>
-            <Controller
-              control={control}
-              name="phoneNumber"
-              render={({ field: { onChange, value } }) => (
-                <Input
-                  value={value}
-                  onChangeText={onChange}
-                  placeholder="(11) 98765-4321"
-                  keyboardType="phone-pad"
-                />
-              )}
-            />
-            {errors.phoneNumber && (
-              <Text className="mt-1 text-red-500">
-                {errors.phoneNumber.message}
-              </Text>
-            )}
-            <View className="mt-2 flex-row items-center">
-              <Controller
-                control={control}
-                name="phoneIsWhatsApp"
-                render={({ field: { onChange, value } }) => (
-                  <Switch value={value} onValueChange={onChange} />
-                )}
-              />
-              <Text className="ml-2">Tem WhatsApp</Text>
-            </View>
-          </View>
-
-          <View>
-            <Text className="mb-2 font-medium">Telefone Fixo (opcional)</Text>
-            <Controller
-              control={control}
-              name="landlineNumber"
-              render={({ field: { onChange, value } }) => (
-                <Input
-                  value={value}
-                  onChangeText={onChange}
-                  placeholder="(11) 3456-7890"
-                  keyboardType="phone-pad"
-                />
-              )}
-            />
-          </View>
-
-          <Text className="mt-4 text-lg font-semibold">Endereço</Text>
-
-          <View className="flex-row gap-2">
-            <View className="flex-1">
-              <Text className="mb-2 font-medium">Rua</Text>
-              <Controller
-                control={control}
-                name="streetName"
-                render={({ field: { onChange, value } }) => (
-                  <Input
-                    value={value}
-                    onChangeText={onChange}
-                    placeholder="Rua das Flores"
-                  />
-                )}
-              />
-              {errors.streetName && (
-                <Text className="mt-1 text-red-500">
-                  {errors.streetName.message}
-                </Text>
-              )}
-            </View>
-            <View className="w-20">
-              <Text className="mb-2 font-medium">Nº</Text>
-              <Controller
-                control={control}
-                name="streetNumber"
-                render={({ field: { onChange, value } }) => (
-                  <Input
-                    value={value}
-                    onChangeText={onChange}
-                    placeholder="123"
-                    keyboardType="numeric"
-                  />
-                )}
-              />
-            </View>
-          </View>
-
-          <View>
-            <Text className="mb-2 font-medium">Bairro</Text>
-            <Controller
-              control={control}
-              name="neighborhood"
-              render={({ field: { onChange, value } }) => (
-                <Input
-                  value={value}
-                  onChangeText={onChange}
-                  placeholder="Centro"
-                />
-              )}
-            />
-            {errors.neighborhood && (
-              <Text className="mt-1 text-red-500">
-                {errors.neighborhood.message}
-              </Text>
-            )}
-          </View>
-
-          <View>
-            <Text className="mb-2 font-medium">Cidade</Text>
-            <Controller
-              control={control}
-              name="city"
-              render={({ field: { onChange, value } }) => (
-                <Input
-                  value={value}
-                  onChangeText={onChange}
-                  placeholder="São Paulo"
-                />
-              )}
-            />
-            {errors.city && (
-              <Text className="mt-1 text-red-500">{errors.city.message}</Text>
-            )}
-          </View>
-
-          <View>
-            <Text className="mb-2 font-medium">CEP</Text>
-            <Controller
-              control={control}
-              name="zipCode"
-              render={({ field: { onChange, value } }) => (
-                <Input
-                  value={value}
-                  onChangeText={onChange}
-                  placeholder="01234-567"
-                  keyboardType="numeric"
-                />
-              )}
-            />
-            {errors.zipCode && (
-              <Text className="mt-1 text-red-500">
-                {errors.zipCode.message}
-              </Text>
-            )}
-          </View>
-
-          <Text className="mt-4 text-lg font-semibold">Coordenadas</Text>
-
-          <View className="flex-row gap-2">
-            <View className="flex-1">
-              <Text className="mb-2 font-medium">Latitude</Text>
-              <Controller
-                control={control}
-                name="latitude"
-                render={({ field: { onChange, value } }) => (
-                  <Input
-                    value={value}
-                    onChangeText={onChange}
-                    placeholder="-23.550520"
-                    keyboardType="numeric"
-                  />
-                )}
-              />
-              {errors.latitude && (
-                <Text className="mt-1 text-red-500">
-                  {errors.latitude.message}
-                </Text>
-              )}
-            </View>
-            <View className="flex-1">
-              <Text className="mb-2 font-medium">Longitude</Text>
-              <Controller
-                control={control}
-                name="longitude"
-                render={({ field: { onChange, value } }) => (
-                  <Input
-                    value={value}
-                    onChangeText={onChange}
-                    placeholder="-46.633308"
-                    keyboardType="numeric"
-                  />
-                )}
-              />
-              {errors.longitude && (
-                <Text className="mt-1 text-red-500">
-                  {errors.longitude.message}
-                </Text>
-              )}
-            </View>
-          </View>
-
-          <Button onPress={handleSubmit(onSubmit)} className="mt-4">
-            <Text>Salvar Cliente</Text>
-          </Button>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    <CustomerForm
+      title="Novo Cliente"
+      onSubmit={onSubmit}
+      errors={form.formState.errors}
+      control={form.control}
+      trigger={form.trigger}
+      submitLabel="Salvar Cliente"
+      loading={isPending}
+      fields={[
+        {
+          name: 'storeName',
+          label: 'Nome da Estabelecimento',
+          placeholder: 'Ex. Loja do João',
+          icon: CircleQuestionMark,
+          iconTooltip: 'Nome pelo qual o estabelecimento será identificado.',
+        },
+        {
+          name: 'contactName',
+          label: 'Nome do Contato',
+          placeholder: 'Ex. João Silva',
+          icon: CircleQuestionMark,
+          iconTooltip: 'Nome do contato principal do estabelecimento.',
+        },
+        {
+          name: 'addressZipCode',
+          label: 'CEP',
+          placeholder: 'Ex. 12345-678',
+          icon: Search,
+          isSearch: true,
+          isSearchLoading: isLoading,
+          onSearchPress: () => {
+            const zipCode = form.getValues('addressZipCode')
+            handleSearchAddress(zipCode)
+          },
+        },
+        {
+          name: 'addressStreetName',
+          label: 'Rua',
+          placeholder: 'Ex. Rua das Flores',
+          icon: CircleQuestionMark,
+          iconTooltip: 'Nome da rua do endereço do estabelecimento.',
+        },
+        {
+          name: 'addressStreetNumber',
+          label: 'Número',
+          placeholder: 'Ex. 123',
+          isNumber: true,
+          icon: CircleQuestionMark,
+          iconTooltip: 'Número do endereço do estabelecimento.',
+        },
+        {
+          name: 'addressNeighborhood',
+          label: 'Bairro',
+          placeholder: 'Ex. Centro',
+          icon: CircleQuestionMark,
+          iconTooltip: 'Nome do bairro do endereço do estabelecimento.',
+        },
+        {
+          name: 'addressCity',
+          label: 'Cidade',
+          placeholder: 'Ex. São Paulo',
+          icon: CircleQuestionMark,
+          iconTooltip: 'Nome da cidade do endereço do estabelecimento.',
+        },
+        {
+          name: 'addressState',
+          label: 'Estado',
+          placeholder: 'Ex. SP',
+          icon: CircleQuestionMark,
+          iconTooltip: 'Nome do estado do endereço do estabelecimento.',
+        },
+        {
+          name: 'phoneNumber',
+          label: 'Telefone',
+          placeholder: 'Ex. +55 (11) 91234-5678',
+        },
+        {
+          name: 'phoneIsWhatsApp',
+          label: 'É WhatsApp?',
+          isSwitch: true,
+        },
+        {
+          name: 'landlineNumber',
+          label: 'Telefone Fixo (Opcional)',
+          placeholder: 'Ex. +55 (11) 3456-7890',
+        },
+        {
+          name: 'landlineIsWhatsApp',
+          label: 'É WhatsApp?',
+          isSwitch: true,
+        },
+      ]}
+      steps={[
+        {
+          label: 'Informações do Estabelecimento',
+          fields: ['storeName', 'contactName'],
+        },
+        {
+          label: 'Dados do Endereço',
+          fields: [
+            'addressZipCode',
+            'addressStreetName',
+            'addressStreetNumber',
+            'addressNeighborhood',
+            'addressCity',
+            'addressState',
+          ],
+        },
+        {
+          label: 'Dados do Contato',
+          fields: [
+            'phoneNumber',
+            'phoneIsWhatsApp',
+            'landlineNumber',
+            'landlineIsWhatsApp',
+          ],
+        },
+      ]}
+    />
   )
 }
