@@ -42,7 +42,7 @@ const customerSchemaWithoutId = {
       .max(100, 'O nome da rua deve ter no máximo 100 caracteres.'),
   addressStreetNumber: () =>
     z
-      .number()
+      .string()
       .min(1, 'O número da rua deve ter no mínimo 1 caractere.')
       .max(10, 'O número da rua deve ter no máximo 10 caracteres.'),
   addressNeighborhood: () =>

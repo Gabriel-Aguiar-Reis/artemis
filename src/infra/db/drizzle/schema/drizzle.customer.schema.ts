@@ -12,7 +12,7 @@ export type CustomerModelShape = Pick<
   landlineNumber: string | null
   landlineIsWhatsApp: boolean | null
   addressStreetName: string
-  addressStreetNumber: number
+  addressStreetNumber: string
   addressNeighborhood: string
   addressCity: string
   addressState: string
@@ -30,7 +30,7 @@ export const customer = sqliteTable('customer', {
   landlineNumber: text('landline_number'),
   landlineIsWhatsApp: integer('landline_is_whatsapp', { mode: 'boolean' }),
   addressStreetName: text('address_street_name').notNull(),
-  addressStreetNumber: integer('address_street_number').notNull(),
+  addressStreetNumber: text('address_street_number').notNull(),
   addressNeighborhood: text('address_neighborhood').notNull(),
   addressCity: text('address_city').notNull(),
   addressState: text('address_state').notNull(),
