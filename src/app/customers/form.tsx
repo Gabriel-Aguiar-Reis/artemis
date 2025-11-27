@@ -7,7 +7,12 @@ import {
 } from '@/src/domain/validations/customer.schema'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { router } from 'expo-router'
-import { CircleQuestionMark, Search } from 'lucide-react-native'
+import {
+  CircleQuestionMark,
+  Pencil,
+  PencilOff,
+  Search,
+} from 'lucide-react-native'
 import * as React from 'react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -26,7 +31,7 @@ export default function CustomerFormScreen() {
       landlineNumber: undefined,
       landlineIsWhatsApp: false,
       addressStreetName: '',
-      addressStreetNumber: 0,
+      addressStreetNumber: '0',
       addressNeighborhood: '',
       addressCity: '',
       addressState: '',
@@ -48,7 +53,7 @@ export default function CustomerFormScreen() {
       const address = await GeocodingService.getAddressByZipCode(zipCode)
       if (address) {
         form.setValue('addressStreetName', address.streetName)
-        form.setValue('addressStreetNumber', address.streetNumber)
+        form.setValue('addressStreetNumber', address.streetNumber.toString())
         form.setValue('addressNeighborhood', address.neighborhood)
         form.setValue('addressCity', address.city)
         form.setValue('addressState', address.state)
@@ -101,8 +106,8 @@ export default function CustomerFormScreen() {
           name: 'addressStreetName',
           label: 'Rua',
           placeholder: 'Ex. Rua das Flores',
-          icon: CircleQuestionMark,
-          iconTooltip: 'Nome da rua do endereço do estabelecimento.',
+          icon: Pencil,
+          alternate: { icon: PencilOff, type: 'toDisabled' },
         },
         {
           name: 'addressStreetNumber',
@@ -136,7 +141,9 @@ export default function CustomerFormScreen() {
         {
           name: 'phoneNumber',
           label: 'Telefone',
-          placeholder: 'Ex. +55 (11) 91234-5678',
+          placeholder: 'Ex. 11 912345678',
+          icon: CircleQuestionMark,
+          iconTooltip: 'Número de telefone no formato XX XXXXXXXXX.',
         },
         {
           name: 'phoneIsWhatsApp',
@@ -146,7 +153,9 @@ export default function CustomerFormScreen() {
         {
           name: 'landlineNumber',
           label: 'Telefone Fixo (Opcional)',
-          placeholder: 'Ex. +55 (11) 3456-7890',
+          placeholder: 'Ex. 11 34567890',
+          icon: CircleQuestionMark,
+          iconTooltip: 'Número de telefone fixo no formato XX XXXX-XXXX.',
         },
         {
           name: 'landlineIsWhatsApp',
