@@ -10,8 +10,8 @@ const customerSchemaWithoutId = {
   storeName: () =>
     z
       .string()
-      .min(2, 'O nome da loja deve ter no mínimo 2 caracteres.')
-      .max(100, 'O nome da loja deve ter no máximo 100 caracteres.'),
+      .min(2, 'O nome do estabelecimento deve ter no mínimo 2 caracteres.')
+      .max(100, 'O nome do estabelecimento deve ter no máximo 100 caracteres.'),
   contactName: () =>
     z
       .string()

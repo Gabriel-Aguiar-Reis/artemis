@@ -4,9 +4,9 @@ import { UUID } from '@/src/lib/utils'
 
 export class CustomerMapper {
   static toDomain(table: CustomerTable): Customer {
-    if (!table.storeName || !table.contactName || !table.phoneNumber) {
+    if (!table.storeName || !table.contactName) {
       throw new Error(
-        'Cliente deve ter nome da loja, nome do contato e número de telefone'
+        'Cliente deve ter nome do estabelecimento e nome do contato.'
       )
     }
 
