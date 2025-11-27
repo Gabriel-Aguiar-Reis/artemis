@@ -124,36 +124,6 @@ export function CustomerForm<T extends FieldValues>({
               />
             )
           }
-          if (fieldConfig.isNumber) {
-            return (
-              <BaseForm.Input.Number<T>
-                key={String(fieldConfig.name)}
-                control={control}
-                name={fieldConfig.name}
-                label={fieldConfig.label}
-                placeholder={fieldConfig.placeholder}
-                error={getErrorMessage(errors?.[fieldConfig.name]?.message)}
-                icon={fieldConfig.icon}
-                alternate={
-                  String(fieldConfig.name) === 'name' && fieldConfig.alternate
-                    ? {
-                        icon: fieldConfig.alternate.icon,
-                        type: fieldConfig.alternate.type,
-                      }
-                    : fieldConfig.alternate
-                }
-                iconTooltip={fieldConfig.iconTooltip}
-                rules={fieldConfig.rules}
-                inputProps={fieldConfig.inputProps}
-                isDialog={fieldConfig.isDialog}
-                isSelect={fieldConfig.isSelect}
-                isSearch={fieldConfig.isSearch}
-                onSearchPress={fieldConfig.onSearchPress}
-                isSearchLoading={fieldConfig.isSearchLoading}
-              />
-            )
-          }
-
           if (fieldConfig.isSwitch) {
             return (
               <BaseForm.Switch<T>

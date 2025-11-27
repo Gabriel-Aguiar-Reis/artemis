@@ -14,10 +14,7 @@ const productSchemaWithoutId = {
   isActive: () => z.boolean().optional(),
   categoryId: () => z.uuid().optional(),
   expiration: () =>
-    z
-      .string()
-      .regex(EXPIRATION_REGEX, 'Formato de expiração inválido')
-      .optional(),
+    z.string().regex(EXPIRATION_REGEX, 'Formato de expiração inválido'),
 }
 
 const productSchema = {

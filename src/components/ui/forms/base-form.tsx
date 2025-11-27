@@ -22,7 +22,6 @@ export type FormFieldProps<T extends FieldValues> = {
   iconTooltip?: string
   rules?: object
   inputProps?: Record<string, any>
-  isNumber?: boolean
   isCurrency?: boolean
   isDialog?: boolean
   isSelect?: boolean
@@ -63,7 +62,6 @@ function Input<T extends FieldValues>({
   iconTooltip,
   rules,
   inputProps,
-  isNumber,
   isCurrency,
   isDialog = false,
   isSelect = false,
@@ -114,10 +112,7 @@ function Input<T extends FieldValues>({
             ? (text: string) => {
                 setLocalCurrency(text)
               }
-            : isNumber
-              ? (text: string) =>
-                  onChange(text === '' ? undefined : Number(text))
-              : onChange,
+            : onChange,
           onBlur: () => {
             if (isCurrency) {
               let clean = (localCurrency || '').replace(/[^\d,.-]/g, '')
@@ -293,13 +288,7 @@ function CurrencyInput<T extends FieldValues>(
 ) {
   return <Input {...props} isCurrency />
 }
-function NumberInput<T extends FieldValues>(
-  props: Omit<InputProps<T>, 'isCurrency' | 'isNumber'>
-) {
-  return <Input {...props} isNumber />
-}
 Input.Currency = CurrencyInput
-Input.Number = NumberInput
 
 export const BaseForm = {
   Root,

@@ -26,7 +26,7 @@ export default function CustomerFormScreen() {
       landlineNumber: undefined,
       landlineIsWhatsApp: false,
       addressStreetName: '',
-      addressStreetNumber: '',
+      addressStreetNumber: 0,
       addressNeighborhood: '',
       addressCity: '',
       addressState: '',
@@ -48,7 +48,7 @@ export default function CustomerFormScreen() {
       const address = await GeocodingService.getAddressByZipCode(zipCode)
       if (address) {
         form.setValue('addressStreetName', address.streetName)
-        form.setValue('addressStreetNumber', address.streetNumber.toString())
+        form.setValue('addressStreetNumber', address.streetNumber)
         form.setValue('addressNeighborhood', address.neighborhood)
         form.setValue('addressCity', address.city)
         form.setValue('addressState', address.state)
@@ -108,9 +108,9 @@ export default function CustomerFormScreen() {
           name: 'addressStreetNumber',
           label: 'Número',
           placeholder: 'Ex. 123',
-          isNumber: true,
           icon: CircleQuestionMark,
           iconTooltip: 'Número do endereço do estabelecimento.',
+          inputProps: { keyboardType: 'numeric' },
         },
         {
           name: 'addressNeighborhood',
