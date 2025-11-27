@@ -7,12 +7,7 @@ import {
 } from '@/src/domain/validations/customer.schema'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { router } from 'expo-router'
-import {
-  CircleQuestionMark,
-  Pencil,
-  PencilOff,
-  Search,
-} from 'lucide-react-native'
+import { CircleQuestionMark, Search } from 'lucide-react-native'
 import * as React from 'react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -106,8 +101,8 @@ export default function CustomerFormScreen() {
           name: 'addressStreetName',
           label: 'Rua',
           placeholder: 'Ex. Rua das Flores',
-          icon: Pencil,
-          alternate: { icon: PencilOff, type: 'toDisabled' },
+          icon: CircleQuestionMark,
+          iconTooltip: 'Nome da rua do endereço do estabelecimento.',
         },
         {
           name: 'addressStreetNumber',
