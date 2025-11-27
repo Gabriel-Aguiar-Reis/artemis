@@ -14,9 +14,11 @@ import { FlashList } from '@shopify/flash-list'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
 import {
   EditIcon,
-  House,
+  MapPinHouse,
   Phone,
+  Store,
   TrashIcon,
+  UserSquare2,
   UtilityPole,
 } from 'lucide-react-native'
 import * as React from 'react'
@@ -168,20 +170,21 @@ export default function CustomersScreen() {
   }
 
   const renderItem = (customer: Customer) => {
+    const address = `${customer.storeAddress.streetName}, ${customer.storeAddress.streetNumber}, ${customer.storeAddress.zipCode}, ${customer.storeAddress.city} - ${customer.storeAddress.state}`
     return (
       <ObjectCard.Root key={customer.id} className="mb-4">
         <ObjectCard.Header>
-          <ObjectCard.Title>{customer.storeName}</ObjectCard.Title>
+          <ObjectCard.Title>
+            <View className="flex-row gap-2 items-center">
+              <Icon as={Store} size={20} className="text-primary" />
+              <Text className="font-bold">{customer.storeName}</Text>
+            </View>
+          </ObjectCard.Title>
           <ObjectCard.Description>
-            <View className="flex-row gap-2 items-center text-ring">
-              <Icon as={House} size={20} />
-              <Text>
-                <Text>
-                  {customer.storeAddress.streetName}, Nº{' '}
-                  {customer.storeAddress.streetNumber},{' '}
-                  {customer.storeAddress.city} - {customer.storeAddress.state},{' '}
-                  {customer.storeAddress.zipCode}
-                </Text>
+            <View className="flex-row gap-2 items-center">
+              <Icon as={MapPinHouse} size={20} className="text-ring" />
+              <Text className="text-sm text-ring text-wrap mr-4">
+                {address}
               </Text>
             </View>
           </ObjectCard.Description>
@@ -192,27 +195,39 @@ export default function CustomersScreen() {
           />
         </ObjectCard.Header>
         <ObjectCard.Content>
-          {customer.phoneNumber && (
-            <View className="flex-row items-center gap-2 text-primary">
-              <Icon as={Phone} size={20} />
-              <Text>
-                {customer.contactName} -{' '}
-                {formatPhoneBrazil(customer.phoneNumber.value)}
-              </Text>
-              {customer.phoneNumber.isWhatsApp && (
-                <Icon as={WhatsAppIcon} size={20} className="text-green-600" />
-              )}
-            </View>
-          )}
-          {customer.landlineNumber && (
-            <View className="flex-row items-center gap-2 text-primary">
-              <Icon as={UtilityPole} size={20} />
-              <Text>{customer.landlineNumber.value}</Text>
-              {customer.landlineNumber.isWhatsApp && (
-                <Icon as={WhatsAppIcon} size={20} className="text-green-600" />
-              )}
-            </View>
-          )}
+          <View className="flex-row gap-2 items-center">
+            <Icon as={UserSquare2} size={16} />
+            <Text className="font-bold">{customer.contactName}</Text>
+            {customer.isActiveWhatsApp() && (
+              <WhatsAppIcon size={16} className="text-green-600" />
+            )}
+          </View>
+          <View className="ml-6">
+            {customer.phoneNumber && (
+              <View className="flex-row items-center gap-2">
+                <Icon as={Phone} size={16} className="text-ring" />
+                <View className="items-start text-primary">
+                  <View className="flex-row items-center">
+                    <Text className="text-sm text-ring">
+                      {formatPhoneBrazil(customer.phoneNumber.value)}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            )}
+            {customer.landlineNumber && (
+              <View className="flex-row items-center gap-2">
+                <Icon as={UtilityPole} size={16} className="text-ring" />
+                <View className="items-start text-primary">
+                  <View className="flex-row items-center">
+                    <Text className="text-sm text-ring">
+                      {formatPhoneBrazil(customer.landlineNumber.value)}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            )}
+          </View>
         </ObjectCard.Content>
       </ObjectCard.Root>
     )
