@@ -1,9 +1,22 @@
 const { getDefaultConfig } = require('expo/metro-config')
 const { withNativeWind } = require('nativewind/metro')
 
-/** @type {import('expo/metro-config').MetroConfig} */
+// Carrega config base do Expo
 const config = getDefaultConfig(__dirname)
-config.resolver.sourceExts.push('sql')
+
+// Ajusta resolver
+config.resolver.assetExts = config.resolver.assetExts.filter(
+  (ext) => ext !== 'svg'
+)
+
+config.resolver.sourceExts = [...config.resolver.sourceExts, 'svg', 'sql']
+
+// Adiciona transformer SVG
+config.transformer.babelTransformerPath = require.resolve(
+  'react-native-svg-transformer'
+)
+
+// Aplica NativeWind
 module.exports = withNativeWind(config, {
   input: './global.css',
   inlineRem: 16,
