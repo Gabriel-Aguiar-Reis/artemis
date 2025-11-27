@@ -60,8 +60,8 @@ function ObjectCardHeader({ children }: ObjectCardHeaderProps) {
 
   if (description)
     return (
-      <CardHeader className="flex-row justify-between items-start">
-        <View className="flex-col">
+      <CardHeader className="flex-row justify-between items-start flex-1">
+        <View className="flex-col flex-1">
           {title && (
             <ObjectCardTitle>
               {(title as ReactElement<{ children: ReactNode }>).props.children}
@@ -98,15 +98,12 @@ function ObjectCardTitle({ children }: ObjectCardTitleProps) {
 }
 
 function ObjectCardDescription({ children }: ObjectCardDescriptionProps) {
-  return <CardDescription className="ml-2">{children}</CardDescription>
+  return <CardDescription className="mt-1">{children}</CardDescription>
 }
 
 function ObjectCardActions({ onPress }: ObjectCardActionsProps) {
   return (
-    <Pressable
-      onPress={onPress}
-      className="ml-2 rounded-md p-2 active:bg-accent"
-    >
+    <Pressable onPress={onPress} className="rounded-md p-2 active:bg-accent">
       <Icon as={MoreVerticalIcon} className="text-muted-foreground" />
     </Pressable>
   )
