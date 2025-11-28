@@ -4,6 +4,7 @@ import { PaymentOrderSerializableDTO } from '@/src/domain/entities/payment-order
 import { ProductMapper } from '@/src/domain/entities/product/mapper/product.mapper'
 import { ProductSnapshot } from '@/src/domain/entities/work-order-item/value-objects/product-snapshot.vo'
 import { WorkOrderItem } from '@/src/domain/entities/work-order-item/work-order-item.entity'
+import { WorkOrderResultItemType } from '@/src/domain/entities/work-order-result-item/work-order-result-item.entity'
 import { WorkOrderResultMapper } from '@/src/domain/entities/work-order-result/mapper/work-order-result.mapper'
 import { WorkOrderResult } from '@/src/domain/entities/work-order-result/work-order-result.entity'
 import { WorkOrderMapper } from '@/src/domain/entities/work-order/mapper/work-order.mapper'
@@ -21,10 +22,7 @@ import { customer } from '@/src/infra/db/drizzle/schema/drizzle.customer.schema'
 import { paymentOrder } from '@/src/infra/db/drizzle/schema/drizzle.payment-order.schema'
 import { product } from '@/src/infra/db/drizzle/schema/drizzle.product.schema'
 import { workOrderItems } from '@/src/infra/db/drizzle/schema/drizzle.work-order-items.schema'
-import {
-  WorkOrderResultItemType,
-  workOrderResultItems,
-} from '@/src/infra/db/drizzle/schema/drizzle.work-order-result-items.schema'
+import { workOrderResultItems } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result-items.schema'
 import { workOrderResult } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result.schema'
 import { workOrder } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
 import { UUID } from '@/src/lib/utils'

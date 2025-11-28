@@ -6,7 +6,10 @@ import { ProductMapper } from '@/src/domain/entities/product/mapper/product.mapp
 import { ProductSnapshot } from '@/src/domain/entities/work-order-item/value-objects/product-snapshot.vo'
 import { WorkOrderItem } from '@/src/domain/entities/work-order-item/work-order-item.entity'
 import { WorkOrderMapItem } from '@/src/domain/entities/work-order-map-item/work-order-map-item.entity'
-import { WorkOrderResultItem } from '@/src/domain/entities/work-order-result-item/work-order-result-item.entity'
+import {
+  WorkOrderResultItem,
+  WorkOrderResultItemType,
+} from '@/src/domain/entities/work-order-result-item/work-order-result-item.entity'
 import { WorkOrderResultMapper } from '@/src/domain/entities/work-order-result/mapper/work-order-result.mapper'
 import { WorkOrderMapper } from '@/src/domain/entities/work-order/mapper/work-order.mapper'
 import {
@@ -23,10 +26,7 @@ import { itinerary } from '@/src/infra/db/drizzle/schema/drizzle.itinerary.schem
 import { paymentOrder } from '@/src/infra/db/drizzle/schema/drizzle.payment-order.schema'
 import { product } from '@/src/infra/db/drizzle/schema/drizzle.product.schema'
 import { workOrderItems } from '@/src/infra/db/drizzle/schema/drizzle.work-order-items.schema'
-import {
-  WorkOrderResultItemType,
-  workOrderResultItems,
-} from '@/src/infra/db/drizzle/schema/drizzle.work-order-result-items.schema'
+import { workOrderResultItems } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result-items.schema'
 import { workOrderResult } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result.schema'
 import { workOrder } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
 import { UUID } from '@/src/lib/utils'
@@ -85,7 +85,9 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
         const snapshot = new ProductSnapshot(prod.id, prod.name, prod.salePrice)
         const resultItem = WorkOrderResultItem.fromProductSnapshot(
           snapshot,
+          resultId,
           row.item.quantity,
+          row.item.type,
           row.item.priceSnapshot,
           row.item.observation ?? undefined
         )

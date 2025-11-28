@@ -144,7 +144,7 @@ export class WorkOrder {
   }
 
   private resolveStatusFromResult(result: WorkOrderResult): WorkOrderStatus {
-    const exchanged = result.exchangedProducts.length
+    const exchanged = result.exchangedProducts?.length ?? 0
     const removed = result.removedProducts?.length ?? 0
     const added = result.addedProducts?.length ?? 0
 

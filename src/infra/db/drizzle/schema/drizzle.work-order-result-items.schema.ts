@@ -1,14 +1,9 @@
+import { WorkOrderResultItemType } from '@/src/domain/entities/work-order-result-item/work-order-result-item.entity'
 import { product } from '@/src/infra/db/drizzle/schema/drizzle.product.schema'
 import { workOrderResult } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result.schema'
 import { InferInsertModel, InferSelectModel } from 'drizzle-orm'
 import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import uuid from 'react-native-uuid'
-
-export enum WorkOrderResultItemType {
-  EXCHANGED = 'exchanged',
-  ADDED = 'added',
-  REMOVED = 'removed',
-}
 
 export const workOrderResultItems = sqliteTable('work_order_result_items', {
   id: text('id', { length: 36 })

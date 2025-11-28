@@ -41,7 +41,7 @@ export type WorkOrderSelectDTO = z.infer<typeof workOrderSelectSchema>
 
 export const workOrderInsertSchema = createInsertSchema(
   workOrder,
-  workOrderSchema
+  workOrderSchemaWithoutId
 )
 
 export type WorkOrderInsertDTO = z.infer<typeof workOrderInsertSchema>

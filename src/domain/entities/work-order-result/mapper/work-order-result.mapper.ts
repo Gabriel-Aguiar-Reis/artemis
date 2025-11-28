@@ -6,16 +6,18 @@ import { UUID } from '@/src/lib/utils'
 export class WorkOrderResultMapper {
   static toDomain(
     table: WorkOrderResultTable,
-    exchangedProducts: WorkOrderResultItem[],
+    exchangedProducts?: WorkOrderResultItem[],
     addedProducts?: WorkOrderResultItem[],
     removedProducts?: WorkOrderResultItem[]
   ): WorkOrderResult {
     return WorkOrderResult.fromDTO({
       id: table.id as UUID,
       totalValue: table.totalValue,
-      exchangedProducts,
-      addedProducts,
-      removedProducts,
+      items: [
+        ...(exchangedProducts ?? []),
+        ...(addedProducts ?? []),
+        ...(removedProducts ?? []),
+      ],
     })
   }
 

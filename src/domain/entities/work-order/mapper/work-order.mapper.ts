@@ -26,7 +26,17 @@ export class WorkOrderMapper {
       paymentOrder: paymentOrder ?? undefined,
       products: items,
       status: table.status as WorkOrderStatus,
-      result,
+      result: result
+        ? {
+            id: result.id as UUID,
+            totalValue: result.totalValue,
+            items: [
+              ...(result.exchangedProducts ?? []),
+              ...(result.addedProducts ?? []),
+              ...(result.removedProducts ?? []),
+            ],
+          }
+        : undefined,
       visitDate: table.visitDate ?? undefined,
       notes: table.notes ?? undefined,
     })
