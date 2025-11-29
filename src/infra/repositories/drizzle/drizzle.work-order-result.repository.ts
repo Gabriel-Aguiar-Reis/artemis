@@ -12,7 +12,7 @@ import { db } from '@/src/infra/db/drizzle/drizzle-client'
 import {
   product,
   workOrderResult,
-  workOrderResultItems,
+  workOrderResultItem,
 } from '@/src/infra/db/drizzle/schema'
 import { UUID } from '@/src/lib/utils'
 import { eq } from 'drizzle-orm'
@@ -25,12 +25,12 @@ export default class DrizzleWorkOrderResultRepository
   ): Promise<WorkOrderResultItem[]> {
     const items = await db
       .select({
-        item: workOrderResultItems,
+        item: workOrderResultItem,
         product: product,
       })
-      .from(workOrderResultItems)
-      .leftJoin(product, eq(workOrderResultItems.productId, product.id))
-      .where(eq(workOrderResultItems.resultId, resultId))
+      .from(workOrderResultItem)
+      .leftJoin(product, eq(workOrderResultItem.productId, product.id))
+      .where(eq(workOrderResultItem.resultId, resultId))
 
     if (!items.length) {
       return []
@@ -46,8 +46,9 @@ export default class DrizzleWorkOrderResultRepository
           salePrice: prod.salePrice,
         })
         return WorkOrderResultItem.fromProductSnapshot(
+          row.item.id as UUID,
           snapshot,
-          resultId,
+          row.item.resultId as UUID,
           row.item.quantity,
           row.item.type,
           row.item.priceSnapshot,

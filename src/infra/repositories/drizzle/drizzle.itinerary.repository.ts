@@ -26,7 +26,7 @@ import { itinerary } from '@/src/infra/db/drizzle/schema/drizzle.itinerary.schem
 import { paymentOrder } from '@/src/infra/db/drizzle/schema/drizzle.payment-order.schema'
 import { product } from '@/src/infra/db/drizzle/schema/drizzle.product.schema'
 import { workOrderItems } from '@/src/infra/db/drizzle/schema/drizzle.work-order-items.schema'
-import { workOrderResultItems } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result-items.schema'
+import { workOrderResultItem } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result-item.schema'
 import { workOrderResult } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result.schema'
 import { workOrder } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
 import { UUID } from '@/src/lib/utils'
@@ -67,12 +67,12 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
   }> {
     const items = await db
       .select({
-        item: workOrderResultItems,
+        item: workOrderResultItem,
         product: product,
       })
-      .from(workOrderResultItems)
-      .leftJoin(product, eq(workOrderResultItems.productId, product.id))
-      .where(eq(workOrderResultItems.resultId, resultId))
+      .from(workOrderResultItem)
+      .leftJoin(product, eq(workOrderResultItem.productId, product.id))
+      .where(eq(workOrderResultItem.resultId, resultId))
 
     const exchangedProducts: WorkOrderResultItem[] = []
     const addedProducts: WorkOrderResultItem[] = []
@@ -84,8 +84,9 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
         const prod = ProductMapper.toDomain(row.product!)
         const snapshot = new ProductSnapshot(prod.id, prod.name, prod.salePrice)
         const resultItem = WorkOrderResultItem.fromProductSnapshot(
+          row.item.id as UUID,
           snapshot,
-          resultId,
+          row.item.resultId as UUID,
           row.item.quantity,
           row.item.type,
           row.item.priceSnapshot,

@@ -1,5 +1,5 @@
 import { WorkOrderResultItemType } from '@/src/domain/entities/work-order-result-item/work-order-result-item.entity'
-import { workOrderResultItems } from '@/src/infra/db/drizzle/schema'
+import { workOrderResultItem } from '@/src/infra/db/drizzle/schema'
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
 import z from 'zod'
 
@@ -18,7 +18,7 @@ export const workOrderResultItemSchema = {
 }
 
 const workOrderResultItemSelectSchema = createSelectSchema(
-  workOrderResultItems,
+  workOrderResultItem,
   workOrderResultItemSchema
 )
 
@@ -27,7 +27,7 @@ export type WorkOrderResultItemSelectDTO = z.infer<
 >
 
 export const workOrderResultItemInsertSchema = createInsertSchema(
-  workOrderResultItems,
+  workOrderResultItem,
   workOrderResultItemSchemaWithoutId
 )
 
@@ -36,7 +36,7 @@ export type WorkOrderResultItemInsertDTO = z.infer<
 >
 
 export const workOrderResultItemUpdateSchema = createInsertSchema(
-  workOrderResultItems,
+  workOrderResultItem,
   workOrderResultItemSchemaWithoutId
 )
 

@@ -22,7 +22,7 @@ import { customer } from '@/src/infra/db/drizzle/schema/drizzle.customer.schema'
 import { paymentOrder } from '@/src/infra/db/drizzle/schema/drizzle.payment-order.schema'
 import { product } from '@/src/infra/db/drizzle/schema/drizzle.product.schema'
 import { workOrderItems } from '@/src/infra/db/drizzle/schema/drizzle.work-order-items.schema'
-import { workOrderResultItems } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result-items.schema'
+import { workOrderResultItem } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result-item.schema'
 import { workOrderResult } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result.schema'
 import { workOrder } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
 import { UUID } from '@/src/lib/utils'
@@ -222,7 +222,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       // Salvar items do resultado
       if (result.exchangedProducts) {
         for (const item of result.exchangedProducts) {
-          await tx.insert(workOrderResultItems).values({
+          await tx.insert(workOrderResultItem).values({
             id: uuid.v4() as string,
             resultId: result.id,
             productId: item.productId,
@@ -236,7 +236,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
 
       if (result.addedProducts) {
         for (const item of result.addedProducts) {
-          await tx.insert(workOrderResultItems).values({
+          await tx.insert(workOrderResultItem).values({
             id: uuid.v4() as string,
             resultId: result.id,
             productId: item.productId,
@@ -250,7 +250,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
 
       if (result.removedProducts) {
         for (const item of result.removedProducts) {
-          await tx.insert(workOrderResultItems).values({
+          await tx.insert(workOrderResultItem).values({
             id: uuid.v4() as string,
             resultId: result.id,
             productId: item.productId,

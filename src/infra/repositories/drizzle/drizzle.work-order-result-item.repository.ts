@@ -3,7 +3,7 @@ import { WorkOrderResultItemMapper } from '@/src/domain/entities/work-order-resu
 import { WorkOrderResultItem } from '@/src/domain/entities/work-order-result-item/work-order-result-item.entity'
 import { WorkOrderResultItemRepository } from '@/src/domain/repositories/work-order-result-item/work-order-result-item.repository'
 import { db } from '@/src/infra/db/drizzle/drizzle-client'
-import { product, workOrderResultItems } from '@/src/infra/db/drizzle/schema'
+import { product, workOrderResultItem } from '@/src/infra/db/drizzle/schema'
 import { UUID } from '@/src/lib/utils'
 import { eq } from 'drizzle-orm'
 
@@ -13,11 +13,11 @@ export class DrizzleWorkOrderResultItemRepository
   async getWorkOrderResultItem(id: UUID): Promise<WorkOrderResultItem> {
     const [row] = await db
       .select()
-      .from(workOrderResultItems)
-      .where(eq(workOrderResultItems.id, id))
-      .leftJoin(product, eq(workOrderResultItems.productId, product.id))
+      .from(workOrderResultItem)
+      .where(eq(workOrderResultItem.id, id))
+      .leftJoin(product, eq(workOrderResultItem.productId, product.id))
 
-    if (!row.work_order_result_items) {
+    if (!row.work_order_result_item) {
       throw new Error(
         'O item do relatório de ordem de serviço não foi encontrado.'
       )
@@ -33,7 +33,7 @@ export class DrizzleWorkOrderResultItemRepository
       salePrice: row.product.salePrice,
     })
 
-    return WorkOrderResultItemMapper.toDomain(row.work_order_result_items, snap)
+    return WorkOrderResultItemMapper.toDomain(row.work_order_result_item, snap)
   }
 
   getWorkOrderResultItemsByResultId(resultId: UUID): Promise<{

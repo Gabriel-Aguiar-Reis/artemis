@@ -1,11 +1,11 @@
 import { ProductSnapshot } from '@/src/domain/entities/work-order-item/value-objects/product-snapshot.vo'
 import { WorkOrderResultItem } from '@/src/domain/entities/work-order-result-item/work-order-result-item.entity'
-import { WorkOrderResultItemsTable } from '@/src/infra/db/drizzle/schema'
+import { WorkOrderResultItemTable } from '@/src/infra/db/drizzle/schema'
 import { UUID } from '@/src/lib/utils'
 
 export class WorkOrderResultItemMapper {
   static toDomain(
-    table: WorkOrderResultItemsTable,
+    table: WorkOrderResultItemTable,
     product: ProductSnapshot
   ): WorkOrderResultItem {
     return WorkOrderResultItem.fromDTO({
