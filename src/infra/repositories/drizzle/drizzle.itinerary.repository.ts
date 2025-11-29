@@ -12,13 +12,12 @@ import {
 } from '@/src/domain/entities/work-order-result-item/work-order-result-item.entity'
 import { WorkOrderResultMapper } from '@/src/domain/entities/work-order-result/mapper/work-order-result.mapper'
 import { WorkOrderMapper } from '@/src/domain/entities/work-order/mapper/work-order.mapper'
-import {
-  WorkOrder,
-  WorkOrderStatus,
-} from '@/src/domain/entities/work-order/work-order.entity'
-import { AddItineraryDto } from '@/src/domain/repositories/itinerary/dtos/add-itinerary.dto'
-import { UpdateItineraryDto } from '@/src/domain/repositories/itinerary/dtos/update-itinerary.dto'
+import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
 import { ItineraryRepository } from '@/src/domain/repositories/itinerary/itinerary.repository'
+import {
+  ItineraryInsertDTO,
+  ItineraryUpdateDTO,
+} from '@/src/domain/validations/itinerary.schema'
 import { db } from '@/src/infra/db/drizzle/drizzle-client'
 import { customer } from '@/src/infra/db/drizzle/schema/drizzle.customer.schema'
 import { itineraryWorkOrder } from '@/src/infra/db/drizzle/schema/drizzle.itinerary-work-order.schema'
@@ -193,108 +192,42 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
     return itineraries
   }
 
-  async addItinerary(dto: AddItineraryDto): Promise<void> {
+  async addItinerary(dto: ItineraryInsertDTO): Promise<void> {
     const id = uuid.v4() as UUID
-
-    // Buscar work orders
-    const workOrders = await this.getWorkOrdersByIds(dto.workOrderIds)
-
-    // Criar ItineraryWorkOrders
-    const workOrdersMap = workOrders.map(
-      (wo, index) =>
-        new ItineraryWorkOrder(uuid.v4() as UUID, id, index + 1, wo, false)
-    )
-
-    const itin = new Itinerary(
-      id,
-      workOrdersMap,
-      new Date(dto.initialItineraryDate),
-      new Date(dto.finalItineraryDate),
-      false
-    )
-
-    const data = ItineraryMapper.toPersistence(itin)
-
-    await db.transaction(async (tx) => {
-      // Inserir itinerary
-      await tx.insert(itinerary).values(data).onConflictDoNothing()
-
-      // Inserir work orders na tabela intermediária
-      for (const item of workOrdersMap) {
-        await tx.insert(itineraryWorkOrder).values({
-          id: uuid.v4() as string,
-          itineraryId: id,
-          workOrderId: item.workOrder.id,
-          position: item.position,
-          isLate: item.isLate,
-        })
-
-        // Marcar work order como COMMITTED quando adicionada ao itinerário
-        await tx
-          .update(workOrder)
-          .set({ status: WorkOrderStatus.COMMITTED })
-          .where(eq(workOrder.id, item.workOrder.id))
-      }
-    })
+    await db.insert(itinerary).values({ ...dto, id })
   }
 
-  async updateItinerary(dto: UpdateItineraryDto): Promise<void> {
-    const workOrdersMap = dto.workOrdersMap.map((item) =>
-      ItineraryWorkOrder.fromDTO(item)
-    )
+  async updateItinerary(dto: ItineraryUpdateDTO): Promise<void> {
+    if (!dto.id) {
+      throw new Error('o ID do itinerário é obrigatório para atualização.')
+    }
 
-    const itin = new Itinerary(
-      dto.id as UUID,
-      workOrdersMap,
-      new Date(dto.initialItineraryDate),
-      new Date(dto.finalItineraryDate),
-      dto.isFinished
-    )
+    const row = db
+      .select()
+      .from(itinerary)
+      .where(eq(itinerary.id, dto.id))
+      .limit(1)
+      .get()
 
-    const data = ItineraryMapper.toPersistence(itin)
+    if (!row) {
+      throw new Error('Itinerário não encontrado para atualização.')
+    }
 
-    await db.transaction(async (tx) => {
-      // Atualizar itinerary
-      await tx
-        .update(itinerary)
-        .set({
-          initialItineraryDate: data.initialItineraryDate,
-          finalItineraryDate: data.finalItineraryDate,
-          isFinished: data.isFinished,
-        })
-        .where(eq(itinerary.id, dto.id))
-
-      // Deletar work orders antigas
-      await tx
-        .delete(itineraryWorkOrder)
-        .where(eq(itineraryWorkOrder.itineraryId, dto.id))
-
-      // Inserir work orders novas
-      for (const item of workOrdersMap) {
-        await tx.insert(itineraryWorkOrder).values({
-          id: uuid.v4() as string,
-          itineraryId: dto.id as UUID,
-          workOrderId: item.workOrder.id,
-          position: item.position,
-          isLate: item.isLate,
-        })
-      }
-    })
+    await db
+      .update(itinerary)
+      .set({
+        initialItineraryDate: dto.initialItineraryDate,
+        finalItineraryDate: dto.finalItineraryDate,
+        isFinished: dto.isFinished,
+      })
+      .where(eq(itinerary.id, dto.id as string))
   }
 
   async deleteItinerary(id: UUID): Promise<void> {
-    await db.transaction(async (tx) => {
-      // Deletar work orders (cascade)
-      await tx
-        .delete(itineraryWorkOrder)
-        .where(eq(itineraryWorkOrder.itineraryId, id))
-
-      // Deletar itinerary
-      await tx.delete(itinerary).where(eq(itinerary.id, id))
-    })
+    await db.delete(itinerary).where(eq(itinerary.id, id))
   }
 
-  async getItinerary(id: UUID): Promise<Itinerary | null> {
+  async getItinerary(id: UUID): Promise<Itinerary> {
     const row = db
       .select()
       .from(itinerary)
