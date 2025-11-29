@@ -75,6 +75,7 @@ export class WorkOrderResult {
       salePrice: product.salePrice,
     })
     const item = WorkOrderResultItem.fromProductSnapshot(
+      this.id,
       snapshot,
       this.id,
       quantity,

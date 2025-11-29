@@ -9,6 +9,7 @@ export enum WorkOrderResultItemType {
 }
 
 export type WorkOrderResultItemSerializableDTO = {
+  id: UUID
   productId: UUID
   resultId: UUID
   productName: string
@@ -20,6 +21,7 @@ export type WorkOrderResultItemSerializableDTO = {
 
 export class WorkOrderResultItem extends WorkOrderItemBase {
   constructor(
+    public id: UUID,
     public productSnapshot: ProductSnapshot,
     public resultId: UUID,
     public quantity: number,
@@ -49,6 +51,7 @@ export class WorkOrderResultItem extends WorkOrderItemBase {
 
   toDTO(): WorkOrderResultItemSerializableDTO {
     return {
+      id: this.id,
       productId: this.productSnapshot.productId,
       resultId: this.resultId,
       productName: this.productSnapshot.productName,
@@ -60,6 +63,7 @@ export class WorkOrderResultItem extends WorkOrderItemBase {
   }
 
   static fromProductSnapshot(
+    id: UUID,
     snapshot: ProductSnapshot,
     resultId: UUID,
     quantity: number,
@@ -68,6 +72,7 @@ export class WorkOrderResultItem extends WorkOrderItemBase {
     observation?: string
   ): WorkOrderResultItem {
     return new WorkOrderResultItem(
+      id,
       snapshot,
       resultId,
       quantity,
@@ -85,6 +90,7 @@ export class WorkOrderResultItem extends WorkOrderItemBase {
     })
 
     return new WorkOrderResultItem(
+      dto.id,
       snapshot,
       dto.resultId,
       dto.quantity,
