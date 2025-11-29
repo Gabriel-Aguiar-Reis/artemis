@@ -3,6 +3,7 @@ import { Button } from '@/src/components/ui/button'
 import { FloatingLabelInput } from '@/src/components/ui/floating-label-input'
 import { Icon } from '@/src/components/ui/icon'
 import { Input } from '@/src/components/ui/input'
+import { Masks } from '@/src/components/ui/masks'
 import { Text } from '@/src/components/ui/text'
 import { PERIODS } from '@/src/lib/utils'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
@@ -57,6 +58,8 @@ export default function ProductsSearchScreen() {
     const normalizeNumberParam = (val: string) => {
       if (!val) return undefined
       const cleaned = String(val)
+        // remove currency symbol and spaces
+        .replace(/R\$\s?/, '')
         .replace(/\s/g, '')
         // remove thousands separators like '.'
         .replace(/\.(?=\d{3}(?:\.|,|$))/g, '')
@@ -156,6 +159,7 @@ export default function ProductsSearchScreen() {
               <View className="flex-row gap-2">
                 <FloatingLabelInput
                   label="Mínimo"
+                  mask={Masks.BRL_CURRENCY}
                   placeholder="29,90"
                   value={minSalePriceFilter}
                   onChangeText={setMinSalePriceFilter}
@@ -165,6 +169,7 @@ export default function ProductsSearchScreen() {
                 />
                 <FloatingLabelInput
                   label="Máximo"
+                  mask={Masks.BRL_CURRENCY}
                   placeholder="99,90"
                   value={maxSalePriceFilter}
                   onChangeText={setMaxSalePriceFilter}

@@ -1,6 +1,7 @@
 import { categoryHooks } from '@/src/application/hooks/category.hooks'
 import { productHooks } from '@/src/application/hooks/product.hooks'
 import { ProductForm } from '@/src/components/ui/forms/product-form'
+import { Masks } from '@/src/components/ui/masks'
 import {
   ProductInsertDTO,
   productInsertSchema,
@@ -65,7 +66,7 @@ export default function ProductFormScreen() {
           name: 'salePrice',
           label: 'Preço de Venda',
           placeholder: 'Ex. 19,90',
-          inputProps: { keyboardType: 'numeric' },
+          inputProps: { keyboardType: 'numeric', mask: Masks.BRL_CURRENCY },
           isCurrency: true,
           icon: CircleQuestionMark,
           iconTooltip:

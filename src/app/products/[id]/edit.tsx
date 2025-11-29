@@ -1,6 +1,7 @@
 import { categoryHooks } from '@/src/application/hooks/category.hooks'
 import { productHooks } from '@/src/application/hooks/product.hooks'
 import { ProductForm } from '@/src/components/ui/forms/product-form'
+import { Masks } from '@/src/components/ui/masks'
 import { Text } from '@/src/components/ui/text'
 import {
   ProductUpdateDTO,
@@ -107,7 +108,7 @@ export default function ProductsEditScreen() {
           name: 'salePrice',
           label: 'Preço de Venda',
           placeholder: 'Ex. 19,90',
-          inputProps: { keyboardType: 'numeric' },
+          inputProps: { keyboardType: 'numeric', mask: Masks.BRL_CURRENCY },
           isCurrency: true,
           icon: Pencil,
           alternate: { icon: PencilOff, type: 'toDisabled' },
