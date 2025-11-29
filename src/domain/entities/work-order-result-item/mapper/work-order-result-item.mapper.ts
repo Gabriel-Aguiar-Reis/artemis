@@ -19,4 +19,16 @@ export class WorkOrderResultItemMapper {
       observation: table.observation || undefined,
     })
   }
+
+  static toPersistence(item: WorkOrderResultItem): WorkOrderResultItemTable {
+    return {
+      id: item.id,
+      productId: item.productId,
+      resultId: item.resultId,
+      quantity: item.quantity,
+      priceSnapshot: item.priceSnapshot,
+      type: item.type,
+      observation: item.observation || null,
+    }
+  }
 }
