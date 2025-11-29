@@ -58,11 +58,12 @@ export default class DrizzleWorkOrderResultRepository
   }
 
   async getWorkOrderResult(id: UUID): Promise<WorkOrderResult> {
-    const [row] = await db
+    const row = db
       .select()
       .from(workOrderResult)
       .where(eq(workOrderResult.id, id))
       .limit(1)
+      .get()
 
     if (!row) throw new Error('Resultado da ordem de serviço não encontrado.')
 
@@ -78,11 +79,12 @@ export default class DrizzleWorkOrderResultRepository
   async getWorkOrderResultByWorkOrderId(
     workOrderId: UUID
   ): Promise<WorkOrderResult> {
-    const [row] = await db
+    const row = db
       .select()
       .from(workOrderResult)
       .where(eq(workOrderResult.id, workOrderId))
       .limit(1)
+      .get()
 
     if (!row) throw new Error('Ordem de serviço não encontrada.')
 

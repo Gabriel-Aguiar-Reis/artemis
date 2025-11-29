@@ -12,13 +12,15 @@ export class DrizzleWorkOrderResultItemRepository
   implements WorkOrderResultItemRepository
 {
   async getWorkOrderResultItem(id: UUID): Promise<WorkOrderResultItem> {
-    const [row] = await db
+    const row = db
       .select()
       .from(workOrderResultItem)
       .where(eq(workOrderResultItem.id, id))
       .leftJoin(product, eq(workOrderResultItem.productId, product.id))
+      .limit(1)
+      .get()
 
-    if (!row.work_order_result_item) {
+    if (!row) {
       throw new Error(
         'O item do relatório de ordem de serviço não foi encontrado.'
       )

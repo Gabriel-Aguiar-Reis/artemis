@@ -50,7 +50,12 @@ export default class DrizzleCategoryRepository implements CategoryRepository {
   }
 
   async getCategory(id: UUID): Promise<Category | null> {
-    const [row] = await db.select().from(category).where(eq(category.id, id))
+    const row = db
+      .select()
+      .from(category)
+      .where(eq(category.id, id))
+      .limit(1)
+      .get()
 
     if (!row) throw new Error('A categoria não foi encontrada.')
     return CategoryMapper.toDomain(row)

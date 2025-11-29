@@ -65,10 +65,12 @@ export default class DrizzlePaymentOrderRepository
   }
 
   async getPaymentOrder(id: UUID): Promise<PaymentOrder | null> {
-    const [row] = await db
+    const row = db
       .select()
       .from(paymentOrder)
       .where(eq(paymentOrder.id, id))
+      .limit(1)
+      .get()
 
     if (!row) throw new Error('A ordem de pagamento não foi encontrada.')
     return PaymentOrderMapper.toDomain(row)

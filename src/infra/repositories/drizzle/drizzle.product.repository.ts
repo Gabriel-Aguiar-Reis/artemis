@@ -97,7 +97,12 @@ export default class DrizzleProductRepository implements ProductRepository {
   }
 
   async getProduct(id: UUID): Promise<Product | null> {
-    const [row] = await db.select().from(product).where(eq(product.id, id))
+    const row = db
+      .select()
+      .from(product)
+      .where(eq(product.id, id))
+      .limit(1)
+      .get()
 
     if (!row) throw new Error('O produto não foi encontrado.')
     return ProductMapper.toDomain(row)

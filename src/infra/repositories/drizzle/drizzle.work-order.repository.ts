@@ -314,7 +314,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
   }
 
   async getWorkOrder(id: UUID): Promise<WorkOrder | null> {
-    const [row] = await db
+    const row = db
       .select({
         workOrder: workOrder,
         customer: customer,
@@ -324,6 +324,8 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       .leftJoin(customer, eq(workOrder.customerId, customer.id))
       .leftJoin(paymentOrder, eq(workOrder.paymentOrderId, paymentOrder.id))
       .where(eq(workOrder.id, id))
+      .limit(1)
+      .get()
 
     if (!row || !row.customer) {
       return null
@@ -348,6 +350,10 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       .leftJoin(customer, eq(workOrder.customerId, customer.id))
       .leftJoin(paymentOrder, eq(workOrder.paymentOrderId, paymentOrder.id))
       .where(eq(workOrder.customerId, customerId))
+
+    if (rows.length === 0) {
+      return []
+    }
 
     const workOrders = await Promise.all(
       rows

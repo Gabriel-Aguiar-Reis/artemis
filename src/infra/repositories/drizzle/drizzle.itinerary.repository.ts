@@ -1,11 +1,11 @@
 import { CustomerMapper } from '@/src/domain/entities/customer/mapper/customer.mapper'
+import { ItineraryWorkOrder } from '@/src/domain/entities/itinerary-work-order/itinerary-work-order.entity'
 import { Itinerary } from '@/src/domain/entities/itinerary/itinerary.entity'
 import { ItineraryMapper } from '@/src/domain/entities/itinerary/mapper/itinerary.mapper'
 import { PaymentOrderMapper } from '@/src/domain/entities/payment-order/mapper/payment-order.mapper'
 import { ProductMapper } from '@/src/domain/entities/product/mapper/product.mapper'
 import { ProductSnapshot } from '@/src/domain/entities/work-order-item/value-objects/product-snapshot.vo'
 import { WorkOrderItem } from '@/src/domain/entities/work-order-item/work-order-item.entity'
-import { WorkOrderMapItem } from '@/src/domain/entities/work-order-map-item/work-order-map-item.entity'
 import {
   WorkOrderResultItem,
   WorkOrderResultItemType,
@@ -115,7 +115,7 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
 
   private async loadItineraryWorkOrders(
     itineraryId: UUID
-  ): Promise<WorkOrderMapItem[]> {
+  ): Promise<ItineraryWorkOrder[]> {
     const rows = await db
       .select({
         itineraryWorkOrder: itineraryWorkOrder,
@@ -164,7 +164,9 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
             result
           )
 
-          return new WorkOrderMapItem(
+          return new ItineraryWorkOrder(
+            row.itineraryWorkOrder.id as UUID,
+            row.itineraryWorkOrder.itineraryId as UUID,
             row.itineraryWorkOrder.position,
             wo,
             row.itineraryWorkOrder.isLate
@@ -197,9 +199,10 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
     // Buscar work orders
     const workOrders = await this.getWorkOrdersByIds(dto.workOrderIds)
 
-    // Criar WorkOrderMapItems
+    // Criar ItineraryWorkOrders
     const workOrdersMap = workOrders.map(
-      (wo, index) => new WorkOrderMapItem(index + 1, wo, false)
+      (wo, index) =>
+        new ItineraryWorkOrder(uuid.v4() as UUID, id, index + 1, wo, false)
     )
 
     const itin = new Itinerary(
@@ -237,7 +240,7 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
 
   async updateItinerary(dto: UpdateItineraryDto): Promise<void> {
     const workOrdersMap = dto.workOrdersMap.map((item) =>
-      WorkOrderMapItem.fromDTO(item)
+      ItineraryWorkOrder.fromDTO(item)
     )
 
     const itin = new Itinerary(
@@ -292,7 +295,12 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
   }
 
   async getItinerary(id: UUID): Promise<Itinerary | null> {
-    const [row] = await db.select().from(itinerary).where(eq(itinerary.id, id))
+    const row = db
+      .select()
+      .from(itinerary)
+      .where(eq(itinerary.id, id))
+      .limit(1)
+      .get()
     if (!row) throw new Error('O itinerário não foi encontrado.')
 
     const workOrdersMap = await this.loadItineraryWorkOrders(id)
@@ -300,11 +308,12 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
   }
 
   async getActiveItinerary(): Promise<Itinerary | null> {
-    const [row] = await db
+    const row = db
       .select()
       .from(itinerary)
       .where(eq(itinerary.isFinished, false))
       .limit(1)
+      .get()
 
     if (!row) throw new Error('O itinerário ativo não foi encontrado.')
 
@@ -361,7 +370,7 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
         .delete(itineraryWorkOrder)
         .where(eq(itineraryWorkOrder.itineraryId, id))
 
-      for (const item of itin.workOrdersMap) {
+      for (const item of itin.workOrders) {
         await tx.insert(itineraryWorkOrder).values({
           id: uuid.v4() as string,
           itineraryId: id,
