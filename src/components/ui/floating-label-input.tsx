@@ -37,6 +37,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from '@/src/components/ui/hover-card'
+import MaskInput, { Mask } from '@/src/components/ui/masks'
 import {
   Select,
   SelectContent,
@@ -82,6 +83,11 @@ type WithoutAlternate = {
 
 type FloatingLabelInputProps = BaseProps &
   (WithAlternate | WithoutAlternate) & {
+    mask?: Mask
+    maskAutoComplete?: boolean
+    placeholderFillCharacter?: string
+    obfuscationCharacter?: string
+    showObfuscatedValue?: boolean
     isDialog?: boolean
     period?: string
     number?: number
@@ -109,6 +115,7 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
     value = '',
     placeholder = '',
     onBlur,
+    // onChangeText can be either the classic (text) or masked signature
     onChangeText,
     alignTooltip,
     sideTooltip,
@@ -124,6 +131,11 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
     isSearch,
     onSearchPress,
     isSearchLoading,
+    mask,
+    maskAutoComplete,
+    placeholderFillCharacter,
+    obfuscationCharacter,
+    showObfuscatedValue,
     gap = 0,
     ...rest
   } = props
@@ -221,25 +233,67 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
       </Animated.Text>
 
       <View className={`flex-row w-full gap-${gap}`}>
-        <Input
-          value={displayValue}
-          placeholder={placeholder}
-          cursorColor={
-            error ? '#ef4444' : colorScheme === 'dark' ? '#d4d4d4' : '#27272a'
-          }
-          onChangeText={onChangeText}
-          onFocus={() => setIsFocused(true)}
-          onBlur={handleBlur}
-          secureTextEntry={secure}
-          editable={!disabled && !isDialog && !isSelect && !isSearchLoading}
-          className={cn(
-            'flex-1 border-border text-sm',
-            activeIcon ? 'rounded-l-md rounded-r-none' : 'rounded-md',
-            (isDialog || isSelect) && 'w-1/2 text-primary bg-secondary',
-            error && 'border-red-500'
-          )}
-          {...rest}
-        />
+        {mask ? (
+          <MaskInput
+            mask={mask}
+            maskAutoComplete={maskAutoComplete}
+            placeholderFillCharacter={placeholderFillCharacter}
+            obfuscationCharacter={obfuscationCharacter}
+            showObfuscatedValue={showObfuscatedValue}
+            value={displayValue}
+            placeholder={placeholder}
+            cursorColor={
+              error ? '#ef4444' : colorScheme === 'dark' ? '#d4d4d4' : '#27272a'
+            }
+            onChangeText={(
+              masked: string,
+              unmasked?: string,
+              obfuscated?: string
+            ) => {
+              // If the consumer expects the classic single-arg onChangeText, call it with masked
+              if (typeof onChangeText === 'function') {
+                try {
+                  // Try calling with three args first (if consumer accepts it)
+                  ;(onChangeText as any)(masked, unmasked, obfuscated)
+                } catch (e) {
+                  // Fallback: call with masked only
+                  ;(onChangeText as any)(masked)
+                }
+              }
+            }}
+            onFocus={() => setIsFocused(true)}
+            onBlur={handleBlur}
+            secureTextEntry={secure}
+            editable={!disabled && !isDialog && !isSelect && !isSearchLoading}
+            className={cn(
+              'flex-1 border-border text-sm',
+              activeIcon ? 'rounded-l-md rounded-r-none' : 'rounded-md',
+              (isDialog || isSelect) && 'w-1/2 text-primary bg-secondary',
+              error && 'border-red-500'
+            )}
+            {...(rest as any)}
+          />
+        ) : (
+          <Input
+            value={displayValue}
+            placeholder={placeholder}
+            cursorColor={
+              error ? '#ef4444' : colorScheme === 'dark' ? '#d4d4d4' : '#27272a'
+            }
+            onChangeText={onChangeText}
+            onFocus={() => setIsFocused(true)}
+            onBlur={handleBlur}
+            secureTextEntry={secure}
+            editable={!disabled && !isDialog && !isSelect && !isSearchLoading}
+            className={cn(
+              'flex-1 border-border text-sm',
+              activeIcon ? 'rounded-l-md rounded-r-none' : 'rounded-md',
+              (isDialog || isSelect) && 'w-1/2 text-primary bg-secondary',
+              error && 'border-red-500'
+            )}
+            {...rest}
+          />
+        )}
         {isDialog && !isSelect && (
           <Dialog>
             <DialogTrigger asChild className="w-40" disabled={disabled}>
