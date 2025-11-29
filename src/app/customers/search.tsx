@@ -2,6 +2,7 @@ import { Button } from '@/src/components/ui/button'
 import { FloatingLabelInput } from '@/src/components/ui/floating-label-input'
 import { Icon } from '@/src/components/ui/icon'
 import { Input } from '@/src/components/ui/input'
+import { Masks } from '@/src/components/ui/masks'
 import { Text } from '@/src/components/ui/text'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import { Search, X } from 'lucide-react-native'
@@ -108,7 +109,8 @@ export default function CustomerSearchScreen() {
 
             <FloatingLabelInput
               label="Telefone"
-              placeholder="Ex. 11 912345678"
+              mask={Masks.BRL_PHONE}
+              placeholder="Ex. (11) 91234-5678"
               value={phoneNumberFilter}
               onChangeText={setPhoneNumberFilter}
               keyboardType="phone-pad"
@@ -117,7 +119,8 @@ export default function CustomerSearchScreen() {
 
             <FloatingLabelInput
               label="Telefone Fixo"
-              placeholder="Ex. 11 34567890"
+              mask={Masks.BRL_LANDLINE_PHONE}
+              placeholder="Ex. (11) 3456-7890"
               value={landlineNumberFilter}
               onChangeText={setLandlineNumberFilter}
               keyboardType="phone-pad"

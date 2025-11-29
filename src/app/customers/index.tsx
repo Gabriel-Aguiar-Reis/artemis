@@ -56,17 +56,21 @@ export default function CustomersScreen() {
         ? smartSearch(customer.contactName, params.contactName)
         : true
 
-      const matchesPhoneNumber = params.phoneNumber
-        ? customer.phoneNumber
-          ? smartSearch(customer.phoneNumber.value, params.phoneNumber)
-          : false
-        : true
+      const matchesPhoneNumber = (() => {
+        if (!params.phoneNumber) return true
+        if (!customer.phoneNumber) return false
+        const needle = String(params.phoneNumber).replace(/\D+/g, '')
+        const hay = String(customer.phoneNumber.value).replace(/\D+/g, '')
+        return needle === '' ? true : hay.includes(needle)
+      })()
 
-      const matchesLandlineNumber = params.landlineNumber
-        ? customer.landlineNumber
-          ? smartSearch(customer.landlineNumber.value, params.landlineNumber)
-          : false
-        : true
+      const matchesLandlineNumber = (() => {
+        if (!params.landlineNumber) return true
+        if (!customer.landlineNumber) return false
+        const needle = String(params.landlineNumber).replace(/\D+/g, '')
+        const hay = String(customer.landlineNumber.value).replace(/\D+/g, '')
+        return needle === '' ? true : hay.includes(needle)
+      })()
 
       const matchesIsActiveWhatsApp = params.isActiveWhatsApp
         ? customer.isActiveWhatsApp().toString() === params.isActiveWhatsApp

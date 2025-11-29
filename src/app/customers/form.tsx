@@ -1,6 +1,7 @@
 import { customerHooks } from '@/src/application/hooks/customer.hooks'
 import { GeocodingService } from '@/src/application/services/geocoding.service'
 import { CustomerForm } from '@/src/components/ui/forms/customer-form'
+import { Masks } from '@/src/components/ui/masks'
 import {
   CustomerInsertDTO,
   customerInsertSchema,
@@ -92,6 +93,7 @@ export default function CustomerFormScreen() {
           icon: Search,
           isSearch: true,
           isSearchLoading: isLoading,
+          inputProps: { mask: Masks.ZIP_CODE },
           onSearchPress: () => {
             const zipCode = form.getValues('addressZipCode')
             handleSearchAddress(zipCode)
@@ -136,9 +138,10 @@ export default function CustomerFormScreen() {
         {
           name: 'phoneNumber',
           label: 'Telefone',
-          placeholder: 'Ex. 11 912345678',
+          placeholder: 'Ex. (11) 91234-5678',
           icon: CircleQuestionMark,
-          iconTooltip: 'Número de telefone no formato XX XXXXXXXXX.',
+          iconTooltip: 'Número de telefone no formato (XX) XXXXX-XXXX.',
+          inputProps: { mask: Masks.BRL_PHONE },
         },
         {
           name: 'phoneIsWhatsApp',
@@ -148,9 +151,10 @@ export default function CustomerFormScreen() {
         {
           name: 'landlineNumber',
           label: 'Telefone Fixo (Opcional)',
-          placeholder: 'Ex. 11 34567890',
+          placeholder: 'Ex. (11) 3456-7890',
           icon: CircleQuestionMark,
-          iconTooltip: 'Número de telefone fixo no formato XX XXXX-XXXX.',
+          iconTooltip: 'Número de telefone fixo no formato (XX) XXXX-XXXX.',
+          inputProps: { mask: Masks.BRL_LANDLINE_PHONE },
         },
         {
           name: 'landlineIsWhatsApp',

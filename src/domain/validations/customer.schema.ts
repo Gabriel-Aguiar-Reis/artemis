@@ -21,8 +21,8 @@ const customerSchemaWithoutId = {
     z
       .string()
       .regex(
-        /^\d{2}\s?\d{5}-?\d{4}$/,
-        'O número de telefone deve ser no padrão XX XXXXX-XXXX.'
+        /^(?:\(\d{2}\)|\d{2})\s?\d{5}-?\d{4}$/,
+        'O número de telefone deve ser no padrão (XX) XXXXX-XXXX.'
       )
       .optional(),
   phoneIsWhatsApp: () => z.boolean().optional(),
@@ -30,8 +30,8 @@ const customerSchemaWithoutId = {
     z
       .string()
       .regex(
-        /^\d{2}\s?\d{4}-?\d{4}$/,
-        'O número de telefone fixo deve ser no padrão XX XXXX-XXXX.'
+        /^(?:\(\d{2}\)|\d{2})\s?\d{4}-?\d{4}$/,
+        'O número de telefone fixo deve ser no padrão (XX) XXXX-XXXX.'
       )
       .optional(),
   landlineIsWhatsApp: () => z.boolean().optional(),

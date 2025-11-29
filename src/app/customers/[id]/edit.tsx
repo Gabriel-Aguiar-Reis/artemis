@@ -1,6 +1,7 @@
 import { customerHooks } from '@/src/application/hooks/customer.hooks'
 import { GeocodingService } from '@/src/application/services/geocoding.service'
 import { CustomerForm } from '@/src/components/ui/forms/customer-form'
+import { Masks } from '@/src/components/ui/masks'
 import { Text } from '@/src/components/ui/text'
 import {
   CustomerUpdateDTO,
@@ -140,6 +141,7 @@ export default function CustomersEditScreen() {
           icon: Search,
           isSearch: true,
           isSearchLoading: isLoading,
+          inputProps: { mask: Masks.ZIP_CODE },
           onSearchPress: () => {
             const zipCode = form.getValues('addressZipCode')
             if (typeof zipCode === 'string' && zipCode.trim() !== '') {
@@ -189,6 +191,7 @@ export default function CustomersEditScreen() {
           placeholder: 'Ex. 11 912345678',
           icon: Pencil,
           alternate: { icon: PencilOff, type: 'toDisabled' },
+          inputProps: { mask: Masks.BRL_PHONE },
         },
         {
           name: 'phoneIsWhatsApp',
@@ -201,6 +204,7 @@ export default function CustomersEditScreen() {
           placeholder: 'Ex. 11 34567890',
           icon: Pencil,
           alternate: { icon: PencilOff, type: 'toDisabled' },
+          inputProps: { mask: Masks.BRL_LANDLINE_PHONE },
         },
         {
           name: 'landlineIsWhatsApp',
