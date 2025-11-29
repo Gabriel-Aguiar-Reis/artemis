@@ -1,7 +1,7 @@
 import {
-  WorkOrderMapItem,
-  WorkOrderMapItemSerializableDTO,
-} from '@/src/domain/entities/work-order-map-item/work-order-map-item.entity'
+  ItineraryWorkOrder,
+  ItineraryWorkOrderSerializableDTO,
+} from '@/src/domain/entities/itinerary-work-order/itinerary-work-order.entity'
 import {
   WorkOrder,
   WorkOrderStatus,
@@ -10,7 +10,7 @@ import { UUID } from '@/src/lib/utils'
 
 export type ItinerarySerializableDTO = {
   id: UUID
-  workOrdersMap: WorkOrderMapItemSerializableDTO[]
+  workOrders: ItineraryWorkOrderSerializableDTO[]
   initialItineraryDate: string
   finalItineraryDate: string
   isFinished: boolean
@@ -19,7 +19,7 @@ export type ItinerarySerializableDTO = {
 export class Itinerary {
   constructor(
     public id: UUID,
-    public workOrdersMap: WorkOrderMapItem[],
+    public workOrders: ItineraryWorkOrder[],
     public initialItineraryDate: Date,
     public finalItineraryDate: Date,
     public isFinished: boolean
@@ -32,12 +32,16 @@ export class Itinerary {
   }
 
   addWorkOrder(workOrder: WorkOrder) {
-    const position = this.workOrdersMap.length + 1
-    this.workOrdersMap.push(new WorkOrderMapItem(position, workOrder))
+    const position = this.workOrders.length + 1
+    const id = crypto.randomUUID() as UUID
+    const itineraryId = this.id
+    this.workOrders.push(
+      new ItineraryWorkOrder(id, itineraryId, position, workOrder)
+    )
   }
 
   markLateOrders(toleranceMinutes: number = 15) {
-    this.workOrdersMap.forEach((item) => {
+    this.workOrders.forEach((item) => {
       item.isLate = item.workOrder.isLate(new Date(), toleranceMinutes)
     })
   }
@@ -46,7 +50,7 @@ export class Itinerary {
     if (this.isFinished) throw new Error('O itinerário já está finalizado.')
 
     this.markLateOrders()
-    this.workOrdersMap.forEach((item) => {
+    this.workOrders.forEach((item) => {
       const wo = item.workOrder
       if (wo.result) wo.status = wo.applyResult(wo.result)
       else if (item.isLate) wo.status = WorkOrderStatus.FAILED
@@ -55,16 +59,16 @@ export class Itinerary {
     this.isFinished = true
   }
 
-  get lateOrders(): WorkOrderMapItem[] {
-    return this.workOrdersMap.filter((w) => w.isLate)
+  get lateOrders(): ItineraryWorkOrder[] {
+    return this.workOrders.filter((w) => w.isLate)
   }
 
   get totalOrders(): number {
-    return this.workOrdersMap.length
+    return this.workOrders.length
   }
 
   get finishedOrders(): number {
-    return this.workOrdersMap.filter((w) => w.workOrder.visitDate).length
+    return this.workOrders.filter((w) => w.workOrder.visitDate).length
   }
 
   get progress(): string {
@@ -74,7 +78,7 @@ export class Itinerary {
   toDTO(): ItinerarySerializableDTO {
     return {
       id: this.id,
-      workOrdersMap: this.workOrdersMap.map((item) => item.toDTO()),
+      workOrders: this.workOrders.map((item) => item.toDTO()),
       initialItineraryDate: this.initialItineraryDate.toISOString(),
       finalItineraryDate: this.finalItineraryDate.toISOString(),
       isFinished: this.isFinished,
@@ -84,7 +88,7 @@ export class Itinerary {
   static fromDTO(dto: ItinerarySerializableDTO): Itinerary {
     return new Itinerary(
       dto.id,
-      dto.workOrdersMap.map((item) => WorkOrderMapItem.fromDTO(item)),
+      dto.workOrders.map((item) => ItineraryWorkOrder.fromDTO(item)),
       new Date(dto.initialItineraryDate),
       new Date(dto.finalItineraryDate),
       dto.isFinished

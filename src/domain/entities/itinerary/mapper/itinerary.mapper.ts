@@ -1,12 +1,12 @@
+import { ItineraryWorkOrder } from '@/src/domain/entities/itinerary-work-order/itinerary-work-order.entity'
 import { Itinerary } from '@/src/domain/entities/itinerary/itinerary.entity'
-import { WorkOrderMapItem } from '@/src/domain/entities/work-order-map-item/work-order-map-item.entity'
 import { ItineraryTable } from '@/src/infra/db/drizzle/schema/drizzle.itinerary.schema'
 import { UUID } from '@/src/lib/utils'
 
 export class ItineraryMapper {
   static toDomain(
     table: ItineraryTable,
-    workOrdersMap: WorkOrderMapItem[]
+    workOrdersMap: ItineraryWorkOrder[]
   ): Itinerary {
     return new Itinerary(
       table.id as UUID,
