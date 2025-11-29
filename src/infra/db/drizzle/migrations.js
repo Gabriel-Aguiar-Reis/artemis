@@ -5,6 +5,7 @@ import m0000 from './0000_yummy_bloodstrike.sql';
 import m0001 from './0001_oval_edwin_jarvis.sql';
 import m0002 from './0002_regular_roulette.sql';
 import m0003 from './0003_hot_nightshade.sql';
+import m0004 from './0004_burly_sharon_carter.sql';
 
   export default {
     journal,
@@ -12,7 +13,8 @@ import m0003 from './0003_hot_nightshade.sql';
       m0000,
 m0001,
 m0002,
-m0003
+m0003,
+m0004
     }
   }
   

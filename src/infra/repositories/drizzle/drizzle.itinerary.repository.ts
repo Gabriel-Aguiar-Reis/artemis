@@ -25,7 +25,7 @@ import { itineraryWorkOrders } from '@/src/infra/db/drizzle/schema/drizzle.itine
 import { itinerary } from '@/src/infra/db/drizzle/schema/drizzle.itinerary.schema'
 import { paymentOrder } from '@/src/infra/db/drizzle/schema/drizzle.payment-order.schema'
 import { product } from '@/src/infra/db/drizzle/schema/drizzle.product.schema'
-import { workOrderItems } from '@/src/infra/db/drizzle/schema/drizzle.work-order-items.schema'
+import { workOrderItem } from '@/src/infra/db/drizzle/schema/drizzle.work-order-item.schema'
 import { workOrderResultItem } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result-item.schema'
 import { workOrderResult } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result.schema'
 import { workOrder } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
@@ -39,12 +39,12 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
   ): Promise<WorkOrderItem[]> {
     const items = await db
       .select({
-        item: workOrderItems,
+        item: workOrderItem,
         product: product,
       })
-      .from(workOrderItems)
-      .leftJoin(product, eq(workOrderItems.productId, product.id))
-      .where(eq(workOrderItems.workOrderId, workOrderId))
+      .from(workOrderItem)
+      .leftJoin(product, eq(workOrderItem.productId, product.id))
+      .where(eq(workOrderItem.workOrderId, workOrderId))
 
     return items
       .filter((row) => row.product)

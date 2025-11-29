@@ -4,7 +4,7 @@ import { InferInsertModel, InferSelectModel } from 'drizzle-orm'
 import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import uuid from 'react-native-uuid'
 
-export const workOrderItems = sqliteTable('work_order_items', {
+export const workOrderItem = sqliteTable('work_order_item', {
   id: text('id', { length: 36 })
     .primaryKey()
     .$defaultFn(() => String(uuid.v4())),
@@ -18,5 +18,5 @@ export const workOrderItems = sqliteTable('work_order_items', {
   priceSnapshot: real('price_snapshot').notNull(), // Preço congelado no momento
 })
 
-export type WorkOrderItemsTable = InferSelectModel<typeof workOrderItems>
-export type NewWorkOrderItemsTable = InferInsertModel<typeof workOrderItems>
+export type WorkOrderItemTable = InferSelectModel<typeof workOrderItem>
+export type NewWorkOrderItemTable = InferInsertModel<typeof workOrderItem>

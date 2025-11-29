@@ -7,7 +7,7 @@ import {
 import { paymentOrder } from '@/src/infra/db/drizzle/schema'
 import { customer } from '@/src/infra/db/drizzle/schema/drizzle.customer.schema'
 import { product } from '@/src/infra/db/drizzle/schema/drizzle.product.schema'
-import { workOrderItems } from '@/src/infra/db/drizzle/schema/drizzle.work-order-items.schema'
+import { workOrderItem } from '@/src/infra/db/drizzle/schema/drizzle.work-order-item.schema'
 import { workOrder } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
 import { UUID } from '@/src/lib/utils'
 import { eq, ExtractTablesWithRelations } from 'drizzle-orm'
@@ -50,10 +50,10 @@ export class PaymentService {
 
     // Verificar existência de items (apenas validação)
     const items = await tx
-      .select({ item: workOrderItems, product: product })
-      .from(workOrderItems)
-      .leftJoin(product, eq(workOrderItems.productId, product.id))
-      .where(eq(workOrderItems.workOrderId, wo.id))
+      .select({ item: workOrderItem, product: product })
+      .from(workOrderItem)
+      .leftJoin(product, eq(workOrderItem.productId, product.id))
+      .where(eq(workOrderItem.workOrderId, wo.id))
 
     if (!items || items.length === 0)
       throw new Error('Itens da ordem de serviço não encontrados.')

@@ -21,7 +21,7 @@ import { db } from '@/src/infra/db/drizzle/drizzle-client'
 import { customer } from '@/src/infra/db/drizzle/schema/drizzle.customer.schema'
 import { paymentOrder } from '@/src/infra/db/drizzle/schema/drizzle.payment-order.schema'
 import { product } from '@/src/infra/db/drizzle/schema/drizzle.product.schema'
-import { workOrderItems } from '@/src/infra/db/drizzle/schema/drizzle.work-order-items.schema'
+import { workOrderItem } from '@/src/infra/db/drizzle/schema/drizzle.work-order-item.schema'
 import { workOrderResultItem } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result-item.schema'
 import { workOrderResult } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result.schema'
 import { workOrder } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
@@ -35,12 +35,12 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
   ): Promise<WorkOrderItem[]> {
     const items = await db
       .select({
-        item: workOrderItems,
+        item: workOrderItem,
         product: product,
       })
-      .from(workOrderItems)
-      .leftJoin(product, eq(workOrderItems.productId, product.id))
-      .where(eq(workOrderItems.workOrderId, workOrderId))
+      .from(workOrderItem)
+      .leftJoin(product, eq(workOrderItem.productId, product.id))
+      .where(eq(workOrderItem.workOrderId, workOrderId))
 
     return items
       .filter((row) => row.product)
@@ -305,9 +305,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
     if (woRow) {
       await db.transaction(async (tx) => {
         // Deletar items (cascade)
-        await tx
-          .delete(workOrderItems)
-          .where(eq(workOrderItems.workOrderId, id))
+        await tx.delete(workOrderItem).where(eq(workOrderItem.workOrderId, id))
 
         // Deletar work order
         await tx.delete(workOrder).where(eq(workOrder.id, id))
@@ -480,7 +478,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       // inserir items
       for (const item of newWo.products) {
         try {
-          await tx.insert(workOrderItems).values({
+          await tx.insert(workOrderItem).values({
             id: String(uuid.v4()),
             workOrderId: newWo.id,
             productId: item.productId,
