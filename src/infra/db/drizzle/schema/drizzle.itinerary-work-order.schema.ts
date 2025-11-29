@@ -4,7 +4,7 @@ import { InferInsertModel, InferSelectModel } from 'drizzle-orm'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import uuid from 'react-native-uuid'
 
-export const itineraryWorkOrders = sqliteTable('itinerary_work_orders', {
+export const itineraryWorkOrder = sqliteTable('itinerary_work_order', {
   id: text('id', { length: 36 })
     .primaryKey()
     .$defaultFn(() => String(uuid.v4())),
@@ -18,9 +18,9 @@ export const itineraryWorkOrders = sqliteTable('itinerary_work_orders', {
   isLate: integer('is_late', { mode: 'boolean' }).notNull().default(false),
 })
 
-export type ItineraryWorkOrdersTable = InferSelectModel<
-  typeof itineraryWorkOrders
+export type ItineraryWorkOrderTable = InferSelectModel<
+  typeof itineraryWorkOrder
 >
-export type NewItineraryWorkOrdersTable = InferInsertModel<
-  typeof itineraryWorkOrders
+export type NewItineraryWorkOrderTable = InferInsertModel<
+  typeof itineraryWorkOrder
 >

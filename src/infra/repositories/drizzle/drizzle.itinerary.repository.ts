@@ -21,7 +21,7 @@ import { UpdateItineraryDto } from '@/src/domain/repositories/itinerary/dtos/upd
 import { ItineraryRepository } from '@/src/domain/repositories/itinerary/itinerary.repository'
 import { db } from '@/src/infra/db/drizzle/drizzle-client'
 import { customer } from '@/src/infra/db/drizzle/schema/drizzle.customer.schema'
-import { itineraryWorkOrders } from '@/src/infra/db/drizzle/schema/drizzle.itinerary-work-orders.schema'
+import { itineraryWorkOrder } from '@/src/infra/db/drizzle/schema/drizzle.itinerary-work-order.schema'
 import { itinerary } from '@/src/infra/db/drizzle/schema/drizzle.itinerary.schema'
 import { paymentOrder } from '@/src/infra/db/drizzle/schema/drizzle.payment-order.schema'
 import { product } from '@/src/infra/db/drizzle/schema/drizzle.product.schema'
@@ -118,19 +118,19 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
   ): Promise<WorkOrderMapItem[]> {
     const rows = await db
       .select({
-        itineraryWorkOrder: itineraryWorkOrders,
+        itineraryWorkOrder: itineraryWorkOrder,
         workOrder: workOrder,
         customer: customer,
         paymentOrder: paymentOrder,
         workOrderResult: workOrderResult,
       })
-      .from(itineraryWorkOrders)
-      .leftJoin(workOrder, eq(itineraryWorkOrders.workOrderId, workOrder.id))
+      .from(itineraryWorkOrder)
+      .leftJoin(workOrder, eq(itineraryWorkOrder.workOrderId, workOrder.id))
       .leftJoin(customer, eq(workOrder.customerId, customer.id))
       .leftJoin(paymentOrder, eq(workOrder.paymentOrderId, paymentOrder.id))
       .leftJoin(workOrderResult, eq(workOrder.resultId, workOrderResult.id))
-      .where(eq(itineraryWorkOrders.itineraryId, itineraryId))
-      .orderBy(itineraryWorkOrders.position)
+      .where(eq(itineraryWorkOrder.itineraryId, itineraryId))
+      .orderBy(itineraryWorkOrder.position)
 
     const workOrderMapItems = await Promise.all(
       rows
@@ -218,7 +218,7 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
 
       // Inserir work orders na tabela intermediária
       for (const item of workOrdersMap) {
-        await tx.insert(itineraryWorkOrders).values({
+        await tx.insert(itineraryWorkOrder).values({
           id: uuid.v4() as string,
           itineraryId: id,
           workOrderId: item.workOrder.id,
@@ -263,12 +263,12 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
 
       // Deletar work orders antigas
       await tx
-        .delete(itineraryWorkOrders)
-        .where(eq(itineraryWorkOrders.itineraryId, dto.id))
+        .delete(itineraryWorkOrder)
+        .where(eq(itineraryWorkOrder.itineraryId, dto.id))
 
       // Inserir work orders novas
       for (const item of workOrdersMap) {
-        await tx.insert(itineraryWorkOrders).values({
+        await tx.insert(itineraryWorkOrder).values({
           id: uuid.v4() as string,
           itineraryId: dto.id as UUID,
           workOrderId: item.workOrder.id,
@@ -283,8 +283,8 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
     await db.transaction(async (tx) => {
       // Deletar work orders (cascade)
       await tx
-        .delete(itineraryWorkOrders)
-        .where(eq(itineraryWorkOrders.itineraryId, id))
+        .delete(itineraryWorkOrder)
+        .where(eq(itineraryWorkOrder.itineraryId, id))
 
       // Deletar itinerary
       await tx.delete(itinerary).where(eq(itinerary.id, id))
@@ -358,11 +358,11 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
 
       // Atualizar work orders (isLate)
       await tx
-        .delete(itineraryWorkOrders)
-        .where(eq(itineraryWorkOrders.itineraryId, id))
+        .delete(itineraryWorkOrder)
+        .where(eq(itineraryWorkOrder.itineraryId, id))
 
       for (const item of itin.workOrdersMap) {
-        await tx.insert(itineraryWorkOrders).values({
+        await tx.insert(itineraryWorkOrder).values({
           id: uuid.v4() as string,
           itineraryId: id,
           workOrderId: item.workOrder.id,
