@@ -481,6 +481,8 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
         throw new Error('Falha ao criar a nova ordem de serviço.')
       }
 
+      if (!newWo.products) return
+
       // inserir items
       for (const item of newWo.products) {
         try {

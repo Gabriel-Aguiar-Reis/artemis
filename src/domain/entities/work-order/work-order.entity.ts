@@ -36,7 +36,7 @@ export type WorkOrderSerializableDTO = {
   updatedAt: string
   scheduledDate: string
   paymentOrder?: PaymentOrderSerializableDTO
-  products: WorkOrderItemSerializableDTO[]
+  products?: WorkOrderItemSerializableDTO[]
   status: WorkOrderStatus
   result?: WorkOrderResultSerializableDTO
   visitDate?: string
@@ -51,7 +51,7 @@ export class WorkOrder {
     public updatedAt: Date,
     public scheduledDate: Date,
     public paymentOrder?: PaymentOrder,
-    public products: WorkOrderItem[] = [],
+    public products?: WorkOrderItem[],
     public status: WorkOrderStatus = WorkOrderStatus.PENDING,
     public result?: WorkOrderResult,
     public visitDate?: Date,
@@ -60,6 +60,9 @@ export class WorkOrder {
 
   addProduct(product: Product, quantity: number) {
     if (quantity <= 0) throw new Error('A quantidade deve ser maior que zero.')
+
+    if (!this.products) this.products = []
+
     const existing = this.products.find((p) => p.productId === product.id)
     if (existing) {
       existing.quantity += quantity
@@ -78,6 +81,9 @@ export class WorkOrder {
 
   removeProduct(product: Product, quantity: number) {
     if (quantity <= 0) throw new Error('A quantidade deve ser maior que zero.')
+
+    if (!this.products) return
+
     const existing = this.products.find((p) => p.productId === product.id)
     if (!existing) return
     existing.quantity -= quantity
@@ -88,6 +94,8 @@ export class WorkOrder {
   }
 
   get totalAmount(): number {
+    if (!this.products) return 0
+
     return this.products.reduce((sum, p) => sum + p.total, 0)
   }
 
@@ -150,7 +158,8 @@ export class WorkOrder {
 
     if (exchanged === 0 && added === 0)
       return this.setStatus(WorkOrderStatus.FAILED)
-    if (removed > 0 || exchanged < this.products.length)
+
+    if (removed > 0 || exchanged < (this.products?.length ?? 0))
       return this.setStatus(WorkOrderStatus.PARTIAL)
     return this.setStatus(WorkOrderStatus.COMPLETED)
   }
