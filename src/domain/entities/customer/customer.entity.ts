@@ -35,6 +35,45 @@ export class Customer {
     return this.phoneNumber?.isWhatsApp || !!this.landlineNumber?.isWhatsApp
   }
 
+  getMainNumber(): {
+    value: string
+    type: 'smartphone' | 'landline'
+    isWhatsApp: boolean
+  } | null {
+    if (this.phoneNumber?.isWhatsApp) {
+      return {
+        value: this.phoneNumber.value,
+        type: 'smartphone',
+        isWhatsApp: true,
+      }
+    }
+
+    if (this.landlineNumber?.isWhatsApp) {
+      return {
+        value: this.landlineNumber.value,
+        type: 'landline',
+        isWhatsApp: true,
+      }
+    }
+
+    if (this.phoneNumber) {
+      return {
+        value: this.phoneNumber.value,
+        type: 'smartphone',
+        isWhatsApp: false,
+      }
+    }
+
+    if (this.landlineNumber) {
+      return {
+        value: this.landlineNumber.value,
+        type: 'landline',
+        isWhatsApp: false,
+      }
+    }
+
+    return null
+  }
   toDTO(): CustomerSerializableDTO {
     return {
       id: this.id,

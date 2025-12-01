@@ -17,6 +17,10 @@ export class Address {
     public zipCode: string
   ) {}
 
+  getFullAddress(): string {
+    return `${this.streetName}, ${this.streetNumber} - ${this.neighborhood}, ${this.city} - ${this.state}, ${this.zipCode.slice(0, 5)}-${this.zipCode.slice(5)}`
+  }
+
   toDTO(): AddressSerializableDTO {
     return {
       streetName: this.streetName,
