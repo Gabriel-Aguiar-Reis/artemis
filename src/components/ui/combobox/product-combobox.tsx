@@ -362,7 +362,7 @@ export function ProductCombobox({
       </Dialog>
 
       {selectedProducts.length > 0 && multiple && (
-        <View className="flex-row flex-wrap gap-2">
+        <View className="flex-row flex-wrap gap-2 mt-2">
           {selectedProducts.map((sp) => {
             const product = products.find((p) => p.id === sp.productId)
             if (!product) return null
@@ -373,7 +373,7 @@ export function ProductCombobox({
                 className="flex-row items-center gap-2 bg-accent px-3 py-1.5 rounded-full"
               >
                 <Text className="text-sm">
-                  {product.name} {sp.quantity > 1 && `(${sp.quantity}x)`}
+                  {product.name} {`(${sp.quantity}x)`}
                 </Text>
                 <Pressable
                   onPress={() =>
