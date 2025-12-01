@@ -1,4 +1,5 @@
-import { formatWithMask, UseMaskedInputProps } from '@/src/components/ui/masks'
+import formatWithMask from '@/src/components/ui/masks/format-with-mask'
+import type { UseMaskedInputProps } from '@/src/components/ui/masks/use-masked-input-props.types'
 import * as React from 'react'
 
 export default (props: UseMaskedInputProps) => {

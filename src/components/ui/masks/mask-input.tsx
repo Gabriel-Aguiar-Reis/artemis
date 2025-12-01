@@ -1,5 +1,6 @@
 import { Input } from '@/src/components/ui/input'
-import { MaskInputProps, useMaskedInputProps } from '@/src/components/ui/masks'
+import { MaskInputProps } from '@/src/components/ui/masks/mask-input.types'
+import useMaskedInputProps from '@/src/components/ui/masks/use-masked-input-props'
 import * as React from 'react'
 import { TextInput } from 'react-native'
 
