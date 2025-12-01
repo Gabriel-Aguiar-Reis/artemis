@@ -1,5 +1,6 @@
-import { categoryHooks } from '@/src/application/hooks/category.hooks'
 import { productHooks } from '@/src/application/hooks/product.hooks'
+import { CategoryCombobox } from '@/src/components/ui/combobox/category-combobox'
+import { BaseForm } from '@/src/components/ui/forms/base-form'
 import { ProductForm } from '@/src/components/ui/forms/product-form'
 import { Masks } from '@/src/components/ui/masks'
 import { Text } from '@/src/components/ui/text'
@@ -7,12 +8,13 @@ import {
   ProductUpdateDTO,
   productUpdateSchema,
 } from '@/src/domain/validations/product.schema'
-import { UUID } from '@/src/lib/utils'
+import { UUID, getErrorMessage } from '@/src/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { router, useLocalSearchParams } from 'expo-router'
 import { Pencil, PencilOff } from 'lucide-react-native'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
+import { View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function ProductsEditScreen() {
@@ -20,7 +22,6 @@ export default function ProductsEditScreen() {
 
   const { data: product, isLoading } = productHooks.getProduct(params.id)
   const { mutate: updateProduct, isPending } = productHooks.updateProduct()
-  const { data: categories } = categoryHooks.getActiveCategories()
 
   const form = useForm<ProductUpdateDTO>({
     resolver: zodResolver(productUpdateSchema),
@@ -84,44 +85,61 @@ export default function ProductsEditScreen() {
       control={form.control}
       submitLabel="Editar Produto"
       loading={isPending}
-      fields={[
-        {
-          name: 'name',
-          label: 'Nome do Produto',
-          placeholder: 'Ex. Guardanapo 70x70cm',
-          icon: Pencil,
-          alternate: { icon: PencilOff, type: 'toDisabled' },
-        },
-        {
-          name: 'categoryId',
-          label: 'Nome da Categoria',
-          placeholder: 'Escolha a categoria...',
-          isSelect: true,
-          inputProps: {
-            selectOptions:
-              categories?.map((c) => ({ id: c.id, nome: c.name })) ?? [],
-          },
-          icon: Pencil,
-          alternate: { icon: PencilOff, type: 'toDisabled' },
-        },
-        {
-          name: 'salePrice',
-          label: 'Preço de Venda',
-          placeholder: 'Ex. 19,90',
-          inputProps: { keyboardType: 'numeric', mask: Masks.BRL_CURRENCY },
-          isCurrency: true,
-          icon: Pencil,
-          alternate: { icon: PencilOff, type: 'toDisabled' },
-        },
-        {
-          name: 'expiration',
-          label: 'Prazo de validade',
-          placeholder: 'Ex: 30 dias',
-          isDialog: true,
-          icon: Pencil,
-          alternate: { icon: PencilOff, type: 'toDisabled' },
-        },
-      ]}
+      fields={[]}
+      customRenderer={() => (
+        <View className="flex-1 gap-4">
+          <BaseForm.Input
+            control={form.control}
+            name="name"
+            label="Nome do Produto"
+            placeholder="Ex. Guardanapo 70x70cm"
+            icon={Pencil}
+            alternate={{ icon: PencilOff, type: 'toDisabled' }}
+            error={getErrorMessage(form.formState.errors?.name?.message)}
+          />
+
+          <CategoryCombobox
+            selectedCategoryId={form.watch('categoryId') || ''}
+            onCategoryChange={(categoryId) =>
+              form.setValue('categoryId', categoryId)
+            }
+            label="Categoria"
+            placeholder="Escolha a categoria..."
+          />
+
+          <BaseForm.Input.Currency
+            control={form.control}
+            name="salePrice"
+            label="Preço de Venda"
+            placeholder="Ex. 19,90"
+            inputProps={{ keyboardType: 'numeric', mask: Masks.BRL_CURRENCY }}
+            icon={Pencil}
+            alternate={{ icon: PencilOff, type: 'toDisabled' }}
+            error={getErrorMessage(form.formState.errors?.salePrice?.message)}
+          />
+
+          <BaseForm.Input
+            control={form.control}
+            name="expiration"
+            label="Prazo de validade"
+            placeholder="Ex: 30 dias"
+            icon={Pencil}
+            alternate={{ icon: PencilOff, type: 'toDisabled' }}
+            isDialog={true}
+            error={getErrorMessage(form.formState.errors?.expiration?.message)}
+          />
+
+          <BaseForm.Switch
+            control={form.control}
+            name="isActive"
+            label="Produto Ativo"
+          />
+
+          <BaseForm.SubmitButton onPress={onSubmit} loading={isPending}>
+            Editar Produto
+          </BaseForm.SubmitButton>
+        </View>
+      )}
     />
   )
 }
