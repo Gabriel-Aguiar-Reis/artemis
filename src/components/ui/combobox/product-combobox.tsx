@@ -28,8 +28,8 @@ import {
   X,
 } from 'lucide-react-native'
 import * as React from 'react'
-import { useMemo, useState } from 'react'
-import { Pressable, View } from 'react-native'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Animated, Easing, Pressable, View } from 'react-native'
 
 type ProductComboboxProps = {
   selectedProducts: Array<{ productId: string; quantity: number }>
@@ -225,9 +225,45 @@ export function ProductCombobox({
     )
   }
 
+  const hasValue = selectedProducts.length > 0
+  const shouldFloat = hasValue || open
+  const animated = useRef(new Animated.Value(shouldFloat ? 1 : 0)).current
+
+  useEffect(() => {
+    Animated.timing(animated, {
+      toValue: shouldFloat ? 1 : 0,
+      duration: 80,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: false,
+    }).start()
+  }, [shouldFloat])
+
+  const labelStyle = {
+    position: 'absolute' as const,
+    left: 8,
+    paddingHorizontal: 2,
+    zIndex: 10,
+    top: animated.interpolate({
+      inputRange: [0, 1],
+      outputRange: [-8, -8],
+    }),
+    fontSize: animated.interpolate({
+      inputRange: [0, 1],
+      outputRange: [12, 12],
+    }),
+  }
+
   return (
-    <View className="gap-2">
-      {label && <Text className="text-sm font-medium">{label}</Text>}
+    <View className="relative">
+      {label && (
+        <Animated.Text
+          style={labelStyle}
+          numberOfLines={1}
+          className="bg-background text-muted-foreground"
+        >
+          {label}
+        </Animated.Text>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
@@ -326,7 +362,7 @@ export function ProductCombobox({
       </Dialog>
 
       {selectedProducts.length > 0 && multiple && (
-        <View className="flex-row flex-wrap gap-2 mt-2">
+        <View className="flex-row flex-wrap gap-2">
           {selectedProducts.map((sp) => {
             const product = products.find((p) => p.id === sp.productId)
             if (!product) return null
@@ -355,6 +391,8 @@ export function ProductCombobox({
           })}
         </View>
       )}
+
+      <View className="min-h-4" />
     </View>
   )
 }
