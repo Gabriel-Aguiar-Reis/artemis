@@ -24,6 +24,8 @@ export default function WorkOrdersSearch() {
     minTotalValue?: string
     maxTotalValue?: string
     isPaid?: string
+    hasPayment?: string
+    hasResult?: string
   }>()
 
   const [searchQuery, setSearchQuery] = useState(params.search || '')
@@ -51,6 +53,12 @@ export default function WorkOrdersSearch() {
   const [isPaidFilter, setIsPaidFilter] = useState<'all' | 'true' | 'false'>(
     (params.isPaid as any) || 'all'
   )
+  const [hasPaymentFilter, setHasPaymentFilter] = useState<
+    'all' | 'true' | 'false'
+  >((params.hasPayment as any) || 'all')
+  const [hasResultFilter, setHasResultFilter] = useState<
+    'all' | 'true' | 'false'
+  >((params.hasResult as any) || 'all')
 
   const applyFilters = () => {
     router.back()
@@ -66,6 +74,8 @@ export default function WorkOrdersSearch() {
         minTotalValue: minTotalValueFilter || undefined,
         maxTotalValue: maxTotalValueFilter || undefined,
         isPaid: isPaidFilter !== 'all' ? isPaidFilter : undefined,
+        hasPayment: hasPaymentFilter !== 'all' ? hasPaymentFilter : undefined,
+        hasResult: hasResultFilter !== 'all' ? hasResultFilter : undefined,
       })
     }, 200)
   }
@@ -80,6 +90,8 @@ export default function WorkOrdersSearch() {
     setMinTotalValueFilter('')
     setMaxTotalValueFilter('')
     setIsPaidFilter('all')
+    setHasPaymentFilter('all')
+    setHasResultFilter('all')
   }
 
   const hasActiveFilters =
@@ -91,7 +103,9 @@ export default function WorkOrdersSearch() {
     visitDateFilter !== '' ||
     minTotalValueFilter !== '' ||
     maxTotalValueFilter !== '' ||
-    isPaidFilter !== 'all'
+    isPaidFilter !== 'all' ||
+    hasPaymentFilter !== 'all' ||
+    hasResultFilter !== 'all'
 
   return (
     <SafeAreaView className="flex-1">
@@ -246,6 +260,66 @@ export default function WorkOrdersSearch() {
               />
 
               <View className="gap-2">
+                <Text className="text-sm font-medium">
+                  Ordem de pagamento criada
+                </Text>
+                <View className="flex-row gap-2">
+                  <Button
+                    variant={hasPaymentFilter === 'all' ? 'default' : 'outline'}
+                    size="sm"
+                    onPress={() => setHasPaymentFilter('all')}
+                    className="flex-1"
+                  >
+                    <Text
+                      className={
+                        hasPaymentFilter === 'all'
+                          ? 'text-primary-foreground'
+                          : 'text-foreground'
+                      }
+                    >
+                      Todos
+                    </Text>
+                  </Button>
+                  <Button
+                    variant={
+                      hasPaymentFilter === 'true' ? 'default' : 'outline'
+                    }
+                    size="sm"
+                    onPress={() => setHasPaymentFilter('true')}
+                    className="flex-1"
+                  >
+                    <Text
+                      className={
+                        hasPaymentFilter === 'true'
+                          ? 'text-primary-foreground'
+                          : 'text-foreground'
+                      }
+                    >
+                      Sim
+                    </Text>
+                  </Button>
+                  <Button
+                    variant={
+                      hasPaymentFilter === 'false' ? 'default' : 'outline'
+                    }
+                    size="sm"
+                    onPress={() => setHasPaymentFilter('false')}
+                    className="flex-1"
+                  >
+                    <Text
+                      className={
+                        hasPaymentFilter === 'false'
+                          ? 'text-primary-foreground'
+                          : 'text-foreground'
+                      }
+                    >
+                      Não
+                    </Text>
+                  </Button>
+                </View>
+              </View>
+
+              <View className="gap-2">
                 <Text className="text-sm font-medium">Status de Pagamento</Text>
                 <View className="flex-row gap-2">
                   <Button
@@ -294,6 +368,64 @@ export default function WorkOrdersSearch() {
                       }
                     >
                       Pendente
+                    </Text>
+                  </Button>
+                </View>
+              </View>
+
+              <View className="gap-2">
+                <Text className="text-sm font-medium">
+                  Relatório da ordem de serviço criado
+                </Text>
+                <View className="flex-row gap-2">
+                  <Button
+                    variant={hasResultFilter === 'all' ? 'default' : 'outline'}
+                    size="sm"
+                    onPress={() => setHasResultFilter('all')}
+                    className="flex-1"
+                  >
+                    <Text
+                      className={
+                        hasResultFilter === 'all'
+                          ? 'text-primary-foreground'
+                          : 'text-foreground'
+                      }
+                    >
+                      Todos
+                    </Text>
+                  </Button>
+                  <Button
+                    variant={hasResultFilter === 'true' ? 'default' : 'outline'}
+                    size="sm"
+                    onPress={() => setHasResultFilter('true')}
+                    className="flex-1"
+                  >
+                    <Text
+                      className={
+                        hasResultFilter === 'true'
+                          ? 'text-primary-foreground'
+                          : 'text-foreground'
+                      }
+                    >
+                      Sim
+                    </Text>
+                  </Button>
+                  <Button
+                    variant={
+                      hasResultFilter === 'false' ? 'default' : 'outline'
+                    }
+                    size="sm"
+                    onPress={() => setHasResultFilter('false')}
+                    className="flex-1"
+                  >
+                    <Text
+                      className={
+                        hasResultFilter === 'false'
+                          ? 'text-primary-foreground'
+                          : 'text-foreground'
+                      }
+                    >
+                      Não
                     </Text>
                   </Button>
                 </View>

@@ -17,6 +17,7 @@ import {
   CalendarSync,
   Contact,
   MapPinned,
+  Receipt,
   ReceiptText,
   Store,
 } from 'lucide-react-native'
@@ -156,47 +157,92 @@ export function WorkOrderCard({
           </Tooltip>
         </View>
 
-        <Tooltip>
-          <TooltipTrigger>
-            <View className="flex-row items-center mb-1 gap-2">
-              <Icon
-                as={ReceiptText}
-                size={16}
-                className={cn(
-                  'text-sm text-yellow-500 dark:text-yellow-200',
-                  wo.paymentOrder?.isPaid &&
-                    'text-sm font-semibold text-cyan-500 dark:text-cyan-200'
-                )}
-              />
-              <Text
-                className={cn(
-                  'text-sm text-yellow-500 dark:text-yellow-200',
-                  wo.paymentOrder?.isPaid &&
-                    'text-sm font-semibold text-cyan-500 dark:text-cyan-200'
-                )}
-              >
-                {wo.paymentOrder ? (
-                  <>
-                    {wo.paymentOrder.method} -{' '}
-                    {wo.paymentOrder.isPaid
-                      ? ' Pago'
-                      : ` ${wo.paymentOrder.paidInstallments}/${wo.paymentOrder.installments} parcelas`}
-                  </>
-                ) : (
-                  'Não registrado'
-                )}
-              </Text>
-              {wo.visitDate && (
-                <Text className="mt-1 text-sm text-green-600">
-                  ✓ Visitado em {wo.visitDate.toLocaleString('pt-BR')}
+        <View className="flex-row items-center gap-2">
+          <Tooltip>
+            <TooltipTrigger>
+              <View className="flex-row items-center mb-1 gap-2">
+                <Icon
+                  as={ReceiptText}
+                  size={16}
+                  className={cn(
+                    'text-sm text-yellow-500 dark:text-yellow-200',
+                    wo.paymentOrder?.isPaid &&
+                      'text-sm font-semibold text-cyan-500 dark:text-cyan-200'
+                  )}
+                />
+                <Text
+                  className={cn(
+                    'text-sm text-yellow-500 dark:text-yellow-200',
+                    wo.paymentOrder?.isPaid &&
+                      'text-sm font-semibold text-cyan-500 dark:text-cyan-200'
+                  )}
+                >
+                  {wo.paymentOrder ? (
+                    <>
+                      {wo.paymentOrder.method} -{' '}
+                      {wo.paymentOrder.isPaid
+                        ? ' Pago'
+                        : ` ${wo.paymentOrder.paidInstallments}/${wo.paymentOrder.installments} parcelas`}
+                    </>
+                  ) : (
+                    'Não registrado'
+                  )}
                 </Text>
-              )}
-            </View>
-          </TooltipTrigger>
-          <TooltipContent>
-            <Text>Pagamento registrado na ordem de serviço</Text>
-          </TooltipContent>
-        </Tooltip>
+                {wo.visitDate && (
+                  <Text className="mt-1 text-sm text-green-600">
+                    ✓ Visitado em {wo.visitDate.toLocaleString('pt-BR')}
+                  </Text>
+                )}
+              </View>
+            </TooltipTrigger>
+            <TooltipContent>
+              <Text>Relatório registrado na ordem de serviço</Text>
+            </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger>
+              <View className="flex-row items-center mb-1 gap-2">
+                <Icon
+                  as={Receipt}
+                  size={16}
+                  className={cn(
+                    'text-sm text-yellow-500 dark:text-yellow-200',
+                    wo.paymentOrder?.isPaid &&
+                      'text-sm font-semibold text-cyan-500 dark:text-cyan-200'
+                  )}
+                />
+                <Text
+                  className={cn(
+                    'text-sm text-yellow-500 dark:text-yellow-200',
+                    wo.paymentOrder?.isPaid &&
+                      'text-sm font-semibold text-cyan-500 dark:text-cyan-200'
+                  )}
+                >
+                  {wo.paymentOrder ? (
+                    <>
+                      {wo.paymentOrder.method} -{' '}
+                      {wo.paymentOrder.isPaid
+                        ? ' Pago'
+                        : ` ${wo.paymentOrder.paidInstallments}/${wo.paymentOrder.installments} parcelas`}
+                    </>
+                  ) : (
+                    'Não registrado'
+                  )}
+                </Text>
+                {wo.visitDate && (
+                  <Text className="mt-1 text-sm text-green-600">
+                    ✓ Visitado em {wo.visitDate.toLocaleString('pt-BR')}
+                  </Text>
+                )}
+              </View>
+            </TooltipTrigger>
+            <TooltipContent>
+              <Text>Pagamento registrado na ordem de serviço</Text>
+            </TooltipContent>
+          </Tooltip>
+        </View>
+
         {wo.paymentOrder && (
           <Tooltip>
             <TooltipTrigger>

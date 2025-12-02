@@ -51,6 +51,8 @@ export default function WorkOrdersScreen() {
     minTotalValue?: string
     maxTotalValue?: string
     isPaid?: string
+    hasPayment?: string
+    hasResult?: string
   }>()
 
   const handleWorkOrderOptions = async (
@@ -135,6 +137,14 @@ export default function WorkOrdersScreen() {
       const matchesIsPaid = params.isPaid
         ? wo.paymentOrder?.isPaid === (params.isPaid === 'true')
         : true
+      const matchesHasPayment = params.hasPayment
+        ? (wo.paymentOrder !== null && wo.paymentOrder !== undefined) ===
+          (params.hasPayment === 'true')
+        : true
+      const matchesHasResult = params.hasResult
+        ? (wo.result !== null && wo.result !== undefined) ===
+          (params.hasResult === 'true')
+        : true
 
       return (
         matchesSearch &&
@@ -145,7 +155,9 @@ export default function WorkOrdersScreen() {
         matchesVisitDate &&
         matchesMinTotalValue &&
         matchesMaxTotalValue &&
-        matchesIsPaid
+        matchesIsPaid &&
+        matchesHasPayment &&
+        matchesHasResult
       )
     })
   }, [
@@ -159,6 +171,8 @@ export default function WorkOrdersScreen() {
     params.minTotalValue,
     params.maxTotalValue,
     params.isPaid,
+    params.hasPayment,
+    params.hasResult,
   ])
   const hasActiveFilters =
     !!params.search ||
@@ -169,7 +183,9 @@ export default function WorkOrdersScreen() {
     !!params.visitDate ||
     !!params.minTotalValue ||
     !!params.maxTotalValue ||
-    !!params.isPaid
+    !!params.isPaid ||
+    !!params.hasPayment ||
+    !!params.hasResult
 
   const activeFilters = useMemo(() => {
     const filters = []
@@ -206,6 +222,18 @@ export default function WorkOrdersScreen() {
         value: params.isPaid === 'true' ? 'Sim' : 'Não',
       })
     }
+    if (params.hasPayment) {
+      filters.push({
+        label: 'Ordem de pagamento criada',
+        value: params.hasPayment === 'true' ? 'Sim' : 'Não',
+      })
+    }
+    if (params.hasResult) {
+      filters.push({
+        label: 'Relatório da ordem de serviço criado',
+        value: params.hasResult === 'true' ? 'Sim' : 'Não',
+      })
+    }
     return filters
   }, [
     params.search,
@@ -217,6 +245,8 @@ export default function WorkOrdersScreen() {
     params.minTotalValue,
     params.maxTotalValue,
     params.isPaid,
+    params.hasPayment,
+    params.hasResult,
   ])
 
   if (isLoading) {
