@@ -207,14 +207,14 @@ export function WorkOrderCard({
                   as={Receipt}
                   size={16}
                   className={cn(
-                    'text-sm text-yellow-500 dark:text-yellow-200',
+                    'text-sm text-red-500 dark:text-red-200',
                     wo.paymentOrder?.isPaid &&
                       'text-sm font-semibold text-cyan-500 dark:text-cyan-200'
                   )}
                 />
                 <Text
                   className={cn(
-                    'text-sm text-yellow-500 dark:text-yellow-200',
+                    'text-sm text-red-500 dark:text-red-200',
                     wo.paymentOrder?.isPaid &&
                       'text-sm font-semibold text-cyan-500 dark:text-cyan-200'
                   )}

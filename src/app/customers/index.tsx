@@ -7,6 +7,11 @@ import { ConfirmDeleteDialog } from '@/src/components/ui/dialog/confirm-delete-d
 import { Icon } from '@/src/components/ui/icon'
 import { ObjectCard } from '@/src/components/ui/object-card'
 import { Text } from '@/src/components/ui/text'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/src/components/ui/tooltip'
 import { WhatsAppIcon } from '@/src/components/ui/whatsapp-icon'
 import { Customer } from '@/src/domain/entities/customer/customer.entity'
 import { formatPhoneBrazil, smartSearch, UUID } from '@/src/lib/utils'
@@ -207,30 +212,44 @@ export default function CustomersScreen() {
             )}
           </View>
           <View className="ml-6">
-            {customer.phoneNumber && (
-              <View className="flex-row items-center gap-2">
-                <Icon as={Phone} size={16} className="text-ring" />
-                <View className="items-start text-primary">
-                  <View className="flex-row items-center">
-                    <Text className="text-sm text-ring">
-                      {formatPhoneBrazil(customer.phoneNumber.value)}
-                    </Text>
+            <Tooltip>
+              <TooltipTrigger>
+                {customer.phoneNumber && (
+                  <View className="flex-row items-center gap-2">
+                    <Icon as={Phone} size={16} className="text-ring" />
+                    <View className="items-start text-primary">
+                      <View className="flex-row items-center">
+                        <Text className="text-sm text-ring">
+                          {formatPhoneBrazil(customer.phoneNumber.value)}
+                        </Text>
+                      </View>
+                    </View>
                   </View>
-                </View>
-              </View>
-            )}
-            {customer.landlineNumber && (
-              <View className="flex-row items-center gap-2">
-                <Icon as={UtilityPole} size={16} className="text-ring" />
-                <View className="items-start text-primary">
-                  <View className="flex-row items-center">
-                    <Text className="text-sm text-ring">
-                      {formatPhoneBrazil(customer.landlineNumber.value)}
-                    </Text>
+                )}
+              </TooltipTrigger>
+              <TooltipContent>
+                <Text>Número de telefone do cliente</Text>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger>
+                {customer.landlineNumber && (
+                  <View className="flex-row items-center gap-2">
+                    <Icon as={UtilityPole} size={16} className="text-ring" />
+                    <View className="items-start text-primary">
+                      <View className="flex-row items-center">
+                        <Text className="text-sm text-ring">
+                          {formatPhoneBrazil(customer.landlineNumber.value)}
+                        </Text>
+                      </View>
+                    </View>
                   </View>
-                </View>
-              </View>
-            )}
+                )}
+              </TooltipTrigger>
+              <TooltipContent>
+                <Text>Número de telefone fixo do cliente</Text>
+              </TooltipContent>
+            </Tooltip>
           </View>
         </ObjectCard.Content>
       </ObjectCard.Root>

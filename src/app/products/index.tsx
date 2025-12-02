@@ -7,6 +7,11 @@ import { ConfirmDeleteDialog } from '@/src/components/ui/dialog/confirm-delete-d
 import { Icon } from '@/src/components/ui/icon'
 import { ObjectCard } from '@/src/components/ui/object-card'
 import { Text } from '@/src/components/ui/text'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/src/components/ui/tooltip'
 import { ProductWithCategoryDTO } from '@/src/domain/repositories/product/dtos/product-with-category.dto'
 import { cn, smartSearch, UUID } from '@/src/lib/utils'
 import { FlashList } from '@shopify/flash-list'
@@ -200,25 +205,39 @@ export default function ProductsScreen() {
         <ObjectCard.Content>
           <View className="flex-row items-center justify-between gap-2">
             <View>
-              <View className="flex-row gap-2 items-center">
-                <Icon as={Banknote} size={20} className="text-green-600" />
-                <Text>
-                  R${' '}
-                  {product.salePrice.toLocaleString('pt-BR', {
-                    minimumFractionDigits: 2,
-                  })}
-                </Text>
-              </View>
-              <View className="flex-row gap-2 items-center">
-                <Icon
-                  as={CalendarClock}
-                  size={20}
-                  className="text-orange-600"
-                />
-                <Text>
-                  <Text>{product.expiration}</Text>
-                </Text>
-              </View>
+              <Tooltip>
+                <TooltipTrigger>
+                  <View className="flex-row gap-2 items-center">
+                    <Icon as={Banknote} size={20} className="text-green-600" />
+                    <Text>
+                      R${' '}
+                      {product.salePrice.toLocaleString('pt-BR', {
+                        minimumFractionDigits: 2,
+                      })}
+                    </Text>
+                  </View>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <Text>Preço de venda do produto</Text>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger>
+                  <View className="flex-row gap-2 items-center">
+                    <Icon
+                      as={CalendarClock}
+                      size={20}
+                      className="text-orange-600"
+                    />
+                    <Text>
+                      <Text>{product.expiration}</Text>
+                    </Text>
+                  </View>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <Text>Data de validade do produto</Text>
+                </TooltipContent>
+              </Tooltip>
             </View>
             <View className="flex-row items-center gap-2">
               <View
