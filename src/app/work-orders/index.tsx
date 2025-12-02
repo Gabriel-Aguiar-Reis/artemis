@@ -98,12 +98,23 @@ export default function WorkOrdersScreen() {
       const matchesSearch = params.search
         ? smartSearch(wo.customer.storeName, params.search)
         : true
-      const matchesPhoneNumber = params.phoneNumber
-        ? wo.customer.phoneNumber?.value.includes(params.phoneNumber)
-        : true
-      const matchesLandlineNumber = params.landlineNumber
-        ? wo.customer.landlineNumber?.value.includes(params.landlineNumber)
-        : true
+
+      const matchesPhoneNumber = (() => {
+        if (!params.phoneNumber) return true
+        if (!wo.customer.phoneNumber) return false
+        const needle = String(params.phoneNumber).replace(/\D+/g, '')
+        const hay = String(wo.customer.phoneNumber.value).replace(/\D+/g, '')
+        return needle === '' ? true : hay.includes(needle)
+      })()
+
+      const matchesLandlineNumber = (() => {
+        if (!params.landlineNumber) return true
+        if (!wo.customer.landlineNumber) return false
+        const needle = String(params.landlineNumber).replace(/\D+/g, '')
+        const hay = String(wo.customer.landlineNumber.value).replace(/\D+/g, '')
+        return needle === '' ? true : hay.includes(needle)
+      })()
+
       const matchesIsWhatsApp = params.isWhatsApp
         ? wo.customer.isActiveWhatsApp() === (params.isWhatsApp === 'true')
         : true
@@ -184,10 +195,10 @@ export default function WorkOrdersScreen() {
       filters.push({ label: 'Data de Visita', value: params.visitDate })
     }
     if (params.minTotalValue) {
-      filters.push({ label: 'Valor Mínimo', value: params.minTotalValue })
+      filters.push({ label: 'Valor Total Mínimo', value: params.minTotalValue })
     }
     if (params.maxTotalValue) {
-      filters.push({ label: 'Valor Máximo', value: params.maxTotalValue })
+      filters.push({ label: 'Valor Total Máximo', value: params.maxTotalValue })
     }
     if (params.isPaid) {
       filters.push({
