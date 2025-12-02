@@ -93,7 +93,7 @@ export class WorkOrder {
     this.updatedAt = new Date()
   }
 
-  get totalAmount(): number {
+  get totalAmountForProducts(): number {
     if (!this.products) return 0
 
     return this.products.reduce((sum, p) => sum + p.total, 0)
