@@ -2,9 +2,14 @@ import { CustomerMapper } from '@/src/domain/entities/customer/mapper/customer.m
 import { PaymentOrderMapper } from '@/src/domain/entities/payment-order/mapper/payment-order.mapper'
 import { PaymentOrderSerializableDTO } from '@/src/domain/entities/payment-order/payment-order.entity'
 import { ProductMapper } from '@/src/domain/entities/product/mapper/product.mapper'
+import { WorkOrderItemMapper } from '@/src/domain/entities/work-order-item/mapper/work-order-item.mapper'
 import { ProductSnapshot } from '@/src/domain/entities/work-order-item/value-objects/product-snapshot.vo'
 import { WorkOrderItem } from '@/src/domain/entities/work-order-item/work-order-item.entity'
-import { WorkOrderResultItemType } from '@/src/domain/entities/work-order-result-item/work-order-result-item.entity'
+import { WorkOrderResultItemMapper } from '@/src/domain/entities/work-order-result-item/mapper/work-order-result-item.mapper'
+import {
+  WorkOrderResultItem,
+  WorkOrderResultItemType,
+} from '@/src/domain/entities/work-order-result-item/work-order-result-item.entity'
 import { WorkOrderResultMapper } from '@/src/domain/entities/work-order-result/mapper/work-order-result.mapper'
 import { WorkOrderResult } from '@/src/domain/entities/work-order-result/work-order-result.entity'
 import { WorkOrderMapper } from '@/src/domain/entities/work-order/mapper/work-order.mapper'
@@ -59,16 +64,71 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       })
   }
 
+  private async loadWorkOrderResult(
+    resultId: UUID
+  ): Promise<WorkOrderResult | undefined> {
+    const [resultRow] = await db
+      .select()
+      .from(workOrderResult)
+      .where(eq(workOrderResult.id, resultId))
+      .limit(1)
+
+    if (!resultRow) return undefined
+
+    // Buscar os items do resultado
+    const resultItems = await db
+      .select({
+        item: workOrderResultItem,
+        product: product,
+      })
+      .from(workOrderResultItem)
+      .leftJoin(product, eq(workOrderResultItem.productId, product.id))
+      .where(eq(workOrderResultItem.resultId, resultId))
+
+    const { exchanged, added, removed } = resultItems.reduce(
+      (acc, row) => {
+        if (!row.product) return acc
+
+        const snapshot = ProductSnapshot.fromDTO({
+          productId: row.product.id as UUID,
+          productName: row.product.name,
+          salePrice: row.product.salePrice,
+        })
+
+        const item = WorkOrderResultItemMapper.toDomain(row.item, snapshot)
+
+        if (item.type === WorkOrderResultItemType.EXCHANGED) {
+          acc.exchanged.push(item)
+        } else if (item.type === WorkOrderResultItemType.ADDED) {
+          acc.added.push(item)
+        } else if (item.type === WorkOrderResultItemType.REMOVED) {
+          acc.removed.push(item)
+        }
+
+        return acc
+      },
+      {
+        exchanged: [] as WorkOrderResultItem[],
+        added: [] as WorkOrderResultItem[],
+        removed: [] as WorkOrderResultItem[],
+      }
+    )
+
+    return WorkOrderResultMapper.toDomain(resultRow, exchanged, added, removed)
+  }
+
   async getWorkOrders(): Promise<WorkOrder[]> {
     const rows = await db
       .select({
         workOrder: workOrder,
         customer: customer,
         paymentOrder: paymentOrder,
+        result: workOrderResult,
       })
       .from(workOrder)
       .leftJoin(customer, eq(workOrder.customerId, customer.id))
       .leftJoin(paymentOrder, eq(workOrder.paymentOrderId, paymentOrder.id))
+      .leftJoin(workOrderResult, eq(workOrder.resultId, workOrderResult.id))
 
     if (rows.length === 0) {
       return []
@@ -85,16 +145,19 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
         const po = row.paymentOrder
           ? PaymentOrderMapper.toDomain(row.paymentOrder)
           : undefined
+        const result = row.result
+          ? await this.loadWorkOrderResult(row.result.id as UUID)
+          : undefined
         const items = await this.loadWorkOrderItems(row.workOrder.id as UUID)
-        if (!po) return WorkOrderMapper.toDomain(row.workOrder, cust, items)
-        return WorkOrderMapper.toDomain(row.workOrder, cust, items, po)
+
+        return WorkOrderMapper.toDomain(row.workOrder, cust, items, po, result)
       })
     )
 
     return workOrders
   }
 
-  async addWorkOrder(dto: WorkOrderInsertDTO): Promise<void> {
+  async addWorkOrder(dto: WorkOrderInsertDTO): Promise<UUID> {
     const id = uuid.v4() as UUID
 
     // Buscar customer
@@ -129,7 +192,20 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       data.paymentOrderId = (dto as any).paymentOrderId as string
     }
 
-    await db.insert(workOrder).values(data).onConflictDoNothing()
+    await db.transaction(async (tx) => {
+      await tx.insert(workOrder).values(data).onConflictDoNothing()
+
+      // Inserir WorkOrderItems se fornecidos
+      const products = (dto as any).products as WorkOrderItem[] | undefined
+      if (products && products.length > 0) {
+        const itemsData = products.map((item) =>
+          WorkOrderItemMapper.toPersistence(item, id)
+        )
+        await tx.insert(workOrderItem).values(itemsData).onConflictDoNothing()
+      }
+    })
+
+    return id
   }
 
   async updateWorkOrder(dto: WorkOrderUpdateDTO): Promise<void> {
@@ -194,6 +270,36 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
         status: data.status,
         visitDate: data.visitDate,
         updatedAt: data.updatedAt,
+      })
+      .where(eq(workOrder.id, id))
+  }
+
+  async updateWorkOrderWithResult(
+    id: UUID,
+    resultId: UUID,
+    status: string,
+    visitDate: Date
+  ): Promise<void> {
+    await db
+      .update(workOrder)
+      .set({
+        resultId,
+        status: status as WorkOrderStatus,
+        visitDate: visitDate.toISOString(),
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(workOrder.id, id))
+  }
+
+  async updateWorkOrderWithPayment(
+    id: UUID,
+    paymentOrderId: UUID
+  ): Promise<void> {
+    await db
+      .update(workOrder)
+      .set({
+        paymentOrderId,
+        updatedAt: new Date().toISOString(),
       })
       .where(eq(workOrder.id, id))
   }
@@ -319,10 +425,12 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
         workOrder: workOrder,
         customer: customer,
         paymentOrder: paymentOrder,
+        result: workOrderResult,
       })
       .from(workOrder)
       .leftJoin(customer, eq(workOrder.customerId, customer.id))
       .leftJoin(paymentOrder, eq(workOrder.paymentOrderId, paymentOrder.id))
+      .leftJoin(workOrderResult, eq(workOrder.resultId, workOrderResult.id))
       .where(eq(workOrder.id, id))
       .limit(1)
       .get()
@@ -335,8 +443,11 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
     const po = row.paymentOrder
       ? PaymentOrderMapper.toDomain(row.paymentOrder)
       : undefined
+    const result = row.result
+      ? await this.loadWorkOrderResult(row.result.id as UUID)
+      : undefined
     const items = await this.loadWorkOrderItems(id)
-    return WorkOrderMapper.toDomain(row.workOrder, cust, items, po)
+    return WorkOrderMapper.toDomain(row.workOrder, cust, items, po, result)
   }
 
   async getWorkOrdersByCustomer(customerId: UUID): Promise<WorkOrder[]> {
@@ -345,10 +456,12 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
         workOrder: workOrder,
         customer: customer,
         paymentOrder: paymentOrder,
+        result: workOrderResult,
       })
       .from(workOrder)
       .leftJoin(customer, eq(workOrder.customerId, customer.id))
       .leftJoin(paymentOrder, eq(workOrder.paymentOrderId, paymentOrder.id))
+      .leftJoin(workOrderResult, eq(workOrder.resultId, workOrderResult.id))
       .where(eq(workOrder.customerId, customerId))
 
     if (rows.length === 0) {
@@ -363,8 +476,17 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
           const po = row.paymentOrder
             ? PaymentOrderMapper.toDomain(row.paymentOrder)
             : undefined
+          const result = row.result
+            ? await this.loadWorkOrderResult(row.result.id as UUID)
+            : undefined
           const items = await this.loadWorkOrderItems(row.workOrder.id as UUID)
-          return WorkOrderMapper.toDomain(row.workOrder, cust, items, po)
+          return WorkOrderMapper.toDomain(
+            row.workOrder,
+            cust,
+            items,
+            po,
+            result
+          )
         })
     )
 

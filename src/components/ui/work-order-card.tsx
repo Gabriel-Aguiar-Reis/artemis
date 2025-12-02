@@ -166,33 +166,19 @@ export function WorkOrderCard({
                   size={16}
                   className={cn(
                     'text-sm text-yellow-500 dark:text-yellow-200',
-                    wo.paymentOrder?.isPaid &&
+                    wo.result &&
                       'text-sm font-semibold text-cyan-500 dark:text-cyan-200'
                   )}
                 />
                 <Text
                   className={cn(
                     'text-sm text-yellow-500 dark:text-yellow-200',
-                    wo.paymentOrder?.isPaid &&
+                    wo.result &&
                       'text-sm font-semibold text-cyan-500 dark:text-cyan-200'
                   )}
                 >
-                  {wo.paymentOrder ? (
-                    <>
-                      {wo.paymentOrder.method} -{' '}
-                      {wo.paymentOrder.isPaid
-                        ? ' Pago'
-                        : ` ${wo.paymentOrder.paidInstallments}/${wo.paymentOrder.installments} parcelas`}
-                    </>
-                  ) : (
-                    'Não registrado'
-                  )}
+                  {wo.result ? 'Relatório registrado' : 'Não registrado'}
                 </Text>
-                {wo.visitDate && (
-                  <Text className="mt-1 text-sm text-green-600">
-                    ✓ Visitado em {wo.visitDate.toLocaleString('pt-BR')}
-                  </Text>
-                )}
               </View>
             </TooltipTrigger>
             <TooltipContent>
@@ -230,11 +216,6 @@ export function WorkOrderCard({
                     'Não registrado'
                   )}
                 </Text>
-                {wo.visitDate && (
-                  <Text className="mt-1 text-sm text-green-600">
-                    ✓ Visitado em {wo.visitDate.toLocaleString('pt-BR')}
-                  </Text>
-                )}
               </View>
             </TooltipTrigger>
             <TooltipContent>

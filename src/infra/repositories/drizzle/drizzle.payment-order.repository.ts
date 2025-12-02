@@ -1,9 +1,9 @@
 import { PaymentService } from '@/src/application/services/payment.service'
 import { PaymentOrderMapper } from '@/src/domain/entities/payment-order/mapper/payment-order.mapper'
 import { PaymentOrder } from '@/src/domain/entities/payment-order/payment-order.entity'
-import { AddPaymentOrderDto } from '@/src/domain/repositories/payment-order/dtos/add-payment-order.dto'
 import { UpdatePaymentOrderDto } from '@/src/domain/repositories/payment-order/dtos/update-payment-order.dto'
 import { PaymentOrderRepository } from '@/src/domain/repositories/payment-order/payment-order.repository'
+import { PaymentOrderInsertDTO } from '@/src/domain/validations/payment-order.schema'
 import { db } from '@/src/infra/db/drizzle/drizzle-client'
 import { paymentOrder } from '@/src/infra/db/drizzle/schema/drizzle.payment-order.schema'
 import { UUID } from '@/src/lib/utils'
@@ -21,7 +21,7 @@ export default class DrizzlePaymentOrderRepository
     return rows.map(PaymentOrderMapper.toDomain)
   }
 
-  async addPaymentOrder(dto: AddPaymentOrderDto): Promise<void> {
+  async addPaymentOrder(dto: PaymentOrderInsertDTO): Promise<UUID> {
     const id = uuid.v4() as UUID
 
     const po = new PaymentOrder(
@@ -29,12 +29,14 @@ export default class DrizzlePaymentOrderRepository
       dto.method,
       dto.totalValue,
       dto.installments ?? 1,
-      false,
-      0
+      dto.isPaid ?? false,
+      dto.paidInstallments ?? 0
     )
 
     const data = PaymentOrderMapper.toPersistence(po)
     await db.insert(paymentOrder).values(data).onConflictDoNothing()
+
+    return id
   }
 
   async updatePaymentOrder(dto: UpdatePaymentOrderDto): Promise<void> {

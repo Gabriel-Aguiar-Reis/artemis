@@ -1,8 +1,10 @@
 import { WorkOrderItemBase } from '@/src/domain/entities/work-order-item-base/work-order-item-base.entity'
 import { ProductSnapshot } from '@/src/domain/entities/work-order-item/value-objects/product-snapshot.vo'
 import { UUID } from '@/src/lib/utils'
+import uuid from 'react-native-uuid'
 
 export type WorkOrderItemSerializableDTO = {
+  id: UUID
   productId: UUID
   productName: string
   salePrice: number
@@ -11,6 +13,7 @@ export type WorkOrderItemSerializableDTO = {
 
 export class WorkOrderItem extends WorkOrderItemBase {
   constructor(
+    public id: UUID,
     public productSnapshot: ProductSnapshot,
     public quantity: number,
     public priceSnapshot: number // Preço congelado no momento da venda
@@ -37,6 +40,7 @@ export class WorkOrderItem extends WorkOrderItemBase {
 
   toDTO(): WorkOrderItemSerializableDTO {
     return {
+      id: this.id,
       productId: this.productSnapshot.productId,
       productName: this.productSnapshot.productName,
       salePrice: this.priceSnapshot,
@@ -50,6 +54,7 @@ export class WorkOrderItem extends WorkOrderItemBase {
     priceSnapshot?: number
   ): WorkOrderItem {
     return new WorkOrderItem(
+      uuid.v4() as UUID,
       snapshot,
       quantity,
       priceSnapshot ?? snapshot.salePrice
@@ -63,6 +68,6 @@ export class WorkOrderItem extends WorkOrderItemBase {
       salePrice: dto.salePrice,
     })
 
-    return new WorkOrderItem(snapshot, dto.quantity, dto.salePrice)
+    return new WorkOrderItem(dto.id, snapshot, dto.quantity, dto.salePrice)
   }
 }

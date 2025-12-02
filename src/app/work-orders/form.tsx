@@ -1,7 +1,14 @@
+import { paymentOrderHooks } from '@/src/application/hooks/payment-order.hooks'
+import { productHooks } from '@/src/application/hooks/product.hooks'
+import { workOrderResultItemHooks } from '@/src/application/hooks/work-order-result-item.hooks'
+import { workOrderResultHooks } from '@/src/application/hooks/work-order-result.hooks'
 import { workOrderHooks } from '@/src/application/hooks/work-order.hooks'
 import { Button } from '@/src/components/ui/button'
+import { AddedProductsCombobox } from '@/src/components/ui/combobox/added-products-combobox'
 import { CustomerCombobox } from '@/src/components/ui/combobox/customer-combobox'
+import { ExchangedProductsCombobox } from '@/src/components/ui/combobox/exchanged-products-combobox'
 import { ProductCombobox } from '@/src/components/ui/combobox/product-combobox'
+import { RemovedProductsCombobox } from '@/src/components/ui/combobox/removed-products-combobox'
 import { DatePickerInput } from '@/src/components/ui/date-picker-input'
 import { BaseForm } from '@/src/components/ui/forms/base-form'
 import {
@@ -9,14 +16,29 @@ import {
   WorkOrderFormCreateRef,
 } from '@/src/components/ui/forms/work-order-form-create'
 import { Text } from '@/src/components/ui/text'
+import { ProductSnapshot } from '@/src/domain/entities/work-order-item/value-objects/product-snapshot.vo'
+import { WorkOrderItem } from '@/src/domain/entities/work-order-item/work-order-item.entity'
+import {
+  WorkOrderResultItem,
+  WorkOrderResultItemType,
+} from '@/src/domain/entities/work-order-result-item/work-order-result-item.entity'
 import { WorkOrderStatus } from '@/src/domain/entities/work-order/work-order.entity'
-import { WorkOrderResultItemInsertDTO } from '@/src/domain/validations/work-order-result-item.schema'
-import { getErrorMessage } from '@/src/lib/utils'
+import { getErrorMessage, UUID } from '@/src/lib/utils'
 import { router } from 'expo-router'
-import { CircleQuestionMark, CreditCard, Package } from 'lucide-react-native'
+import { CircleQuestionMark, CreditCard } from 'lucide-react-native'
 import * as React from 'react'
 import { useForm } from 'react-hook-form'
 import { View } from 'react-native'
+import Toast from 'react-native-toast-message'
+import uuid from 'react-native-uuid'
+
+// Tipo intermediário para os comboboxes (inclui productName)
+export type WorkOrderResultItemInput = {
+  productId: string
+  productName: string
+  quantity: number
+  priceSnapshot: number
+}
 
 // Tipo customizado para o fluxo completo do formulário
 type WorkOrderFormData = {
@@ -33,10 +55,10 @@ type WorkOrderFormData = {
   // Produtos agendados (para WorkOrderItems)
   products?: { productId: string; quantity: number }[]
 
-  // Campos do WorkOrderResult
-  exchangedProducts?: WorkOrderResultItemInsertDTO[]
-  addedProducts?: WorkOrderResultItemInsertDTO[]
-  removedProducts?: WorkOrderResultItemInsertDTO[]
+  // Campos do WorkOrderResult (usando tipo intermediário com productName)
+  exchangedProducts?: WorkOrderResultItemInput[]
+  addedProducts?: WorkOrderResultItemInput[]
+  removedProducts?: WorkOrderResultItemInput[]
 
   // Campos da PaymentOrder
   method?: string
@@ -51,7 +73,22 @@ type WorkOrderFormData = {
 }
 
 export default function WorkOrderFormScreen() {
-  const { mutate: addWorkOrder, isPending } = workOrderHooks.addWorkOrder()
+  const { mutateAsync: addWorkOrder, isPending: isWorkOrderPending } =
+    workOrderHooks.addWorkOrder()
+  const { mutateAsync: updateWorkOrderWithResult } =
+    workOrderHooks.updateWorkOrderWithResult()
+  const { mutateAsync: updateWorkOrderWithPayment } =
+    workOrderHooks.updateWorkOrderWithPayment()
+  const { mutateAsync: addWorkOrderResult } =
+    workOrderResultHooks.addWorkOrderResult()
+  const { mutateAsync: addWorkOrderResultItems } =
+    workOrderResultItemHooks.addWorkOrderResultItems()
+  const { mutateAsync: addPaymentOrder } = paymentOrderHooks.addPaymentOrder()
+
+  // Buscar produtos para usar nos comboboxes
+  const { data: allProducts = [] } = productHooks.getProductsWithCategory()
+
+  const isPending = isWorkOrderPending
 
   // Ref para controlar o fluxo de navegação entre steps
   const formRef = React.useRef<WorkOrderFormCreateRef>(null)
@@ -101,75 +138,209 @@ export default function WorkOrderFormScreen() {
     return true
   }
 
-  const onSubmitFinal = (data: WorkOrderFormData) => {
-    console.log('Submitting work order:', data)
+  const onSubmitFinal = async (data: WorkOrderFormData) => {
+    try {
+      console.log('Submitting work order:', data)
 
-    // Criar a work order básica
-    const workOrderData = {
-      customerId: data.customerId,
-      scheduledDate: data.scheduledDate,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      status: WorkOrderStatus.PENDING,
-      notes: data.notes,
+      // 1. CRIAR WORK ORDER
+      // Converter produtos agendados para WorkOrderItems completos
+      const workOrderItems = (data.products || []).map((p) => {
+        const productInfo = allProducts.find((prod) => prod.id === p.productId)
+        if (!productInfo) {
+          throw new Error(`Produto ${p.productId} não encontrado`)
+        }
+
+        const snapshot = new ProductSnapshot(
+          productInfo.id as UUID,
+          productInfo.name,
+          productInfo.salePrice
+        )
+
+        return WorkOrderItem.fromProductSnapshot(
+          snapshot,
+          p.quantity,
+          productInfo.salePrice
+        )
+      })
+
+      const workOrderData = {
+        customerId: data.customerId,
+        scheduledDate: data.scheduledDate,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        status: WorkOrderStatus.PENDING,
+        notes: data.notes,
+        products: workOrderItems, // WorkOrderItems completos
+      }
+
+      // Criar a work order (retorna o ID criado)
+      const workOrderId = await addWorkOrder(workOrderData)
+
+      // 2. CRIAR RELATÓRIO FINAL (se shouldCreateReport = true)
+      if (data.shouldCreateReport) {
+        const workOrderResultId = uuid.v4() as UUID
+
+        // 2a. Calcular totalValue baseado nos produtos trocados + adicionados
+        let totalValue = 0
+
+        const exchangedItems: WorkOrderResultItem[] = []
+        const addedItems: WorkOrderResultItem[] = []
+        const removedItems: WorkOrderResultItem[] = []
+
+        // Processar produtos trocados
+        if (data.exchangedProducts && data.exchangedProducts.length > 0) {
+          data.exchangedProducts.forEach((item) => {
+            const snapshot = new ProductSnapshot(
+              item.productId as UUID,
+              item.productName,
+              item.priceSnapshot
+            )
+
+            const resultItem = WorkOrderResultItem.fromProductSnapshot(
+              uuid.v4() as UUID,
+              snapshot,
+              workOrderResultId,
+              item.quantity,
+              WorkOrderResultItemType.EXCHANGED,
+              item.priceSnapshot,
+              undefined
+            )
+
+            exchangedItems.push(resultItem)
+            totalValue += item.priceSnapshot * item.quantity
+          })
+        }
+
+        // Processar produtos adicionados
+        if (data.addedProducts && data.addedProducts.length > 0) {
+          data.addedProducts.forEach((item) => {
+            const snapshot = new ProductSnapshot(
+              item.productId as UUID,
+              item.productName,
+              item.priceSnapshot
+            )
+
+            const resultItem = WorkOrderResultItem.fromProductSnapshot(
+              uuid.v4() as UUID,
+              snapshot,
+              workOrderResultId,
+              item.quantity,
+              WorkOrderResultItemType.ADDED,
+              item.priceSnapshot,
+              undefined
+            )
+
+            addedItems.push(resultItem)
+            totalValue += item.priceSnapshot * item.quantity
+          })
+        }
+
+        // Processar produtos removidos (não afetam o totalValue)
+        if (data.removedProducts && data.removedProducts.length > 0) {
+          data.removedProducts.forEach((item) => {
+            const snapshot = new ProductSnapshot(
+              item.productId as UUID,
+              item.productName,
+              item.priceSnapshot
+            )
+
+            const resultItem = WorkOrderResultItem.fromProductSnapshot(
+              uuid.v4() as UUID,
+              snapshot,
+              workOrderResultId,
+              item.quantity,
+              WorkOrderResultItemType.REMOVED,
+              item.priceSnapshot,
+              undefined
+            )
+
+            removedItems.push(resultItem)
+          })
+        }
+
+        // 2b. Criar WorkOrderResult
+        await addWorkOrderResult({
+          id: workOrderResultId,
+          totalValue,
+        })
+
+        // 2c. Criar WorkOrderResultItems
+        const allResultItems = [
+          ...exchangedItems,
+          ...addedItems,
+          ...removedItems,
+        ]
+
+        if (allResultItems.length > 0) {
+          // Adicionar todos os items de uma vez (já são entidades WorkOrderResultItem)
+          // IMPORTANTE: Passar como [array] porque o hook usa apply e desestrutura arrays
+          await (addWorkOrderResultItems as any)([allResultItems])
+        }
+
+        // 2d. Determinar status baseado no resultado
+        let newStatus = WorkOrderStatus.COMPLETED
+
+        const scheduledProductsCount = data.products?.length || 0
+        const exchangedCount = exchangedItems.length
+        const removedCount = removedItems.length
+
+        if (exchangedCount === 0 && addedItems.length === 0) {
+          newStatus = WorkOrderStatus.FAILED
+        } else if (
+          removedCount > 0 ||
+          (scheduledProductsCount > 0 &&
+            exchangedCount < scheduledProductsCount)
+        ) {
+          newStatus = WorkOrderStatus.PARTIAL
+        }
+
+        // Atualizar WorkOrder com resultado e status
+        await updateWorkOrderWithResult([
+          workOrderId,
+          workOrderResultId,
+          newStatus,
+          new Date(),
+        ])
+      }
+
+      // 3. CRIAR ORDEM DE PAGAMENTO (se shouldCreatePayment = true)
+      if (data.shouldCreatePayment) {
+        // Usar totalValue do result se existir, senão calcular dos produtos
+        let paymentTotal = data.totalValue || 0
+
+        const paymentOrderId = await addPaymentOrder({
+          method: data.method || 'Dinheiro',
+          totalValue: paymentTotal,
+          installments: data.installments || 1,
+          isPaid: data.isPaid || false,
+          paidInstallments: data.isPaid ? data.installments || 1 : 0,
+        })
+
+        // Vincular PaymentOrder à WorkOrder
+        await updateWorkOrderWithPayment([workOrderId, paymentOrderId])
+      }
+
+      Toast.show({
+        type: 'success',
+        text1: 'Ordem de serviço criada com sucesso!',
+      })
+
+      console.log('Work order created successfully')
+      router.back()
+    } catch (error) {
+      console.error('Error creating work order:', error)
+      Toast.show({
+        type: 'error',
+        text1: 'Erro ao criar ordem de serviço',
+        text2: error instanceof Error ? error.message : 'Erro desconhecido',
+      })
     }
-
-    /**
-     * TODO: Implementar a lógica completa do fluxo:
-     *
-     * FLUXO COMPLETO:
-     * ================
-     *
-     * 1. CRIAR WORK ORDER
-     *    - Criar a WorkOrder com os dados básicos (customerId, scheduledDate, notes)
-     *    - Status inicial: PENDING
-     *
-     * 2. ADICIONAR PRODUTOS AGENDADOS (se data.products existe e length > 0)
-     *    - Para cada produto em data.products:
-     *      - Criar WorkOrderItem com productId, quantity, priceSnapshot
-     *      - Vincular à WorkOrder criada
-     *
-     * 3. CRIAR RELATÓRIO FINAL (se data.shouldCreateReport = true)
-     *    a) Criar WorkOrderResult
-     *       - Calcular totalValue baseado nos produtos trocados + adicionados
-     *
-     *    b) Criar WorkOrderResultItems
-     *       - EXCHANGED: produtos de data.exchangedProducts
-     *         (se havia produtos agendados, devem vir dali; senão, adicionar manualmente)
-     *       - ADDED: produtos de data.addedProducts (produtos extras)
-     *       - REMOVED: produtos de data.removedProducts (não foram trocados)
-     *
-     *    c) Atualizar status da WorkOrder baseado no resultado:
-     *       - Se exchanged = 0 && added = 0 → FAILED
-     *       - Se removed > 0 || exchanged < produtos.length → PARTIAL
-     *       - Caso contrário → COMPLETED
-     *
-     *    d) Vincular WorkOrderResult à WorkOrder (resultId)
-     *
-     * 4. CRIAR ORDEM DE PAGAMENTO (se data.shouldCreatePayment = true)
-     *    - Criar PaymentOrder com:
-     *      - method: data.paymentMethod
-     *      - totalValue: do WorkOrderResult (se existir) ou calcular dos produtos
-     *      - installments: data.installments (se hasInstallments)
-     *      - isPaid: data.isPaid (se não houver parcelamento)
-     *      - paidInstallments: 0 (ou installments se isPaid = true)
-     *
-     *    - Vincular PaymentOrder à WorkOrder (paymentOrderId)
-     *
-     * 5. FINALIZAR
-     *    - Sempre atualizar visitDate para agora quando houver relatório
-     *    - Aplicar as transições de status apropriadas baseado no resultado
-     */
-
-    addWorkOrder(workOrderData)
-    router.back()
   }
 
   const onSubmit = form.handleSubmit(onSubmitFinal)
 
   // Observar mudanças para condicionar visibilidade de campos
   const installments = form.watch('installments')
-  const scheduledProducts = form.watch('products')
 
   return (
     <WorkOrderFormCreate
@@ -183,52 +354,7 @@ export default function WorkOrderFormScreen() {
       submitLabel="Salvar Ordem de Serviço"
       loading={isPending}
       fields={[
-        // Step 1: Cliente e Data Agendada - via customRenderer
-        {
-          name: 'notes',
-          label: 'Observações (Opcional)',
-          placeholder: 'Adicione observações sobre a ordem',
-          iconTooltip: 'Adicione observações relevantes para a ordem',
-          icon: CircleQuestionMark,
-        },
-        // Step 2: Produtos Agendados - usando ProductCombobox via customRenderer no step
-        // Step 3: Não tem campos - será uma tela com botões de decisão
-        // Step 4: Produtos do Relatório
-        // Se houver produtos agendados, mostrar mensagem sobre seleção
-        ...(scheduledProducts && scheduledProducts.length > 0
-          ? [
-              {
-                name: 'exchangedProducts' as const,
-                label: 'Produtos Trocados (dos agendados)',
-                placeholder: 'Selecione dos produtos agendados',
-                icon: Package,
-                iconTooltip:
-                  'Selecione quais produtos agendados foram realmente trocados',
-              },
-            ]
-          : [
-              {
-                name: 'exchangedProducts' as const,
-                label: 'Produtos Trocados',
-                placeholder: 'Adicione produtos trocados',
-                icon: Package,
-              },
-            ]),
-        {
-          name: 'addedProducts',
-          label: 'Produtos Adicionados',
-          placeholder: 'Produtos extras não agendados',
-          icon: Package,
-          iconTooltip: 'Produtos adicionados além dos agendados',
-        },
-        {
-          name: 'removedProducts',
-          label: 'Produtos Removidos',
-          placeholder: 'Produtos que não foram trocados',
-          icon: Package,
-          iconTooltip: 'Produtos agendados que não foram trocados',
-        },
-        // Step 5: Não tem campos - será uma tela com botões de decisão
+        // Campos do formulário - agora usamos apenas customRenderer nos steps
         // Step 6: Ordem de Pagamento
         {
           name: 'method',
@@ -362,7 +488,10 @@ export default function WorkOrderFormScreen() {
               <Button
                 variant="default"
                 size="lg"
-                onPress={() => formRef.current?.goToNextStep()}
+                onPress={() => {
+                  form.setValue('shouldCreateReport', true)
+                  formRef.current?.goToNextStep()
+                }}
                 className="w-full"
               >
                 <Text>Criar Relatório Final</Text>
@@ -371,7 +500,10 @@ export default function WorkOrderFormScreen() {
               <Button
                 variant="outline"
                 size="lg"
-                onPress={() => formRef.current?.submitForm()}
+                onPress={() => {
+                  form.setValue('shouldCreateReport', false)
+                  formRef.current?.submitForm()
+                }}
                 className="w-full"
               >
                 <Text>Finalizar Sem Relatório</Text>
@@ -381,7 +513,64 @@ export default function WorkOrderFormScreen() {
         },
         {
           label: 'Relatório Final',
-          fields: ['exchangedProducts', 'addedProducts', 'removedProducts'],
+          fields: [],
+          customRenderer: () => (
+            <View className="flex-1 gap-4">
+              <ExchangedProductsCombobox
+                scheduledProducts={form.watch('products') || []}
+                selectedExchangedProducts={
+                  form.watch('exchangedProducts') || []
+                }
+                onExchangedProductsChange={(products) =>
+                  form.setValue('exchangedProducts', products)
+                }
+                availableProducts={allProducts}
+                label="Produtos Trocados"
+                placeholder="Selecione dos produtos agendados"
+              />
+
+              <AddedProductsCombobox
+                selectedAddedProducts={form.watch('addedProducts') || []}
+                onAddedProductsChange={(products) =>
+                  form.setValue('addedProducts', products)
+                }
+                label="Produtos Adicionados"
+                placeholder="Produtos extras não agendados"
+              />
+
+              <RemovedProductsCombobox
+                scheduledProducts={form.watch('products') || []}
+                exchangedProducts={form.watch('exchangedProducts') || []}
+                selectedRemovedProducts={form.watch('removedProducts') || []}
+                onRemovedProductsChange={(products) =>
+                  form.setValue('removedProducts', products)
+                }
+                availableProducts={allProducts}
+                label="Produtos Removidos"
+                placeholder="Produtos não trocados"
+              />
+
+              {/* Botões de navegação customizados */}
+              <View className="flex-row justify-between w-full gap-2 mt-auto">
+                <Button
+                  variant="outline"
+                  size="default"
+                  onPress={() => formRef.current?.goToPrevStep?.()}
+                  className="w-2/5"
+                >
+                  <Text>Anterior</Text>
+                </Button>
+
+                <Button
+                  variant="default"
+                  onPress={() => formRef.current?.goToNextStep()}
+                  className="w-2/5"
+                >
+                  <Text>Próximo</Text>
+                </Button>
+              </View>
+            </View>
+          ),
         },
         {
           label: 'Criar Pagamento?',
@@ -395,7 +584,10 @@ export default function WorkOrderFormScreen() {
               <Button
                 variant="default"
                 size="lg"
-                onPress={() => formRef.current?.goToNextStep()}
+                onPress={() => {
+                  form.setValue('shouldCreatePayment', true)
+                  formRef.current?.goToNextStep()
+                }}
                 className="w-full"
               >
                 <Text>Registrar Pagamento</Text>
@@ -404,7 +596,10 @@ export default function WorkOrderFormScreen() {
               <Button
                 variant="outline"
                 size="lg"
-                onPress={() => formRef.current?.submitForm()}
+                onPress={() => {
+                  form.setValue('shouldCreatePayment', false)
+                  formRef.current?.submitForm()
+                }}
                 className="w-full"
               >
                 <Text>Finalizar Sem Pagamento</Text>
@@ -414,11 +609,145 @@ export default function WorkOrderFormScreen() {
         },
         {
           label: 'Ordem de Pagamento',
-          fields: [
-            'method',
-            'installments',
-            ...(installments === 1 ? ['isPaid' as const] : []),
-          ],
+          fields: [],
+          customRenderer: () => {
+            // Calcular total baseado nos produtos do relatório
+            const exchangedProducts = form.watch('exchangedProducts') || []
+            const addedProducts = form.watch('addedProducts') || []
+
+            const totalValue =
+              exchangedProducts.reduce(
+                (sum, p) => sum + p.priceSnapshot * p.quantity,
+                0
+              ) +
+              addedProducts.reduce(
+                (sum, p) => sum + p.priceSnapshot * p.quantity,
+                0
+              )
+
+            // Atualizar totalValue no formulário (sem useEffect)
+            if (form.getValues('totalValue') !== totalValue) {
+              form.setValue('totalValue', totalValue, { shouldValidate: false })
+            }
+
+            const allProductItems = [
+              ...exchangedProducts.map((p) => ({ ...p, type: 'Trocado' })),
+              ...addedProducts.map((p) => ({ ...p, type: 'Adicionado' })),
+            ]
+
+            return (
+              <View className="flex-1 gap-4">
+                {/* Resumo do Relatório */}
+                {allProductItems.length > 0 && (
+                  <View className="bg-accent/30 rounded-lg p-4 mb-2">
+                    <Text className="font-semibold text-base mb-3">
+                      Resumo do Relatório
+                    </Text>
+
+                    {/* Lista de produtos */}
+                    <View className="gap-2 mb-3">
+                      {allProductItems.map((item, index) => (
+                        <View
+                          key={`${item.productId}-${index}`}
+                          className="flex-row justify-between items-center py-2 border-b border-border/50"
+                        >
+                          <View className="flex-1">
+                            <Text className="text-sm font-medium">
+                              {item.productName}
+                            </Text>
+                            <Text className="text-xs text-muted-foreground">
+                              {item.type} • {item.quantity}x
+                            </Text>
+                          </View>
+                          <Text className="text-xs text-muted-foreground">
+                            {item.quantity}x R$
+                            {item.priceSnapshot.toLocaleString('pt-BR', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}{' '}
+                            ={' '}
+                          </Text>
+                          <Text className="text-sm font-semibold">
+                            R${' '}
+                            {(
+                              item.priceSnapshot * item.quantity
+                            ).toLocaleString('pt-BR', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+
+                    {/* Total */}
+                    <View className="flex-row justify-between items-center pt-3 border-t-2 border-border">
+                      <Text className="font-bold text-lg">Valor Total:</Text>
+                      <Text className="font-bold text-xl text-primary">
+                        R${' '}
+                        {totalValue.toLocaleString('pt-BR', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </Text>
+                    </View>
+                  </View>
+                )}
+
+                {/* Campos do pagamento */}
+                <BaseForm.Input
+                  control={form.control}
+                  name="method"
+                  label="Método de Pagamento"
+                  placeholder="Ex: Dinheiro, PIX, Débito"
+                  icon={CreditCard}
+                  error={getErrorMessage(
+                    form.formState.errors?.method?.message
+                  )}
+                />
+
+                {installments === 1 && (
+                  <BaseForm.Switch
+                    control={form.control}
+                    name="isPaid"
+                    label="Pagamento Feito"
+                  />
+                )}
+                <BaseForm.Input
+                  control={form.control}
+                  name="installments"
+                  label="Número de Parcelas"
+                  placeholder="Ex: 1 (ou mais se parcelado)"
+                  icon={CircleQuestionMark}
+                  inputProps={{ keyboardType: 'numeric' as const }}
+                  error={getErrorMessage(
+                    form.formState.errors?.installments?.message
+                  )}
+                />
+
+                {/* Botões de navegação customizados */}
+                <View className="flex-row justify-between w-full gap-2 mt-auto">
+                  <Button
+                    variant="outline"
+                    size="default"
+                    onPress={() => formRef.current?.goToPrevStep?.()}
+                    className="w-2/5"
+                  >
+                    <Text>Anterior</Text>
+                  </Button>
+
+                  <Button
+                    variant="default"
+                    onPress={onSubmit}
+                    disabled={isPending}
+                    className="w-2/5"
+                  >
+                    <Text>{isPending ? 'Salvando...' : 'Salvar'}</Text>
+                  </Button>
+                </View>
+              </View>
+            )
+          },
         },
       ]}
     />

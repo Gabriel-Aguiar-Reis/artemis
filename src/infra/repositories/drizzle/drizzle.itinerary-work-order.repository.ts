@@ -78,15 +78,44 @@ export class DrizzleItineraryWorkOrderRepository
   }
 
   async addItineraryWorkOrder(item: ItineraryWorkOrder): Promise<void> {
-    throw new Error('Method not implemented.')
+    await db
+      .insert(itineraryWorkOrder)
+      .values({
+        id: item.id,
+        itineraryId: item.itineraryId,
+        workOrderId: item.workOrder.id,
+        position: item.position,
+        isLate: item.isLate,
+      })
+      .onConflictDoNothing()
   }
+
   async addItineraryWorkOrders(items: ItineraryWorkOrder[]): Promise<void> {
-    throw new Error('Method not implemented.')
+    if (items.length === 0) return
+
+    const data = items.map((item) => ({
+      id: item.id,
+      itineraryId: item.itineraryId,
+      workOrderId: item.workOrder.id,
+      position: item.position,
+      isLate: item.isLate,
+    }))
+
+    await db.insert(itineraryWorkOrder).values(data).onConflictDoNothing()
   }
+
   async updateItineraryWorkOrder(item: ItineraryWorkOrder): Promise<void> {
-    throw new Error('Method not implemented.')
+    await db
+      .update(itineraryWorkOrder)
+      .set({
+        workOrderId: item.workOrder.id,
+        position: item.position,
+        isLate: item.isLate,
+      })
+      .where(eq(itineraryWorkOrder.id, item.id))
   }
+
   async deleteItineraryWorkOrder(id: UUID): Promise<void> {
-    throw new Error('Method not implemented.')
+    await db.delete(itineraryWorkOrder).where(eq(itineraryWorkOrder.id, id))
   }
 }

@@ -104,7 +104,6 @@ export class DrizzleWorkOrderResultItemRepository
 
   async addWorkOrderResultItems(items: WorkOrderResultItem[]): Promise<void> {
     const data = items.map((item) => {
-      const id = uuid.v4()
       return WorkOrderResultItemMapper.toPersistence(item)
     })
     await db.insert(workOrderResultItem).values(data).onConflictDoNothing()

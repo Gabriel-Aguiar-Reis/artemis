@@ -7,6 +7,7 @@ import {
   WorkOrderStatus,
 } from '@/src/domain/entities/work-order/work-order.entity'
 import { UUID } from '@/src/lib/utils'
+import uuid from 'react-native-uuid'
 
 export type ItinerarySerializableDTO = {
   id: UUID
@@ -33,7 +34,7 @@ export class Itinerary {
 
   addWorkOrder(workOrder: WorkOrder) {
     const position = this.workOrders.length + 1
-    const id = crypto.randomUUID() as UUID
+    const id = uuid.v4() as UUID
     const itineraryId = this.id
     this.workOrders.push(
       new ItineraryWorkOrder(id, itineraryId, position, workOrder)

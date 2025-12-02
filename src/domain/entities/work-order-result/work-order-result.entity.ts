@@ -158,6 +158,16 @@ export class WorkOrderResult {
     }
   }
 
+  toJSON() {
+    return {
+      id: this.id,
+      totalValue: this.totalValue,
+      exchangedProducts: this.exchangedProducts?.map((p) => p.toDTO()) ?? [],
+      addedProducts: this.addedProducts?.map((p) => p.toDTO()) ?? [],
+      removedProducts: this.removedProducts?.map((p) => p.toDTO()) ?? [],
+    }
+  }
+
   static fromDTO(dto: WorkOrderResultSerializableDTO): WorkOrderResult {
     const exchangedProducts =
       dto.items &&

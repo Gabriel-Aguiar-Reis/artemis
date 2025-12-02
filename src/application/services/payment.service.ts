@@ -78,7 +78,8 @@ export class PaymentService {
       updatedAt: wo.updatedAt ?? new Date().toISOString(),
       scheduledDate: wo.scheduledDate,
       paymentOrder: po,
-      products: items.map((r) => ({
+      products: (items || []).map((r) => ({
+        id: r.item.id as UUID,
         productId: r.item.productId as UUID,
         quantity: r.item.quantity,
         productName: r.product?.name ?? '',
