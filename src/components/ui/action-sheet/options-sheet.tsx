@@ -35,7 +35,7 @@ export function OptionsSheet(props: SheetProps<'options-sheet'>) {
           </Text>
         )}
 
-        <View className="gap-2">
+        <View className="gap-2 items-center">
           {payload?.options.map((option, index) => (
             <Pressable
               key={index}
