@@ -518,6 +518,7 @@ export default function WorkOrderFormScreen() {
             <View className="flex-1 gap-4">
               <ExchangedProductsCombobox
                 scheduledProducts={form.watch('products') || []}
+                removedProducts={form.watch('removedProducts') || []}
                 selectedExchangedProducts={
                   form.watch('exchangedProducts') || []
                 }

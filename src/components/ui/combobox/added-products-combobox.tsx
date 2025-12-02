@@ -188,7 +188,7 @@ export function AddedProductsCombobox({
           {/* Controle de quantidade */}
           {selected && (
             <View className="flex-row items-center gap-3 mt-3 pt-3 border-t border-border">
-              <Text className="text-sm font-medium">Quantidade:</Text>
+              <Text className="text-sm font-medium">Qte:</Text>
               <View className="flex-row items-center gap-2">
                 <Pressable
                   onPress={(e) => {
