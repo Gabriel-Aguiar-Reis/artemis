@@ -267,7 +267,9 @@ export default function WorkOrdersScreen() {
               <ButtonFilter
                 href={{
                   pathname: '/work-orders/search',
-                  params: {},
+                  params: {
+                    ...params,
+                  },
                 }}
                 isActive={hasActiveFilters}
               />
