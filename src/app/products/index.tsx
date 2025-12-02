@@ -8,7 +8,7 @@ import { Icon } from '@/src/components/ui/icon'
 import { ObjectCard } from '@/src/components/ui/object-card'
 import { Text } from '@/src/components/ui/text'
 import { ProductWithCategoryDTO } from '@/src/domain/repositories/product/dtos/product-with-category.dto'
-import { cn, UUID } from '@/src/lib/utils'
+import { cn, smartSearch, UUID } from '@/src/lib/utils'
 import { FlashList } from '@shopify/flash-list'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
 import {
@@ -52,7 +52,7 @@ export default function ProductsScreen() {
     if (!products) return []
     return products.filter((product) => {
       const matchesSearch = params.search
-        ? product.name.includes(params.search)
+        ? smartSearch(product.name, params.search)
         : true
       const matchesCategory = params.categoryName
         ? product.categoryName

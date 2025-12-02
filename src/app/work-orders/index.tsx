@@ -1,55 +1,217 @@
 import { workOrderHooks } from '@/src/application/hooks/work-order.hooks'
-import { Button } from '@/src/components/ui/button'
+import { ActiveFiltersBanner } from '@/src/components/ui/active-filters-banner'
+import { BackToTopButton } from '@/src/components/ui/back-to-top-button'
+import { ButtonFilter } from '@/src/components/ui/button-filter'
+import { ButtonNew } from '@/src/components/ui/button-new'
+import { ConfirmDeleteDialog } from '@/src/components/ui/dialog/confirm-delete-dialog'
 import { Text } from '@/src/components/ui/text'
-import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
-import { Link, Stack } from 'expo-router'
-import { MessageCircle, Plus } from 'lucide-react-native'
-import { useColorScheme } from 'nativewind'
+import { WorkOrderCard } from '@/src/components/ui/work-order-card'
+import { smartSearch, UUID } from '@/src/lib/utils'
+import { FlashList } from '@shopify/flash-list'
+import { router, Stack, useLocalSearchParams } from 'expo-router'
+import { EditIcon, TrashIcon } from 'lucide-react-native'
 import * as React from 'react'
-import { Pressable, ScrollView, View } from 'react-native'
+import { useMemo, useRef, useState } from 'react'
+import {
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  ScrollView,
+  View,
+} from 'react-native'
+import { SheetManager } from 'react-native-actions-sheet'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function WorkOrdersScreen() {
   const { data: workOrders, isLoading } = workOrderHooks.getWorkOrders()
-  const { colorScheme } = useColorScheme()
+  const [selectedWorkOrder, setSelectedWorkOrder] = useState<{
+    id: UUID
+    customerName: string
+    date: Date
+  } | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
-  const sendWhatsApp = (workOrder: WorkOrder) => {
-    try {
-      // WhatsAppService.sendWorkOrderMessage(workOrder)
-    } catch (error: any) {
-      alert(error.message)
-    }
+  const { mutate: deleteWorkOrder } = workOrderHooks.deleteWorkOrder()
+
+  // Adicionado useRef e useState para ScrollView e botão de voltar ao topo
+  const scrollRef = useRef<ScrollView>(null)
+  const [showScrollBtn, setShowScrollBtn] = useState(false)
+
+  const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetY = e.nativeEvent.contentOffset.y
+    setShowScrollBtn(offsetY > 0)
   }
+
+  const params = useLocalSearchParams<{
+    search?: string // customer store name or contact name
+    phoneNumber?: string
+    landlineNumber?: string
+    isWhatsApp?: string
+    scheduledDate?: string
+    visitDate?: string
+    minTotalValue?: string
+    maxTotalValue?: string
+    isPaid?: string
+  }>()
+
+  const handleWorkOrderOptions = async (
+    workOrderId: UUID,
+    customerName: string,
+    date: Date
+  ) => {
+    await SheetManager.show('options-sheet', {
+      payload: {
+        title: `${customerName} - ${date.toLocaleDateString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: '2-digit',
+        })}`,
+        options: [
+          {
+            label: 'Editar',
+            icon: EditIcon,
+            onPress: () => {
+              router.push(`/work-orders/form`)
+            },
+          },
+          {
+            label: 'Excluir',
+            icon: TrashIcon,
+            destructive: true,
+            onPress: () => {
+              setSelectedWorkOrder({ id: workOrderId, customerName, date })
+              setDeleteDialogOpen(true)
+            },
+          },
+        ],
+      },
+    })
+  }
+
+  const handleDeleteWorkOrder = (workOrderId: UUID) => {
+    deleteWorkOrder(workOrderId)
+    setDeleteDialogOpen(false)
+  }
+
+  const filteredWorkOrders = useMemo(() => {
+    if (!workOrders) return []
+    return workOrders.filter((wo) => {
+      const matchesSearch = params.search
+        ? smartSearch(wo.customer.storeName, params.search)
+        : true
+      const matchesPhoneNumber = params.phoneNumber
+        ? wo.customer.phoneNumber?.value.includes(params.phoneNumber)
+        : true
+      const matchesLandlineNumber = params.landlineNumber
+        ? wo.customer.landlineNumber?.value.includes(params.landlineNumber)
+        : true
+      const matchesIsWhatsApp = params.isWhatsApp
+        ? wo.customer.isActiveWhatsApp() === (params.isWhatsApp === 'true')
+        : true
+      const matchesScheduledDate = params.scheduledDate
+        ? wo.scheduledDate
+            .toLocaleDateString('pt-BR')
+            .includes(params.scheduledDate)
+        : true
+      const matchesVisitDate = params.visitDate
+        ? wo.visitDate?.toLocaleDateString('pt-BR').includes(params.visitDate)
+        : true
+      const matchesMinTotalValue = params.minTotalValue
+        ? wo.paymentOrder?.totalValue || 0 >= Number(params.minTotalValue)
+        : true
+      const matchesMaxTotalValue = params.maxTotalValue
+        ? wo.paymentOrder?.totalValue || 0 <= Number(params.maxTotalValue)
+        : true
+      const matchesIsPaid = params.isPaid
+        ? wo.paymentOrder?.isPaid === (params.isPaid === 'true')
+        : true
+
+      return (
+        matchesSearch &&
+        matchesPhoneNumber &&
+        matchesLandlineNumber &&
+        matchesIsWhatsApp &&
+        matchesScheduledDate &&
+        matchesVisitDate &&
+        matchesMinTotalValue &&
+        matchesMaxTotalValue &&
+        matchesIsPaid
+      )
+    })
+  }, [
+    workOrders,
+    params.search,
+    params.phoneNumber,
+    params.landlineNumber,
+    params.isWhatsApp,
+    params.scheduledDate,
+    params.visitDate,
+    params.minTotalValue,
+    params.maxTotalValue,
+    params.isPaid,
+  ])
+  const hasActiveFilters =
+    !!params.search ||
+    !!params.phoneNumber ||
+    !!params.landlineNumber ||
+    !!params.isWhatsApp ||
+    !!params.scheduledDate ||
+    !!params.visitDate ||
+    !!params.minTotalValue ||
+    !!params.maxTotalValue ||
+    !!params.isPaid
+
+  const activeFilters = useMemo(() => {
+    const filters = []
+    if (params.search) {
+      filters.push({ label: 'Busca', value: params.search })
+    }
+    if (params.phoneNumber) {
+      filters.push({ label: 'Telefone', value: params.phoneNumber })
+    }
+    if (params.landlineNumber) {
+      filters.push({ label: 'Telefone Fixo', value: params.landlineNumber })
+    }
+    if (params.isWhatsApp) {
+      filters.push({
+        label: 'WhatsApp',
+        value: params.isWhatsApp === 'true' ? 'Sim' : 'Não',
+      })
+    }
+    if (params.scheduledDate) {
+      filters.push({ label: 'Data Agendada', value: params.scheduledDate })
+    }
+    if (params.visitDate) {
+      filters.push({ label: 'Data de Visita', value: params.visitDate })
+    }
+    if (params.minTotalValue) {
+      filters.push({ label: 'Valor Mínimo', value: params.minTotalValue })
+    }
+    if (params.maxTotalValue) {
+      filters.push({ label: 'Valor Máximo', value: params.maxTotalValue })
+    }
+    if (params.isPaid) {
+      filters.push({
+        label: 'Pago',
+        value: params.isPaid === 'true' ? 'Sim' : 'Não',
+      })
+    }
+    return filters
+  }, [
+    params.search,
+    params.phoneNumber,
+    params.landlineNumber,
+    params.isWhatsApp,
+    params.scheduledDate,
+    params.visitDate,
+    params.minTotalValue,
+    params.maxTotalValue,
+    params.isPaid,
+  ])
 
   if (isLoading) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center">
         <Text>Carregando ordens de serviço...</Text>
-      </SafeAreaView>
-    )
-  }
-
-  if (!workOrders || workOrders.length === 0) {
-    return (
-      <SafeAreaView className="flex-1 items-center justify-center p-4">
-        <Stack.Screen
-          options={{
-            title: 'Ordens de Serviço',
-            headerRight: () => (
-              <Link href="/work-orders/form" asChild>
-                <Button size="icon" variant="outline">
-                  <Plus
-                    size={24}
-                    color={colorScheme === 'dark' ? 'white' : undefined}
-                  />
-                </Button>
-              </Link>
-            ),
-          }}
-        />
-        <Text className="text-center text-muted-foreground">
-          Nenhuma ordem de serviço cadastrada.
-        </Text>
       </SafeAreaView>
     )
   }
@@ -60,75 +222,80 @@ export default function WorkOrdersScreen() {
         options={{
           title: 'Ordens de Serviço',
           headerRight: () => (
-            <Link href="/work-orders/form" asChild>
-              <Button size="icon" variant="outline">
-                <Plus
-                  size={24}
-                  color={colorScheme === 'dark' ? 'white' : undefined}
-                />
-              </Button>
-            </Link>
+            <View className="flex-row gap-2">
+              <ButtonFilter
+                href={{
+                  pathname: '/work-orders/search',
+                  params: {},
+                }}
+                isActive={hasActiveFilters}
+              />
+              <ButtonNew href="/work-orders/form" />
+            </View>
           ),
         }}
       />
-      <ScrollView className="flex-1">
-        <View className="gap-3 p-4">
-          {workOrders.length === 0 ? (
-            <View className="items-center py-12">
-              <Text className="text-center text-muted-foreground">
-                Nenhuma ordem de serviço cadastrada.
-              </Text>
-            </View>
-          ) : (
-            workOrders.map((wo) => (
-              <View
-                key={wo.id}
-                className="rounded-lg border border-border bg-card p-4"
-              >
-                <View className="flex-row items-start justify-between">
-                  <View className="flex-1">
-                    <Text className="text-lg font-semibold">
-                      {wo.customer.storeName}
-                    </Text>
-                    <Text className="mt-1 text-sm text-muted-foreground">
-                      {wo.scheduledDate.toLocaleString('pt-BR')}
-                    </Text>
-                    <Text className="mt-2 text-sm">
-                      Total: R$ {wo.totalAmount.toFixed(2)}
-                    </Text>
-                    <Text className="text-sm text-muted-foreground">
-                      Produtos: {wo.products.length}
-                    </Text>
-                    <Text className="text-sm text-muted-foreground">
-                      Pagamento:{' '}
-                      {wo.paymentOrder ? (
-                        <>
-                          {wo.paymentOrder.method} -{' '}
-                          {wo.paymentOrder.isPaid
-                            ? ' Pago'
-                            : ` ${wo.paymentOrder.paidInstallments}/${wo.paymentOrder.installments} parcelas`}
-                        </>
-                      ) : (
-                        'Não registrado'
-                      )}
-                    </Text>
-                    {wo.visitDate && (
-                      <Text className="mt-1 text-sm text-green-600">
-                        ✓ Visitado em {wo.visitDate.toLocaleString('pt-BR')}
-                      </Text>
-                    )}
-                  </View>
-                  {wo.customer.isActiveWhatsApp() && (
-                    <Pressable onPress={() => sendWhatsApp(wo)}>
-                      <MessageCircle size={24} color="#25D366" />
-                    </Pressable>
-                  )}
-                </View>
-              </View>
-            ))
-          )}
+      {!workOrders || workOrders.length === 0 ? (
+        <View className="flex-1 items-center justify-center px-4">
+          <Text className="text-center text-muted-foreground">
+            Nenhuma ordem de serviço cadastrada.{' \n'}
+            Clique no + para adicionar.
+          </Text>
         </View>
-      </ScrollView>
+      ) : (
+        <>
+          <ActiveFiltersBanner
+            filters={activeFilters}
+            clearFiltersHref="/work-orders"
+          />
+          <ScrollView
+            className="flex-1"
+            ref={scrollRef}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+          >
+            <View className="gap-3 p-4">
+              {filteredWorkOrders.length === 0 ? (
+                <View className="items-center py-12">
+                  <Text className="text-center text-muted-foreground">
+                    Nenhum produto encontrado com os filtros aplicados.
+                  </Text>
+                </View>
+              ) : (
+                <FlashList
+                  data={filteredWorkOrders}
+                  renderItem={({ item }) => (
+                    <WorkOrderCard
+                      wo={item}
+                      onPress={() =>
+                        handleWorkOrderOptions(
+                          item.id,
+                          item.customer.storeName,
+                          item.scheduledDate
+                        )
+                      }
+                    />
+                  )}
+                  ListFooterComponent={<View className="h-16" />}
+                />
+              )}
+            </View>
+          </ScrollView>
+
+          {/* Botão de voltar ao topo */}
+          <BackToTopButton isVisible={showScrollBtn} scrollRef={scrollRef} />
+          {selectedWorkOrder && (
+            <ConfirmDeleteDialog
+              open={deleteDialogOpen}
+              onOpenChange={setDeleteDialogOpen}
+              title={`Excluir ordem de serviço do cliente "${selectedWorkOrder.customerName}"?`}
+              handleDelete={() => {
+                handleDeleteWorkOrder(selectedWorkOrder.id)
+              }}
+            />
+          )}
+        </>
+      )}
     </SafeAreaView>
   )
 }

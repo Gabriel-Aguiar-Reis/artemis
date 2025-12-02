@@ -204,7 +204,7 @@ export function WorkOrderCard({
                 <Icon as={Banknote} size={16} className="text-green-600" />
                 <Text className="text-sm ml-1 ">
                   R${' '}
-                  {wo.totalAmountForProducts.toLocaleString('pt-BR', {
+                  {wo.paymentOrder?.totalValue.toLocaleString('pt-BR', {
                     minimumFractionDigits: 2,
                   })}
                 </Text>
