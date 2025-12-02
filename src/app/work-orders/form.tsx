@@ -375,7 +375,7 @@ export default function WorkOrderFormScreen() {
               {
                 name: 'isPaid' as const,
                 label: 'Foi pago?',
-                isSwitch: true,
+                isCheckbox: true,
               },
             ]
           : []),
@@ -708,7 +708,7 @@ export default function WorkOrderFormScreen() {
                 />
 
                 {installments === 1 && (
-                  <BaseForm.Switch
+                  <BaseForm.Checkbox
                     control={form.control}
                     name="isPaid"
                     label="Pagamento Feito"

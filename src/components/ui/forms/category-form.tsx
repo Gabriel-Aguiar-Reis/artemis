@@ -50,7 +50,7 @@ export function CategoryForm<T extends FieldValues>({
         iconTooltip={nameIconTooltip}
         rules={{ required: true }}
       />
-      <BaseForm.Switch
+      <BaseForm.Checkbox
         control={control}
         name={'isActive' as Path<T>}
         label="Categoria Ativa"

@@ -88,7 +88,7 @@ export function ProductForm<T extends FieldValues>({
               />
             )
           })}
-          <BaseForm.Switch<T>
+          <BaseForm.Checkbox<T>
             control={control}
             name={'isActive' as Path<T>}
             label="Produto Ativo"

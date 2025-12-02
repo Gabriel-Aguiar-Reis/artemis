@@ -1,3 +1,4 @@
+import { Checkbox } from '@/src/components/ui/checkbox'
 import { FloatingLabelInput } from '@/src/components/ui/floating-label-input'
 import { Label } from '@/src/components/ui/label'
 import { Text } from '@/src/components/ui/text'
@@ -7,7 +8,7 @@ import { Stack } from 'expo-router'
 import { LucideIcon } from 'lucide-react-native'
 import React, { BaseSyntheticEvent, ReactNode } from 'react'
 import { Control, Controller, FieldValues, Path } from 'react-hook-form'
-import { ScrollView, Switch, View } from 'react-native'
+import { ScrollView, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 export type FormFieldProps<T extends FieldValues> = {
@@ -28,7 +29,7 @@ export type FormFieldProps<T extends FieldValues> = {
   isSearch?: boolean
   onSearchPress?: () => void
   isSearchLoading?: boolean
-  isSwitch?: boolean
+  isCheckbox?: boolean
 }
 
 type RootProps = {
@@ -243,25 +244,21 @@ function Input<T extends FieldValues>({
   )
 }
 
-type SwitchProps<T extends FieldValues> = FormFieldProps<T> & {
+type CheckboxProps<T extends FieldValues> = FormFieldProps<T> & {
   control: Control<T>
 }
-function SwitchField<T extends FieldValues>({
+function CheckboxField<T extends FieldValues>({
   control,
   name,
   label,
-}: SwitchProps<T>) {
+}: CheckboxProps<T>) {
   return (
-    <View className="flex-row items-center">
+    <View className="flex-row items-center gap-2">
       <Controller
         control={control}
         name={name}
         render={({ field: { onChange, value } }) => (
-          <Switch
-            key={value ? 'on' : 'off'}
-            value={!!value}
-            onValueChange={onChange}
-          />
+          <Checkbox checked={!!value} onCheckedChange={onChange} />
         )}
       />
       <Label className="ml-2">{label}</Label>
@@ -293,6 +290,6 @@ Input.Currency = CurrencyInput
 export const BaseForm = {
   Root,
   Input,
-  Switch: SwitchField,
+  Checkbox: CheckboxField,
   SubmitButton,
 }

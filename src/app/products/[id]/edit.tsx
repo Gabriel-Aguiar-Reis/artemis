@@ -129,7 +129,7 @@ export default function ProductsEditScreen() {
             error={getErrorMessage(form.formState.errors?.expiration?.message)}
           />
 
-          <BaseForm.Switch
+          <BaseForm.Checkbox
             control={form.control}
             name="isActive"
             label="Produto Ativo"

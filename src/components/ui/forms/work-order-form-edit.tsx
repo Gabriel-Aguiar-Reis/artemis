@@ -124,9 +124,9 @@ export function WorkOrderFormEdit<T extends FieldValues>({
               />
             )
           }
-          if (fieldConfig.isSwitch) {
+          if (fieldConfig.isCheckbox) {
             return (
-              <BaseForm.Switch<T>
+              <BaseForm.Checkbox<T>
                 key={String(fieldConfig.name)}
                 control={control}
                 name={fieldConfig.name}

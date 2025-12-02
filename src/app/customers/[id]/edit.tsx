@@ -195,8 +195,8 @@ export default function CustomersEditScreen() {
         },
         {
           name: 'phoneIsWhatsApp',
-          label: 'É WhatsApp?',
-          isSwitch: true,
+          label: 'WhatsApp',
+          isCheckbox: true,
         },
         {
           name: 'landlineNumber',
@@ -208,8 +208,8 @@ export default function CustomersEditScreen() {
         },
         {
           name: 'landlineIsWhatsApp',
-          label: 'É WhatsApp?',
-          isSwitch: true,
+          label: 'WhatsApp',
+          isCheckbox: true,
         },
       ]}
       steps={[

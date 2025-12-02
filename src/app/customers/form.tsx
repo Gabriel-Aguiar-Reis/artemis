@@ -145,8 +145,8 @@ export default function CustomerFormScreen() {
         },
         {
           name: 'phoneIsWhatsApp',
-          label: 'É WhatsApp?',
-          isSwitch: true,
+          label: 'WhatsApp',
+          isCheckbox: true,
         },
         {
           name: 'landlineNumber',
@@ -158,8 +158,8 @@ export default function CustomerFormScreen() {
         },
         {
           name: 'landlineIsWhatsApp',
-          label: 'É WhatsApp?',
-          isSwitch: true,
+          label: 'WhatsApp',
+          isCheckbox: true,
         },
       ]}
       steps={[
