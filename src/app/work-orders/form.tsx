@@ -3,6 +3,7 @@ import { productHooks } from '@/src/application/hooks/product.hooks'
 import { workOrderResultItemHooks } from '@/src/application/hooks/work-order-result-item.hooks'
 import { workOrderResultHooks } from '@/src/application/hooks/work-order-result.hooks'
 import { workOrderHooks } from '@/src/application/hooks/work-order.hooks'
+import { Alert, AlertDescription, AlertTitle } from '@/src/components/ui/alert'
 import { Button } from '@/src/components/ui/button'
 import { AddedProductsCombobox } from '@/src/components/ui/combobox/added-products-combobox'
 import { CustomerCombobox } from '@/src/components/ui/combobox/customer-combobox'
@@ -25,7 +26,7 @@ import {
 import { WorkOrderStatus } from '@/src/domain/entities/work-order/work-order.entity'
 import { getErrorMessage, UUID } from '@/src/lib/utils'
 import { router } from 'expo-router'
-import { CircleQuestionMark, CreditCard } from 'lucide-react-native'
+import { CircleQuestionMark, CreditCard, Info } from 'lucide-react-native'
 import * as React from 'react'
 import { useForm } from 'react-hook-form'
 import { View } from 'react-native'
@@ -341,6 +342,21 @@ export default function WorkOrderFormScreen() {
 
   // Observar mudanças para condicionar visibilidade de campos
   const installments = form.watch('installments')
+  const isPaid = form.watch('isPaid')
+
+  // Se marcar como pago, força parcelas = 1
+  React.useEffect(() => {
+    if (isPaid) {
+      form.setValue('installments', 1)
+    }
+  }, [isPaid, form])
+
+  // Se mudar parcelas para > 1, desmarca isPaid
+  React.useEffect(() => {
+    if ((installments || 1) > 1 && isPaid) {
+      form.setValue('isPaid', false)
+    }
+  }, [installments, isPaid, form])
 
   return (
     <WorkOrderFormCreate
@@ -700,27 +716,48 @@ export default function WorkOrderFormScreen() {
                   control={form.control}
                   name="method"
                   label="Método de Pagamento"
-                  placeholder="Ex: Dinheiro, PIX, Débito"
+                  placeholder="Ex: Dinheiro, PIX, Débito, Cartão de Crédito"
                   icon={CreditCard}
                   error={getErrorMessage(
                     form.formState.errors?.method?.message
                   )}
                 />
 
+                {/* Alerta explicativo sobre pagamento */}
+                <Alert icon={Info}>
+                  <AlertTitle>Sobre o Pagamento</AlertTitle>
+                  <AlertDescription>
+                    {isPaid
+                      ? 'Pagamento à vista foi marcado como realizado. O número de parcelas foi definido como 1.'
+                      : (installments || 1) > 1
+                        ? `Pagamento parcelado em ${installments}x. Você poderá marcar cada parcela como paga posteriormente.`
+                        : 'Marque "Pagamento à Vista Realizado" se o valor foi pago à vista, ou defina o número de parcelas para pagamento parcelado.'}
+                  </AlertDescription>
+                </Alert>
+
                 {installments === 1 && (
                   <BaseForm.Checkbox
                     control={form.control}
                     name="isPaid"
-                    label="Pagamento Feito"
+                    label="Pagamento à Vista Realizado"
                   />
                 )}
+
                 <BaseForm.Input
                   control={form.control}
                   name="installments"
                   label="Número de Parcelas"
-                  placeholder="Ex: 1 (ou mais se parcelado)"
+                  placeholder={
+                    isPaid
+                      ? '1 (à vista)'
+                      : 'Ex: 1 (à vista) ou mais (parcelado)'
+                  }
                   icon={CircleQuestionMark}
-                  inputProps={{ keyboardType: 'numeric' as const }}
+                  iconTooltip="Para pagamento à vista, use 1. Para parcelado, defina o número de parcelas."
+                  inputProps={{
+                    keyboardType: 'numeric' as const,
+                    editable: !isPaid,
+                  }}
                   error={getErrorMessage(
                     form.formState.errors?.installments?.message
                   )}
