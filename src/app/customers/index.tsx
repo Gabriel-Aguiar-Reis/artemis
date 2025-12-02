@@ -181,7 +181,7 @@ export default function CustomersScreen() {
   const renderItem = (customer: Customer) => {
     const address = `${customer.storeAddress.streetName}, ${customer.storeAddress.streetNumber}, ${customer.storeAddress.zipCode}, ${customer.storeAddress.city} - ${customer.storeAddress.state}`
     return (
-      <ObjectCard.Root key={customer.id} className="mb-4">
+      <ObjectCard.Root key={customer.id} className="mb-4 dark:bg-input/30">
         <ObjectCard.Header>
           <ObjectCard.Title>
             <View className="flex-row gap-2 items-center">

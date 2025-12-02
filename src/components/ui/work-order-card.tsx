@@ -54,7 +54,7 @@ export function WorkOrderCard({
   onPress?: () => void
 }) {
   return (
-    <ObjectCard.Root key={wo.id} className="mb-4">
+    <ObjectCard.Root key={wo.id} className="mb-4 dark:bg-input/30">
       <ObjectCard.Header>
         <ObjectCard.Title>
           <View className="flex-row items-center gap-2">

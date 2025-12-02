@@ -108,7 +108,7 @@ export default function CategoriesScreen() {
 
   const renderItem = (category: Category) => {
     return (
-      <ObjectCard.Root key={category.id} className="mb-4">
+      <ObjectCard.Root key={category.id} className="mb-4 dark:bg-input/30">
         <ObjectCard.Header>
           <ObjectCard.Title>{category.name}</ObjectCard.Title>
           <ObjectCard.Actions

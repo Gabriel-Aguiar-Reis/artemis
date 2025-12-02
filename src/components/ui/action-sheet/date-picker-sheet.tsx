@@ -57,7 +57,7 @@ export function DatePickerSheet(props: SheetProps<'date-picker-sheet'>) {
         <Button
           variant="outline"
           onPress={async () => await SheetManager.hide(props.sheetId)}
-          className="w-full"
+          className="w-full mb-8"
         >
           <Text>Cancelar</Text>
         </Button>

@@ -189,7 +189,7 @@ export default function ProductsScreen() {
 
   const renderItem = (product: ProductWithCategoryDTO) => {
     return (
-      <ObjectCard.Root key={product.id} className="mb-4">
+      <ObjectCard.Root key={product.id} className="mb-4 dark:bg-input/30">
         <ObjectCard.Header>
           <ObjectCard.Title>{product.name}</ObjectCard.Title>
           <ObjectCard.Description>
