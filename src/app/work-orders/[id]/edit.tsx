@@ -11,7 +11,7 @@ import {
 import { getErrorMessage, UUID } from '@/src/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { router, useLocalSearchParams } from 'expo-router'
-import { CircleQuestionMark } from 'lucide-react-native'
+import { Pen, PenOff } from 'lucide-react-native'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { View } from 'react-native'
@@ -96,7 +96,8 @@ export default function WorkOrderEditScreen() {
           name: 'notes',
           label: 'Observações',
           placeholder: 'Adicione observações sobre a ordem',
-          icon: CircleQuestionMark,
+          icon: PenOff,
+          alternate: { icon: Pen, type: 'toDisabled' },
         },
       ]}
       steps={[
@@ -134,8 +135,8 @@ export default function WorkOrderEditScreen() {
                 name="notes"
                 label="Observações (Opcional)"
                 placeholder="Adicione observações sobre a ordem"
-                iconTooltip="Adicione observações relevantes para a ordem"
-                icon={CircleQuestionMark}
+                icon={Pen}
+                alternate={{ icon: PenOff, type: 'toDisabled' }}
                 error={getErrorMessage(form.formState.errors?.notes?.message)}
               />
             </View>

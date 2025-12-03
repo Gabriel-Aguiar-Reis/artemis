@@ -14,7 +14,7 @@ const paymentOrderSchemaWithoutId = {
   installments: z
     .number()
     .min(1, 'O número de parcelas deve ser pelo menos 1.'),
-  isPaid: z.boolean().default(false),
+  isPaid: z.boolean().default(false).optional(),
   paidInstallments: z
     .number()
     .min(0, 'O número de parcelas pagas deve ser pelo menos 0.'),
@@ -41,7 +41,7 @@ export type PaymentOrderInsertDTO = z.infer<typeof paymentOrderInsertSchema>
 
 export const paymentOrderUpdateSchema = createUpdateSchema(
   paymentOrder,
-  paymentOrderSchema
+  paymentOrderSchemaWithoutId
 )
 
 export type PaymentOrderUpdateDTO = z.infer<typeof paymentOrderUpdateSchema>
