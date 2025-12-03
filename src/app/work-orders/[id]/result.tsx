@@ -35,13 +35,15 @@ export default function WorkOrderResultScreen() {
 
     await SheetManager.show('options-sheet', {
       payload: {
-        title: 'Opções do Resultado',
+        title: 'Opções do Relatório',
         options: [
           {
-            label: 'Editar Resultado',
+            label: 'Editar Relatório',
             icon: Edit,
             onPress: () => {
-              router.push(`/work-orders/${params.id}/result/edit`)
+              router.push(
+                `/work-orders/${params.id}/result/${workOrder.result!.id}/edit`
+              )
             },
           },
         ],
@@ -116,14 +118,24 @@ export default function WorkOrderResultScreen() {
     <SafeAreaView className="flex-1">
       <Stack.Screen
         options={{
-          title: 'Resultado da Visita',
+          title: 'Relatório do Serviço',
         }}
       />
       <View className="flex-1 p-4">
         <ObjectCard.Root className="mb-4 dark:bg-input/30">
           <ObjectCard.Header>
-            <ObjectCard.Title>Resumo do Resultado</ObjectCard.Title>
-            <ObjectCard.Actions onPress={handleResultOptions} />
+            <ObjectCard.Title>
+              Resumo do Relatório
+              {workOrder.paymentOrder && (
+                <Text className="text-xs font-medium text-muted-foreground">
+                  {' '}
+                  - Não pode ser editado
+                </Text>
+              )}
+            </ObjectCard.Title>
+            {!workOrder.paymentOrder && (
+              <ObjectCard.Actions onPress={handleResultOptions} />
+            )}
           </ObjectCard.Header>
           <ObjectCard.Content>
             <View className="gap-3">

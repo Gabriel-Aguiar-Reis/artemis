@@ -114,6 +114,25 @@ export default function WorkOrdersScreen() {
       },
     })
 
+    // Grupo: Resultado
+    if (workOrder.result) {
+      options.push({
+        label: 'Acessar Relatório',
+        icon: ReceiptText,
+        onPress: () => {
+          router.push(`/work-orders/${workOrder.id}/result`)
+        },
+      })
+    } else {
+      options.push({
+        label: 'Criar Relatório',
+        icon: Plus,
+        onPress: () => {
+          router.push(`/work-orders/${workOrder.id}/result/create`)
+        },
+      })
+    }
+
     // Grupo: Pagamento
     if (workOrder.paymentOrder) {
       options.push({
@@ -129,25 +148,6 @@ export default function WorkOrdersScreen() {
         icon: Plus,
         onPress: () => {
           router.push(`/work-orders/${workOrder.id}/payment/create`)
-        },
-      })
-    }
-
-    // Grupo: Resultado
-    if (workOrder.result) {
-      options.push({
-        label: 'Acessar Resultado',
-        icon: ReceiptText,
-        onPress: () => {
-          router.push(`/work-orders/${workOrder.id}/result`)
-        },
-      })
-    } else {
-      options.push({
-        label: 'Criar Resultado',
-        icon: Plus,
-        onPress: () => {
-          router.push(`/work-orders/${workOrder.id}/result/create`)
         },
       })
     }

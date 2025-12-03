@@ -1,7 +1,7 @@
 import { productHooks } from '@/src/application/hooks/product.hooks'
 import { workOrderResultItemHooks } from '@/src/application/hooks/work-order-result-item.hooks'
 import { workOrderResultHooks } from '@/src/application/hooks/work-order-result.hooks'
-import { workOrderHooks } from '@/src/application/hooks/work-order.hooks'
+import { Alert, AlertDescription, AlertTitle } from '@/src/components/ui/alert'
 import { Button } from '@/src/components/ui/button'
 import { AddedProductsCombobox } from '@/src/components/ui/combobox/added-products-combobox'
 import { ExchangedProductsCombobox } from '@/src/components/ui/combobox/exchanged-products-combobox'
@@ -13,8 +13,10 @@ import {
   WorkOrderResultItemType,
 } from '@/src/domain/entities/work-order-result-item/work-order-result-item.entity'
 import { UUID } from '@/src/lib/utils'
+import { useQueryClient } from '@tanstack/react-query'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
-import { useState } from 'react'
+import { Info } from 'lucide-react-native'
+import { useEffect, useState } from 'react'
 import { ScrollView, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import uuid from 'react-native-uuid'
@@ -26,17 +28,19 @@ type ResultItemInput = {
   priceSnapshot: number
 }
 
-export default function WorkOrderResultCreateScreen() {
+export default function WorkOrderResultEditByIdScreen() {
   const params = useLocalSearchParams<{ id: UUID }>()
-  const { data: workOrder, isLoading: isLoadingWorkOrder } =
-    workOrderHooks.getWorkOrder(params.id)
+  const queryClient = useQueryClient()
+  const { data: result, isLoading } = workOrderResultHooks.getWorkOrderResult(
+    params.id
+  )
   const { data: allProducts } = productHooks.getProductsWithCategory()
-  const { mutateAsync: addWorkOrderResult } =
-    workOrderResultHooks.addWorkOrderResult()
+  const { mutateAsync: updateWorkOrderResult } =
+    workOrderResultHooks.updateWorkOrderResult()
+  const { mutateAsync: deleteWorkOrderResultItem } =
+    workOrderResultItemHooks.deleteWorkOrderResultItem()
   const { mutateAsync: addWorkOrderResultItems } =
     workOrderResultItemHooks.addWorkOrderResultItems()
-  const { mutateAsync: updateWorkOrderWithResult } =
-    workOrderHooks.updateWorkOrderWithResult()
 
   const [exchangedProducts, setExchangedProducts] = useState<ResultItemInput[]>(
     []
@@ -45,13 +49,55 @@ export default function WorkOrderResultCreateScreen() {
   const [removedProducts, setRemovedProducts] = useState<ResultItemInput[]>([])
   const [isPending, setIsPending] = useState(false)
 
+  useEffect(() => {
+    if (!result) return
+    const exchanged: ResultItemInput[] =
+      result.exchangedProducts?.map((item) => ({
+        productId: item.productSnapshot.productId,
+        productName: item.productSnapshot.productName,
+        quantity: item.quantity,
+        priceSnapshot: item.priceSnapshot,
+      })) || []
+
+    const added: ResultItemInput[] =
+      result.addedProducts?.map((item) => ({
+        productId: item.productSnapshot.productId,
+        productName: item.productSnapshot.productName,
+        quantity: item.quantity,
+        priceSnapshot: item.priceSnapshot,
+      })) || []
+
+    const removed: ResultItemInput[] =
+      result.removedProducts?.map((item) => ({
+        productId: item.productSnapshot.productId,
+        productName: item.productSnapshot.productName,
+        quantity: item.quantity,
+        priceSnapshot: item.priceSnapshot,
+      })) || []
+
+    setExchangedProducts(exchanged)
+    setAddedProducts(added)
+    setRemovedProducts(removed)
+  }, [result])
+
   const handleSubmit = async () => {
-    if (!workOrder) return
+    if (!result) return
 
     try {
       setIsPending(true)
 
-      // Calcular total value
+      // 1. Deletar todos os items existentes
+      const allExistingItems = [
+        ...(result.exchangedProducts || []),
+        ...(result.addedProducts || []),
+        ...(result.removedProducts || []),
+      ]
+
+      for (const item of allExistingItems) {
+        await deleteWorkOrderResultItem(item.id)
+      }
+
+      // 2. Calcular novo total value
       const totalValue =
         exchangedProducts.reduce(
           (sum, p) => sum + p.priceSnapshot * p.quantity,
@@ -59,14 +105,13 @@ export default function WorkOrderResultCreateScreen() {
         ) +
         addedProducts.reduce((sum, p) => sum + p.priceSnapshot * p.quantity, 0)
 
-      // 1. Criar WorkOrderResult
-      const resultId = uuid.v4() as UUID
-      await addWorkOrderResult({
-        id: resultId,
+      // 3. Atualizar WorkOrderResult com novo totalValue
+      await updateWorkOrderResult({
+        id: result.id,
         totalValue,
       })
 
-      // 2. Criar WorkOrderResultItems
+      // 4. Criar novos WorkOrderResultItems
       const allResultItems = [
         ...exchangedProducts.map((p) =>
           WorkOrderResultItem.fromProductSnapshot(
@@ -76,7 +121,7 @@ export default function WorkOrderResultCreateScreen() {
               productName: p.productName,
               salePrice: p.priceSnapshot,
             }),
-            resultId,
+            result.id,
             p.quantity,
             WorkOrderResultItemType.EXCHANGED,
             p.priceSnapshot
@@ -90,7 +135,7 @@ export default function WorkOrderResultCreateScreen() {
               productName: p.productName,
               salePrice: p.priceSnapshot,
             }),
-            resultId,
+            result.id,
             p.quantity,
             WorkOrderResultItemType.ADDED,
             p.priceSnapshot
@@ -104,7 +149,7 @@ export default function WorkOrderResultCreateScreen() {
               productName: p.productName,
               salePrice: p.priceSnapshot,
             }),
-            resultId,
+            result.id,
             p.quantity,
             WorkOrderResultItemType.REMOVED,
             p.priceSnapshot
@@ -116,68 +161,61 @@ export default function WorkOrderResultCreateScreen() {
         await (addWorkOrderResultItems as any)([allResultItems])
       }
 
-      // 3. Associar result à work order
-      await updateWorkOrderWithResult([
-        workOrder.id,
-        resultId,
-        'completed',
-        new Date(),
-      ])
+      // Efeito cascata: invalidar queries relacionadas
+      queryClient.invalidateQueries({ queryKey: ['workOrderResultItems'] })
+      queryClient.invalidateQueries({ queryKey: ['workOrderResults'] })
+      queryClient.invalidateQueries({ queryKey: ['workOrders'] })
 
       router.back()
     } catch (error) {
-      console.error('Erro ao criar relatório:', error)
+      console.error('Erro ao atualizar relatório:', error)
     } finally {
       setIsPending(false)
     }
   }
 
-  if (isLoadingWorkOrder) {
+  if (isLoading) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center">
-        <Text>Carregando ordem de serviço...</Text>
+        <Text>Carregando relatório...</Text>
       </SafeAreaView>
     )
   }
 
-  if (!workOrder) {
+  if (!result) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center">
-        <Text>Ordem de serviço não encontrada.</Text>
+        <Text>Relatório não encontrado.</Text>
       </SafeAreaView>
     )
   }
-
-  if (workOrder.result) {
-    return (
-      <SafeAreaView className="flex-1 items-center justify-center">
-        <Text>Esta ordem de serviço já possui um relatório registrado.</Text>
-      </SafeAreaView>
-    )
-  }
-
-  const scheduledProducts = workOrder.products || []
 
   return (
     <SafeAreaView className="flex-1">
       <Stack.Screen
         options={{
-          title: 'Criar Relatório',
+          title: 'Editar Relatório',
         }}
       />
       <ScrollView className="flex-1 p-4">
         <View className="gap-4">
+          <Alert icon={Info}>
+            <AlertTitle>Editar Produtos do Relatório</AlertTitle>
+            <AlertDescription className="text-xs">
+              Você pode adicionar, remover ou modificar as quantidades dos
+              produtos trocados, adicionados e removidos. O valor total será
+              recalculado automaticamente.
+            </AlertDescription>
+          </Alert>
+
           <ExchangedProductsCombobox
-            scheduledProducts={scheduledProducts.map((p) => ({
-              productId: p.productId,
-              quantity: p.quantity,
-            }))}
+            scheduledProducts={[]}
             removedProducts={removedProducts}
             selectedExchangedProducts={exchangedProducts}
             onExchangedProductsChange={setExchangedProducts}
             availableProducts={allProducts}
             label="Produtos Trocados"
-            placeholder="Selecione dos produtos agendados"
+            placeholder="Selecione dos produtos"
           />
 
           <AddedProductsCombobox
@@ -188,10 +226,7 @@ export default function WorkOrderResultCreateScreen() {
           />
 
           <RemovedProductsCombobox
-            scheduledProducts={scheduledProducts.map((p) => ({
-              productId: p.productId,
-              quantity: p.quantity,
-            }))}
+            scheduledProducts={[]}
             exchangedProducts={exchangedProducts}
             selectedRemovedProducts={removedProducts}
             onRemovedProductsChange={setRemovedProducts}
@@ -200,9 +235,33 @@ export default function WorkOrderResultCreateScreen() {
             placeholder="Produtos não trocados"
           />
 
+          <View className="bg-accent/30 p-4 rounded-lg">
+            <Text className="text-base font-semibold mb-2">
+              Resumo Atualizado
+            </Text>
+            <View className="flex-row justify-between items-center pt-2 border-t border-border">
+              <Text className="font-bold text-lg">Novo Valor Total:</Text>
+              <Text className="font-bold text-xl text-primary">
+                R${' '}
+                {(
+                  exchangedProducts.reduce(
+                    (sum, p) => sum + p.priceSnapshot * p.quantity,
+                    0
+                  ) +
+                  addedProducts.reduce(
+                    (sum, p) => sum + p.priceSnapshot * p.quantity,
+                    0
+                  )
+                ).toLocaleString('pt-BR', {
+                  minimumFractionDigits: 2,
+                })}
+              </Text>
+            </View>
+          </View>
+
           <Button onPress={handleSubmit} disabled={isPending}>
             <Text className="text-primary-foreground font-semibold">
-              {isPending ? 'Salvando...' : 'Salvar Relatório'}
+              {isPending ? 'Salvando...' : 'Salvar Alterações'}
             </Text>
           </Button>
         </View>

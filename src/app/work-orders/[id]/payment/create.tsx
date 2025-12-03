@@ -1,7 +1,9 @@
 import { paymentOrderHooks } from '@/src/application/hooks/payment-order.hooks'
 import { workOrderHooks } from '@/src/application/hooks/work-order.hooks'
+import { Alert, AlertDescription, AlertTitle } from '@/src/components/ui/alert'
 import { Button } from '@/src/components/ui/button'
 import { BaseForm } from '@/src/components/ui/forms/base-form'
+import { Masks } from '@/src/components/ui/masks'
 import { Text } from '@/src/components/ui/text'
 import {
   PaymentOrderInsertDTO,
@@ -10,7 +12,7 @@ import {
 import { getErrorMessage, UUID } from '@/src/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
-import { CreditCard } from 'lucide-react-native'
+import { CircleQuestionMark, CreditCard, Info } from 'lucide-react-native'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { ScrollView, View } from 'react-native'
@@ -146,11 +148,11 @@ export default function WorkOrderPaymentCreateScreen() {
       />
       <ScrollView className="flex-1 p-4">
         <View className="gap-4">
-          {/* Resumo dos produtos (se houver resultado) */}
+          {/* Resumo dos produtos (se houver relatório) */}
           {allProductItems.length > 0 && (
-            <View className="bg-muted/30 p-4 rounded-lg mb-2">
-              <Text className="text-sm font-semibold mb-2">
-                Produtos do Resultado
+            <View className="bg-accent/30 p-4 rounded-lg mb-2">
+              <Text className="text-base font-semibold mb-3">
+                Produtos do Relatório
               </Text>
               {allProductItems.map((item, index) => (
                 <View
@@ -179,6 +181,20 @@ export default function WorkOrderPaymentCreateScreen() {
                   </Text>
                 </View>
               ))}
+              <View className="flex-row justify-between items-center pt-3 mt-2 border-t-2 border-border">
+                <Text className="font-bold text-lg">Total:</Text>
+                <Text className="font-bold text-xl text-primary">
+                  R${' '}
+                  {allProductItems
+                    .reduce(
+                      (sum, item) => sum + item.priceSnapshot * item.quantity,
+                      0
+                    )
+                    .toLocaleString('pt-BR', {
+                      minimumFractionDigits: 2,
+                    })}
+                </Text>
+              </View>
             </View>
           )}
 
@@ -196,29 +212,29 @@ export default function WorkOrderPaymentCreateScreen() {
             name="totalValue"
             label="Valor Total"
             placeholder="0.00"
+            inputProps={{ keyboardType: 'numeric', mask: Masks.BRL_CURRENCY }}
             error={getErrorMessage(form.formState.errors?.totalValue?.message)}
           />
 
-          <BaseForm.Input
-            control={form.control}
-            name="installments"
-            label="Número de Parcelas"
-            placeholder="1"
-            error={getErrorMessage(
-              form.formState.errors?.installments?.message
-            )}
-            inputProps={{ keyboardType: 'numeric' }}
-          />
+          {/* Alerta explicativo sobre pagamento */}
+          <Alert icon={Info}>
+            <AlertTitle>Sobre o Pagamento</AlertTitle>
+            <AlertDescription>
+              {isPaid
+                ? 'Pagamento à vista foi marcado como realizado. O número de parcelas foi definido como 1.'
+                : (installments || 1) > 1
+                  ? `Pagamento parcelado em ${installments}x. Você poderá marcar cada parcela como paga posteriormente.`
+                  : 'Marque "Foi pago?" se o valor foi pago à vista, ou defina o número de parcelas para pagamento parcelado.'}
+            </AlertDescription>
+          </Alert>
 
-          {installments === 1 && (
+          {installments === 1 ? (
             <BaseForm.Checkbox
               control={form.control}
               name="isPaid"
-              label="Foi pago?"
+              label="Pagamento à Vista Realizado"
             />
-          )}
-
-          {installments > 1 && (
+          ) : (
             <BaseForm.Input
               control={form.control}
               name="paidInstallments"
@@ -228,8 +244,25 @@ export default function WorkOrderPaymentCreateScreen() {
                 form.formState.errors?.paidInstallments?.message
               )}
               inputProps={{ keyboardType: 'numeric' }}
+              icon={CircleQuestionMark}
             />
           )}
+
+          <BaseForm.Input
+            control={form.control}
+            name="installments"
+            label="Número de Parcelas"
+            placeholder={isPaid ? '1' : 'Ex: 1 (à vista) ou mais (parcelado)'}
+            error={getErrorMessage(
+              form.formState.errors?.installments?.message
+            )}
+            inputProps={{
+              keyboardType: 'numeric',
+              editable: !isPaid,
+            }}
+            icon={CircleQuestionMark}
+            iconTooltip="Para pagamento à vista, use 1. Para parcelado, defina o número de parcelas."
+          />
 
           <Button onPress={onSubmit} disabled={isPending}>
             <Text className="text-primary-foreground font-semibold">
