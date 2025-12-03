@@ -4,6 +4,7 @@ import { Text } from '@/src/components/ui/text'
 import { useState } from 'react'
 import { View } from 'react-native'
 import { SheetManager, SheetProps } from 'react-native-actions-sheet'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import DateTimePicker, {
   DateType,
   useDefaultClassNames,
@@ -19,6 +20,7 @@ export type DatePickerSheetPayload = {
 
 export function DatePickerSheet(props: SheetProps<'date-picker-sheet'>) {
   const payload = props.payload as DatePickerSheetPayload | undefined
+  const insets = useSafeAreaInsets()
 
   const defaultClassNames = useDefaultClassNames()
   const [selected, setSelected] = useState<DateType>(payload?.initialDate)
@@ -32,35 +34,37 @@ export function DatePickerSheet(props: SheetProps<'date-picker-sheet'>) {
 
   return (
     <DefaultActionSheet sheetProps={props}>
-      <View className="gap-4 px-4 py-6 bg-background">
-        {payload?.title && (
-          <Text variant="h3" className="mb-2">
-            {payload.title}
-          </Text>
-        )}
+      <View style={{ paddingBottom: insets.bottom }}>
+        <View className="gap-4 px-4 py-6 bg-background">
+          {payload?.title && (
+            <Text variant="h3" className="mb-2">
+              {payload.title}
+            </Text>
+          )}
 
-        <DateTimePicker
-          mode="single"
-          date={selected}
-          onChange={({ date }) => setSelected(date)}
-          classNames={{ ...defaultClassNames }}
-          minDate={payload?.minDate}
-          maxDate={payload?.maxDate}
-          showOutsideDays
-          timeZone="America/Sao_Paulo"
-          locale="pt"
-        />
+          <DateTimePicker
+            mode="single"
+            date={selected}
+            onChange={({ date }) => setSelected(date)}
+            classNames={{ ...defaultClassNames }}
+            minDate={payload?.minDate}
+            maxDate={payload?.maxDate}
+            showOutsideDays
+            timeZone="America/Sao_Paulo"
+            locale="pt"
+          />
 
-        <Button onPress={handleConfirm} disabled={!selected}>
-          <Text>Confirmar</Text>
-        </Button>
-        <Button
-          variant="outline"
-          onPress={async () => await SheetManager.hide(props.sheetId)}
-          className="w-full mb-8"
-        >
-          <Text>Cancelar</Text>
-        </Button>
+          <Button onPress={handleConfirm} disabled={!selected}>
+            <Text>Confirmar</Text>
+          </Button>
+          <Button
+            variant="outline"
+            onPress={async () => await SheetManager.hide(props.sheetId)}
+            className="w-full"
+          >
+            <Text>Cancelar</Text>
+          </Button>
+        </View>
       </View>
     </DefaultActionSheet>
   )

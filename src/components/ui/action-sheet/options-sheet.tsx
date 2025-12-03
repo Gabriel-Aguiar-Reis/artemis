@@ -8,6 +8,7 @@ import { LucideIcon } from 'lucide-react-native'
 import { Pressable, View } from 'react-native'
 import { SheetManager, SheetProps } from 'react-native-actions-sheet'
 import { ScrollView } from 'react-native-gesture-handler'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 export type OptionItem = {
   label: string
@@ -24,6 +25,7 @@ export type OptionsSheetPayload = {
 
 export function OptionsSheet(props: SheetProps<'options-sheet'>) {
   const payload = props.payload as OptionsSheetPayload | undefined
+  const insets = useSafeAreaInsets()
 
   const handleOptionPress = async (option: OptionItem) => {
     option.onPress()
@@ -32,61 +34,65 @@ export function OptionsSheet(props: SheetProps<'options-sheet'>) {
 
   return (
     <DefaultActionSheet sheetProps={props}>
-      <View className="gap-4 px-4 py-6 bg-background">
-        {payload?.title && (
-          <Text variant="h3" className="mb-2">
-            {payload.title}
-          </Text>
-        )}
+      <View style={{ paddingBottom: insets.bottom }}>
+        <View className="gap-4 px-4 py-6 bg-background">
+          {payload?.title && (
+            <Text variant="h3" className="mb-2">
+              {payload.title}
+            </Text>
+          )}
 
-        <ScrollView>
-          {payload?.options.map((option, index) => {
-            return (
-              <Pressable
-                key={index}
-                onPress={() => handleOptionPress(option)}
-                className={cn(
-                  'flex-row items-center gap-3 rounded-lg border border-border bg-card p-4 active:bg-accent mb-2',
-                  option.isWhatsApp &&
-                    'bg-green-100 dark:bg-green-950 border-green-600',
-                  option.destructive && 'border-destructive bg-destructive/10'
-                )}
-              >
-                {option.icon ? (
-                  <Icon
-                    as={option.icon}
-                    size={20}
-                    className={
-                      option.destructive
-                        ? 'text-destructive'
-                        : 'text-foreground'
-                    }
-                  />
-                ) : option.isWhatsApp ? (
-                  <WhatsAppIcon size={20} className="text-green-600" />
-                ) : null}
-
-                <Text
+          <ScrollView contentContainerStyle={{ flexGrow: 1 }} bounces={false}>
+            {payload?.options.map((option, index) => {
+              return (
+                <Pressable
+                  key={index}
+                  onPress={() => handleOptionPress(option)}
                   className={cn(
-                    'flex-1',
-                    option.destructive ? 'text-destructive' : 'text-foreground',
-                    option.isWhatsApp && 'text-green-600'
+                    'flex-row items-center gap-3 rounded-lg border border-border bg-card p-4 active:bg-accent mb-2',
+                    option.isWhatsApp &&
+                      'bg-green-100 dark:bg-green-950 border-green-600',
+                    option.destructive && 'border-destructive bg-destructive/10'
                   )}
                 >
-                  {option.label}
-                </Text>
-              </Pressable>
-            )
-          })}
-        </ScrollView>
+                  {option.icon ? (
+                    <Icon
+                      as={option.icon}
+                      size={20}
+                      className={
+                        option.destructive
+                          ? 'text-destructive'
+                          : 'text-foreground'
+                      }
+                    />
+                  ) : option.isWhatsApp ? (
+                    <WhatsAppIcon size={20} className="text-green-600" />
+                  ) : null}
 
-        <Button
-          variant="outline"
-          onPress={async () => await SheetManager.hide(props.sheetId)}
-          className="w-full mb-8"
-        >
-          <Text>Cancelar</Text>
-        </Button>
+                  <Text
+                    className={cn(
+                      'flex-1',
+                      option.destructive
+                        ? 'text-destructive'
+                        : 'text-foreground',
+                      option.isWhatsApp && 'text-green-600'
+                    )}
+                  >
+                    {option.label}
+                  </Text>
+                </Pressable>
+              )
+            })}
+          </ScrollView>
+
+          <Button
+            variant="outline"
+            onPress={async () => await SheetManager.hide(props.sheetId)}
+            className="w-full"
+          >
+            <Text>Cancelar</Text>
+          </Button>
+        </View>
       </View>
     </DefaultActionSheet>
   )
