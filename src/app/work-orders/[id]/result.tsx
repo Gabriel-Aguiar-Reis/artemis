@@ -137,7 +137,10 @@ export default function WorkOrderResultScreen() {
                   Valor Total
                 </Text>
                 <Text className="text-sm font-semibold">
-                  R$ {result.totalValue.toFixed(2)}
+                  R${' '}
+                  {result.totalValue.toLocaleString('pt-BR', {
+                    minimumFractionDigits: 2,
+                  })}
                 </Text>
               </View>
 
@@ -227,7 +230,10 @@ export default function WorkOrderResultScreen() {
                             Preço Unitário
                           </Text>
                           <Text className="text-sm font-semibold">
-                            R$ {item.priceSnapshot.toFixed(2)}
+                            R${' '}
+                            {item.priceSnapshot.toLocaleString('pt-BR', {
+                              minimumFractionDigits: 2,
+                            })}
                           </Text>
                         </View>
                         <View className="flex-row items-center gap-2">
@@ -235,7 +241,12 @@ export default function WorkOrderResultScreen() {
                             Subtotal
                           </Text>
                           <Text className="text-sm font-semibold">
-                            R$ {(item.priceSnapshot * item.quantity).toFixed(2)}
+                            R${' '}
+                            {(
+                              item.priceSnapshot * item.quantity
+                            ).toLocaleString('pt-BR', {
+                              minimumFractionDigits: 2,
+                            })}
                           </Text>
                         </View>
                       </View>

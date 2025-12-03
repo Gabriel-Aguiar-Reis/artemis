@@ -93,7 +93,10 @@ export default function WorkOrderPaymentScreen() {
                   Valor Total
                 </Text>
                 <Text className="text-sm font-semibold">
-                  R$ {payment.totalValue.toFixed(2)}
+                  R${' '}
+                  {payment.totalValue.toLocaleString('pt-BR', {
+                    minimumFractionDigits: 2,
+                  })}
                 </Text>
               </View>
 
@@ -103,7 +106,9 @@ export default function WorkOrderPaymentScreen() {
                 </Text>
                 <Text className="text-sm font-semibold">
                   {payment.installments}x de R${' '}
-                  {payment.installmentValue.toFixed(2)}
+                  {payment.installmentValue.toLocaleString('pt-BR', {
+                    minimumFractionDigits: 2,
+                  })}
                 </Text>
               </View>
 
@@ -145,7 +150,10 @@ export default function WorkOrderPaymentScreen() {
                       Valor Pago
                     </Text>
                     <Text className="text-sm font-semibold">
-                      R$ {payment.paidValue.toFixed(2)}
+                      R${' '}
+                      {payment.paidValue.toLocaleString('pt-BR', {
+                        minimumFractionDigits: 2,
+                      })}
                     </Text>
                   </View>
 
@@ -154,7 +162,10 @@ export default function WorkOrderPaymentScreen() {
                       Valor Restante
                     </Text>
                     <Text className="text-sm font-semibold">
-                      R$ {payment.remainingValue.toFixed(2)}
+                      R${' '}
+                      {payment.remainingValue.toLocaleString('pt-BR', {
+                        minimumFractionDigits: 2,
+                      })}
                     </Text>
                   </View>
                 </>

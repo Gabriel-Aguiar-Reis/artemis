@@ -266,7 +266,7 @@ export function RemovedProductsCombobox({
                 </Pressable>
               </View>
               <Text className="text-xs text-muted-foreground">
-                (máx: {item.quantity})
+                (máx: {item.maxRemovableQuantity})
               </Text>
             </View>
           )}

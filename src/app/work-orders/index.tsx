@@ -123,7 +123,7 @@ export default function WorkOrdersScreen() {
           router.push(`/work-orders/${workOrder.id}/payment`)
         },
       })
-    } else {
+    } else if (workOrder.result) {
       options.push({
         label: 'Criar Pagamento',
         icon: Plus,
