@@ -16,6 +16,7 @@ import { PortalHost } from '@rn-primitives/portal'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator'
 import { useDrizzleStudio } from 'expo-drizzle-studio-plugin'
+import * as NavigationBar from 'expo-navigation-bar'
 import { Stack } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { useColorScheme } from 'nativewind'
@@ -47,6 +48,14 @@ export default function RootLayout() {
   const { success, error } = useMigrations(db, migrations)
 
   useDrizzleStudio(getExpoDb())
+
+  React.useEffect(() => {
+    if (Platform.OS === 'android') {
+      const isDark = colorScheme === 'dark'
+      NavigationBar.setBackgroundColorAsync(isDark ? '#000000' : '#ffffff')
+      NavigationBar.setButtonStyleAsync(isDark ? 'light' : 'dark')
+    }
+  }, [colorScheme])
 
   if (error) {
     return (

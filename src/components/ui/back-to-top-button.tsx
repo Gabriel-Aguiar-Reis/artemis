@@ -31,7 +31,7 @@ export function BackToTopButton({
   return (
     <Animated.View
       pointerEvents={isVisible ? 'auto' : 'none'}
-      className="absolute bottom-12 right-4 z-50"
+      className="absolute bottom-16 right-4 z-50"
       style={{ opacity: fadeAnim, display: 'flex' }}
     >
       <Pressable
