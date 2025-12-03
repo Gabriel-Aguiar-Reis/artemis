@@ -6,10 +6,19 @@ import { ButtonNew } from '@/src/components/ui/button-new'
 import { ConfirmDeleteDialog } from '@/src/components/ui/dialog/confirm-delete-dialog'
 import { Text } from '@/src/components/ui/text'
 import { WorkOrderCard } from '@/src/components/ui/work-order-card'
+import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
 import { smartSearch, UUID } from '@/src/lib/utils'
 import { FlashList } from '@shopify/flash-list'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
-import { EditIcon, TrashIcon } from 'lucide-react-native'
+import {
+  Edit,
+  LucideIcon,
+  Package,
+  Plus,
+  Receipt,
+  ReceiptText,
+  Trash2,
+} from 'lucide-react-native'
 import * as React from 'react'
 import { useMemo, useRef, useState } from 'react'
 import {
@@ -55,36 +64,111 @@ export default function WorkOrdersScreen() {
     hasResult?: string
   }>()
 
-  const handleWorkOrderOptions = async (
-    workOrderId: UUID,
-    customerName: string,
-    date: Date
-  ) => {
+  const handleWorkOrderOptions = async (workOrder: WorkOrder) => {
+    const customerName = workOrder.customer.storeName
+    const date = workOrder.scheduledDate || workOrder.visitDate
+
+    const options: {
+      label: string
+      icon?: LucideIcon
+      onPress: () => void
+      destructive?: boolean
+      isWhatsApp?: boolean
+    }[] = []
+
+    // Grupo: Ordem de Serviço
+    options.push({
+      label: 'Editar Cabeçalho da Ordem',
+      icon: Edit,
+      onPress: () => {
+        router.push(`/work-orders/${workOrder.id}/edit`)
+      },
+    })
+
+    options.push({
+      label: 'Acessar Produtos Agendados',
+      icon: Package,
+      onPress: () => {
+        router.push(`/work-orders/${workOrder.id}/products`)
+      },
+    })
+
+    // Grupo: Pagamento
+    if (workOrder.paymentOrder) {
+      options.push({
+        label: 'Acessar Pagamento',
+        icon: Receipt,
+        onPress: () => {
+          router.push(`/work-orders/${workOrder.id}/payment`)
+        },
+      })
+    } else {
+      options.push({
+        label: 'Criar Pagamento',
+        icon: Plus,
+        onPress: () => {
+          router.push(`/work-orders/${workOrder.id}/payment/create`)
+        },
+      })
+    }
+
+    // Grupo: Resultado
+    if (workOrder.result) {
+      options.push({
+        label: 'Acessar Resultado',
+        icon: ReceiptText,
+        onPress: () => {
+          router.push(`/work-orders/${workOrder.id}/result`)
+        },
+      })
+    } else {
+      options.push({
+        label: 'Criar Resultado',
+        icon: Plus,
+        onPress: () => {
+          router.push(`/work-orders/${workOrder.id}/result/create`)
+        },
+      })
+    }
+
+    // WhatsApp
+    if (workOrder.customer.isActiveWhatsApp()) {
+      options.push({
+        label: 'Enviar Mensagem',
+        onPress: () => {
+          try {
+            // TODO: Implementar envio de WhatsApp
+            console.log('Implementar envio de WhatsApp')
+          } catch (error) {
+            console.error('Erro ao enviar WhatsApp:', error)
+          }
+        },
+        isWhatsApp: true,
+      })
+    }
+
+    options.push({
+      label: 'Excluir',
+      icon: Trash2,
+      destructive: true,
+      onPress: () => {
+        setSelectedWorkOrder({
+          id: workOrder.id,
+          customerName,
+          date: date!,
+        })
+        setDeleteDialogOpen(true)
+      },
+    })
+
     await SheetManager.show('options-sheet', {
       payload: {
-        title: `${customerName} - ${date.toLocaleDateString('pt-BR', {
+        title: `${customerName} - ${date?.toLocaleDateString('pt-BR', {
           day: '2-digit',
           month: '2-digit',
           year: '2-digit',
         })}`,
-        options: [
-          {
-            label: 'Editar',
-            icon: EditIcon,
-            onPress: () => {
-              router.push(`/work-orders/form`)
-            },
-          },
-          {
-            label: 'Excluir',
-            icon: TrashIcon,
-            destructive: true,
-            onPress: () => {
-              setSelectedWorkOrder({ id: workOrderId, customerName, date })
-              setDeleteDialogOpen(true)
-            },
-          },
-        ],
+        options,
       },
     })
   }
@@ -310,13 +394,7 @@ export default function WorkOrdersScreen() {
                   renderItem={({ item }) => (
                     <WorkOrderCard
                       wo={item}
-                      onPress={() =>
-                        handleWorkOrderOptions(
-                          item.id,
-                          item.customer.storeName,
-                          item.scheduledDate
-                        )
-                      }
+                      onPress={() => handleWorkOrderOptions(item)}
                     />
                   )}
                   ListFooterComponent={<View className="h-16" />}
