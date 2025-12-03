@@ -36,6 +36,7 @@ type CustomerComboboxProps = {
   onCustomerChange: (customerId: string) => void
   label?: string
   placeholder?: string
+  error?: string
 }
 
 export function CustomerCombobox({
@@ -43,6 +44,7 @@ export function CustomerCombobox({
   onCustomerChange,
   label = 'Cliente',
   placeholder = 'Selecione um cliente',
+  error,
 }: CustomerComboboxProps) {
   const { data: customers = [], isLoading } = customerHooks.getCustomers()
   const [open, setOpen] = useState(false)
@@ -194,7 +196,10 @@ export function CustomerCombobox({
         <Animated.Text
           style={labelStyle}
           numberOfLines={1}
-          className="bg-background text-muted-foreground"
+          className={cn(
+            'bg-background',
+            error ? 'text-red-500' : 'text-muted-foreground'
+          )}
         >
           {label}
         </Animated.Text>
@@ -205,16 +210,22 @@ export function CustomerCombobox({
           <Pressable
             className={cn(
               'flex-row items-center justify-between h-12 px-4 rounded-md',
-              'border border-input bg-background',
-              'active:bg-accent'
+              'border bg-background',
+              'active:bg-accent',
+              error ? 'border-red-500' : 'border-input'
             )}
           >
             <View className="flex-row items-center gap-2 flex-1">
-              <Icon as={Store} size={20} className="text-muted-foreground" />
+              <Icon
+                as={Store}
+                size={20}
+                className={cn('text-muted-foreground', error && 'text-red-500')}
+              />
               <Text
                 className={cn(
                   'flex-1',
-                  !selectedCustomerId && 'text-muted-foreground'
+                  !selectedCustomerId && 'text-muted-foreground',
+                  error && 'text-red-500'
                 )}
                 numberOfLines={1}
               >
@@ -224,7 +235,7 @@ export function CustomerCombobox({
             <Icon
               as={ChevronDown}
               size={20}
-              className="text-muted-foreground"
+              className={cn('text-muted-foreground', error && 'text-red-500')}
             />
           </Pressable>
         </DialogTrigger>
@@ -296,7 +307,9 @@ export function CustomerCombobox({
         </DialogContent>
       </Dialog>
 
-      <View className="min-h-4" />
+      <View className="min-h-4 justify-center">
+        {error && <Text className="ml-2 text-xs text-red-500">{error}</Text>}
+      </View>
     </View>
   )
 }

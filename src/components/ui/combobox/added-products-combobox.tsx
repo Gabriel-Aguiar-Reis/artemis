@@ -37,6 +37,7 @@ type AddedProductsComboboxProps = {
   onAddedProductsChange: (products: WorkOrderResultItemInput[]) => void
   label?: string
   placeholder?: string
+  error?: string
 }
 
 export function AddedProductsCombobox({
@@ -44,6 +45,7 @@ export function AddedProductsCombobox({
   onAddedProductsChange,
   label = 'Produtos Adicionados',
   placeholder = 'Selecione produtos extras',
+  error,
 }: AddedProductsComboboxProps) {
   const { data: products = [], isLoading } =
     productHooks.getProductsWithCategory()
@@ -255,7 +257,10 @@ export function AddedProductsCombobox({
         <Animated.Text
           style={labelStyle}
           numberOfLines={1}
-          className="bg-background text-muted-foreground"
+          className={cn(
+            'bg-background',
+            error ? 'text-red-500' : 'text-muted-foreground'
+          )}
         >
           {label}
         </Animated.Text>
@@ -266,16 +271,22 @@ export function AddedProductsCombobox({
           <Pressable
             className={cn(
               'flex-row items-center justify-between h-12 px-4 rounded-md',
-              'border border-input bg-background',
-              'active:bg-accent'
+              'border bg-background',
+              'active:bg-accent',
+              error ? 'border-red-500' : 'border-input'
             )}
           >
             <View className="flex-row items-center gap-2 flex-1">
-              <Icon as={Package} size={20} className="text-muted-foreground" />
+              <Icon
+                as={Package}
+                size={20}
+                className={cn('text-muted-foreground', error && 'text-red-500')}
+              />
               <Text
                 className={cn(
                   'flex-1',
-                  selectedAddedProducts.length === 0 && 'text-muted-foreground'
+                  selectedAddedProducts.length === 0 && 'text-muted-foreground',
+                  error && 'text-red-500'
                 )}
                 numberOfLines={1}
               >
@@ -285,7 +296,7 @@ export function AddedProductsCombobox({
             <Icon
               as={ChevronDown}
               size={20}
-              className="text-muted-foreground"
+              className={cn('text-muted-foreground', error && 'text-red-500')}
             />
           </Pressable>
         </DialogTrigger>
@@ -383,7 +394,9 @@ export function AddedProductsCombobox({
         </View>
       )}
 
-      <View className="min-h-4" />
+      <View className="min-h-4 justify-center">
+        {error && <Text className="ml-2 text-xs text-red-500">{error}</Text>}
+      </View>
     </View>
   )
 }

@@ -36,6 +36,7 @@ type ExchangedProductsComboboxProps = {
   onExchangedProductsChange: (products: WorkOrderResultItemInput[]) => void
   label?: string
   placeholder?: string
+  error?: string
   // Para buscar informações completas dos produtos
   availableProducts?: Array<{
     id: string
@@ -51,6 +52,7 @@ export function ExchangedProductsCombobox({
   onExchangedProductsChange,
   label = 'Produtos Trocados',
   placeholder = 'Selecione dos produtos agendados',
+  error,
   availableProducts = [],
 }: ExchangedProductsComboboxProps) {
   const [open, setOpen] = useState(false)
@@ -334,7 +336,10 @@ export function ExchangedProductsCombobox({
         <Animated.Text
           style={labelStyle}
           numberOfLines={1}
-          className="bg-background text-muted-foreground"
+          className={cn(
+            'bg-background',
+            error ? 'text-red-500' : 'text-muted-foreground'
+          )}
         >
           {label}
         </Animated.Text>
@@ -345,17 +350,23 @@ export function ExchangedProductsCombobox({
           <Pressable
             className={cn(
               'flex-row items-center justify-between h-12 px-4 rounded-md',
-              'border border-input bg-background',
-              'active:bg-accent'
+              'border bg-background',
+              'active:bg-accent',
+              error ? 'border-red-500' : 'border-input'
             )}
           >
             <View className="flex-row items-center gap-2 flex-1">
-              <Icon as={Package} size={20} className="text-muted-foreground" />
+              <Icon
+                as={Package}
+                size={20}
+                className={cn('text-muted-foreground', error && 'text-red-500')}
+              />
               <Text
                 className={cn(
                   'flex-1',
                   selectedExchangedProducts.length === 0 &&
-                    'text-muted-foreground'
+                    'text-muted-foreground',
+                  error && 'text-red-500'
                 )}
                 numberOfLines={1}
               >
@@ -365,7 +376,7 @@ export function ExchangedProductsCombobox({
             <Icon
               as={ChevronDown}
               size={20}
-              className="text-muted-foreground"
+              className={cn('text-muted-foreground', error && 'text-red-500')}
             />
           </Pressable>
         </DialogTrigger>
@@ -478,7 +489,9 @@ export function ExchangedProductsCombobox({
         </View>
       )}
 
-      <View className="min-h-4" />
+      <View className="min-h-4 justify-center">
+        {error && <Text className="ml-2 text-xs text-red-500">{error}</Text>}
+      </View>
     </View>
   )
 }

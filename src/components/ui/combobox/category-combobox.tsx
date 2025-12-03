@@ -25,6 +25,7 @@ type CategoryComboboxProps = {
   onCategoryChange: (categoryId: string) => void
   label?: string
   placeholder?: string
+  error?: string
 }
 
 export function CategoryCombobox({
@@ -32,6 +33,7 @@ export function CategoryCombobox({
   onCategoryChange,
   label = 'Categoria',
   placeholder = 'Selecione uma categoria',
+  error,
 }: CategoryComboboxProps) {
   const { data: categories = [], isLoading } = categoryHooks.getCategories()
   const [open, setOpen] = useState(false)
@@ -139,7 +141,10 @@ export function CategoryCombobox({
         <Animated.Text
           style={labelStyle}
           numberOfLines={1}
-          className="bg-background text-muted-foreground"
+          className={cn(
+            'bg-background',
+            error ? 'text-red-500' : 'text-muted-foreground'
+          )}
         >
           {label}
         </Animated.Text>
@@ -150,20 +155,22 @@ export function CategoryCombobox({
           <Pressable
             className={cn(
               'flex-row items-center justify-between h-12 px-4 rounded-md',
-              'border border-input bg-background',
-              'active:bg-accent'
+              'border bg-background',
+              'active:bg-accent',
+              error ? 'border-red-500' : 'border-input'
             )}
           >
             <View className="flex-row items-center gap-2 flex-1">
               <Icon
                 as={FolderTree}
                 size={20}
-                className="text-muted-foreground"
+                className={cn('text-muted-foreground', error && 'text-red-500')}
               />
               <Text
                 className={cn(
                   'flex-1',
-                  !selectedCategoryId && 'text-muted-foreground'
+                  !selectedCategoryId && 'text-muted-foreground',
+                  error && 'text-red-500'
                 )}
                 numberOfLines={1}
               >
@@ -173,7 +180,7 @@ export function CategoryCombobox({
             <Icon
               as={ChevronDown}
               size={20}
-              className="text-muted-foreground"
+              className={cn('text-muted-foreground', error && 'text-red-500')}
             />
           </Pressable>
         </DialogTrigger>
@@ -245,7 +252,9 @@ export function CategoryCombobox({
         </DialogContent>
       </Dialog>
 
-      <View className="min-h-4" />
+      <View className="min-h-4 justify-center">
+        {error && <Text className="ml-2 text-xs text-red-500">{error}</Text>}
+      </View>
     </View>
   )
 }
