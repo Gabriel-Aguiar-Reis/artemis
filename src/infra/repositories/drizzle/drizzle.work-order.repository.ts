@@ -252,7 +252,17 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
 
     const data = WorkOrderMapper.toPersistence(wo)
 
-    await db.insert(workOrder).values(data).onConflictDoNothing()
+    await db
+      .update(workOrder)
+      .set({
+        customerId: data.customerId,
+        scheduledDate: data.scheduledDate,
+        visitDate: data.visitDate,
+        status: data.status,
+        notes: data.notes,
+        updatedAt: data.updatedAt,
+      })
+      .where(eq(workOrder.id, dto.id as UUID))
   }
 
   async updateWorkOrderStart(id: UUID): Promise<void> {

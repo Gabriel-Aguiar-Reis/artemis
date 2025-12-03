@@ -4,6 +4,7 @@ import { BackToTopButton } from '@/src/components/ui/back-to-top-button'
 import { ButtonFilter } from '@/src/components/ui/button-filter'
 import { ButtonNew } from '@/src/components/ui/button-new'
 import { ConfirmDeleteDialog } from '@/src/components/ui/dialog/confirm-delete-dialog'
+import { NotesDialog } from '@/src/components/ui/dialog/notes-dialog'
 import { Text } from '@/src/components/ui/text'
 import { WorkOrderCard } from '@/src/components/ui/work-order-card'
 import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
@@ -38,6 +39,11 @@ export default function WorkOrdersScreen() {
     date: Date
   } | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [notesDialogOpen, setNotesDialogOpen] = useState(false)
+  const [selectedNotes, setSelectedNotes] = useState<{
+    title: string
+    notes?: string
+  } | null>(null)
 
   const { mutate: deleteWorkOrder } = workOrderHooks.deleteWorkOrder()
 
@@ -76,6 +82,21 @@ export default function WorkOrdersScreen() {
       isWhatsApp?: boolean
     }[] = []
 
+    options.push({
+      label: 'Ver Observações',
+      icon: ReceiptText,
+      onPress: () => {
+        setSelectedNotes({
+          title: `${customerName} - ${date?.toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: '2-digit',
+          })}`,
+          notes: workOrder.notes,
+        })
+        setNotesDialogOpen(true)
+      },
+    })
     // Grupo: Ordem de Serviço
     options.push({
       label: 'Editar Cabeçalho da Ordem',
@@ -413,6 +434,14 @@ export default function WorkOrdersScreen() {
               handleDelete={() => {
                 handleDeleteWorkOrder(selectedWorkOrder.id)
               }}
+            />
+          )}
+          {selectedNotes && (
+            <NotesDialog
+              open={notesDialogOpen}
+              onOpenChange={setNotesDialogOpen}
+              title={selectedNotes.title}
+              notes={selectedNotes.notes}
             />
           )}
         </>
