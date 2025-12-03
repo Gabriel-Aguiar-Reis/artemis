@@ -43,6 +43,7 @@ export type WorkOrderFormCreateRef = {
   goToNextStep: () => void
   goToPrevStep: () => void
   submitForm: () => void
+  handleNext: () => Promise<void>
 }
 
 function WorkOrderFormCreateComponent<T extends FieldValues>(
@@ -102,6 +103,9 @@ function WorkOrderFormCreateComponent<T extends FieldValues>(
       setCurrentStep((s) => Math.max(0, s - 1))
     },
     submitForm: onSubmit,
+    handleNext: async () => {
+      await handleNext()
+    },
   }))
 
   return (

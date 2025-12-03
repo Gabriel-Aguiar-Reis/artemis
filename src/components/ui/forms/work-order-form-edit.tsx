@@ -3,7 +3,7 @@ import { BaseForm, FormFieldProps } from '@/src/components/ui/forms/base-form'
 import { Stepper } from '@/src/components/ui/stepper'
 import { Text } from '@/src/components/ui/text'
 import { getErrorMessage } from '@/src/lib/utils'
-import { BaseSyntheticEvent, useState } from 'react'
+import { BaseSyntheticEvent, ReactNode, useState } from 'react'
 import {
   Control,
   FieldErrors,
@@ -15,6 +15,7 @@ import { KeyboardAvoidingView, Platform, View } from 'react-native'
 type StepConfig<T extends FieldValues> = {
   label: string
   fields: FormFieldProps<T>['name'][]
+  customRenderer?: () => ReactNode
 }
 
 type WorkOrderFormEditProps<T extends FieldValues> = {
@@ -94,78 +95,83 @@ export function WorkOrderFormEdit<T extends FieldValues>({
           </Text>
         )}
 
-        {visibleFields.map((fieldConfig) => {
-          if (fieldConfig.isCurrency) {
-            return (
-              <BaseForm.Input.Currency<T>
-                key={String(fieldConfig.name)}
-                control={control}
-                name={fieldConfig.name}
-                label={fieldConfig.label}
-                placeholder={fieldConfig.placeholder}
-                error={getErrorMessage(errors?.[fieldConfig.name]?.message)}
-                icon={fieldConfig.icon}
-                alternate={
-                  String(fieldConfig.name) === 'name' && fieldConfig.alternate
-                    ? {
-                        icon: fieldConfig.alternate.icon,
-                        type: fieldConfig.alternate.type,
-                      }
-                    : fieldConfig.alternate
-                }
-                iconTooltip={fieldConfig.iconTooltip}
-                rules={fieldConfig.rules}
-                inputProps={fieldConfig.inputProps}
-                isDialog={fieldConfig.isDialog}
-                isSelect={fieldConfig.isSelect}
-                isSearch={fieldConfig.isSearch}
-                onSearchPress={fieldConfig.onSearchPress}
-                isSearchLoading={fieldConfig.isSearchLoading}
-              />
-            )
-          }
-          if (fieldConfig.isCheckbox) {
-            return (
-              <BaseForm.Checkbox<T>
-                key={String(fieldConfig.name)}
-                control={control}
-                name={fieldConfig.name}
-                label={fieldConfig.label}
-                icon={fieldConfig.icon}
-                iconTooltip={fieldConfig.iconTooltip}
-                rules={fieldConfig.rules}
-              />
-            )
-          }
-
-          return (
-            <BaseForm.Input<T>
-              key={String(fieldConfig.name)}
-              control={control}
-              name={fieldConfig.name}
-              label={fieldConfig.label}
-              placeholder={fieldConfig.placeholder}
-              error={getErrorMessage(errors?.[fieldConfig.name]?.message)}
-              icon={fieldConfig.icon}
-              alternate={
-                String(fieldConfig.name) === 'name' && fieldConfig.alternate
-                  ? {
-                      icon: fieldConfig.alternate.icon,
-                      type: fieldConfig.alternate.type,
+        {/* Renderização customizada se fornecida */}
+        {step?.customRenderer
+          ? step.customRenderer()
+          : /* Renderização padrão dos campos */
+            visibleFields.map((fieldConfig) => {
+              if (fieldConfig.isCurrency) {
+                return (
+                  <BaseForm.Input.Currency<T>
+                    key={String(fieldConfig.name)}
+                    control={control}
+                    name={fieldConfig.name}
+                    label={fieldConfig.label}
+                    placeholder={fieldConfig.placeholder}
+                    error={getErrorMessage(errors?.[fieldConfig.name]?.message)}
+                    icon={fieldConfig.icon}
+                    alternate={
+                      String(fieldConfig.name) === 'name' &&
+                      fieldConfig.alternate
+                        ? {
+                            icon: fieldConfig.alternate.icon,
+                            type: fieldConfig.alternate.type,
+                          }
+                        : fieldConfig.alternate
                     }
-                  : fieldConfig.alternate
+                    iconTooltip={fieldConfig.iconTooltip}
+                    rules={fieldConfig.rules}
+                    inputProps={fieldConfig.inputProps}
+                    isDialog={fieldConfig.isDialog}
+                    isSelect={fieldConfig.isSelect}
+                    isSearch={fieldConfig.isSearch}
+                    onSearchPress={fieldConfig.onSearchPress}
+                    isSearchLoading={fieldConfig.isSearchLoading}
+                  />
+                )
               }
-              iconTooltip={fieldConfig.iconTooltip}
-              rules={fieldConfig.rules}
-              inputProps={fieldConfig.inputProps}
-              isDialog={fieldConfig.isDialog}
-              isSelect={fieldConfig.isSelect}
-              isSearch={fieldConfig.isSearch}
-              onSearchPress={fieldConfig.onSearchPress}
-              isSearchLoading={fieldConfig.isSearchLoading}
-            />
-          )
-        })}
+              if (fieldConfig.isCheckbox) {
+                return (
+                  <BaseForm.Checkbox<T>
+                    key={String(fieldConfig.name)}
+                    control={control}
+                    name={fieldConfig.name}
+                    label={fieldConfig.label}
+                    icon={fieldConfig.icon}
+                    iconTooltip={fieldConfig.iconTooltip}
+                    rules={fieldConfig.rules}
+                  />
+                )
+              }
+
+              return (
+                <BaseForm.Input<T>
+                  key={String(fieldConfig.name)}
+                  control={control}
+                  name={fieldConfig.name}
+                  label={fieldConfig.label}
+                  placeholder={fieldConfig.placeholder}
+                  error={getErrorMessage(errors?.[fieldConfig.name]?.message)}
+                  icon={fieldConfig.icon}
+                  alternate={
+                    String(fieldConfig.name) === 'name' && fieldConfig.alternate
+                      ? {
+                          icon: fieldConfig.alternate.icon,
+                          type: fieldConfig.alternate.type,
+                        }
+                      : fieldConfig.alternate
+                  }
+                  iconTooltip={fieldConfig.iconTooltip}
+                  rules={fieldConfig.rules}
+                  inputProps={fieldConfig.inputProps}
+                  isDialog={fieldConfig.isDialog}
+                  isSelect={fieldConfig.isSelect}
+                  isSearch={fieldConfig.isSearch}
+                  onSearchPress={fieldConfig.onSearchPress}
+                  isSearchLoading={fieldConfig.isSearchLoading}
+                />
+              )
+            })}
         <View className="flex-row justify-between w-full gap-2 mt-4">
           <Button
             variant="outline"
