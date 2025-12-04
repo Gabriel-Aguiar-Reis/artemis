@@ -41,7 +41,7 @@ export class WhatsAppService {
     workOrder: WorkOrder,
     notifyVisit: boolean
   ): string {
-    let message = `Olá ${workOrder.customer.contactName}, tudo bem?`
+    let message = `Olá, ${workOrder.customer.contactName}, tudo bem?\n\n`
 
     const customer = workOrder.customer
     const scheduledDate = workOrder.scheduledDate.toLocaleDateString('pt-BR', {
@@ -51,12 +51,12 @@ export class WhatsAppService {
     })
 
     if (notifyVisit) {
-      message += `A visita está confirmada para o dia ${scheduledDate}. Qualquer imprevisto, por favor, avise com antecedência.\n\n`
+      message += `A minha visita está confirmada para o dia *${scheduledDate}*.\n\n`
       message += `Qualquer dúvida, estou à disposição!`
       return message
     }
 
-    message += `📋 *Ordem de Serviço*\n\n`
+    message += `📋 Segue o resumo da *Ordem de Serviço* realizada:\n\n`
     message += `🏪 Loja: ${customer.storeName}\n`
     message += `📅 Data agendada: ${scheduledDate}\n\n`
 
@@ -116,7 +116,11 @@ export class WhatsAppService {
     if (paymentOrder) {
       message += `💳 *Pagamento:*\n`
       message += `Método: ${paymentOrder.method}\n`
-      message += `Parcelas: ${paymentOrder.installments}x de R$ ${paymentOrder.installmentValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n`
+      if (paymentOrder.installments && paymentOrder.installments > 1) {
+        message += `Parcelas: ${paymentOrder.installments}x de R$ ${(
+          paymentOrder.totalValue / paymentOrder.installments
+        ).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n`
+      }
       message += `Pago: R$ ${paymentOrder.paidValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n`
       message += `Restante: R$ ${paymentOrder.remainingValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n\n`
 
