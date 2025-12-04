@@ -11,7 +11,6 @@ import { Text } from '@/src/components/ui/text'
 import { WorkOrderCard } from '@/src/components/ui/work-order-card'
 import { ItineraryWorkOrder } from '@/src/domain/entities/itinerary-work-order/itinerary-work-order.entity'
 import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
-import { useQueryClient } from '@tanstack/react-query'
 import { Stack, useRouter } from 'expo-router'
 import {
   Edit,
@@ -21,7 +20,7 @@ import {
   Receipt,
   ReceiptText,
 } from 'lucide-react-native'
-import React, { useCallback, useMemo, useRef, useState } from 'react'
+import React, { memo, useCallback, useEffect, useRef, useState } from 'react'
 import {
   NativeScrollEvent,
   NativeSyntheticEvent,
@@ -40,7 +39,6 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
 
 export default function ItineraryScreen() {
   const router = useRouter()
-  const queryClient = useQueryClient()
   const [isDragging, setIsDragging] = useState(false)
   const [selectedNotes, setSelectedNotes] = useState<{
     title: string
@@ -52,9 +50,12 @@ export default function ItineraryScreen() {
   const { mutateAsync: updatePositions } =
     itineraryWorkOrderHooks.updatePositions()
 
-  const workOrders = useMemo(() => {
-    if (!itinerary?.workOrders) return []
-    return [...itinerary.workOrders].sort((a, b) => a.position - b.position)
+  const [workOrders, setWorkOrders] = useState<ItineraryWorkOrder[]>([])
+
+  useEffect(() => {
+    if (itinerary?.workOrders) {
+      setWorkOrders(itinerary.workOrders)
+    }
   }, [itinerary?.workOrders])
 
   // Adicionado useRef e useState para FlatList e botão de voltar ao topo
@@ -191,6 +192,8 @@ export default function ItineraryScreen() {
     })
   }
 
+  memo(WorkOrderCard)
+
   const renderItem = useCallback(
     ({ item, drag, isActive }: RenderItemParams<ItineraryWorkOrder>) => {
       const animatedStyle = useAnimatedStyle(() => {
@@ -207,11 +210,7 @@ export default function ItineraryScreen() {
       })
 
       return (
-        <AnimatedPressable
-          onLongPress={isDragging ? drag : undefined}
-          disabled={!isDragging || isActive}
-          style={animatedStyle}
-        >
+        <AnimatedPressable onLongPress={drag} style={animatedStyle}>
           <View className="px-4">
             <WorkOrderCard
               wo={item.workOrder}
@@ -222,7 +221,7 @@ export default function ItineraryScreen() {
         </AnimatedPressable>
       )
     },
-    [isDragging, router]
+    []
   )
 
   const handleDragEnd = useCallback(
@@ -232,8 +231,6 @@ export default function ItineraryScreen() {
         position: index + 1,
       }))
       await (updatePositions as any)([updates])
-      queryClient.invalidateQueries({ queryKey: ['itineraryWorkOrders'] })
-      queryClient.invalidateQueries({ queryKey: ['itineraries'] })
     },
     [updatePositions]
   )
@@ -301,7 +298,7 @@ export default function ItineraryScreen() {
                 onDragEnd={handleDragEnd}
                 ListHeaderComponent={<View className="h-4" />}
                 ListFooterComponent={<View className="h-16" />}
-                activationDistance={isDragging ? 0 : 20}
+                activationDistance={20}
                 animationConfig={{ damping: 20, mass: 0.5, stiffness: 500 }}
               />
             )}
