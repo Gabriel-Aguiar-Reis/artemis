@@ -224,7 +224,7 @@ export default function WorkOrderPaymentCreateScreen() {
                 ? 'Pagamento à vista foi marcado como realizado. O número de parcelas foi definido como 1.'
                 : (installments || 1) > 1
                   ? `Pagamento parcelado em ${installments}x. Você poderá marcar cada parcela como paga posteriormente.`
-                  : 'Marque "Foi pago?" se o valor foi pago à vista, ou defina o número de parcelas para pagamento parcelado.'}
+                  : 'Marque "Pagamento à Vista Realizado" se o valor foi pago à vista, ou defina o número de parcelas para pagamento parcelado.'}
             </AlertDescription>
           </Alert>
 

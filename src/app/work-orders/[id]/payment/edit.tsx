@@ -190,7 +190,7 @@ export default function PaymentEditScreen() {
               {isPaid
                 ? 'Pagamento à vista marcado como realizado. O número de parcelas é 1.'
                 : installments === 1
-                  ? 'Pagamento à vista. Marque "Foi pago?" se o valor já foi recebido.'
+                  ? 'Pagamento à vista. Marque "Pagamento à Vista Realizado" se o valor já foi recebido.'
                   : `Pagamento parcelado em ${installments}x. ${paidInstallments} de ${installments} parcela(s) paga(s).`}
             </AlertDescription>
           </Alert>

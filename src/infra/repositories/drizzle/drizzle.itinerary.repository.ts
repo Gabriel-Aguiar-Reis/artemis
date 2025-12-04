@@ -293,7 +293,7 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
       .limit(1)
       .get()
 
-    if (!row) throw new Error('O itinerário ativo não foi encontrado.')
+    if (!row) return null
 
     const workOrdersMap = await this.loadItineraryWorkOrders(row.id as UUID)
     return ItineraryMapper.toDomain(row, workOrdersMap)

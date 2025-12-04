@@ -450,7 +450,7 @@ export default function WorkOrderFormScreen() {
           ? [
               {
                 name: 'isPaid' as const,
-                label: 'Foi pago?',
+                label: 'Pagamento Realizado',
                 isCheckbox: true,
               },
             ]
