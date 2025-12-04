@@ -8,6 +8,8 @@ let drizzleInstance: ReturnType<typeof drizzle> | null = null
 export function getExpoDb() {
   if (!expoDb) {
     expoDb = openDatabaseSync('artemis.db')
+    // Habilitar foreign keys para suportar cascade delete
+    expoDb.execSync('PRAGMA foreign_keys = ON;')
   }
   return expoDb
 }
