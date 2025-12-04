@@ -125,7 +125,10 @@ export function ProductCombobox({
     return (
       <View className="min-h-[140px]">
         <Pressable
-          onPress={() => toggleProduct(item)}
+          onPress={() => {
+            // Só seleciona se não estiver selecionado
+            if (!selected) toggleProduct(item)
+          }}
           className={cn(
             'p-4 border-b border-border',
             selected && 'bg-accent/50'
@@ -181,13 +184,22 @@ export function ProductCombobox({
             </View>
 
             {selected && (
-              <View className="bg-primary rounded-full p-1">
+              <Pressable
+                onPress={(e) => {
+                  e.stopPropagation()
+                  // tira seleção ao clicar no ícone de check
+                  onProductsChange(
+                    selectedProducts.filter((p) => p.productId !== item.id)
+                  )
+                }}
+                className="bg-primary rounded-full p-1"
+              >
                 <Icon
                   as={Check}
                   size={16}
                   className="text-primary-foreground"
                 />
-              </View>
+              </Pressable>
             )}
           </View>
 
