@@ -214,7 +214,6 @@ export default function ItineraryScreen() {
           <View className="px-4">
             <WorkOrderCard
               wo={item.workOrder}
-              index={item.position}
               onPress={() => handleWorkOrderOptions(item.workOrder)}
             />
           </View>
