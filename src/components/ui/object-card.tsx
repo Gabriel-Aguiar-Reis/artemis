@@ -6,6 +6,7 @@ import {
   CardTitle,
 } from '@/src/components/ui/card'
 import { Icon } from '@/src/components/ui/icon'
+import { Text } from '@/src/components/ui/text'
 import { MoreVerticalIcon } from 'lucide-react-native'
 import * as React from 'react'
 import { isValidElement, ReactElement, ReactNode } from 'react'
@@ -14,10 +15,12 @@ import { Pressable, View } from 'react-native'
 type ObjectCardRootProps = {
   children: ReactNode
   className?: string
+  index?: number
 }
 
 type ObjectCardHeaderProps = {
   children: ReactNode
+  index?: number
 }
 
 type ObjectCardTitleProps = {
@@ -36,11 +39,19 @@ type ObjectCardContentProps = {
   children: ReactNode
 }
 
-function ObjectCardRoot({ children, className }: ObjectCardRootProps) {
-  return <Card className={className}>{children}</Card>
+function ObjectCardRoot({ children, className, index }: ObjectCardRootProps) {
+  return (
+    <View className="relative">
+      {index !== undefined && (
+        <View className="absolute min-w-7 px-1 h-7 rounded-tl-xl rounded-br-lg flex items-center justify-center border-border border-2 z-10 dark:bg-background">
+          <Text className="text-base text-primary font-bold">{index + 1}</Text>
+        </View>
+      )}
+      <Card className={className}>{children}</Card>
+    </View>
+  )
 }
-
-function ObjectCardHeader({ children }: ObjectCardHeaderProps) {
+function ObjectCardHeader({ children, index }: ObjectCardHeaderProps) {
   const childrenArray = React.Children.toArray(children)
 
   const title = childrenArray.find(
