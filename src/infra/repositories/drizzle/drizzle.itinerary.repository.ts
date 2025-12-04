@@ -29,7 +29,7 @@ import { workOrderResultItem } from '@/src/infra/db/drizzle/schema/drizzle.work-
 import { workOrderResult } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result.schema'
 import { workOrder } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
 import { UUID } from '@/src/lib/utils'
-import { and, eq, gte, inArray, lte } from 'drizzle-orm'
+import { and, asc, eq, gte, inArray, lte } from 'drizzle-orm'
 import uuid from 'react-native-uuid'
 
 export default class DrizzleItineraryRepository implements ItineraryRepository {
@@ -194,7 +194,52 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
 
   async addItinerary(dto: ItineraryInsertDTO): Promise<void> {
     const id = uuid.v4() as UUID
-    await db.insert(itinerary).values({ ...dto, id })
+
+    // Verificar se já existe um itinerário ativo
+    const activeItinerary = db
+      .select()
+      .from(itinerary)
+      .where(eq(itinerary.isFinished, false))
+      .limit(1)
+      .get()
+
+    if (activeItinerary) {
+      throw new Error(
+        'Já existe um itinerário ativo. Finalize-o antes de criar um novo.'
+      )
+    }
+
+    // Buscar work orders no período
+    const startDate = new Date(dto.initialItineraryDate)
+    const endDate = new Date(dto.finalItineraryDate)
+
+    const workOrdersInPeriod = await db
+      .select()
+      .from(workOrder)
+      .where(
+        and(
+          gte(workOrder.scheduledDate, startDate.toISOString()),
+          lte(workOrder.scheduledDate, endDate.toISOString())
+        )
+      )
+      .orderBy(asc(workOrder.scheduledDate))
+
+    await db.transaction(async (tx) => {
+      // Criar o itinerário
+      await tx.insert(itinerary).values({ ...dto, id })
+
+      // Criar os itinerary-work-orders
+      for (let i = 0; i < workOrdersInPeriod.length; i++) {
+        const wo = workOrdersInPeriod[i]
+        await tx.insert(itineraryWorkOrder).values({
+          id: uuid.v4() as string,
+          itineraryId: id,
+          workOrderId: wo.id,
+          position: i + 1,
+          isLate: false,
+        })
+      }
+    })
   }
 
   async updateItinerary(dto: ItineraryUpdateDTO): Promise<void> {
