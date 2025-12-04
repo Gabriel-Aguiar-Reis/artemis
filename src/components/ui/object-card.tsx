@@ -44,7 +44,7 @@ function ObjectCardRoot({ children, className, index }: ObjectCardRootProps) {
     <View className="relative">
       {index !== undefined && (
         <View className="absolute min-w-7 px-1 h-7 rounded-tl-xl rounded-br-lg flex items-center justify-center border-border border-2 z-10 dark:bg-background">
-          <Text className="text-base text-primary font-bold">{index + 1}</Text>
+          <Text className="text-base text-primary font-bold">{index}</Text>
         </View>
       )}
       <Card className={className}>{children}</Card>
