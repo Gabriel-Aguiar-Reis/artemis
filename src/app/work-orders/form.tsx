@@ -576,7 +576,7 @@ export default function WorkOrderFormScreen() {
                 size="lg"
                 onPress={() => {
                   form.setValue('shouldCreateReport', true)
-                  formRef.current?.handleNext()
+                  formRef.current?.goToNextStep()
                 }}
                 className="w-full"
               >
@@ -676,7 +676,7 @@ export default function WorkOrderFormScreen() {
                 size="lg"
                 onPress={() => {
                   form.setValue('shouldCreatePayment', true)
-                  formRef.current?.handleNext()
+                  formRef.current?.goToNextStep()
                 }}
                 className="w-full"
               >
