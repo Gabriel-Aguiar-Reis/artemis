@@ -20,6 +20,7 @@ export class DrizzleItineraryWorkOrderRepository
       .from(itineraryWorkOrder)
       .where(eq(itineraryWorkOrder.itineraryId, itineraryId))
       .leftJoin(workOrder, eq(itineraryWorkOrder.workOrderId, workOrder.id))
+      .orderBy(itineraryWorkOrder.position)
 
     if (rows.length === 0) {
       return []

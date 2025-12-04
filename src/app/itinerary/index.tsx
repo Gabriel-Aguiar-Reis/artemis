@@ -5,12 +5,13 @@ import { BackToTopButton } from '@/src/components/ui/back-to-top-button'
 import { ButtonFilter } from '@/src/components/ui/button-filter'
 import { ButtonFinish } from '@/src/components/ui/button-finish'
 import { ButtonNew } from '@/src/components/ui/button-new'
+import { ButtonReorder } from '@/src/components/ui/button-reorder'
 import { NotesDialog } from '@/src/components/ui/dialog/notes-dialog'
 import { Text } from '@/src/components/ui/text'
 import { WorkOrderCard } from '@/src/components/ui/work-order-card'
-import { ItineraryWorkOrder } from '@/src/domain/entities/itinerary-work-order/itinerary-work-order.entity'
 import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
 import { UUID } from '@/src/lib/utils'
+import { FlashList } from '@shopify/flash-list'
 import { Stack, useRouter } from 'expo-router'
 import {
   Edit,
@@ -20,22 +21,14 @@ import {
   Receipt,
   ReceiptText,
 } from 'lucide-react-native'
-import React, { memo, useCallback, useRef, useState } from 'react'
-import {
-  NativeScrollEvent,
-  NativeSyntheticEvent,
-  Pressable,
-  View,
-} from 'react-native'
+import React, { useRef, useState } from 'react'
+import { NativeScrollEvent, NativeSyntheticEvent, View } from 'react-native'
 import { SheetManager } from 'react-native-actions-sheet'
-import DraggableFlatList, {
-  RenderItemParams,
-} from 'react-native-draggable-flatlist'
-import { GestureHandlerRootView } from 'react-native-gesture-handler'
-import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated'
+import {
+  GestureHandlerRootView,
+  ScrollView,
+} from 'react-native-gesture-handler'
 import { SafeAreaView } from 'react-native-safe-area-context'
-
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
 
 export default function ItineraryScreen() {
   const router = useRouter()
@@ -46,14 +39,12 @@ export default function ItineraryScreen() {
   const [notesDialogOpen, setNotesDialogOpen] = useState(false)
 
   const { data: itinerary, isLoading } = itineraryHooks.getActiveItinerary()
-  const { mutateAsync: updatePositions } =
-    itineraryWorkOrderHooks.updatePositions()
   const { data: workOrders } =
     itineraryWorkOrderHooks.getItineraryWorkOrdersByItineraryId(
       itinerary?.id || ('' as UUID)
     )
 
-  const flatListRef = useRef<any>(null)
+  const flatListRef = useRef<ScrollView>(null)
   const [showScrollBtn, setShowScrollBtn] = useState(false)
 
   const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -62,7 +53,7 @@ export default function ItineraryScreen() {
   }
 
   const scrollToTop = () => {
-    flatListRef.current?.scrollToOffset({ offset: 0, animated: true })
+    flatListRef.current?.scrollTo({ y: 0, animated: true })
   }
 
   const handleWorkOrderOptions = async (workOrder: WorkOrder) => {
@@ -186,48 +177,6 @@ export default function ItineraryScreen() {
     })
   }
 
-  memo(WorkOrderCard)
-
-  const renderItem = useCallback(
-    ({ item, drag, isActive }: RenderItemParams<ItineraryWorkOrder>) => {
-      const animatedStyle = useAnimatedStyle(() => {
-        return {
-          transform: [
-            {
-              scale: withSpring(isActive ? 1.05 : 1, {
-                stiffness: 500,
-              }),
-            },
-          ],
-          opacity: withSpring(isActive ? 0.9 : 1),
-        }
-      })
-
-      return (
-        <AnimatedPressable onLongPress={drag} style={animatedStyle}>
-          <View className="px-4">
-            <WorkOrderCard
-              wo={item.workOrder}
-              onPress={() => handleWorkOrderOptions(item.workOrder)}
-            />
-          </View>
-        </AnimatedPressable>
-      )
-    },
-    []
-  )
-
-  const handleDragEnd = useCallback(
-    async ({ data }: { data: ItineraryWorkOrder[] }) => {
-      const updates = data.map((item, index) => ({
-        id: item.id,
-        position: index + 1,
-      }))
-      await (updatePositions as any)([updates])
-    },
-    [updatePositions]
-  )
-
   return (
     <GestureHandlerRootView className="flex-1">
       <SafeAreaView className="flex-1">
@@ -236,11 +185,9 @@ export default function ItineraryScreen() {
             headerTitle: 'Itinerário',
             headerRight: () => (
               <View className="flex-row gap-2">
+                {itinerary && <ButtonReorder href="/itinerary/reorder" />}
                 <ButtonFilter
-                  href={{
-                    pathname: '/itinerary/search',
-                    params: {},
-                  }}
+                  href={{ pathname: '/itinerary/search', params: {} }}
                   isActive={false}
                 />
                 {itinerary && !itinerary.isFinished ? (
@@ -248,6 +195,7 @@ export default function ItineraryScreen() {
                 ) : (
                   <ButtonNew href="/itinerary/form" />
                 )}
+                {/* Novo botão para editar ordenação */}
               </View>
             ),
           }}
@@ -273,28 +221,37 @@ export default function ItineraryScreen() {
               {itinerary.finalItineraryDate.toLocaleDateString('pt-BR')}
             </Text>
 
-            {!workOrders || workOrders.length === 0 ? (
-              <View className="flex-1 items-center justify-center px-4">
-                <Text className="text-center text-muted-foreground">
-                  Há algo errado!{'\n'}
-                  Nenhuma ordem de serviço encontrada{'\n'}
-                  no período escolhido.
-                </Text>
-              </View>
-            ) : (
-              <DraggableFlatList
-                ref={flatListRef}
-                data={workOrders}
-                renderItem={renderItem}
-                onScroll={handleScroll}
-                keyExtractor={(item) => item.id}
-                onDragEnd={handleDragEnd}
-                ListHeaderComponent={<View className="h-4" />}
-                ListFooterComponent={<View className="h-16" />}
-                activationDistance={20}
-                animationConfig={{ damping: 20, mass: 0.5, stiffness: 500 }}
-              />
-            )}
+            <ScrollView
+              ref={flatListRef}
+              onScroll={handleScroll}
+              scrollEventThrottle={16}
+            >
+              {!workOrders || workOrders.length === 0 ? (
+                <View className="flex-1 items-center justify-center px-4">
+                  <Text className="text-center text-muted-foreground">
+                    Há algo errado!{'\n'}
+                    Nenhuma ordem de serviço encontrada{'\n'}
+                    no período escolhido.
+                  </Text>
+                </View>
+              ) : (
+                <View className="flex-1">
+                  <FlashList
+                    data={workOrders}
+                    renderItem={({ item }) => (
+                      <View key={item.id} className="px-4">
+                        <WorkOrderCard
+                          wo={item.workOrder}
+                          onPress={() => handleWorkOrderOptions(item.workOrder)}
+                        />
+                      </View>
+                    )}
+                    ListHeaderComponent={<View className="h-4" />}
+                    ListFooterComponent={<View className="h-16" />}
+                  />
+                </View>
+              )}
+            </ScrollView>
             {/* Botão de voltar ao topo */}
             <BackToTopButton isVisible={showScrollBtn} onPress={scrollToTop} />
 
