@@ -49,7 +49,8 @@ export default function ItineraryScreen() {
   const [notesDialogOpen, setNotesDialogOpen] = useState(false)
 
   const { data: itinerary, isLoading } = itineraryHooks.getActiveItinerary()
-  const { mutate: updatePositions } = itineraryWorkOrderHooks.updatePositions()
+  const { mutateAsync: updatePositions } =
+    itineraryWorkOrderHooks.updatePositions()
 
   const workOrders = useMemo(() => {
     if (!itinerary?.workOrders) return []
@@ -211,11 +212,13 @@ export default function ItineraryScreen() {
           disabled={!isDragging || isActive}
           style={animatedStyle}
         >
-          <WorkOrderCard
-            wo={item.workOrder}
-            index={item.position}
-            onPress={() => handleWorkOrderOptions(item.workOrder)}
-          />
+          <View className="px-4">
+            <WorkOrderCard
+              wo={item.workOrder}
+              index={item.position}
+              onPress={() => handleWorkOrderOptions(item.workOrder)}
+            />
+          </View>
         </AnimatedPressable>
       )
     },
@@ -223,12 +226,12 @@ export default function ItineraryScreen() {
   )
 
   const handleDragEnd = useCallback(
-    ({ data }: { data: ItineraryWorkOrder[] }) => {
+    async ({ data }: { data: ItineraryWorkOrder[] }) => {
       const updates = data.map((item, index) => ({
         id: item.id,
         position: index + 1,
       }))
-      updatePositions(updates)
+      await (updatePositions as any)([updates])
       queryClient.invalidateQueries({ queryKey: ['itineraryWorkOrders'] })
       queryClient.invalidateQueries({ queryKey: ['itineraries'] })
     },
@@ -296,6 +299,7 @@ export default function ItineraryScreen() {
                 onScroll={handleScroll}
                 keyExtractor={(item) => item.id}
                 onDragEnd={handleDragEnd}
+                ListHeaderComponent={<View className="h-4" />}
                 ListFooterComponent={<View className="h-16" />}
                 activationDistance={isDragging ? 0 : 20}
                 containerStyle={{ backgroundColor: 'transparent' }}
