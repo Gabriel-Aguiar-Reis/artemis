@@ -382,7 +382,12 @@ export default function WorkOrderFormScreen() {
       })
 
       console.log('Work order created successfully')
-      router.back()
+
+      // Retornar para o index com o ID da work order criada
+      router.replace({
+        pathname: '/work-orders',
+        params: { createdWorkOrderId: workOrderId },
+      })
     } catch (error) {
       console.error('Error creating work order:', error)
       Toast.show({
@@ -717,7 +722,9 @@ export default function WorkOrderFormScreen() {
 
             // Atualizar totalValue no formulário (sem useEffect)
             if (form.getValues('totalValue') !== totalValue) {
-              form.setValue('totalValue', totalValue, { shouldValidate: false })
+              form.setValue('totalValue', totalValue, {
+                shouldValidate: false,
+              })
             }
 
             const allProductItems = [

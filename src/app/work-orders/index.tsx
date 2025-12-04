@@ -6,6 +6,7 @@ import { ButtonFilter } from '@/src/components/ui/button-filter'
 import { ButtonNew } from '@/src/components/ui/button-new'
 import { ConfirmDeleteDialog } from '@/src/components/ui/dialog/confirm-delete-dialog'
 import { NotesDialog } from '@/src/components/ui/dialog/notes-dialog'
+import { WhatsAppSummaryDialog } from '@/src/components/ui/dialog/whatsapp-summary-dialog'
 import { Text } from '@/src/components/ui/text'
 import { WorkOrderCard } from '@/src/components/ui/work-order-card'
 import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
@@ -31,8 +32,12 @@ import {
 } from 'react-native'
 import { SheetManager } from 'react-native-actions-sheet'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import Toast from 'react-native-toast-message'
 
 export default function WorkOrdersScreen() {
+  const { createdWorkOrderId } = useLocalSearchParams<{
+    createdWorkOrderId?: string
+  }>()
   const { data: workOrders, isLoading } = workOrderHooks.getWorkOrders()
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<{
     id: UUID
@@ -45,6 +50,7 @@ export default function WorkOrdersScreen() {
     title: string
     notes?: string
   } | null>(null)
+  const [showWhatsAppDialog, setShowWhatsAppDialog] = useState(false)
 
   const { mutate: deleteWorkOrder } = workOrderHooks.deleteWorkOrder()
 
@@ -56,6 +62,13 @@ export default function WorkOrdersScreen() {
     const offsetY = e.nativeEvent.contentOffset.y
     setShowScrollBtn(offsetY > 0)
   }
+
+  // Detectar quando uma work order foi criada e mostrar o dialog do WhatsApp
+  React.useEffect(() => {
+    if (createdWorkOrderId && workOrders) {
+      setShowWhatsAppDialog(true)
+    }
+  }, [createdWorkOrderId, workOrders])
 
   const params = useLocalSearchParams<{
     search?: string // customer store name or contact name
@@ -209,6 +222,49 @@ export default function WorkOrdersScreen() {
   const handleDeleteWorkOrder = (workOrderId: UUID) => {
     deleteWorkOrder(workOrderId)
     setDeleteDialogOpen(false)
+  }
+
+  // Função para enviar mensagem do WhatsApp
+  const handleSendWhatsApp = () => {
+    if (!createdWorkOrderId || !workOrders) {
+      setShowWhatsAppDialog(false)
+      // Limpar o parâmetro da URL
+      router.replace('/work-orders')
+      return
+    }
+
+    try {
+      // Buscar a work order criada
+      const workOrder = workOrders.find((wo) => wo.id === createdWorkOrderId)
+
+      if (!workOrder) {
+        throw new Error('Ordem de serviço não encontrada')
+      }
+
+      // Enviar mensagem via WhatsApp
+      WhatsAppService.sendWorkOrderMessage(workOrder, false)
+
+      setShowWhatsAppDialog(false)
+      // Limpar o parâmetro da URL
+      router.replace('/work-orders')
+    } catch (error) {
+      console.error('Error sending WhatsApp message:', error)
+      Toast.show({
+        type: 'error',
+        text1: 'Erro ao enviar mensagem',
+        text2: error instanceof Error ? error.message : 'Erro desconhecido',
+      })
+      setShowWhatsAppDialog(false)
+      // Limpar o parâmetro da URL
+      router.replace('/work-orders')
+    }
+  }
+
+  // Função para cancelar o envio do WhatsApp
+  const handleCancelWhatsApp = () => {
+    setShowWhatsAppDialog(false)
+    // Limpar o parâmetro da URL
+    router.replace('/work-orders')
   }
 
   const filteredWorkOrders = useMemo(() => {
@@ -438,6 +494,7 @@ export default function WorkOrdersScreen() {
 
           {/* Botão de voltar ao topo */}
           <BackToTopButton isVisible={showScrollBtn} scrollRef={scrollRef} />
+
           {selectedWorkOrder && (
             <ConfirmDeleteDialog
               open={deleteDialogOpen}
@@ -448,6 +505,7 @@ export default function WorkOrdersScreen() {
               }}
             />
           )}
+
           {selectedNotes && (
             <NotesDialog
               open={notesDialogOpen}
@@ -456,6 +514,15 @@ export default function WorkOrdersScreen() {
               notes={selectedNotes.notes}
             />
           )}
+
+          <WhatsAppSummaryDialog
+            open={showWhatsAppDialog}
+            onOpenChange={setShowWhatsAppDialog}
+            title="Enviar resumo ao cliente?"
+            description="Deseja enviar via WhatsApp o resumo desta ordem de serviço?"
+            onConfirm={handleSendWhatsApp}
+            onCancel={handleCancelWhatsApp}
+          />
         </>
       )}
     </SafeAreaView>

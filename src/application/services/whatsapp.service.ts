@@ -123,9 +123,8 @@ export class WhatsAppService {
       }
       message += `Pago: R$ ${paymentOrder.paidValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n`
       message += `Restante: R$ ${paymentOrder.remainingValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n\n`
-
-      message += `Qualquer dúvida, estou à disposição!`
     }
+    message += `Qualquer dúvida, estou à disposição!`
     return message
   }
 }
