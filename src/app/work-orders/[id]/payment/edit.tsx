@@ -11,6 +11,7 @@ import {
 } from '@/src/domain/validations/payment-order.schema'
 import { getErrorMessage, UUID } from '@/src/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useQueryClient } from '@tanstack/react-query'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
 import { CircleQuestionMark, CreditCard, Info } from 'lucide-react-native'
 import { useEffect } from 'react'
@@ -24,6 +25,8 @@ export default function PaymentEditScreen() {
     workOrderHooks.getWorkOrder(params.id)
   const { mutateAsync: updatePayment, isPending } =
     paymentOrderHooks.updatePaymentOrder()
+
+  const queryClient = useQueryClient()
 
   const form = useForm<PaymentOrderUpdateDTO>({
     resolver: zodResolver(paymentOrderUpdateSchema),
@@ -68,6 +71,7 @@ export default function PaymentEditScreen() {
         isPaid: data.isPaid ?? false,
         paidInstallments: Number(data.paidInstallments),
       })
+      queryClient.invalidateQueries({ queryKey: ['itineraryWorkOrders'] })
       router.back()
     } catch (error) {
       console.error('Erro ao atualizar pagamento:', error)

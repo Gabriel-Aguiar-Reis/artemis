@@ -165,6 +165,7 @@ export default function WorkOrderResultEditByIdScreen() {
       queryClient.invalidateQueries({ queryKey: ['workOrderResultItems'] })
       queryClient.invalidateQueries({ queryKey: ['workOrderResults'] })
       queryClient.invalidateQueries({ queryKey: ['workOrders'] })
+      queryClient.invalidateQueries({ queryKey: ['itineraryWorkOrders'] })
 
       router.back()
     } catch (error) {
