@@ -9,6 +9,10 @@ import { UUID } from '@/src/lib/utils'
 
 export abstract class WorkOrderRepository {
   abstract getWorkOrders: () => Promise<WorkOrder[]>
+  abstract getWorkOrdersByDateRange: (
+    startDate: Date,
+    endDate: Date
+  ) => Promise<WorkOrder[]>
   abstract addWorkOrder: (dto: WorkOrderInsertDTO) => Promise<UUID>
   abstract updateWorkOrder: (dto: WorkOrderUpdateDTO) => Promise<void>
   abstract updateWorkOrderStart: (id: UUID) => Promise<void>
