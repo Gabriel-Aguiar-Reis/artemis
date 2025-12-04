@@ -3,15 +3,15 @@ if (__DEV__) {
 }
 
 import { Button } from '@/src/components/ui/button'
+import { ButtonSettings } from '@/src/components/ui/button-settings'
 import { Text } from '@/src/components/ui/text'
 import { Link, LinkProps, Stack } from 'expo-router'
 import {
   ClipboardList,
   FolderTree,
   MapPin,
-  MoonStarIcon,
   Package,
-  SunIcon,
+  Settings,
   Users,
 } from 'lucide-react-native'
 import { useColorScheme } from 'nativewind'
@@ -20,28 +20,9 @@ import { ReactNode } from 'react'
 import { ScrollView, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-function ThemeToggle() {
-  const { colorScheme, toggleColorScheme } = useColorScheme()
-
-  return (
-    <Button
-      onPressIn={toggleColorScheme}
-      size="icon"
-      variant="ghost"
-      className="ios:size-9 rounded-full web:mx-4"
-    >
-      {colorScheme === 'dark' ? (
-        <SunIcon size={20} color={'white'} />
-      ) : (
-        <MoonStarIcon size={20} />
-      )}
-    </Button>
-  )
-}
-
 const SCREEN_OPTIONS = {
   title: 'Artemis',
-  headerRight: () => <ThemeToggle />,
+  headerRight: () => <ButtonSettings icon={Settings} />,
 }
 
 interface MenuItemProps {

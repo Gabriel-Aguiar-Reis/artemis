@@ -10,11 +10,13 @@ import {
   OptionsSheet,
   OptionsSheetPayload,
 } from '@/src/components/ui/action-sheet/options-sheet'
+import { SettingsSheet } from '@/src/components/ui/action-sheet/settings-sheet'
 import { registerSheet, SheetDefinition } from 'react-native-actions-sheet'
 
 registerSheet('options-sheet', OptionsSheet)
 registerSheet('date-picker-sheet', DatePickerSheet)
 registerSheet('date-picker-range-sheet', DatePickerRangeSheet)
+registerSheet('settings-sheet', SettingsSheet)
 
 declare module 'react-native-actions-sheet' {
   interface Sheets {
@@ -27,5 +29,6 @@ declare module 'react-native-actions-sheet' {
     'date-picker-range-sheet': SheetDefinition<{
       payload: DatePickerRangeSheetPayload
     }>
+    'settings-sheet': SheetDefinition
   }
 }
