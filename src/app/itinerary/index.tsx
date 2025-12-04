@@ -6,7 +6,6 @@ import { ButtonFilter } from '@/src/components/ui/button-filter'
 import { ButtonFinish } from '@/src/components/ui/button-finish'
 import { ButtonNew } from '@/src/components/ui/button-new'
 import { NotesDialog } from '@/src/components/ui/dialog/notes-dialog'
-import { DragToggleButton } from '@/src/components/ui/drag-toggle-button'
 import { Text } from '@/src/components/ui/text'
 import { WorkOrderCard } from '@/src/components/ui/work-order-card'
 import { ItineraryWorkOrder } from '@/src/domain/entities/itinerary-work-order/itinerary-work-order.entity'
@@ -40,7 +39,6 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
 
 export default function ItineraryScreen() {
   const router = useRouter()
-  const [isDragging, setIsDragging] = useState(false)
   const [selectedNotes, setSelectedNotes] = useState<{
     title: string
     notes?: string
@@ -297,8 +295,6 @@ export default function ItineraryScreen() {
                 animationConfig={{ damping: 20, mass: 0.5, stiffness: 500 }}
               />
             )}
-
-            <DragToggleButton onPress={() => setIsDragging(!isDragging)} />
             {/* Botão de voltar ao topo */}
             <BackToTopButton isVisible={showScrollBtn} onPress={scrollToTop} />
 
