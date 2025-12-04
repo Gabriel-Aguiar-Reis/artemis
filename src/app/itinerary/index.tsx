@@ -11,6 +11,7 @@ import { Text } from '@/src/components/ui/text'
 import { WorkOrderCard } from '@/src/components/ui/work-order-card'
 import { ItineraryWorkOrder } from '@/src/domain/entities/itinerary-work-order/itinerary-work-order.entity'
 import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
+import { UUID } from '@/src/lib/utils'
 import { Stack, useRouter } from 'expo-router'
 import {
   Edit,
@@ -20,7 +21,7 @@ import {
   Receipt,
   ReceiptText,
 } from 'lucide-react-native'
-import React, { memo, useCallback, useEffect, useRef, useState } from 'react'
+import React, { memo, useCallback, useRef, useState } from 'react'
 import {
   NativeScrollEvent,
   NativeSyntheticEvent,
@@ -49,16 +50,11 @@ export default function ItineraryScreen() {
   const { data: itinerary, isLoading } = itineraryHooks.getActiveItinerary()
   const { mutateAsync: updatePositions } =
     itineraryWorkOrderHooks.updatePositions()
+  const { data: workOrders } =
+    itineraryWorkOrderHooks.getItineraryWorkOrdersByItineraryId(
+      itinerary?.id || ('' as UUID)
+    )
 
-  const [workOrders, setWorkOrders] = useState<ItineraryWorkOrder[]>([])
-
-  useEffect(() => {
-    if (itinerary?.workOrders) {
-      setWorkOrders(itinerary.workOrders)
-    }
-  }, [itinerary?.workOrders])
-
-  // Adicionado useRef e useState para FlatList e botão de voltar ao topo
   const flatListRef = useRef<any>(null)
   const [showScrollBtn, setShowScrollBtn] = useState(false)
 
