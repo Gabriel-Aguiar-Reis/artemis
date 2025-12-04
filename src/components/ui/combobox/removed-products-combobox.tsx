@@ -69,10 +69,21 @@ export function RemovedProductsCombobox({
           exchangedProducts.find((p) => p.productId === sp.productId)
             ?.quantity || 0
 
-        // Quantidade máxima que pode ser removida = agendada - trocada
-        const maxRemovableQty = sp.quantity - exchangedQty
+        // Quantidade já removida
+        const removedQty =
+          selectedRemovedProducts.find((p) => p.productId === sp.productId)
+            ?.quantity || 0
 
-        if (maxRemovableQty <= 0) return null
+        // Quantidade máxima que pode ser removida = agendada - trocada - já removida
+        const maxRemovableQty = sp.quantity - exchangedQty - removedQty
+
+        // Permite que produtos já selecionados continuem aparecendo na lista
+        const isSelected = selectedRemovedProducts.some(
+          (p) => p.productId === sp.productId
+        )
+
+        // Remove apenas se não tiver disponibilidade E não estiver selecionado
+        if (maxRemovableQty <= 0 && !isSelected) return null
 
         return {
           productId: sp.productId,
@@ -89,7 +100,12 @@ export function RemovedProductsCombobox({
       maxRemovableQuantity: number
       priceSnapshot: number
     }>
-  }, [scheduledProducts, exchangedProducts, availableProducts])
+  }, [
+    scheduledProducts,
+    exchangedProducts,
+    selectedRemovedProducts,
+    availableProducts,
+  ])
 
   const filteredProducts = useMemo(() => {
     if (!searchQuery) return removableProducts
@@ -110,9 +126,13 @@ export function RemovedProductsCombobox({
   }
 
   const updateProductQuantity = (productId: string, quantity: number) => {
-    const maxQuantity =
-      removableProducts.find((p) => p.productId === productId)
-        ?.maxRemovableQuantity || 1
+    const productInfo = removableProducts.find((p) => p.productId === productId)
+    if (!productInfo) return
+
+    // Calcular o máximo real: quantidade agendada - quantidade trocada
+    const exchangedQty =
+      exchangedProducts.find((p) => p.productId === productId)?.quantity || 0
+    const maxQuantity = productInfo.quantity - exchangedQty
 
     if (quantity <= 0) {
       onRemovedProductsChange(
@@ -182,10 +202,21 @@ export function RemovedProductsCombobox({
     const selected = isProductRemoved(item.productId)
     const quantity = getProductQuantity(item.productId)
 
+    // Calcular o máximo real: quantidade agendada - quantidade trocada
+    const exchangedQty =
+      exchangedProducts.find((p) => p.productId === item.productId)?.quantity ||
+      0
+    const maxQuantity = item.quantity - exchangedQty
+
     return (
       <View className="min-h-[120px]">
         <Pressable
-          onPress={() => toggleProduct(item)}
+          onPress={() => {
+            // Só adiciona o produto se não estiver selecionado
+            if (!selected) {
+              toggleProduct(item)
+            }
+          }}
           className={cn(
             'p-4 border-b border-border',
             selected && 'bg-accent/50'
@@ -218,13 +249,19 @@ export function RemovedProductsCombobox({
             </View>
 
             {selected && (
-              <View className="bg-primary rounded-full p-1">
+              <Pressable
+                onPress={(e) => {
+                  e.stopPropagation()
+                  toggleProduct(item)
+                }}
+                className="bg-primary rounded-full p-1"
+              >
                 <Icon
                   as={Check}
                   size={16}
                   className="text-primary-foreground"
                 />
-              </View>
+              </Pressable>
             )}
           </View>
 
@@ -253,20 +290,20 @@ export function RemovedProductsCombobox({
                     updateProductQuantity(item.productId, quantity + 1)
                   }}
                   className="bg-muted rounded-md p-2"
-                  disabled={quantity >= item.quantity}
+                  disabled={quantity >= maxQuantity}
                 >
                   <Icon
                     as={Plus}
                     size={16}
                     className={cn(
                       'text-foreground',
-                      quantity >= item.quantity && 'text-muted-foreground'
+                      quantity >= maxQuantity && 'text-muted-foreground'
                     )}
                   />
                 </Pressable>
               </View>
               <Text className="text-xs text-muted-foreground">
-                (máx: {item.maxRemovableQuantity})
+                (máx: {maxQuantity})
               </Text>
             </View>
           )}

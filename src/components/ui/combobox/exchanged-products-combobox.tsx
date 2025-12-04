@@ -78,7 +78,13 @@ export function ExchangedProductsCombobox({
         // Quantidade disponível para trocar = agendada - removida - já trocada
         const availableQty = sp.quantity - removedQty - exchangedQty
 
-        if (availableQty <= 0) return null
+        // Permite que produtos já selecionados continuem aparecendo na lista
+        const isSelected = selectedExchangedProducts.some(
+          (p) => p.productId === sp.productId
+        )
+
+        // Remove apenas se não tiver disponibilidade E não estiver selecionado
+        if (availableQty <= 0 && !isSelected) return null
 
         return {
           productId: sp.productId,
@@ -121,9 +127,15 @@ export function ExchangedProductsCombobox({
   }
 
   const updateProductQuantity = (productId: string, quantity: number) => {
-    const maxQuantity =
-      scheduledProductsWithInfo.find((p) => p.productId === productId)
-        ?.availableQuantity || 1
+    const productInfo = scheduledProductsWithInfo.find(
+      (p) => p.productId === productId
+    )
+    if (!productInfo) return
+
+    // Calcular o máximo real: quantidade agendada - quantidade removida
+    const removedQty =
+      removedProducts.find((p) => p.productId === productId)?.quantity || 0
+    const maxQuantity = productInfo.quantity - removedQty
 
     if (quantity <= 0) {
       onExchangedProductsChange(
@@ -209,10 +221,20 @@ export function ExchangedProductsCombobox({
     const selected = isProductExchanged(item.productId)
     const quantity = getProductQuantity(item.productId)
 
+    // Calcular o máximo real: quantidade agendada - quantidade removida
+    const removedQty =
+      removedProducts.find((p) => p.productId === item.productId)?.quantity || 0
+    const maxQuantity = item.quantity - removedQty
+
     return (
       <View className="min-h-[120px]">
         <Pressable
-          onPress={() => toggleProduct(item)}
+          onPress={() => {
+            // Só adiciona o produto se não estiver selecionado
+            if (!selected) {
+              toggleProduct(item)
+            }
+          }}
           className={cn(
             'p-4 border-b border-border',
             selected && 'bg-accent/50'
@@ -245,13 +267,19 @@ export function ExchangedProductsCombobox({
             </View>
 
             {selected && (
-              <View className="bg-primary rounded-full p-1">
+              <Pressable
+                onPress={(e) => {
+                  e.stopPropagation()
+                  toggleProduct(item)
+                }}
+                className="bg-primary rounded-full p-1"
+              >
                 <Icon
                   as={Check}
                   size={16}
                   className="text-primary-foreground"
                 />
-              </View>
+              </Pressable>
             )}
           </View>
 
@@ -280,20 +308,20 @@ export function ExchangedProductsCombobox({
                     updateProductQuantity(item.productId, quantity + 1)
                   }}
                   className="bg-muted rounded-md p-2"
-                  disabled={quantity >= item.quantity}
+                  disabled={quantity >= maxQuantity}
                 >
                   <Icon
                     as={Plus}
                     size={16}
                     className={cn(
                       'text-foreground',
-                      quantity >= item.quantity && 'text-muted-foreground'
+                      quantity >= maxQuantity && 'text-muted-foreground'
                     )}
                   />
                 </Pressable>
               </View>
               <Text className="text-xs text-muted-foreground">
-                (máx: {item.quantity})
+                (máx: {maxQuantity})
               </Text>
             </View>
           )}

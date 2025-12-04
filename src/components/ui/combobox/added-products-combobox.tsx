@@ -121,7 +121,12 @@ export function AddedProductsCombobox({
     return (
       <View className="min-h-[140px]">
         <Pressable
-          onPress={() => toggleProduct(item)}
+          onPress={() => {
+            // Só adiciona o produto se não estiver selecionado
+            if (!selected) {
+              toggleProduct(item)
+            }
+          }}
           className={cn(
             'p-4 border-b border-border',
             selected && 'bg-accent/50'
@@ -177,13 +182,19 @@ export function AddedProductsCombobox({
             </View>
 
             {selected && (
-              <View className="bg-primary rounded-full p-1">
+              <Pressable
+                onPress={(e) => {
+                  e.stopPropagation()
+                  toggleProduct(item)
+                }}
+                className="bg-primary rounded-full p-1"
+              >
                 <Icon
                   as={Check}
                   size={16}
                   className="text-primary-foreground"
                 />
-              </View>
+              </Pressable>
             )}
           </View>
 
