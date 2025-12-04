@@ -118,4 +118,15 @@ export class DrizzleItineraryWorkOrderRepository
   async deleteItineraryWorkOrder(id: UUID): Promise<void> {
     await db.delete(itineraryWorkOrder).where(eq(itineraryWorkOrder.id, id))
   }
+
+  async updatePositions(
+    items: { id: UUID; position: number }[]
+  ): Promise<void> {
+    for (const item of items) {
+      await db
+        .update(itineraryWorkOrder)
+        .set({ position: item.position })
+        .where(eq(itineraryWorkOrder.id, item.id))
+    }
+  }
 }

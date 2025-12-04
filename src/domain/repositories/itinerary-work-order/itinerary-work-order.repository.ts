@@ -14,5 +14,9 @@ export abstract class ItineraryWorkOrderRepository {
 
   abstract updateItineraryWorkOrder(item: ItineraryWorkOrder): Promise<void>
 
+  abstract updatePositions(
+    items: { id: UUID; position: number }[]
+  ): Promise<void>
+
   abstract deleteItineraryWorkOrder(id: UUID): Promise<void>
 }

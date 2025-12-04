@@ -4,12 +4,14 @@ import { useEffect, useState } from 'react'
 import { Animated, Pressable } from 'react-native'
 
 type BackToTopButtonProps = {
-  scrollRef: React.RefObject<any>
+  scrollRef?: React.RefObject<any>
+  onPress?: () => void
   isVisible: boolean
 }
 
 export function BackToTopButton({
   scrollRef,
+  onPress,
   isVisible,
 }: BackToTopButtonProps) {
   const fadeAnim = useState(new Animated.Value(0))[0]
@@ -23,7 +25,9 @@ export function BackToTopButton({
   }, [isVisible])
 
   const scrollToTop = () => {
-    if (scrollRef.current) {
+    if (onPress) {
+      onPress()
+    } else if (scrollRef?.current) {
       scrollRef.current.scrollTo({ y: 0, animated: true })
     }
   }
