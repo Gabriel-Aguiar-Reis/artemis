@@ -1,4 +1,5 @@
 import { workOrderHooks } from '@/src/application/hooks/work-order.hooks'
+import { WhatsAppService } from '@/src/application/services/whatsapp.service'
 import { ActiveFiltersBanner } from '@/src/components/ui/active-filters-banner'
 import { BackToTopButton } from '@/src/components/ui/back-to-top-button'
 import { ButtonFilter } from '@/src/components/ui/button-filter'
@@ -155,11 +156,22 @@ export default function WorkOrdersScreen() {
     // WhatsApp
     if (workOrder.customer.isActiveWhatsApp()) {
       options.push({
-        label: 'Enviar Mensagem',
+        label: 'Avisar cliente da visita',
         onPress: () => {
           try {
-            // TODO: Implementar envio de WhatsApp
-            console.log('Implementar envio de WhatsApp')
+            WhatsAppService.sendWorkOrderMessage(workOrder, true)
+          } catch (error) {
+            console.error('Erro ao enviar WhatsApp:', error)
+          }
+        },
+        isWhatsApp: true,
+      })
+
+      options.push({
+        label: 'Enviar resumo ao cliente',
+        onPress: () => {
+          try {
+            WhatsAppService.sendWorkOrderMessage(workOrder, false)
           } catch (error) {
             console.error('Erro ao enviar WhatsApp:', error)
           }
