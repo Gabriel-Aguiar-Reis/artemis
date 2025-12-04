@@ -302,7 +302,6 @@ export default function ItineraryScreen() {
                 ListHeaderComponent={<View className="h-4" />}
                 ListFooterComponent={<View className="h-16" />}
                 activationDistance={isDragging ? 0 : 20}
-                containerStyle={{ backgroundColor: 'transparent' }}
                 animationConfig={{ damping: 20, mass: 0.5, stiffness: 500 }}
               />
             )}
