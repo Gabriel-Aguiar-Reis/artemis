@@ -1,157 +1,567 @@
-# Artemis - Sistema de Gerenciamento de Rotas e Ordens de Serviço# Minimal Template
+# Artemis 📱
 
-Sistema desenvolvido em React Native com Expo para gerenciar clientes, produtos, ordens de serviço e itinerários de visita.This is a [React Native](https://reactnative.dev/) project built with [Expo](https://expo.dev/) and [React Native Reusables](https://reactnativereusables.com).
+Sistema mobile de gerenciamento de rotas e ordens de serviço desenvolvido com React Native e Expo.
 
-## 🚀 FuncionalidadesIt was initialized using the following command:
+## 📋 Índice
 
-### ✅ Implementadas```bash
+- [Sobre o Projeto](#sobre-o-projeto)
+- [Principais Funcionalidades](#principais-funcionalidades)
+- [Tecnologias Utilizadas](#tecnologias-utilizadas)
+- [Arquitetura](#arquitetura)
+- [Pré-requisitos](#pré-requisitos)
+- [Instalação](#instalacao)
+- [Scripts Disponíveis](#scripts-disponiveis)
+- [Estrutura do Projeto](#estrutura-do-projeto)
+- [Entidades do Domínio](#entidades-do-dominio)
+- [Sistema de Licenças](#sistema-de-licencas)
+- [Build e Deploy](#build-e-deploy)
+- [Contribuindo](#contribuindo)
 
-npx @react-native-reusables/cli@latest init -t artemis
+## 🎯 Sobre o Projeto
 
-- **Gestão de Clientes**: Cadastro completo com endereço e coordenadas GPS```
+Artemis é um aplicativo mobile completo para gerenciamento de rotas de vendas e ordens de serviço. Ele permite que vendedores e representantes comerciais organizem suas visitas, gerenciem clientes, produtos e acompanhem o desempenho de suas entregas e vendas.
 
-- **Gestão de Categorias**: Organize produtos por categorias
+### Principais Funcionalidades
 
-- **Gestão de Produtos**: Catálogo com preços, validade e categorização## Getting Started
+#### 👥 Gestão de Clientes
 
-- **Ordens de Serviço**: Crie e gerencie ordens de visita para clientes
+- Cadastro completo de clientes com dados de contato
+- Suporte a múltiplos telefones (fixo e celular)
+- Integração com WhatsApp
+- Geolocalização via endereço
+- Histórico de pedidos e visitas
 
-- **Itinerário**: Planeje rotas de visita com otimização automáticaTo run the development server:
+#### 📦 Gestão de Produtos
 
-- **WhatsApp Integration**: Envie detalhes da ordem de serviço via WhatsApp (wa.me)
+- Catálogo de produtos com categorias
+- Controle de validade
+- Preços e descrições
+- Organização por categorias
 
-- **Google Maps Integration**: Gere links para rotas completas ou parciais```bash
+#### 👥 Gestão de Clientes
 
-- **Reordenação de Rotas**: Ajuste manualmente a ordem das visitas npm run dev
+- Cadastro completo de clientes com dados de contato
+- Suporte a múltiplos telefones (fixo e celular)
+- Integração com WhatsApp
+- Geolocalização via endereço
+- Histórico de pedidos e visitas
 
-- **Otimização de Rotas**: Algoritmo que calcula a rota mais eficiente # or
+#### 📦 Gestão de Produtos
 
-- **Cálculo de Distâncias**: Distância entre pontos usando fórmula de Haversine yarn dev
+- Catálogo de produtos com categorias
+- Controle de validade
+- Preços e descrições
+- Organização por categorias
 
-  # or
+#### 🗂️ Categorias
 
-## 📦 Instalação pnpm dev
+- Organização hierárquica de produtos
+- Facilita a busca e filtragem
 
-    # or
+#### 📋 Ordens de Serviço
 
-````bash bun dev
+- Criação e gerenciamento de ordens de serviço
+- Produtos agendados e resultados de visita
+- Status de pagamento
+- Data de visita e agendamento
+- Observações e notas
+- Integração com WhatsApp para envio de resumos
 
-# Instale as dependências```
+#### 🗺️ Itinerários
 
-yarn install
+- Planejamento de rotas de visita
+- Visualização de ordens de serviço no itinerário
+- Reordenação de visitas (drag and drop)
+- Finalização de itinerários
+- Filtragem e busca avançada
 
-This will start the Expo Dev Server. Open the app in:
+#### 💰 Gestão Financeira
 
-# Inicie o app
+- Controle de pagamentos
+- Ordens de pagamento vinculadas
+- Cálculo automático de totais
+- Status de pagamento (pago/pendente)
 
-yarn dev- **iOS**: press `i` to launch in the iOS simulator _(Mac only)_
+#### 📱 Integração WhatsApp
 
-```- **Android**: press `a` to launch in the Android emulator
+- Envio automático de resumos de pedidos
+- Notificações de visita
+- Mensagens personalizadas para clientes
 
-- **Web**: press `w` to run in a browser
+#### 🔐 Sistema de Licenças
 
-## 🎯 Como Usar
+- Controle de licenças de uso
+- Modo administrador
+- Renovação de licenças
+- Criptografia de chaves de ativação
+- **[TypeScript](https://www.typescriptlang.org/)** (5.9.2) - Tipagem estática
+- **[Expo Router](https://docs.expo.dev/router/introduction/)** (6.0.10) - Navegação file-based
 
-You can also scan the QR code using the [Expo Go](https://expo.dev/go) app on your device. This project fully supports running in Expo Go for quick testing on physical devices.
+### Banco de Dados
 
-### 1. Cadastrar Clientes
+- **[Drizzle ORM](https://orm.drizzle.team/)** (0.44.7) - ORM TypeScript-first
+- **[Expo SQLite](https://docs.expo.dev/versions/latest/sdk/sqlite/)** (16.0.9) - Banco de dados local
+- **[Drizzle Kit](https://orm.drizzle.team/kit-docs/overview)** (0.31.7) - Migrations e studio
 
-- Vá em "Clientes" > botão "+"## Adding components
+### UI/UX
 
-- Preencha nome da loja, contato, telefone e endereço
+- **[NativeWind](https://www.nativewind.dev/)** (4.2.1) - Tailwind CSS para React Native
+- **[Lucide React Native](https://lucide.dev/)** (0.545.0) - Ícones
+- **[React Native Actions Sheet](https://github.com/ammarahm-ed/react-native-actions-sheet)** (0.9.8) - Bottom sheets
+- **[@rn-primitives](https://rn-primitives.com/)** - Componentes UI acessíveis
+- **[React Native Reanimated](https://docs.swmansion.com/react-native-reanimated/)** (4.1.1) - Animações
 
-- **Importante**: Adicione as coordenadas GPS (latitude/longitude) para usar no itinerárioYou can add more reusable components using the CLI:
+### Gerenciamento de Estado
 
-- Marque se o telefone tem WhatsApp
+- **[TanStack Query](https://tanstack.com/query)** (5.90.8) - Server state management
+- **[React Hook Form](https://react-hook-form.com/)** (7.66.0) - Formulários
+- **[Zod](https://zod.dev/)** (4.1.12) - Validação de schemas
+
+### Outras Bibliotecas
+
+- **[React Native Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/)** - Gestos
+- **[React Native Draggable FlatList](https://github.com/computerjazz/react-native-draggable-flatlist)** - Listas arrastáveis
+- **[FlashList](https://shopify.github.io/flash-list/)** - Listas otimizadas
+- **[libphonenumber-js](https://github.com/catamphetamine/libphonenumber-js)** - Validação de telefones
+- **[ExcelJS](https://github.com/exceljs/exceljs)** - Exportação de dados
+
+### Dev Tools
+
+- **[Reactotron](https://github.com/infinitered/reactotron)** - Debug
+- **[Prettier](https://prettier.io/)** - Formatação de código
+- **[ESLint](https://eslint.org/)** - Linting
+
+## 🏗️ Arquitetura
+
+O projeto segue os princípios de **Clean Architecture** e **Domain-Driven Design (DDD)**, com separação clara de responsabilidades:
+
+```text
+src/
+├── app/                    # Screens (Expo Router)
+├── application/           # Camada de aplicação
+│   ├── hooks/            # React Query hooks
+│   └── services/         # Serviços de aplicação
+├── domain/               # Camada de domínio
+│   ├── entities/         # Entidades de negócio
+│   ├── repositories/     # Interfaces de repositórios
+│   └── validations/      # Schemas de validação (Zod)
+├── infra/                # Camada de infraestrutura
+│   ├── db/              # Configuração do banco
+│   └── repositories/    # Implementação dos repositórios
+├── components/           # Componentes reutilizáveis
+│   └── ui/              # Componentes de interface
+├── lib/                  # Utilitários e helpers
+└── types/                # Definições de tipos TypeScript
+```
+
+### Camadas
+
+#### 1. Domain (Domínio)
+
+- **Entities**: Classes que representam os conceitos principais do negócio
+- **Repositories**: Interfaces que definem contratos de acesso a dados
+- **Validations**: Schemas Zod para validação de dados
+- **Value Objects**: Objetos imutáveis que representam conceitos do domínio
+
+#### 2. Application (Aplicação)
+
+- **Hooks**: Custom hooks usando TanStack Query para gerenciamento de estado
+- **Services**: Lógica de aplicação (WhatsApp, Pagamentos, Geocoding)
+
+#### 3. Infrastructure (Infraestrutura)
+
+- **DB**: Configuração Drizzle e migrations
+- **Repositories**: Implementação concreta dos repositórios usando Drizzle
+
+#### 4. Presentation (Apresentação)
+
+- **App**: Screens do aplicativo (Expo Router)
+- **Components**: Componentes React reutilizáveis
+
+## 📦 Pré-requisitos
+
+- **Node.js** >= 18.x
+- **Yarn** (recomendado) ou npm
+- **Expo CLI**
+- **Android Studio** (para Android) ou **Xcode** (para iOS)
+- **EAS CLI** (para builds)
+
+## 🔧 Instalação
+
+1. **Clone o repositório**
 
 ```bash
+git clone https://github.com/Gabriel-Aguiar-Reis/artemis.git
+cd artemis
+```
 
-### 2. Criar Categoriasnpx react-native-reusables/cli@latest add [...components]
+2. **Instale as dependências**
 
-- Vá em "Categorias" > botão "+"```
+```bash
+yarn install
+# ou
+npm install
+```
 
-- Digite o nome da categoria (ex: Fertilizantes, Sementes)
+3. **Inicie o desenvolvimento**
 
-> e.g. `npx react-native-reusables/cli@latest add input textarea`
+```bash
+yarn dev
+# ou
+npm run dev
+```
 
-### 3. Cadastrar Produtos
+## 📜 Scripts Disponíveis
 
-- Vá em "Produtos" > botão "+"If you don't specify any component names, you'll be prompted to select which components to add interactively. Use the `--all` flag to install all available components at once.
+```bash
+# Desenvolvimento
+yarn dev              # Inicia o servidor Expo (limpa cache)
+yarn android          # Inicia no Android
+yarn ios              # Inicia no iOS
+yarn web              # Inicia na web
 
-- Preencha nome, categoria, preço e validade
+# Build (Development)
+yarn build:dev:android    # Build de desenvolvimento Android (EAS)
+yarn build:dev:ios        # Build de desenvolvimento iOS (EAS)
 
-- Validade aceita formatos: "1 year", "6 months", "30 days"## Project Features
+# Build (Production)
+yarn build:prod:android   # Build de produção Android (EAS)
+yarn build:prod:ios       # Build de produção iOS (EAS)
 
+# Utilitários
+yarn clean            # Remove .expo e node_modules
+```
 
+## 📁 Estrutura do Projeto
 
-### 4. Criar Ordem de Serviço- ⚛️ Built with [Expo Router](https://expo.dev/router)
-
-- Vá em "Ordens de Serviço" > botão "+"- 🎨 Styled with [Tailwind CSS](https://tailwindcss.com/) via [Nativewind](https://www.nativewind.dev/)
-
-- Selecione o cliente- 📦 UI powered by [React Native Reusables](https://github.com/founded-labs/react-native-reusables)
-
-- Escolha método de pagamento e parcelas- 🚀 New Architecture enabled
-
-- 🔥 Edge to Edge enabled
-
-### 5. Gerenciar Itinerário- 📱 Runs on iOS, Android, and Web
-
-- Vá em "Itinerário"
-
-- Use "Otimizar Rota" para calcular o melhor caminho## Learn More
-
-- Reordene manualmente usando as setas ↑↓
-
-- Clique em "Abrir no Maps" para ver a rota completaTo dive deeper into the technologies used:
-
-- Ou clique em "Rota até próximo" para ver apenas um trecho
-
-- [React Native Docs](https://reactnative.dev/docs/getting-started)
-
-### 6. Enviar WhatsApp- [Expo Docs](https://docs.expo.dev/)
-
-- Na listagem de Ordens de Serviço- [Nativewind Docs](https://www.nativewind.dev/)
-
-- Clique no ícone do WhatsApp (verde)- [React Native Reusables](https://reactnativereusables.com)
-
-- A mensagem será gerada automaticamente
-
-## Deploy with EAS
-
-## 🛠️ Tecnologias
-
-The easiest way to deploy your app is with [Expo Application Services (EAS)](https://expo.dev/eas).
-
-- React Native 0.81.5
-
-- Expo 54- [EAS Build](https://docs.expo.dev/build/introduction/)
-
-- Expo Router- [EAS Updates](https://docs.expo.dev/eas-update/introduction/)
-
-- NativeWind (Tailwind CSS)- [EAS Submit](https://docs.expo.dev/submit/introduction/)
-
-- TypeScript
-
-- React Context API---
-
-
-
-## 📱 EstruturaIf you enjoy using React Native Reusables, please consider giving it a ⭐ on [GitHub](https://github.com/founded-labs/react-native-reusables). Your support means a lot!
-
-
-````
-
+```
 artemis/
-├── app/ # Telas (Expo Router)
 ├── src/
-│ ├── models/ # Classes de domínio
-│ ├── contexts/ # React Contexts
-│ └── services/ # WhatsApp e Maps
-└── components/ # Componentes UI
-
+│   ├── app/                          # Screens (file-based routing)
+│   │   ├── _layout.tsx              # Layout raiz
+│   │   ├── index.tsx                # Tela inicial
+│   │   ├── admin/                   # Funcionalidades admin
+│   │   │   └── generate-license.tsx # Geração de licenças
+│   │   ├── categories/              # Gestão de categorias
+│   │   │   ├── index.tsx
+│   │   │   ├── form.tsx
+│   │   │   ├── search.tsx
+│   │   │   └── [id]/
+│   │   ├── customers/               # Gestão de clientes
+│   │   │   ├── index.tsx
+│   │   │   ├── form.tsx
+│   │   │   ├── search.tsx
+│   │   │   └── [id]/
+│   │   ├── products/                # Gestão de produtos
+│   │   │   ├── index.tsx
+│   │   │   ├── form.tsx
+│   │   │   ├── search.tsx
+│   │   │   └── [id]/
+│   │   ├── work-orders/             # Ordens de serviço
+│   │   │   ├── index.tsx
+│   │   │   ├── form.tsx
+│   │   │   ├── search.tsx
+│   │   │   └── [id]/
+│   │   ├── itinerary/               # Itinerários
+│   │   │   ├── index.tsx
+│   │   │   ├── form.tsx
+│   │   │   ├── finish.tsx
+│   │   │   ├── reorder.tsx
+│   │   │   └── search.tsx
+│   │   └── license/                 # Licenciamento
+│   │       └── renew.tsx
+│   │
+│   ├── application/
+│   │   ├── hooks/                   # React Query hooks
+│   │   │   ├── category.hooks.ts
+│   │   │   ├── customer.hooks.ts
+│   │   │   ├── product.hooks.ts
+│   │   │   ├── work-order.hooks.ts
+│   │   │   ├── itinerary.hooks.ts
+│   │   │   ├── license.hooks.ts
+│   │   │   └── ...
+│   │   └── services/                # Serviços
+│   │       ├── whatsapp.service.ts
+│   │       ├── payment.service.ts
+│   │       └── geocoding.service.ts
+│   │
+│   ├── domain/
+│   │   ├── entities/                # Entidades de domínio
+│   │   │   ├── customer/
+│   │   │   │   ├── customer.entity.ts
+│   │   │   │   ├── mapper/
+│   │   │   │   └── value-objects/
+│   │   │   ├── product/
+│   │   │   ├── category/
+│   │   │   ├── work-order/
+│   │   │   ├── itinerary/
+│   │   │   ├── license/
+│   │   │   └── ...
+│   │   ├── repositories/            # Interfaces de repositórios
+│   │   └── validations/             # Schemas Zod
+│   │
+│   ├── infra/
+│   │   ├── db/
+│   │   │   └── drizzle/
+│   │   │       ├── drizzle-client.ts
+│   │   │       ├── migrations/
+│   │   │       └── schema/
+│   │   └── repositories/            # Implementações
+│   │
+│   ├── components/
+│   │   └── ui/                      # Componentes UI
+│   │       ├── button.tsx
+│   │       ├── input.tsx
+│   │       ├── dialog.tsx
+│   │       ├── work-order-card.tsx
+│   │       ├── action-sheet/
+│   │       ├── forms/
+│   │       └── ...
+│   │
+│   ├── lib/                         # Utilitários
+│   │   ├── utils.ts
+│   │   ├── theme.ts
+│   │   └── license-crypto.ts
+│   │
+│   └── assets/
+│       └── images/
+│
+├── app.json                         # Configuração Expo
+├── eas.json                         # Configuração EAS Build
+├── drizzle.config.ts               # Configuração Drizzle
+├── tailwind.config.js              # Configuração Tailwind
+├── tsconfig.json                   # Configuração TypeScript
+├── babel.config.js
+├── metro.config.js
+└── package.json
 ```
 
-## 📝 Licença
+## 🎨 Entidades do Domínio
 
-MIT
+### Customer (Cliente)
+
+```typescript
+class Customer {
+  id: UUID
+  storeName: string // Nome da loja
+  contactName: string // Nome do contato
+  address: Address // Value Object
+  smartphoneNumber?: SmartphoneNumber // Value Object
+  landlineNumber?: LandlinePhoneNumber // Value Object
+  isActiveWhatsApp: boolean
+  notes?: string
+  createdAt: Date
+  updatedAt: Date
+}
 ```
+
+### Product (Produto)
+
+```typescript
+class Product {
+  id: UUID
+  name: string
+  categoryId: UUID
+  price: number
+  expiration?: Expiration // Value Object
+  description?: string
+  createdAt: Date
+  updatedAt: Date
+}
+```
+
+### Category (Categoria)
+
+```typescript
+class Category {
+  id: UUID
+  name: string
+  createdAt: Date
+  updatedAt: Date
+}
+```
+
+### WorkOrder (Ordem de Serviço)
+
+```typescript
+class WorkOrder {
+  id: UUID
+  customerId: UUID
+  customer: Customer
+  scheduledDate?: Date // Data agendada
+  visitDate?: Date // Data da visita
+  notes?: string
+  status: WorkOrderStatus // SCHEDULED | COMPLETED | CANCELED
+  paymentOrderId?: UUID
+  items: WorkOrderItem[] // Produtos agendados
+  result?: WorkOrderResult // Resultado da visita
+  createdAt: Date
+  updatedAt: Date
+}
+```
+
+### Itinerary (Itinerário)
+
+```typescript
+class Itinerary {
+  id: UUID
+  date: Date
+  isActive: boolean
+  workOrders: ItineraryWorkOrder[]
+  createdAt: Date
+  updatedAt: Date
+}
+```
+
+### License (Licença)
+
+```typescript
+class License {
+  id: UUID
+  uniqueCode: string
+  expirationDate: Date
+  isAdmin: boolean
+  createdAt: Date
+
+  isExpired(): boolean
+  isLifetime(): boolean
+  getDaysRemaining(): number
+}
+```
+
+## 🔐 Sistema de Licenças
+
+O Artemis possui um sistema de licenciamento integrado para controle de uso:
+
+### Tipos de Licença
+
+- **Normal**: Licença com prazo de validade
+- **Admin**: Licença vitalícia com privilégios especiais
+- **Lifetime**: Licença vitalícia (expiração em 2150+)
+
+### Funcionalidades
+
+- ✅ Geração de códigos de ativação criptografados
+- ✅ Validação de licenças
+- ✅ Renovação de licenças
+- ✅ Bloqueio automático quando expirada
+- ✅ Modo administrador para testes
+
+### Fluxo de Ativação
+
+1. O app gera um código único ao primeiro uso
+2. Usuário compartilha o código com o administrador
+3. Administrador gera chave de ativação
+4. Usuário insere a chave no app
+5. Licença é ativada e validada
+
+## 🎨 Temas e Estilos
+
+O projeto utiliza **NativeWind** (Tailwind CSS) com suporte a:
+
+- 🌗 Modo claro/escuro automático
+- 🎨 Sistema de cores customizável (HSL)
+- 📱 Design responsivo
+- ♿ Componentes acessíveis
+
+## 🚀 Build e Deploy
+
+### Development Build
+
+```bash
+# Android
+eas build --profile development --platform android
+
+# iOS
+eas build --profile development --platform ios
+```
+
+### Production Build
+
+```bash
+# Android
+eas build --profile production --platform android
+
+# iOS
+eas build --profile production --platform ios
+```
+
+### Configuração EAS
+
+- **Project ID**: `2bb468aa-893d-4448-8274-4472d488da50`
+- **Bundle ID (iOS)**: `com.gabrielaguiar.artemis`
+- **Package (Android)**: `com.gabrielaguiar.artemis`
+
+## 🧪 Boas Práticas Implementadas
+
+- ✅ **Clean Architecture** e **DDD**
+- ✅ **TypeScript** com strict mode
+- ✅ **Type-safe routing** com Expo Router
+- ✅ **Server state** com TanStack Query
+- ✅ **Validação** com Zod
+- ✅ **Migrations** versionadas com Drizzle
+- ✅ **Componentes reutilizáveis** e acessíveis
+- ✅ **Otimização de performance** (FlashList, Reanimated)
+- ✅ **Code splitting** por funcionalidade
+- ✅ **Formatação automática** com Prettier
+
+## 🔄 Fluxos Principais
+
+### Criar Ordem de Serviço
+
+1. Selecionar cliente
+2. Definir data de agendamento
+3. Adicionar produtos agendados
+4. Adicionar observações (opcional)
+5. Salvar ordem de serviço
+6. Enviar resumo por WhatsApp (opcional)
+
+### Gerenciar Itinerário
+
+1. Criar novo itinerário (data atual)
+2. Adicionar ordens de serviço ao itinerário
+3. Reordenar visitas por arraste
+4. Executar visitas e registrar resultados
+5. Finalizar itinerário
+
+### Registrar Resultado de Visita
+
+1. Abrir ordem de serviço no itinerário
+2. Adicionar produtos vendidos
+3. Registrar pagamento (se houver)
+4. Marcar como concluída
+5. Enviar confirmação por WhatsApp
+
+## 📱 Suporte de Plataformas
+
+- ✅ Android
+- ✅ iOS
+- ⚠️ Web (experimental)
+
+## 🤝 Contribuindo
+
+Contribuições são bem-vindas! Por favor:
+
+1. Faça fork do projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/MinhaFeature`)
+3. Commit suas mudanças (`git commit -m 'Adiciona MinhaFeature'`)
+4. Push para a branch (`git push origin feature/MinhaFeature`)
+5. Abra um Pull Request
+
+## 📄 Licença
+
+Este projeto é proprietário e de uso restrito.
+
+## 👨‍💻 Autor
+
+Gabriel Aguiar Reis
+
+- GitHub: [@Gabriel-Aguiar-Reis](https://github.com/Gabriel-Aguiar-Reis)
+
+## 📞 Suporte
+
+Para dúvidas ou suporte, entre em contato através do repositório.
+
+---
+
+Desenvolvido com ❤️ usando React Native e Expo
