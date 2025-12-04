@@ -631,4 +631,50 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       }
     })
   }
+
+  async getWorkOrdersByDateRange(
+    startDate: Date,
+    endDate: Date
+  ): Promise<WorkOrder[]> {
+    const rows = await db
+      .select({
+        workOrder: workOrder,
+        customer: customer,
+        paymentOrder: paymentOrder,
+        result: workOrderResult,
+      })
+      .from(workOrder)
+      .leftJoin(customer, eq(workOrder.customerId, customer.id))
+      .leftJoin(paymentOrder, eq(workOrder.paymentOrderId, paymentOrder.id))
+      .leftJoin(workOrderResult, eq(workOrder.resultId, workOrderResult.id))
+
+    const filtered = rows.filter((row) => {
+      const scheduledDate = new Date(row.workOrder.scheduledDate)
+      return scheduledDate >= startDate && scheduledDate <= endDate
+    })
+
+    const workOrders = await Promise.all(
+      filtered
+        .filter((row) => row.customer)
+        .map(async (row) => {
+          const cust = CustomerMapper.toDomain(row.customer!)
+          const po = row.paymentOrder
+            ? PaymentOrderMapper.toDomain(row.paymentOrder)
+            : undefined
+          const result = row.result
+            ? await this.loadWorkOrderResult(row.result.id as UUID)
+            : undefined
+          const items = await this.loadWorkOrderItems(row.workOrder.id as UUID)
+          return WorkOrderMapper.toDomain(
+            row.workOrder,
+            cust,
+            items,
+            po,
+            result
+          )
+        })
+    )
+
+    return workOrders
+  }
 }
