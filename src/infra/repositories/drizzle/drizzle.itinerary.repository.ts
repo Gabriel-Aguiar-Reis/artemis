@@ -12,7 +12,6 @@ import {
 } from '@/src/domain/entities/work-order-result-item/work-order-result-item.entity'
 import { WorkOrderResultMapper } from '@/src/domain/entities/work-order-result/mapper/work-order-result.mapper'
 import { WorkOrderMapper } from '@/src/domain/entities/work-order/mapper/work-order.mapper'
-import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
 import { ItineraryRepository } from '@/src/domain/repositories/itinerary/itinerary.repository'
 import {
   ItineraryInsertDTO,
@@ -29,7 +28,7 @@ import { workOrderResultItem } from '@/src/infra/db/drizzle/schema/drizzle.work-
 import { workOrderResult } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result.schema'
 import { workOrder } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
 import { UUID } from '@/src/lib/utils'
-import { and, asc, eq, gte, inArray, lte } from 'drizzle-orm'
+import { and, asc, eq, gte, lte } from 'drizzle-orm'
 import uuid from 'react-native-uuid'
 
 export default class DrizzleItineraryRepository implements ItineraryRepository {
@@ -358,56 +357,5 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
         })
       }
     })
-  }
-
-  // Helper privado para buscar work orders
-  private async getWorkOrdersByIds(ids: UUID[]): Promise<WorkOrder[]> {
-    const rows = await db
-      .select({
-        workOrder: workOrder,
-        customer: customer,
-        paymentOrder: paymentOrder,
-        workOrderResult: workOrderResult,
-      })
-      .from(workOrder)
-      .leftJoin(customer, eq(workOrder.customerId, customer.id))
-      .leftJoin(paymentOrder, eq(workOrder.paymentOrderId, paymentOrder.id))
-      .leftJoin(workOrderResult, eq(workOrder.resultId, workOrderResult.id))
-      .where(inArray(workOrder.id, ids))
-
-    const workOrders = await Promise.all(
-      rows
-        .filter((row) => row.customer)
-        .map(async (row) => {
-          const cust = CustomerMapper.toDomain(row.customer!)
-          const po = row.paymentOrder
-            ? PaymentOrderMapper.toDomain(row.paymentOrder!)
-            : undefined
-
-          let result = undefined
-          if (row.workOrderResult) {
-            const resultItems = await this.loadWorkOrderResultItems(
-              row.workOrderResult.id as UUID
-            )
-            result = WorkOrderResultMapper.toDomain(
-              row.workOrderResult,
-              resultItems.exchangedProducts,
-              resultItems.addedProducts,
-              resultItems.removedProducts
-            )
-          }
-
-          const items = await this.loadWorkOrderItems(row.workOrder.id as UUID)
-          return WorkOrderMapper.toDomain(
-            row.workOrder,
-            cust,
-            items,
-            po,
-            result
-          )
-        })
-    )
-
-    return workOrders
   }
 }
