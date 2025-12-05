@@ -31,7 +31,7 @@ import { workOrderResultItem } from '@/src/infra/db/drizzle/schema/drizzle.work-
 import { workOrderResult } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result.schema'
 import { workOrder } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
 import { UUID } from '@/src/lib/utils'
-import { eq } from 'drizzle-orm'
+import { eq, isNull } from 'drizzle-orm'
 import uuid from 'react-native-uuid'
 
 export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
@@ -647,6 +647,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       .leftJoin(customer, eq(workOrder.customerId, customer.id))
       .leftJoin(paymentOrder, eq(workOrder.paymentOrderId, paymentOrder.id))
       .leftJoin(workOrderResult, eq(workOrder.resultId, workOrderResult.id))
+      .where(isNull(workOrder.visitDate))
 
     const filtered = rows.filter((row) => {
       const scheduledDate = new Date(row.workOrder.scheduledDate)
