@@ -7,13 +7,14 @@ import { ItineraryWorkOrder } from '@/src/domain/entities/itinerary-work-order/i
 import { UUID } from '@/src/lib/utils'
 import { useQueryClient } from '@tanstack/react-query'
 import { Stack, useRouter } from 'expo-router'
-import React, { useCallback, useEffect, useState } from 'react'
-import { TouchableOpacity, View } from 'react-native'
-import DraggableFlatList, {
-  RenderItemParams,
-  ScaleDecorator,
-} from 'react-native-draggable-flatlist'
-import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import React, { FC, useCallback, useEffect, useState } from 'react'
+import { ListRenderItemInfo, View } from 'react-native'
+import { GestureHandlerRootView, Pressable } from 'react-native-gesture-handler'
+import ReorderableList, {
+  ReorderableListReorderEvent,
+  reorderItems,
+  useReorderableDrag,
+} from 'react-native-reorderable-list'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function ItineraryReorderScreen() {
@@ -36,20 +37,25 @@ export default function ItineraryReorderScreen() {
     }
   }, [workOrders])
 
-  const renderItem = useCallback(
-    ({ item, drag, isActive }: RenderItemParams<ItineraryWorkOrder>) => {
-      return (
-        <ScaleDecorator>
-          <TouchableOpacity onLongPress={drag} disabled={isActive}>
-            <View className="px-4">
-              <WorkOrderCard wo={item.workOrder} />
-            </View>
-          </TouchableOpacity>
-        </ScaleDecorator>
-      )
-    },
-    []
-  )
+  const handleReorder = ({ from, to }: ReorderableListReorderEvent) => {
+    setListData((value) => reorderItems(value, from, to))
+  }
+
+  const Card: FC<{ item: ItineraryWorkOrder }> = ({ item }) => {
+    const drag = useReorderableDrag()
+    return (
+      <Pressable onLongPress={drag}>
+        <WorkOrderCard wo={item.workOrder} />
+      </Pressable>
+    )
+  }
+  const renderItem = ({ item }: ListRenderItemInfo<ItineraryWorkOrder>) => {
+    return (
+      <View className="px-4">
+        <Card item={item} />
+      </View>
+    )
+  }
 
   const handleSave = useCallback(async () => {
     const updates = listData.map((item, index) => ({
@@ -89,14 +95,13 @@ export default function ItineraryReorderScreen() {
             </Text>
           </View>
         ) : (
-          <DraggableFlatList
+          <ReorderableList
             data={listData}
-            onDragEnd={({ data }) => setListData(data)}
             keyExtractor={(item) => item.id}
             renderItem={renderItem}
+            onReorder={handleReorder}
             ListHeaderComponent={<View className="h-4" />}
             ListFooterComponent={<View className="h-16" />}
-            activationDistance={20}
           />
         )}
       </SafeAreaView>
