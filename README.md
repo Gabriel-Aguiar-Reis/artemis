@@ -88,12 +88,28 @@ Artemis é um aplicativo mobile completo para gerenciamento de rotas de vendas e
 - Notificações de visita
 - Mensagens personalizadas para clientes
 
+#### 📊 Importação/Exportação de Dados
+
+- Download de template Excel (.xlsx) pré-configurado
+- Importação em lote de categorias, produtos e clientes
+- Validação automática de dados durante importação
+- Tratamento de referências cruzadas (categorias em produtos)
+- Mensagens de erro detalhadas para facilitar correção
+- Formatos flexíveis para campos (ex: validade aceita múltiplos formatos)
+
 #### 🔐 Sistema de Licenças
 
 - Controle de licenças de uso
 - Modo administrador
 - Renovação de licenças
 - Criptografia de chaves de ativação
+
+## 🛠️ Tecnologias Utilizadas
+
+### Core
+
+- **[React Native](https://reactnative.dev/)** (0.78.4) - Framework mobile
+- **[Expo](https://expo.dev/)** (~52.0.29) - Plataforma de desenvolvimento
 - **[TypeScript](https://www.typescriptlang.org/)** (5.9.2) - Tipagem estática
 - **[Expo Router](https://docs.expo.dev/router/introduction/)** (6.0.10) - Navegação file-based
 
@@ -120,10 +136,13 @@ Artemis é um aplicativo mobile completo para gerenciamento de rotas de vendas e
 ### Outras Bibliotecas
 
 - **[React Native Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/)** - Gestos
-- **[React Native Draggable FlatList](https://github.com/computerjazz/react-native-draggable-flatlist)** - Listas arrastáveis
+- **[React Native Reorderable List](https://github.com/omahili/react-native-reorderable-list)** - Listas arrastáveis
 - **[FlashList](https://shopify.github.io/flash-list/)** - Listas otimizadas
 - **[libphonenumber-js](https://github.com/catamphetamine/libphonenumber-js)** - Validação de telefones
-- **[ExcelJS](https://github.com/exceljs/exceljs)** - Exportação de dados
+- **[XLSX](https://docs.sheetjs.com/)** - Importação e exportação Excel
+- **[Expo Document Picker](https://docs.expo.dev/versions/latest/sdk/document-picker/)** - Seleção de arquivos
+- **[Expo File System](https://docs.expo.dev/versions/latest/sdk/filesystem/)** - Manipulação de arquivos
+- **[Expo Sharing](https://docs.expo.dev/versions/latest/sdk/sharing/)** - Compartilhamento de arquivos
 
 ### Dev Tools
 
@@ -241,6 +260,7 @@ artemis/
 │   │   ├── _layout.tsx              # Layout raiz
 │   │   ├── index.tsx                # Tela inicial
 │   │   ├── admin/                   # Funcionalidades admin
+│   │   │   ├── data-transfer.tsx.   # Import e Export de planilha template
 │   │   │   └── generate-license.tsx # Geração de licenças
 │   │   ├── categories/              # Gestão de categorias
 │   │   │   ├── index.tsx
@@ -281,6 +301,7 @@ artemis/
 │   │   │   ├── license.hooks.ts
 │   │   │   └── ...
 │   │   └── services/                # Serviços
+│   │       ├── excel.service.ts
 │   │       ├── whatsapp.service.ts
 │   │       ├── payment.service.ts
 │   │       └── geocoding.service.ts
@@ -324,6 +345,7 @@ artemis/
 │   │   └── license-crypto.ts
 │   │
 │   └── assets/
+│       ├── template-app-preenchimento.tsx
 │       └── images/
 │
 ├── app.json                         # Configuração Expo
@@ -428,6 +450,89 @@ class License {
   getDaysRemaining(): number
 }
 ```
+
+## 📊 Importação e Exportação de Dados
+
+O Artemis possui um sistema completo de importação e exportação de dados via planilhas Excel:
+
+### Funcionalidades
+
+#### Download de Template
+
+- Template Excel pré-configurado com 3 abas (Categorias, Produtos, Clientes)
+- Exemplos de preenchimento em cada aba
+- Compartilhamento nativo do sistema para salvar em qualquer local
+
+#### Importação de Dados
+
+- Importação em lote de categorias, produtos e clientes
+- Validação em tempo real durante a importação
+- Tratamento automático de referências cruzadas (categorias → produtos)
+- Mensagens de erro detalhadas indicando linha e problema
+- Logs completos para debugging
+
+### Formato do Campo de Validade (Produtos)
+
+O campo "validade" aceita múltiplos formatos flexíveis:
+
+- **Com espaço**: `30 dias`, `1 mês`, `2 semanas`, `1 ano`
+- **Sem espaço**: `30dias`, `1mês`, `2semanas`
+- **Abreviado**: `30 d`, `2 s`, `1 m`, `1 a`
+- **Variações**: Aceita maiúsculas/minúsculas e com/sem acento
+- **Plurais**: Detecta automaticamente singular/plural
+
+Exemplos válidos:
+
+```
+30 dias
+30dias
+30 DIAS
+1 mês
+1 mes
+2 semanas
+2s
+1a
+```
+
+A validação normaliza automaticamente o formato ao salvar no banco.
+
+### Estrutura das Planilhas
+
+#### Categorias
+
+- **Nome**: Nome da categoria (obrigatório)
+- **Ativo**: 1 para ativo, 0 para inativo
+
+#### Produtos
+
+- **Nome**: Nome do produto (obrigatório)
+- **Categoria**: Nome exato da categoria (deve existir na aba Categorias)
+- **Preço de Venda**: Valor numérico
+- **Ativo**: 1 para ativo, 0 para inativo
+- **Validade**: Formato flexível (ex: "30 dias", "1 mês")
+
+#### Clientes
+
+- **Nome Estabelecimento**: Nome da loja (obrigatório)
+- **Nome Contato**: Nome da pessoa de contato (obrigatório)
+- **Telefone Celular**: Número completo com DDI
+- **WhatsApp Celular**: 1 se tem WhatsApp, 0 caso contrário
+- **Telefone Fixo**: Número completo
+- **WhatsApp Fixo**: 1 se tem WhatsApp, 0 caso contrário
+- **Logradouro**: Nome da rua
+- **Número**: Número do endereço
+- **Bairro**: Nome do bairro
+- **Cidade**: Nome da cidade
+- **CEP**: Formato 01234-567
+
+### Validações e Tratamento de Erros
+
+- ✅ Validação de campos obrigatórios
+- ✅ Validação de tipos de dados
+- ✅ Validação de foreign keys (categorias em produtos)
+- ✅ Mensagens de erro com número da linha
+- ✅ Continuação da importação mesmo com erros em linhas específicas
+- ✅ Resumo final com quantidade importada
 
 ## 🔐 Sistema de Licenças
 
