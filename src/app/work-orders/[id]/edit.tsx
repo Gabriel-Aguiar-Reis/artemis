@@ -40,32 +40,23 @@ export default function WorkOrderEditScreen() {
   })
 
   const onSubmit = form.handleSubmit(async (data: WorkOrderUpdateDTO) => {
-    return new Promise<void>((resolve) => {
-      updateWorkOrder(
-        {
-          id: params.id,
-          customerId: data.customerId as UUID,
-          scheduledDate: data.scheduledDate,
-          notes: data.notes,
-          updatedAt: new Date(),
+    updateWorkOrder(
+      {
+        id: params.id,
+        customerId: data.customerId as UUID,
+        scheduledDate: data.scheduledDate,
+        notes: data.notes,
+        updatedAt: new Date(),
+      },
+      {
+        onSuccess: () => {
+          queryClient.removeQueries({ queryKey: ['itineraryWorkOrders'] })
+          queryClient.removeQueries({ queryKey: ['workOrders'] })
+          queryClient.removeQueries({ queryKey: ['itineraries'] })
         },
-        {
-          onSuccess: () => {
-            queryClient.removeQueries({ queryKey: ['itineraryWorkOrders'] })
-            queryClient.removeQueries({ queryKey: ['workOrders'] })
-            queryClient.removeQueries({ queryKey: ['itineraries'] })
-
-            setTimeout(() => {
-              router.back()
-              resolve()
-            }, 100)
-          },
-          onError: () => {
-            resolve()
-          },
-        }
-      )
-    })
+      }
+    )
+    router.back()
   })
 
   useEffect(() => {

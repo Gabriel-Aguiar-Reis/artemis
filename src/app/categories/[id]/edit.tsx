@@ -34,29 +34,20 @@ export default function CategoriesEditScreen() {
   })
 
   const onSubmit = form.handleSubmit(async (data: CategoryUpdateDTO) => {
-    return new Promise<void>((resolve) => {
-      updateCategory(
-        {
-          id: params.id,
-          name: data.name ?? '',
-          isActive: data.isActive ?? true,
+    updateCategory(
+      {
+        id: params.id,
+        name: data.name ?? '',
+        isActive: data.isActive ?? true,
+      },
+      {
+        onSuccess: () => {
+          queryClient.removeQueries({ queryKey: ['categories'] })
+          queryClient.removeQueries({ queryKey: ['products'] })
         },
-        {
-          onSuccess: () => {
-            queryClient.removeQueries({ queryKey: ['categories'] })
-            queryClient.removeQueries({ queryKey: ['products'] })
-
-            setTimeout(() => {
-              router.back()
-              resolve()
-            }, 100)
-          },
-          onError: () => {
-            resolve()
-          },
-        }
-      )
-    })
+      }
+    )
+    router.back()
   })
 
   useEffect(() => {

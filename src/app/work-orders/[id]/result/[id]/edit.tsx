@@ -169,9 +169,7 @@ export default function WorkOrderResultEditByIdScreen() {
       queryClient.removeQueries({ queryKey: ['paymentOrders'] })
       queryClient.removeQueries({ queryKey: ['itineraries'] })
 
-      setTimeout(() => {
-        router.back()
-      }, 100)
+      router.back()
     } catch (error) {
       console.error('Erro ao atualizar relatório:', error)
     } finally {

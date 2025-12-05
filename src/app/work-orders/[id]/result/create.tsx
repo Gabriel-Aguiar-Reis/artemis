@@ -133,9 +133,7 @@ export default function WorkOrderResultCreateScreen() {
       queryClient.removeQueries({ queryKey: ['workOrderResultItems'] })
       queryClient.removeQueries({ queryKey: ['itineraries'] })
 
-      setTimeout(() => {
-        router.back()
-      }, 100)
+      router.back()
     } catch (error) {
       console.error('Erro ao criar relatório:', error)
     } finally {

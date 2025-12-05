@@ -103,9 +103,7 @@ export default function WorkOrderPaymentCreateScreen() {
       queryClient.removeQueries({ queryKey: ['paymentOrders'] })
       queryClient.removeQueries({ queryKey: ['itineraries'] })
 
-      setTimeout(() => {
-        router.back()
-      }, 100)
+      router.back()
     } catch (error) {
       console.error('Erro ao criar pagamento:', error)
     }

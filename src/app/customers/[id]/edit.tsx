@@ -46,31 +46,22 @@ export default function CustomersEditScreen() {
   })
 
   const onSubmit = form.handleSubmit(async (data: CustomerUpdateDTO) => {
-    return new Promise<void>((resolve) => {
-      updateCustomer(
-        {
-          id: params.id,
-          ...data,
+    updateCustomer(
+      {
+        id: params.id,
+        ...data,
+      },
+      {
+        onSuccess: () => {
+          // Limpar cache completamente e voltar
+          queryClient.removeQueries({ queryKey: ['customers'] })
+          queryClient.removeQueries({ queryKey: ['workOrders'] })
+          queryClient.removeQueries({ queryKey: ['itineraryWorkOrders'] })
+          queryClient.removeQueries({ queryKey: ['itineraries'] })
         },
-        {
-          onSuccess: () => {
-            // Limpar cache completamente e voltar
-            queryClient.removeQueries({ queryKey: ['customers'] })
-            queryClient.removeQueries({ queryKey: ['workOrders'] })
-            queryClient.removeQueries({ queryKey: ['itineraryWorkOrders'] })
-            queryClient.removeQueries({ queryKey: ['itineraries'] })
-
-            setTimeout(() => {
-              router.back()
-              resolve()
-            }, 100)
-          },
-          onError: () => {
-            resolve()
-          },
-        }
-      )
-    })
+      }
+    )
+    router.back()
   })
 
   const handleSearchAddress = async (zipCode: string) => {

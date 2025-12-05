@@ -67,9 +67,7 @@ export default function ItineraryReorderScreen() {
       queryClient.removeQueries({ queryKey: ['itineraryWorkOrders'] })
       queryClient.removeQueries({ queryKey: ['itineraries'] })
 
-      setTimeout(() => {
-        router.back()
-      }, 100)
+      router.back()
     } catch (err) {
       console.error('Falha ao salvar nova ordenação:', err)
     }

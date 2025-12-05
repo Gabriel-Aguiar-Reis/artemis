@@ -112,9 +112,7 @@ export default function ItineraryFinishScreen() {
       queryClient.removeQueries({ queryKey: ['itinerary', itinerary.id] })
       queryClient.removeQueries({ queryKey: ['workOrders'] })
 
-      setTimeout(() => {
-        router.replace('/itinerary')
-      }, 100)
+      router.replace('/itinerary')
     } catch (error) {
       console.error('Erro ao finalizar itinerário:', error)
     } finally {
