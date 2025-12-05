@@ -49,6 +49,7 @@ export default function WorkOrderEditScreen() {
     })
 
     queryClient.invalidateQueries({ queryKey: ['itineraryWorkOrders'] })
+    queryClient.invalidateQueries({ queryKey: ['workOrders'] })
     router.back()
   })
 

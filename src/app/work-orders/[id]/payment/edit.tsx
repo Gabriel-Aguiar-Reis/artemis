@@ -72,6 +72,8 @@ export default function PaymentEditScreen() {
         paidInstallments: Number(data.paidInstallments),
       })
       queryClient.invalidateQueries({ queryKey: ['itineraryWorkOrders'] })
+      queryClient.invalidateQueries({ queryKey: ['workOrders'] })
+      queryClient.invalidateQueries({ queryKey: ['paymentOrders'] })
       router.back()
     } catch (error) {
       console.error('Erro ao atualizar pagamento:', error)

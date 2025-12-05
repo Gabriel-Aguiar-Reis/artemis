@@ -10,6 +10,7 @@ import {
 } from '@/src/domain/validations/product.schema'
 import { UUID, getErrorMessage } from '@/src/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useQueryClient } from '@tanstack/react-query'
 import { router, useLocalSearchParams } from 'expo-router'
 import { Pencil, PencilOff } from 'lucide-react-native'
 import { useEffect } from 'react'
@@ -22,6 +23,7 @@ export default function ProductsEditScreen() {
 
   const { data: product, isLoading } = productHooks.getProduct(params.id)
   const { mutate: updateProduct, isPending } = productHooks.updateProduct()
+  const queryClient = useQueryClient()
 
   const form = useForm<ProductUpdateDTO>({
     resolver: zodResolver(productUpdateSchema),
@@ -39,6 +41,9 @@ export default function ProductsEditScreen() {
 
   const onSubmit = form.handleSubmit((data: ProductUpdateDTO) => {
     updateProduct({ ...data, id: params.id })
+    queryClient.invalidateQueries({ queryKey: ['products'] })
+    queryClient.invalidateQueries({ queryKey: ['workOrderItems'] })
+    queryClient.invalidateQueries({ queryKey: ['workOrderResultItems'] })
     router.back()
   })
 

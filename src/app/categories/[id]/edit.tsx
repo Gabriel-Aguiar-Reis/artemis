@@ -7,6 +7,7 @@ import {
 } from '@/src/domain/validations/category.schema'
 import { UUID } from '@/src/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useQueryClient } from '@tanstack/react-query'
 import { router, useLocalSearchParams } from 'expo-router'
 import { Pencil, PencilOff } from 'lucide-react-native'
 import { useEffect } from 'react'
@@ -17,6 +18,7 @@ export default function CategoriesEditScreen() {
   const params = useLocalSearchParams<{
     id: UUID
   }>()
+  const queryClient = useQueryClient()
 
   const { data: category, isLoading } = categoryHooks.getCategory(params.id)
   const { mutate: updateCategory, isPending } = categoryHooks.updateCategory()
@@ -37,6 +39,8 @@ export default function CategoriesEditScreen() {
       name: data.name ?? '',
       isActive: data.isActive ?? true,
     })
+    queryClient.invalidateQueries({ queryKey: ['categories'] })
+    queryClient.invalidateQueries({ queryKey: ['products'] })
     router.back()
   })
 

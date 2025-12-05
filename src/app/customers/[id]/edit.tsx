@@ -9,6 +9,7 @@ import {
 } from '@/src/domain/validations/customer.schema'
 import { UUID } from '@/src/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useQueryClient } from '@tanstack/react-query'
 import { router, useLocalSearchParams } from 'expo-router'
 import { Pencil, PencilOff, Search } from 'lucide-react-native'
 import { useEffect, useState } from 'react'
@@ -17,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function CustomersEditScreen() {
   const params = useLocalSearchParams<{ id: UUID }>()
+  const queryClient = useQueryClient()
 
   const { data: customer, isLoading: isLoadingCustomer } =
     customerHooks.getCustomer(params.id)
@@ -48,6 +50,10 @@ export default function CustomersEditScreen() {
       id: params.id,
       ...data,
     })
+    queryClient.invalidateQueries({ queryKey: ['customers'] })
+    queryClient.invalidateQueries({ queryKey: ['workOrders'] })
+    queryClient.invalidateQueries({ queryKey: ['itineraryWorkOrders'] })
+    queryClient.invalidateQueries({ queryKey: ['itineraries'] })
     router.back()
   })
 
