@@ -49,11 +49,11 @@ export default class DrizzleProductRepository implements ProductRepository {
   }
 
   async addProduct(dto: ProductInsertDTO): Promise<void> {
-    const id = uuid.v4()
+    const id = dto.id ? (dto.id as UUID) : (uuid.v4() as UUID)
     const expiration = new Expiration(dto.expiration)
 
     const prod = new Product(
-      id as UUID,
+      id,
       dto.name,
       dto.categoryId as UUID,
       dto.salePrice,

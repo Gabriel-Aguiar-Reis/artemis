@@ -21,8 +21,8 @@ export default class DrizzleCategoryRepository implements CategoryRepository {
   }
 
   async addCategory(dto: CategoryInsertDTO): Promise<void> {
-    const id = uuid.v4()
-    const cat = new Category(id as UUID, dto.name, dto.isActive ?? true)
+    const id = dto.id ? (dto.id as UUID) : (uuid.v4() as UUID)
+    const cat = new Category(id, dto.name, dto.isActive ?? true)
     const data = CategoryMapper.toPersistence(cat)
     await db.insert(category).values(data).onConflictDoNothing()
   }

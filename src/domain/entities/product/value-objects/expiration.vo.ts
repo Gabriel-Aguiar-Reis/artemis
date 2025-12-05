@@ -1,6 +1,8 @@
 export type ExpirationSerializableDTO = string
 
-export const EXPIRATION_REGEX = /^(\d+)\s*([^\s]+)$/i
+// Aceita formatos como: "30 dias", "30dias", "1 mês", "2 semanas", etc.
+export const EXPIRATION_REGEX = /^(\d+)\s*(.+)$/i
+
 export class Expiration {
   private durationMs: number
 
@@ -12,26 +14,50 @@ export class Expiration {
   private parseToMilliseconds(value: string): number {
     const raw = String(value).trim()
     const match = raw.match(EXPIRATION_REGEX)
-    if (!match) throw new Error('O formato de expiração é inválido.')
+    if (!match) {
+      throw new Error(
+        'Formato de validade inválido. Use: número + unidade (ex: "30 dias", "1 mês", "2 semanas")'
+      )
+    }
+
     const [, qtyStr, unitRaw] = match
     const qty = Number(qtyStr)
-    if (Number.isNaN(qty) || qty <= 0)
-      throw new Error('Quantidade inválida na expiração.')
+
+    if (Number.isNaN(qty) || qty <= 0) {
+      throw new Error(
+        'Quantidade inválida. Use um número maior que zero (ex: "30 dias", "1 mês")'
+      )
+    }
 
     // Normaliza acentos e converte para lower
-    // Normaliza acentos e converte para lower (remover apenas diacríticos)
     const unit = String(unitRaw)
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .toLowerCase()
+      .trim()
 
     let ms: number | undefined
-    if (unit.startsWith('dia')) ms = 24 * 60 * 60 * 1000
-    else if (unit.startsWith('semana')) ms = 7 * 24 * 60 * 60 * 1000
-    else if (unit.startsWith('mes')) ms = 30 * 24 * 60 * 60 * 1000
-    else if (unit.startsWith('ano')) ms = 365 * 24 * 60 * 60 * 1000
 
-    if (!ms) throw new Error('Unidade de tempo inválida para expiração.')
+    // Aceita variações comuns (plural, singular, abreviações)
+    if (/^dias?$/.test(unit) || /^d$/.test(unit)) {
+      ms = 24 * 60 * 60 * 1000
+    } else if (
+      /^semanas?$/.test(unit) ||
+      /^sem$/.test(unit) ||
+      /^s$/.test(unit)
+    ) {
+      ms = 7 * 24 * 60 * 60 * 1000
+    } else if (/^mes(es)?$/.test(unit) || /^m$/.test(unit)) {
+      ms = 30 * 24 * 60 * 60 * 1000
+    } else if (/^anos?$/.test(unit) || /^a$/.test(unit)) {
+      ms = 365 * 24 * 60 * 60 * 1000
+    }
+
+    if (!ms) {
+      throw new Error(
+        `Unidade "${unitRaw}" não reconhecida. Use: dias, semanas, meses ou anos`
+      )
+    }
 
     return qty * ms
   }
@@ -50,24 +76,30 @@ export class Expiration {
     const qty = Number(qtyStr)
     if (Number.isNaN(qty)) return this.value
 
-    // Normaliza acentos e converte para lower (remover diacríticos)
+    // Normaliza acentos e converte para lower
     const unit = String(unitRaw)
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .toLowerCase()
+      .trim()
 
-    // Determina a forma base da unidade (singular) preservando acentos
-    // Usamos o unit (normalizado sem diacríticos) apenas para identificar a unidade
-    // e retornamos a forma singular preferida com acento quando aplicável.
-    let singular = unit
-    if (unit.startsWith('dia')) singular = 'dia'
-    else if (unit.startsWith('semana')) singular = 'semana'
-    else if (unit.startsWith('mes')) singular = 'mês'
-    else if (unit.startsWith('ano')) singular = 'ano'
+    // Determina a forma padrão da unidade
+    let unitName = unit
+    if (/^dias?$/.test(unit) || /^d$/.test(unit)) {
+      unitName = qty === 1 ? 'dia' : 'dias'
+    } else if (
+      /^semanas?$/.test(unit) ||
+      /^sem$/.test(unit) ||
+      /^s$/.test(unit)
+    ) {
+      unitName = qty === 1 ? 'semana' : 'semanas'
+    } else if (/^mes(es)?$/.test(unit) || /^m$/.test(unit)) {
+      unitName = qty === 1 ? 'mês' : 'meses'
+    } else if (/^anos?$/.test(unit) || /^a$/.test(unit)) {
+      unitName = qty === 1 ? 'ano' : 'anos'
+    }
 
-    if (qty === 1) return `${qty} ${singular}`
-    // Se qty > 1, retorna a string trimmed para evitar espaços indesejados
-    return raw
+    return `${qty} ${unitName}`
   }
 
   static fromDTO(dto: ExpirationSerializableDTO): Expiration {
