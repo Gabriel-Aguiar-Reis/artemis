@@ -55,12 +55,16 @@ export function WorkOrderCard({
   onPress?: () => void
   isLate?: boolean
 }) {
+  // Verificar se tem resultado mas não tem pagamento
+  const hasResultNoPay = wo.result && !wo.paymentOrder
+
   return (
     <ObjectCard.Root
       key={wo.id}
       className={cn(
         'mb-4 dark:bg-input/30',
-        isLate && 'border-2 border-warning'
+        isLate && 'border-2 border-warning',
+        hasResultNoPay && 'border-2 border-destructive'
       )}
     >
       <ObjectCard.Header>
@@ -80,6 +84,11 @@ export function WorkOrderCard({
                 <Text className="text-xs font-bold text-warning-foreground">
                   ATRASADO
                 </Text>
+              </View>
+            )}
+            {hasResultNoPay && (
+              <View className="bg-destructive/40 rounded-full px-2 py-0.5">
+                <Text className="text-xs font-bold text-red-100">S/ PGTO</Text>
               </View>
             )}
           </View>

@@ -6,9 +6,7 @@ import DrizzleWorkOrderRepository from '@/src/infra/repositories/drizzle/drizzle
 import { UUID } from '@/src/lib/utils'
 import { eq } from 'drizzle-orm'
 
-export class DrizzleItineraryWorkOrderRepository
-  implements ItineraryWorkOrderRepository
-{
+export class DrizzleItineraryWorkOrderRepository implements ItineraryWorkOrderRepository {
   constructor(
     private workOrderRepository: DrizzleWorkOrderRepository = new DrizzleWorkOrderRepository()
   ) {}
@@ -114,6 +112,13 @@ export class DrizzleItineraryWorkOrderRepository
         isLate: item.isLate,
       })
       .where(eq(itineraryWorkOrder.id, item.id))
+  }
+
+  async clearIsLateByWorkOrderId(workOrderId: UUID): Promise<void> {
+    await db
+      .update(itineraryWorkOrder)
+      .set({ isLate: false })
+      .where(eq(itineraryWorkOrder.workOrderId, workOrderId))
   }
 
   async deleteItineraryWorkOrder(id: UUID): Promise<void> {

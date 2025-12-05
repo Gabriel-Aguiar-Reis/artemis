@@ -292,15 +292,24 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
     status: string,
     visitDate: Date
   ): Promise<void> {
-    await db
-      .update(workOrder)
-      .set({
-        resultId,
-        status: status as WorkOrderStatus,
-        visitDate: visitDate.toISOString(),
-        updatedAt: new Date().toISOString(),
-      })
-      .where(eq(workOrder.id, id))
+    await db.transaction(async (tx) => {
+      // Atualizar a work order
+      await tx
+        .update(workOrder)
+        .set({
+          resultId,
+          status: status as WorkOrderStatus,
+          visitDate: visitDate.toISOString(),
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(workOrder.id, id))
+
+      // Limpar isLate de todas as itinerary_work_orders desta work order
+      await tx
+        .update(itineraryWorkOrder)
+        .set({ isLate: false })
+        .where(eq(itineraryWorkOrder.workOrderId, id))
+    })
   }
 
   async updateWorkOrderWithPayment(
