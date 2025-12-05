@@ -157,20 +157,20 @@ O projeto segue os princípios de **Clean Architecture** e **Domain-Driven Desig
 ```text
 src/
 ├── app/                    # Screens (Expo Router)
-├── application/           # Camada de aplicação
-│   ├── hooks/            # React Query hooks
-│   └── services/         # Serviços de aplicação
-├── domain/               # Camada de domínio
-│   ├── entities/         # Entidades de negócio
-│   ├── repositories/     # Interfaces de repositórios
-│   └── validations/      # Schemas de validação (Zod)
-├── infra/                # Camada de infraestrutura
-│   ├── db/              # Configuração do banco
-│   └── repositories/    # Implementação dos repositórios
-├── components/           # Componentes reutilizáveis
-│   └── ui/              # Componentes de interface
-├── lib/                  # Utilitários e helpers
-└── types/                # Definições de tipos TypeScript
+├── application/            # Camada de aplicação
+│   ├── hooks/              # React Query hooks
+│   └── services/           # Serviços de aplicação
+├── domain/                 # Camada de domínio
+│   ├── entities/           # Entidades de negócio
+│   ├── repositories/       # Interfaces de repositórios
+│   └── validations/        # Schemas de validação (Zod)
+├── infra/                  # Camada de infraestrutura
+│   ├── db/                 # Configuração do banco
+│   └── repositories/       # Implementação dos repositórios
+├── components/             # Componentes reutilizáveis
+│   └── ui/                 # Componentes de interface
+├── lib/                    # Utilitários e helpers
+└── types/                  # Definições de tipos TypeScript
 ```
 
 ### Camadas
@@ -257,42 +257,42 @@ yarn clean            # Remove .expo e node_modules
 artemis/
 ├── src/
 │   ├── app/                          # Screens (file-based routing)
-│   │   ├── _layout.tsx              # Layout raiz
-│   │   ├── index.tsx                # Tela inicial
-│   │   ├── admin/                   # Funcionalidades admin
-│   │   │   ├── data-transfer.tsx.   # Import e Export de planilha template
-│   │   │   └── generate-license.tsx # Geração de licenças
-│   │   ├── categories/              # Gestão de categorias
+│   │   ├── _layout.tsx               # Layout raiz
+│   │   ├── index.tsx                 # Tela inicial
+│   │   ├── admin/                    # Funcionalidades admin
+│   │   │   ├── data-transfer.tsx.    # Import e Export de planilha template
+│   │   │   └── generate-license.tsx  # Geração de licenças
+│   │   ├── categories/               # Gestão de categorias
 │   │   │   ├── index.tsx
 │   │   │   ├── form.tsx
 │   │   │   ├── search.tsx
 │   │   │   └── [id]/
-│   │   ├── customers/               # Gestão de clientes
+│   │   ├── customers/                # Gestão de clientes
 │   │   │   ├── index.tsx
 │   │   │   ├── form.tsx
 │   │   │   ├── search.tsx
 │   │   │   └── [id]/
-│   │   ├── products/                # Gestão de produtos
+│   │   ├── products/                 # Gestão de produtos
 │   │   │   ├── index.tsx
 │   │   │   ├── form.tsx
 │   │   │   ├── search.tsx
 │   │   │   └── [id]/
-│   │   ├── work-orders/             # Ordens de serviço
+│   │   ├── work-orders/              # Ordens de serviço
 │   │   │   ├── index.tsx
 │   │   │   ├── form.tsx
 │   │   │   ├── search.tsx
 │   │   │   └── [id]/
-│   │   ├── itinerary/               # Itinerários
+│   │   ├── itinerary/                # Itinerários
 │   │   │   ├── index.tsx
 │   │   │   ├── form.tsx
 │   │   │   ├── finish.tsx
 │   │   │   ├── reorder.tsx
 │   │   │   └── search.tsx
-│   │   └── license/                 # Licenciamento
+│   │   └── license/                  # Licenciamento
 │   │       └── renew.tsx
 │   │
 │   ├── application/
-│   │   ├── hooks/                   # React Query hooks
+│   │   ├── hooks/                    # React Query hooks
 │   │   │   ├── category.hooks.ts
 │   │   │   ├── customer.hooks.ts
 │   │   │   ├── product.hooks.ts
@@ -300,14 +300,14 @@ artemis/
 │   │   │   ├── itinerary.hooks.ts
 │   │   │   ├── license.hooks.ts
 │   │   │   └── ...
-│   │   └── services/                # Serviços
+│   │   └── services/                 # Serviços
 │   │       ├── excel.service.ts
 │   │       ├── whatsapp.service.ts
 │   │       ├── payment.service.ts
 │   │       └── geocoding.service.ts
 │   │
 │   ├── domain/
-│   │   ├── entities/                # Entidades de domínio
+│   │   ├── entities/                 # Entidades de domínio
 │   │   │   ├── customer/
 │   │   │   │   ├── customer.entity.ts
 │   │   │   │   ├── mapper/
@@ -318,8 +318,8 @@ artemis/
 │   │   │   ├── itinerary/
 │   │   │   ├── license/
 │   │   │   └── ...
-│   │   ├── repositories/            # Interfaces de repositórios
-│   │   └── validations/             # Schemas Zod
+│   │   ├── repositories/             # Interfaces de repositórios
+│   │   └── validations/              # Schemas Zod
 │   │
 │   ├── infra/
 │   │   ├── db/
@@ -327,10 +327,10 @@ artemis/
 │   │   │       ├── drizzle-client.ts
 │   │   │       ├── migrations/
 │   │   │       └── schema/
-│   │   └── repositories/            # Implementações
+│   │   └── repositories/             # Implementações
 │   │
 │   ├── components/
-│   │   └── ui/                      # Componentes UI
+│   │   └── ui/                       # Componentes UI
 │   │       ├── button.tsx
 │   │       ├── input.tsx
 │   │       ├── dialog.tsx
@@ -339,7 +339,7 @@ artemis/
 │   │       ├── forms/
 │   │       └── ...
 │   │
-│   ├── lib/                         # Utilitários
+│   ├── lib/                          # Utilitários
 │   │   ├── utils.ts
 │   │   ├── theme.ts
 │   │   └── license-crypto.ts
@@ -348,11 +348,11 @@ artemis/
 │       ├── template-app-preenchimento.tsx
 │       └── images/
 │
-├── app.json                         # Configuração Expo
-├── eas.json                         # Configuração EAS Build
-├── drizzle.config.ts               # Configuração Drizzle
-├── tailwind.config.js              # Configuração Tailwind
-├── tsconfig.json                   # Configuração TypeScript
+├── app.json                          # Configuração Expo
+├── eas.json                          # Configuração EAS Build
+├── drizzle.config.ts                 # Configuração Drizzle
+├── tailwind.config.js                # Configuração Tailwind
+├── tsconfig.json                     # Configuração TypeScript
 ├── babel.config.js
 ├── metro.config.js
 └── package.json
@@ -367,13 +367,17 @@ class Customer {
   id: UUID
   storeName: string // Nome da loja
   contactName: string // Nome do contato
-  address: Address // Value Object
-  smartphoneNumber?: SmartphoneNumber // Value Object
-  landlineNumber?: LandlinePhoneNumber // Value Object
-  isActiveWhatsApp: boolean
-  notes?: string
-  createdAt: Date
-  updatedAt: Date
+  storeAddress: Address // Value Object
+  phoneNumber?: SmartphoneNumber // Value Object (telefone celular)
+  landlineNumber?: LandlinePhoneNumber // Value Object (telefone fixo)
+
+  // Métodos
+  isActiveWhatsApp(): boolean
+  getMainNumber(): {
+    value: string
+    type: 'smartphone' | 'landline'
+    isWhatsApp: boolean
+  } | null
 }
 ```
 
@@ -384,11 +388,12 @@ class Product {
   id: UUID
   name: string
   categoryId: UUID
-  price: number
-  expiration?: Expiration // Value Object
-  description?: string
-  createdAt: Date
-  updatedAt: Date
+  salePrice: number // Preço de venda
+  isActive: boolean // Produto ativo/inativo
+  expiration: Expiration // Value Object (validade)
+
+  // Métodos
+  isExpired(referenceDate?: Date): boolean
 }
 ```
 
@@ -398,27 +403,41 @@ class Product {
 class Category {
   id: UUID
   name: string
-  createdAt: Date
-  updatedAt: Date
+  isActive: boolean // Categoria ativa/inativa
 }
 ```
 
 ### WorkOrder (Ordem de Serviço)
 
 ```typescript
+enum WorkOrderStatus {
+  PENDING = 'PENDING',
+  COMMITTED = 'COMMITTED',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  PARTIAL = 'PARTIAL',
+  CANCELLED = 'CANCELLED',
+  FAILED = 'FAILED',
+}
+
 class WorkOrder {
   id: UUID
-  customerId: UUID
-  customer: Customer
-  scheduledDate?: Date // Data agendada
-  visitDate?: Date // Data da visita
-  notes?: string
-  status: WorkOrderStatus // SCHEDULED | COMPLETED | CANCELED
-  paymentOrderId?: UUID
-  items: WorkOrderItem[] // Produtos agendados
+  customer: Customer // Objeto Customer completo
+  scheduledDate: Date // Data agendada
+  visitDate?: Date // Data da visita real
+  notes?: string // Observações
+  status: WorkOrderStatus
+  paymentOrder?: PaymentOrder // Ordem de pagamento
+  products?: WorkOrderItem[] // Produtos agendados
   result?: WorkOrderResult // Resultado da visita
   createdAt: Date
   updatedAt: Date
+
+  // Métodos
+  addProduct(product: Product, quantity: number): void
+  removeProduct(productId: UUID): void
+  updateProductQuantity(productId: UUID, quantity: number): void
+  getTotalValue(): number
 }
 ```
 
@@ -427,11 +446,16 @@ class WorkOrder {
 ```typescript
 class Itinerary {
   id: UUID
-  date: Date
-  isActive: boolean
-  workOrders: ItineraryWorkOrder[]
-  createdAt: Date
-  updatedAt: Date
+  initialItineraryDate: Date // Data inicial do itinerário
+  finalItineraryDate: Date // Data final do itinerário
+  isFinished: boolean // Itinerário finalizado
+  workOrders: ItineraryWorkOrder[] // Ordens de serviço no itinerário
+
+  // Métodos
+  addWorkOrder(workOrder: WorkOrder): void
+  markLateOrders(toleranceMinutes?: number): void
+  finish(): void
+  reopenItinerary(): void
 }
 ```
 
