@@ -11,15 +11,14 @@ import {
 import { db } from '@/src/infra/db/drizzle/drizzle-client'
 import {
   product,
+  workOrder,
   workOrderResult,
   workOrderResultItem,
 } from '@/src/infra/db/drizzle/schema'
 import { UUID } from '@/src/lib/utils'
 import { eq } from 'drizzle-orm'
 
-export default class DrizzleWorkOrderResultRepository
-  implements WorkOrderResultRepository
-{
+export default class DrizzleWorkOrderResultRepository implements WorkOrderResultRepository {
   private async loadWorkOrderResultItems(
     resultId: UUID
   ): Promise<WorkOrderResultItem[]> {
@@ -129,6 +128,20 @@ export default class DrizzleWorkOrderResultRepository
     if (!existing)
       throw new Error('Relatório final da ordem de serviço não encontrado.')
 
-    await db.delete(workOrderResult).where(eq(workOrderResult.id, resultId))
+    await db.transaction(async (tx) => {
+      // Deletar items do resultado primeiro
+      await tx
+        .delete(workOrderResultItem)
+        .where(eq(workOrderResultItem.resultId, resultId))
+
+      // Remover referência em work orders
+      await tx
+        .update(workOrder)
+        .set({ resultId: null })
+        .where(eq(workOrder.resultId, resultId))
+
+      // Deletar resultado
+      await tx.delete(workOrderResult).where(eq(workOrderResult.id, resultId))
+    })
   }
 }

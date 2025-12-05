@@ -1,3 +1,4 @@
+import { PaymentService } from '@/src/application/services/payment.service'
 import { CustomerMapper } from '@/src/domain/entities/customer/mapper/customer.mapper'
 import { PaymentOrderMapper } from '@/src/domain/entities/payment-order/mapper/payment-order.mapper'
 import { PaymentOrderSerializableDTO } from '@/src/domain/entities/payment-order/payment-order.entity'
@@ -24,6 +25,7 @@ import {
 } from '@/src/domain/validations/work-order.schema'
 import { db } from '@/src/infra/db/drizzle/drizzle-client'
 import { customer } from '@/src/infra/db/drizzle/schema/drizzle.customer.schema'
+import { itineraryWorkOrder } from '@/src/infra/db/drizzle/schema/drizzle.itinerary-work-order.schema'
 import { paymentOrder } from '@/src/infra/db/drizzle/schema/drizzle.payment-order.schema'
 import { product } from '@/src/infra/db/drizzle/schema/drizzle.product.schema'
 import { workOrderItem } from '@/src/infra/db/drizzle/schema/drizzle.work-order-item.schema'
@@ -305,13 +307,28 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
     id: UUID,
     paymentOrderId: UUID
   ): Promise<void> {
-    await db
-      .update(workOrder)
-      .set({
-        paymentOrderId,
-        updatedAt: new Date().toISOString(),
-      })
-      .where(eq(workOrder.id, id))
+    await db.transaction(async (tx) => {
+      // Vincular paymentOrder à workOrder
+      await tx
+        .update(workOrder)
+        .set({
+          paymentOrderId,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(workOrder.id, id))
+
+      // Verificar se a ordem de pagamento está paga
+      const po = await tx
+        .select()
+        .from(paymentOrder)
+        .where(eq(paymentOrder.id, paymentOrderId))
+        .limit(1)
+
+      if (po.length > 0 && po[0].isPaid) {
+        // Se já está paga, finalizar a work order
+        await PaymentService.finalizePayment(tx, paymentOrderId)
+      }
+    })
   }
 
   async updateWorkOrderFinish(
@@ -420,10 +437,34 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
 
     if (woRow) {
       await db.transaction(async (tx) => {
-        // Deletar items (cascade)
+        // Deletar relacionamento com itinerários
+        await tx
+          .delete(itineraryWorkOrder)
+          .where(eq(itineraryWorkOrder.workOrderId, id))
+
+        // Deletar items da work order
         await tx.delete(workOrderItem).where(eq(workOrderItem.workOrderId, id))
 
-        // Deletar work order
+        // Deletar result items se existir result
+        if (woRow.resultId) {
+          await tx
+            .delete(workOrderResultItem)
+            .where(eq(workOrderResultItem.resultId, woRow.resultId))
+
+          // Deletar result
+          await tx
+            .delete(workOrderResult)
+            .where(eq(workOrderResult.id, woRow.resultId))
+        }
+
+        // Deletar payment order se existir
+        if (woRow.paymentOrderId) {
+          await tx
+            .delete(paymentOrder)
+            .where(eq(paymentOrder.id, woRow.paymentOrderId))
+        }
+
+        // Finalmente, deletar work order
         await tx.delete(workOrder).where(eq(workOrder.id, id))
       })
     }

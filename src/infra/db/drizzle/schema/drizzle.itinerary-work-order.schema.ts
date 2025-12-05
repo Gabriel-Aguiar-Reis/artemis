@@ -12,7 +12,7 @@ export const itineraryWorkOrder = sqliteTable('itinerary_work_order', {
     .references(() => itinerary.id, { onDelete: 'cascade' })
     .notNull(),
   workOrderId: text('work_order_id')
-    .references(() => workOrder.id)
+    .references(() => workOrder.id, { onDelete: 'cascade' })
     .notNull(),
   position: integer('position').notNull(),
   isLate: integer('is_late', { mode: 'boolean' }).notNull().default(false),

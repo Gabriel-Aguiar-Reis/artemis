@@ -24,15 +24,19 @@ export const workOrder = sqliteTable('work_order', {
     .primaryKey()
     .$defaultFn(() => String(uuid.v4())),
   customerId: text('customer_id')
-    .references(() => customer.id)
+    .references(() => customer.id, { onDelete: 'restrict' })
     .notNull(),
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
   updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
   scheduledDate: text('scheduled_date').notNull(),
   visitDate: text('visit_date'),
-  paymentOrderId: text('payment_order_id').references(() => paymentOrder.id),
+  paymentOrderId: text('payment_order_id').references(() => paymentOrder.id, {
+    onDelete: 'set null',
+  }),
   status: text('status').notNull().$type<WorkOrderStatus>(),
-  resultId: text('result_id').references(() => workOrderResult.id),
+  resultId: text('result_id').references(() => workOrderResult.id, {
+    onDelete: 'set null',
+  }),
   notes: text('notes'),
 }) satisfies Record<keyof WorkOrderModelShape, any>
 

@@ -8,13 +8,12 @@ import {
 } from '@/src/domain/validations/payment-order.schema'
 import { db } from '@/src/infra/db/drizzle/drizzle-client'
 import { paymentOrder } from '@/src/infra/db/drizzle/schema/drizzle.payment-order.schema'
+import { workOrder } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
 import { UUID } from '@/src/lib/utils'
 import { eq } from 'drizzle-orm'
 import uuid from 'react-native-uuid'
 
-export default class DrizzlePaymentOrderRepository
-  implements PaymentOrderRepository
-{
+export default class DrizzlePaymentOrderRepository implements PaymentOrderRepository {
   async getPaymentOrders(): Promise<PaymentOrder[]> {
     const rows = await db.select().from(paymentOrder)
     if (rows.length === 0) {
@@ -24,7 +23,7 @@ export default class DrizzlePaymentOrderRepository
   }
 
   async addPaymentOrder(dto: PaymentOrderInsertDTO): Promise<UUID> {
-    const id = uuid.v4() as UUID
+    const id = (dto.id as UUID) || (uuid.v4() as UUID)
 
     const po = new PaymentOrder(
       id,
@@ -36,7 +35,10 @@ export default class DrizzlePaymentOrderRepository
     )
 
     const data = PaymentOrderMapper.toPersistence(po)
-    await db.insert(paymentOrder).values(data).onConflictDoNothing()
+
+    await db.transaction(async (tx) => {
+      await tx.insert(paymentOrder).values(data).onConflictDoNothing()
+    })
 
     return id
   }
@@ -80,7 +82,16 @@ export default class DrizzlePaymentOrderRepository
   }
 
   async deletePaymentOrder(id: UUID): Promise<void> {
-    await db.delete(paymentOrder).where(eq(paymentOrder.id, id))
+    await db.transaction(async (tx) => {
+      // Remover referência em work orders
+      await tx
+        .update(workOrder)
+        .set({ paymentOrderId: null })
+        .where(eq(workOrder.paymentOrderId, id))
+
+      // Deletar payment order
+      await tx.delete(paymentOrder).where(eq(paymentOrder.id, id))
+    })
   }
 
   async getPaymentOrder(id: UUID): Promise<PaymentOrder | null> {

@@ -15,6 +15,7 @@ import { UUID } from '@/src/lib/utils'
 import { FlashList } from '@shopify/flash-list'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import {
+  Copy,
   Edit,
   LucideIcon,
   Package,
@@ -163,6 +164,17 @@ export default function ItineraryScreen() {
           }
         },
         isWhatsApp: true,
+      })
+    }
+
+    // Clonar (apenas se tiver resultado e pagamento)
+    if (workOrder.result && workOrder.paymentOrder) {
+      options.push({
+        label: 'Clonar Ordem de Serviço',
+        icon: Copy,
+        onPress: () => {
+          router.push(`/work-orders/${workOrder.id}/clone` as any)
+        },
       })
     }
 

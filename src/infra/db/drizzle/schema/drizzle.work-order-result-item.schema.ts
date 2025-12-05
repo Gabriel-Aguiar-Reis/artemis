@@ -13,7 +13,7 @@ export const workOrderResultItem = sqliteTable('work_order_result_item', {
     .references(() => workOrderResult.id, { onDelete: 'cascade' })
     .notNull(),
   productId: text('product_id')
-    .references(() => product.id)
+    .references(() => product.id, { onDelete: 'restrict' })
     .notNull(),
   quantity: integer('quantity').notNull(),
   priceSnapshot: real('price_snapshot').notNull(),

@@ -17,7 +17,7 @@ export const product = sqliteTable('product', {
     .$defaultFn(() => String(uuid.v4())),
   name: text('name').notNull(),
   categoryId: text('category_id')
-    .references(() => category.id)
+    .references(() => category.id, { onDelete: 'restrict' })
     .notNull(),
   salePrice: real('sale_price').notNull(),
   isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
