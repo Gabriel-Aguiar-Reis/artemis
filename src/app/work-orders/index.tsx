@@ -228,8 +228,7 @@ export default function WorkOrdersScreen() {
   const handleSendWhatsApp = () => {
     if (!createdWorkOrderId || !workOrders) {
       setShowWhatsAppDialog(false)
-      // Limpar o parâmetro da URL
-      router.replace('/work-orders')
+      router.back()
       return
     }
 
@@ -245,8 +244,7 @@ export default function WorkOrdersScreen() {
       WhatsAppService.sendWorkOrderMessage(workOrder, false)
 
       setShowWhatsAppDialog(false)
-      // Limpar o parâmetro da URL
-      router.replace('/work-orders')
+      router.back()
     } catch (error) {
       console.error('Error sending WhatsApp message:', error)
       Toast.show({
@@ -255,16 +253,14 @@ export default function WorkOrdersScreen() {
         text2: error instanceof Error ? error.message : 'Erro desconhecido',
       })
       setShowWhatsAppDialog(false)
-      // Limpar o parâmetro da URL
-      router.replace('/work-orders')
+      router.back()
     }
   }
 
   // Função para cancelar o envio do WhatsApp
   const handleCancelWhatsApp = () => {
     setShowWhatsAppDialog(false)
-    // Limpar o parâmetro da URL
-    router.replace('/work-orders')
+    router.back()
   }
 
   const filteredWorkOrders = useMemo(() => {
