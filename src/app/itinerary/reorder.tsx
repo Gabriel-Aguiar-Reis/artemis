@@ -8,15 +8,13 @@ import { UUID } from '@/src/lib/utils'
 import { useQueryClient } from '@tanstack/react-query'
 import { Stack, useRouter } from 'expo-router'
 import React, { useCallback, useEffect, useState } from 'react'
-import { Pressable, View } from 'react-native'
+import { TouchableOpacity, View } from 'react-native'
 import DraggableFlatList, {
   RenderItemParams,
+  ScaleDecorator,
 } from 'react-native-draggable-flatlist'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
-import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
-
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
 
 export default function ItineraryReorderScreen() {
   const router = useRouter()
@@ -40,23 +38,14 @@ export default function ItineraryReorderScreen() {
 
   const renderItem = useCallback(
     ({ item, drag, isActive }: RenderItemParams<ItineraryWorkOrder>) => {
-      const animatedStyle = useAnimatedStyle(() => {
-        return {
-          transform: [
-            {
-              scale: withSpring(isActive ? 1.03 : 1, { stiffness: 500 }),
-            },
-          ],
-          opacity: withSpring(isActive ? 0.95 : 1),
-        }
-      })
-
       return (
-        <AnimatedPressable onLongPress={drag} style={animatedStyle}>
-          <View className="px-4">
-            <WorkOrderCard wo={item.workOrder} />
-          </View>
-        </AnimatedPressable>
+        <ScaleDecorator>
+          <TouchableOpacity onLongPress={drag} disabled={isActive}>
+            <View className="px-4">
+              <WorkOrderCard wo={item.workOrder} />
+            </View>
+          </TouchableOpacity>
+        </ScaleDecorator>
       )
     },
     []
@@ -108,7 +97,6 @@ export default function ItineraryReorderScreen() {
             ListHeaderComponent={<View className="h-4" />}
             ListFooterComponent={<View className="h-16" />}
             activationDistance={20}
-            animationConfig={{ damping: 20, mass: 0.5, stiffness: 500 }}
           />
         )}
       </SafeAreaView>
