@@ -240,7 +240,8 @@ export default function WorkOrdersScreen() {
   const handleSendWhatsApp = () => {
     if (!createdWorkOrderId || !workOrders) {
       setShowWhatsAppDialog(false)
-      router.back()
+      router.setParams({ createdWorkOrderId: undefined })
+      router.navigate('/work-orders', { dangerouslySingular: true })
       return
     }
 
@@ -256,7 +257,8 @@ export default function WorkOrdersScreen() {
       WhatsAppService.sendWorkOrderMessage(workOrder, false)
 
       setShowWhatsAppDialog(false)
-      router.back()
+      router.setParams({ createdWorkOrderId: undefined })
+      router.navigate('/work-orders', { dangerouslySingular: true })
     } catch (error) {
       console.error('Error sending WhatsApp message:', error)
       Toast.show({
@@ -265,14 +267,16 @@ export default function WorkOrdersScreen() {
         text2: error instanceof Error ? error.message : 'Erro desconhecido',
       })
       setShowWhatsAppDialog(false)
-      router.back()
+      router.setParams({ createdWorkOrderId: undefined })
+      router.navigate('/work-orders', { dangerouslySingular: true })
     }
   }
 
   // Função para cancelar o envio do WhatsApp
   const handleCancelWhatsApp = () => {
     setShowWhatsAppDialog(false)
-    router.back()
+    router.setParams({ createdWorkOrderId: undefined })
+    router.navigate('/work-orders', { dangerouslySingular: true })
   }
 
   const filteredWorkOrders = useMemo(() => {
