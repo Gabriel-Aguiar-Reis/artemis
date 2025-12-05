@@ -12,6 +12,7 @@ import { Text } from '@/src/components/ui/text'
 import { db } from '@/src/infra/db/drizzle/drizzle-client'
 import { category } from '@/src/infra/db/drizzle/schema/drizzle.category.schema'
 import { UUID } from '@/src/lib/utils'
+import { useQueryClient } from '@tanstack/react-query'
 import { eq } from 'drizzle-orm'
 import * as DocumentPicker from 'expo-document-picker'
 import { File } from 'expo-file-system'
@@ -38,6 +39,8 @@ export default function DataTransferScreen() {
   const { mutateAsync: addProduct } = productHooks.addProduct()
   const { mutateAsync: addCustomer } = customerHooks.addCustomer()
 
+  const queryClient = useQueryClient()
+
   // Função para copiar asset para cache e compartilhar
 
   const handleExport = async () => {
@@ -57,7 +60,6 @@ export default function DataTransferScreen() {
         text2: 'Escolha onde salvar ou abrir o arquivo',
       })
     } catch (error) {
-      console.error('Erro ao exportar:', error)
       Toast.show({
         type: 'error',
         text1: 'Erro na exportação',
@@ -95,8 +97,6 @@ export default function DataTransferScreen() {
       let productsImported = 0
       let customersImported = 0
 
-      console.log('Abas disponíveis:', workbook.SheetNames)
-
       // Mapa para armazenar categorias (nome -> id)
       const categoryMap = new Map<string, string>()
 
@@ -105,13 +105,10 @@ export default function DataTransferScreen() {
         (name) => name === 'categorias'
       )
       if (categorySheetName) {
-        console.log('Processando aba de categorias...')
         const categorySheet = workbook.Sheets[categorySheetName]
         const categoryRows = XLSX.utils.sheet_to_json<any>(categorySheet, {
           header: 1,
         })
-
-        console.log(`Total de linhas em categorias: ${categoryRows.length}`)
 
         // Preparar todas as categorias para importação em lote
         const categoriesToImport: Array<{
@@ -126,10 +123,7 @@ export default function DataTransferScreen() {
           const name = String(row[0] || '').trim()
           const isActive = Number(row[1]) === 1
 
-          console.log(`Categoria linha ${i + 1}:`, { name, isActive })
-
           if (!name) {
-            console.warn(`Categoria linha ${i + 1}: nome vazio, pulando`)
             continue
           }
 
@@ -141,7 +135,6 @@ export default function DataTransferScreen() {
         // Importar todas as categorias sequencialmente para garantir que sejam inseridas
         for (const cat of categoriesToImport) {
           try {
-            console.log(`Tentando inserir categoria:`, cat)
             await addCategory(cat)
             categoriesImported++
 
@@ -153,29 +146,14 @@ export default function DataTransferScreen() {
               .limit(1)
               .get()
 
-            if (categoryInDb) {
-              console.log(
-                `✅ Categoria "${cat.name}" confirmada no banco (ID: ${cat.id})`
-              )
-            } else {
-              console.error(
-                `❌ Categoria "${cat.name}" NÃO foi encontrada no banco após inserção!`
-              )
+            if (!categoryInDb) {
               categoryMap.delete(cat.name)
             }
-          } catch (error) {
-            console.error(`Erro ao importar categoria "${cat.name}":`, error)
+          } catch {
             // Remove do mapa se falhar
             categoryMap.delete(cat.name)
           }
         }
-
-        console.log(
-          'Mapa de categorias após importação:',
-          Array.from(categoryMap.entries())
-        )
-      } else {
-        console.warn('Aba "categorias" não encontrada')
       }
 
       // === Importar Produtos ===
@@ -183,13 +161,10 @@ export default function DataTransferScreen() {
         (name) => name === 'produtos'
       )
       if (productSheetName) {
-        console.log('Processando aba de produtos...')
         const productSheet = workbook.Sheets[productSheetName]
         const productRows = XLSX.utils.sheet_to_json<any>(productSheet, {
           header: 1,
         })
-
-        console.log(`Total de linhas em produtos: ${productRows.length}`)
 
         // Pular primeira linha (cabeçalho)
         for (let i = 1; i < productRows.length; i++) {
@@ -200,39 +175,18 @@ export default function DataTransferScreen() {
           const isActive = Number(row[3]) === 1
           const expirationValue = String(row[4] || '').trim()
 
-          console.log(`Produto linha ${i + 1}:`, {
-            name,
-            categoryName,
-            salePrice,
-            isActive,
-            expirationValue,
-          })
-
           if (!name) {
-            console.warn(`Produto linha ${i + 1}: nome vazio, pulando`)
             continue
           }
 
           if (!categoryName) {
-            console.warn(`Produto linha ${i + 1}: categoria vazia, pulando`)
             continue
           }
 
           const categoryId = categoryMap.get(categoryName)
           if (!categoryId) {
-            console.error(
-              `Produto linha ${i + 1}: Categoria "${categoryName}" não encontrada no mapa`
-            )
-            console.error(
-              'Categorias disponíveis no mapa:',
-              Array.from(categoryMap.keys())
-            )
             continue
           }
-
-          console.log(
-            `Produto linha ${i + 1}: categoryId encontrado: ${categoryId}`
-          )
 
           // Verificar se a categoria existe no banco antes de inserir o produto
           const categoryInDb = db
@@ -243,16 +197,8 @@ export default function DataTransferScreen() {
             .get()
 
           if (!categoryInDb) {
-            console.error(
-              `❌ Produto linha ${i + 1}: Categoria com ID "${categoryId}" NÃO existe no banco!`
-            )
             continue
           }
-
-          console.log(
-            `✅ Categoria confirmada no banco para o produto:`,
-            categoryInDb
-          )
 
           try {
             const id = uuid.v4()
@@ -264,16 +210,10 @@ export default function DataTransferScreen() {
               isActive,
               expiration: expirationValue,
             }
-            console.log(`Tentando inserir produto:`, productData)
             await addProduct(productData)
             productsImported++
-            console.log(`Produto "${name}" importado com sucesso`)
-          } catch (error) {
-            console.error(`Erro ao importar produto linha ${i + 1}:`, error)
-          }
+          } catch {}
         }
-      } else {
-        console.warn('Aba "produtos" não encontrada')
       }
 
       // === Importar Clientes ===
@@ -281,13 +221,10 @@ export default function DataTransferScreen() {
         (name) => name === 'clientes'
       )
       if (customerSheetName) {
-        console.log('Processando aba de clientes...')
         const customerSheet = workbook.Sheets[customerSheetName]
         const customerRows = XLSX.utils.sheet_to_json<any>(customerSheet, {
           header: 1,
         })
-
-        console.log(`Total de linhas em clientes: ${customerRows.length}`)
 
         // Pular primeira linha (cabeçalho)
         for (let i = 1; i < customerRows.length; i++) {
@@ -304,31 +241,11 @@ export default function DataTransferScreen() {
           const city = String(row[9] || '').trim()
           const zipCode = String(row[10] || '').trim()
 
-          console.log(`Cliente linha ${i + 1}:`, {
-            storeName,
-            contactName,
-            phoneNumberValue,
-            phoneWhatsApp,
-            landlineNumberValue,
-            landlineWhatsApp,
-            streetName,
-            streetNumber,
-            neighborhood,
-            city,
-            zipCode,
-          })
-
           if (!storeName) {
-            console.warn(
-              `Cliente linha ${i + 1}: nome do estabelecimento vazio, pulando`
-            )
             continue
           }
 
           if (!contactName) {
-            console.warn(
-              `Cliente linha ${i + 1}: nome de contato vazio, pulando`
-            )
             continue
           }
 
@@ -350,28 +267,21 @@ export default function DataTransferScreen() {
               landlineIsWhatsApp: landlineWhatsApp,
             })
             customersImported++
-            console.log(`Cliente "${storeName}" importado com sucesso`)
-          } catch (error) {
-            console.error(`Erro ao importar cliente linha ${i + 1}:`, error)
-          }
+          } catch {}
         }
-      } else {
-        console.warn('Aba "clientes" não encontrada')
       }
+
+      // Invalidar todas as queries após importação completa
+      await queryClient.invalidateQueries({ queryKey: ['customers'] })
+      await queryClient.invalidateQueries({ queryKey: ['categories'] })
+      await queryClient.invalidateQueries({ queryKey: ['products'] })
 
       Toast.show({
         type: 'success',
         text1: 'Importação concluída',
         text2: `${categoriesImported} categorias, ${productsImported} produtos, ${customersImported} clientes`,
       })
-
-      console.log('Importação finalizada:', {
-        categoriesImported,
-        productsImported,
-        customersImported,
-      })
     } catch (error) {
-      console.error('Erro ao importar:', error)
       Toast.show({
         type: 'error',
         text1: 'Erro na importação',
