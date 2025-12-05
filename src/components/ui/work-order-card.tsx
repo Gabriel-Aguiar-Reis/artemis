@@ -49,19 +49,39 @@ const renderContactNumber = (customer: Customer) => {
 export function WorkOrderCard({
   wo,
   onPress,
+  isLate = false,
 }: {
   wo: WorkOrder
   onPress?: () => void
+  isLate?: boolean
 }) {
   return (
-    <ObjectCard.Root key={wo.id} className="mb-4 dark:bg-input/30">
+    <ObjectCard.Root
+      key={wo.id}
+      className={cn(
+        'mb-4 dark:bg-input/30',
+        isLate && 'border-2 border-warning'
+      )}
+    >
       <ObjectCard.Header>
         <ObjectCard.Title>
-          <View className="flex-row items-center gap-2">
+          <View className="flex-row items-center gap-2 flex-wrap">
             <Icon as={Store} size={20} className="text-primary" />
-            <Text className="text-lg font-semibold">
+            <Text
+              className="text-lg font-semibold flex-shrink"
+              numberOfLines={2}
+              ellipsizeMode="tail"
+              style={{ flexShrink: 1, flexGrow: 1, flexBasis: 0 }}
+            >
               {wo.customer.storeName}
             </Text>
+            {isLate && (
+              <View className="bg-warning/40 rounded-full px-2 py-0.5">
+                <Text className="text-xs font-bold text-warning-foreground">
+                  ATRASADO
+                </Text>
+              </View>
+            )}
           </View>
         </ObjectCard.Title>
         <ObjectCard.Description>

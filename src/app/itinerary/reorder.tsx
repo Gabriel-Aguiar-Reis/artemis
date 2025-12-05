@@ -45,7 +45,7 @@ export default function ItineraryReorderScreen() {
     const drag = useReorderableDrag()
     return (
       <Pressable onLongPress={drag}>
-        <WorkOrderCard wo={item.workOrder} />
+        <WorkOrderCard wo={item.workOrder} isLate={item.isLate} />
       </Pressable>
     )
   }

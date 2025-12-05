@@ -230,12 +230,29 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
       // Criar os itinerary-work-orders
       for (let i = 0; i < workOrdersInPeriod.length; i++) {
         const wo = workOrdersInPeriod[i]
+
+        // Verificar se esta work order já estava em um itinerário anterior como atrasada
+        const previousItineraryWorkOrder = tx
+          .select()
+          .from(itineraryWorkOrder)
+          .where(eq(itineraryWorkOrder.workOrderId, wo.id))
+          .orderBy(itineraryWorkOrder.id)
+          .limit(1)
+          .get()
+
+        // Marcar como atrasada se:
+        // 1. Já estava em um itinerário anterior E foi marcada como atrasada
+        // 2. OU se a work order não tem visitDate e a scheduledDate já passou
+        const wasLateInPrevious = previousItineraryWorkOrder?.isLate || false
+        const isOverdue =
+          !wo.visitDate && new Date(wo.scheduledDate) < new Date()
+
         await tx.insert(itineraryWorkOrder).values({
           id: uuid.v4() as string,
           itineraryId: id,
           workOrderId: wo.id,
           position: i + 1,
-          isLate: false,
+          isLate: wasLateInPrevious || isOverdue,
         })
       }
     })

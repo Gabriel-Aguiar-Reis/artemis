@@ -8,6 +8,7 @@ import { ButtonFinish } from '@/src/components/ui/button-finish'
 import { ButtonNew } from '@/src/components/ui/button-new'
 import { ButtonReorder } from '@/src/components/ui/button-reorder'
 import { NotesDialog } from '@/src/components/ui/dialog/notes-dialog'
+import { Icon } from '@/src/components/ui/icon'
 import { Text } from '@/src/components/ui/text'
 import { WorkOrderCard } from '@/src/components/ui/work-order-card'
 import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
@@ -15,6 +16,7 @@ import { UUID } from '@/src/lib/utils'
 import { FlashList } from '@shopify/flash-list'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import {
+  Clock,
   Copy,
   Edit,
   LucideIcon,
@@ -395,11 +397,13 @@ export default function ItineraryScreen() {
           </View>
         ) : (
           <>
-            <Text className="font-bold text-center border-b border-border pb-2">
-              Itinerário{' '}
-              {itinerary.initialItineraryDate.toLocaleDateString('pt-BR')} -{' '}
-              {itinerary.finalItineraryDate.toLocaleDateString('pt-BR')}
-            </Text>
+            <View className="flex-row items-center justify-center gap-2 pb-2">
+              <Icon as={Clock} size={20} className="text-primary" />
+              <Text className="font-bold text-center border-b border-border">
+                {itinerary.initialItineraryDate.toLocaleDateString('pt-BR')} -{' '}
+                {itinerary.finalItineraryDate.toLocaleDateString('pt-BR')}
+              </Text>
+            </View>
 
             <ScrollView
               ref={flatListRef}
@@ -426,6 +430,7 @@ export default function ItineraryScreen() {
                       <View key={item.id} className="px-4">
                         <WorkOrderCard
                           wo={item.workOrder}
+                          isLate={item.isLate}
                           onPress={() => handleWorkOrderOptions(item.workOrder)}
                         />
                       </View>
