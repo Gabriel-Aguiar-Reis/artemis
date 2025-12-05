@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/src/components/ui/card'
+import { Icon } from '@/src/components/ui/icon'
 import { Text } from '@/src/components/ui/text'
 import { UUID } from '@/src/lib/utils'
 import { useQueryClient } from '@tanstack/react-query'
@@ -165,7 +166,8 @@ export default function ItineraryFinishScreen() {
                 {/* Total de ordens */}
                 <View className="flex-row items-center gap-3">
                   <View className="bg-primary/10 p-3 rounded-full">
-                    <FileText
+                    <Icon
+                      as={FileText}
                       size={20}
                       className="text-primary"
                       strokeWidth={2}
@@ -187,13 +189,15 @@ export default function ItineraryFinishScreen() {
                     className={`p-3 rounded-full ${stats.lateWorkOrders > 0 ? 'bg-destructive/10' : 'bg-primary/10'}`}
                   >
                     {stats.lateWorkOrders > 0 ? (
-                      <AlertCircle
+                      <Icon
+                        as={AlertCircle}
                         size={20}
                         className="text-destructive"
                         strokeWidth={2}
                       />
                     ) : (
-                      <CheckCircle
+                      <Icon
+                        as={CheckCircle}
                         size={20}
                         className="text-primary"
                         strokeWidth={2}
@@ -215,7 +219,8 @@ export default function ItineraryFinishScreen() {
                 {/* Dias no período */}
                 <View className="flex-row items-center gap-3">
                   <View className="bg-primary/10 p-3 rounded-full">
-                    <Calendar
+                    <Icon
+                      as={Calendar}
                       size={20}
                       className="text-primary"
                       strokeWidth={2}
@@ -234,7 +239,8 @@ export default function ItineraryFinishScreen() {
                 {/* Faturamento total */}
                 <View className="flex-row items-center gap-3">
                   <View className="bg-primary/10 p-3 rounded-full">
-                    <DollarSign
+                    <Icon
+                      as={DollarSign}
                       size={20}
                       className="text-primary"
                       strokeWidth={2}
@@ -257,7 +263,8 @@ export default function ItineraryFinishScreen() {
                 {/* Ordens com resultado */}
                 <View className="flex-row items-center gap-3">
                   <View className="bg-primary/10 p-3 rounded-full">
-                    <FileText
+                    <Icon
+                      as={FileText}
                       size={20}
                       className="text-primary"
                       strokeWidth={2}
@@ -276,7 +283,8 @@ export default function ItineraryFinishScreen() {
                 {/* Pagamento */}
                 <View className="flex-row items-center gap-3">
                   <View className="bg-primary/10 p-3 rounded-full">
-                    <DollarSign
+                    <Icon
+                      as={DollarSign}
                       size={20}
                       className="text-primary"
                       strokeWidth={2}
@@ -298,7 +306,11 @@ export default function ItineraryFinishScreen() {
             <Card className="bg-muted/50">
               <CardContent>
                 <View className="flex-row gap-3">
-                  <Clock size={20} className="text-muted-foreground mt-0.5" />
+                  <Icon
+                    as={Clock}
+                    size={20}
+                    className="text-muted-foreground mt-0.5"
+                  />
                   <View className="flex-1">
                     <Text className="text-sm text-muted-foreground">
                       Ao finalizar este itinerário, os atrasos (se houver) serão

@@ -97,12 +97,13 @@ export function ItineraryForm<T extends FieldValues>({
     )
     const totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
 
-    // Calcular faturamento estimado
+    // Calcular faturamento estimado baseado nos produtos agendados
     const estimatedRevenue = workOrders.reduce((acc, wo) => {
+      // Prioriza o valor do pagamento se existir, senão usa o total dos produtos
       if (wo.paymentOrder) {
         return acc + wo.paymentOrder.totalValue
       }
-      return acc
+      return acc + wo.totalAmountForProducts
     }, 0)
 
     return {
