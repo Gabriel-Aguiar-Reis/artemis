@@ -71,10 +71,15 @@ export default function PaymentEditScreen() {
         isPaid: data.isPaid ?? false,
         paidInstallments: Number(data.paidInstallments),
       })
-      queryClient.invalidateQueries({ queryKey: ['itineraryWorkOrders'] })
-      queryClient.invalidateQueries({ queryKey: ['workOrders'] })
-      queryClient.invalidateQueries({ queryKey: ['paymentOrders'] })
-      router.back()
+
+      queryClient.removeQueries({ queryKey: ['itineraryWorkOrders'] })
+      queryClient.removeQueries({ queryKey: ['workOrders'] })
+      queryClient.removeQueries({ queryKey: ['paymentOrders'] })
+      queryClient.removeQueries({ queryKey: ['itineraries'] })
+
+      setTimeout(() => {
+        router.back()
+      }, 100)
     } catch (error) {
       console.error('Erro ao atualizar pagamento:', error)
     }

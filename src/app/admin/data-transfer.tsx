@@ -271,10 +271,10 @@ export default function DataTransferScreen() {
         }
       }
 
-      // Invalidar todas as queries após importação completa
-      await queryClient.invalidateQueries({ queryKey: ['customers'] })
-      await queryClient.invalidateQueries({ queryKey: ['categories'] })
-      await queryClient.invalidateQueries({ queryKey: ['products'] })
+      // Limpar cache após importação completa
+      queryClient.removeQueries({ queryKey: ['customers'] })
+      queryClient.removeQueries({ queryKey: ['categories'] })
+      queryClient.removeQueries({ queryKey: ['products'] })
 
       Toast.show({
         type: 'success',

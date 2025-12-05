@@ -106,12 +106,15 @@ export default function ItineraryFinishScreen() {
     setIsFinishing(true)
     try {
       await itineraryHooks.finishItinerary(itinerary.id)
-      await queryClient.invalidateQueries({ queryKey: ['itineraryWorkOrders'] })
-      await queryClient.invalidateQueries({ queryKey: ['itineraries'] })
-      await queryClient.invalidateQueries({
-        queryKey: ['itinerary', itinerary.id],
-      })
-      router.replace('/itinerary')
+
+      queryClient.removeQueries({ queryKey: ['itineraryWorkOrders'] })
+      queryClient.removeQueries({ queryKey: ['itineraries'] })
+      queryClient.removeQueries({ queryKey: ['itinerary', itinerary.id] })
+      queryClient.removeQueries({ queryKey: ['workOrders'] })
+
+      setTimeout(() => {
+        router.replace('/itinerary')
+      }, 100)
     } catch (error) {
       console.error('Erro ao finalizar itinerário:', error)
     } finally {

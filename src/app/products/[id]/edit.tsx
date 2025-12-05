@@ -39,12 +39,29 @@ export default function ProductsEditScreen() {
     reValidateMode: 'onBlur',
   })
 
-  const onSubmit = form.handleSubmit((data: ProductUpdateDTO) => {
-    updateProduct({ ...data, id: params.id })
-    queryClient.invalidateQueries({ queryKey: ['products'] })
-    queryClient.invalidateQueries({ queryKey: ['workOrderItems'] })
-    queryClient.invalidateQueries({ queryKey: ['workOrderResultItems'] })
-    router.back()
+  const onSubmit = form.handleSubmit(async (data: ProductUpdateDTO) => {
+    return new Promise<void>((resolve) => {
+      updateProduct(
+        { ...data, id: params.id },
+        {
+          onSuccess: () => {
+            queryClient.removeQueries({ queryKey: ['products'] })
+            queryClient.removeQueries({ queryKey: ['workOrderItems'] })
+            queryClient.removeQueries({ queryKey: ['workOrderResultItems'] })
+            queryClient.removeQueries({ queryKey: ['workOrders'] })
+            queryClient.removeQueries({ queryKey: ['workOrderResults'] })
+
+            setTimeout(() => {
+              router.back()
+              resolve()
+            }, 100)
+          },
+          onError: () => {
+            resolve()
+          },
+        }
+      )
+    })
   })
 
   useEffect(() => {

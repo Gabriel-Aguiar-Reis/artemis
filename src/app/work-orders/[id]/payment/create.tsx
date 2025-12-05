@@ -97,9 +97,15 @@ export default function WorkOrderPaymentCreateScreen() {
       })
       // 2. Associar payment order à work order
       await (updateWorkOrderWithPayment as any)([params.id, paymentOrderId])
-      queryClient.invalidateQueries({ queryKey: ['itineraryWorkOrders'] })
 
-      router.back()
+      queryClient.removeQueries({ queryKey: ['itineraryWorkOrders'] })
+      queryClient.removeQueries({ queryKey: ['workOrders'] })
+      queryClient.removeQueries({ queryKey: ['paymentOrders'] })
+      queryClient.removeQueries({ queryKey: ['itineraries'] })
+
+      setTimeout(() => {
+        router.back()
+      }, 100)
     } catch (error) {
       console.error('Erro ao criar pagamento:', error)
     }

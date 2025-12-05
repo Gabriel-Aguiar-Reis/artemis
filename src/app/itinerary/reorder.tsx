@@ -64,9 +64,12 @@ export default function ItineraryReorderScreen() {
     }))
     try {
       await (updatePositions as any)([updates])
-      queryClient.invalidateQueries({ queryKey: ['itineraryWorkOrders'] })
-      queryClient.invalidateQueries({ queryKey: ['itineraries'] })
-      router.back()
+      queryClient.removeQueries({ queryKey: ['itineraryWorkOrders'] })
+      queryClient.removeQueries({ queryKey: ['itineraries'] })
+
+      setTimeout(() => {
+        router.back()
+      }, 100)
     } catch (err) {
       console.error('Falha ao salvar nova ordenação:', err)
     }

@@ -161,14 +161,17 @@ export default function WorkOrderResultEditByIdScreen() {
         await (addWorkOrderResultItems as any)([allResultItems])
       }
 
-      // Efeito cascata: invalidar queries relacionadas
-      queryClient.invalidateQueries({ queryKey: ['workOrderResultItems'] })
-      queryClient.invalidateQueries({ queryKey: ['workOrderResults'] })
-      queryClient.invalidateQueries({ queryKey: ['workOrders'] })
-      queryClient.invalidateQueries({ queryKey: ['itineraryWorkOrders'] })
-      queryClient.invalidateQueries({ queryKey: ['paymentOrders'] })
+      // Efeito cascata: limpar cache relacionado
+      queryClient.removeQueries({ queryKey: ['workOrderResultItems'] })
+      queryClient.removeQueries({ queryKey: ['workOrderResults'] })
+      queryClient.removeQueries({ queryKey: ['workOrders'] })
+      queryClient.removeQueries({ queryKey: ['itineraryWorkOrders'] })
+      queryClient.removeQueries({ queryKey: ['paymentOrders'] })
+      queryClient.removeQueries({ queryKey: ['itineraries'] })
 
-      router.back()
+      setTimeout(() => {
+        router.back()
+      }, 100)
     } catch (error) {
       console.error('Erro ao atualizar relatório:', error)
     } finally {
