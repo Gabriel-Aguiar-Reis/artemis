@@ -5,16 +5,16 @@ const { withNativeWind } = require('nativewind/metro')
 const config = getDefaultConfig(__dirname)
 
 // Ajusta resolver
-config.resolver.assetExts = config.resolver.assetExts.filter(
-  (ext) => ext !== 'svg'
-)
+config.resolver.assetExts = [
+  ...config.resolver.assetExts.filter((ext) => ext !== 'svg'),
+  'xlsx', // Adicionar suporte para arquivos Excel
+]
 
 config.resolver.sourceExts = [...config.resolver.sourceExts, 'svg', 'sql']
 
 // Adiciona transformer SVG
-config.transformer.babelTransformerPath = require.resolve(
-  'react-native-svg-transformer'
-)
+config.transformer.babelTransformerPath =
+  require.resolve('react-native-svg-transformer')
 
 // Aplica NativeWind
 module.exports = withNativeWind(config, {
