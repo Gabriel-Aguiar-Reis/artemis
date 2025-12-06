@@ -4,7 +4,7 @@ import {
   generateUniqueCode,
   validateLicenseCode,
 } from '@/src/lib/license-crypto'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 const licenseRepository = new DrizzleLicenseRepository()
 
@@ -27,6 +27,8 @@ export function useLicense() {
  * Hook para criar licença inicial
  */
 export function useCreateInitialLicense() {
+  const queryClient = useQueryClient()
+
   return useMutation({
     mutationFn: async () => {
       const uniqueCode = generateUniqueCode()
@@ -39,6 +41,10 @@ export function useCreateInitialLicense() {
         isAdmin
       )
     },
+    onSuccess: () => {
+      // Invalida o cache para forçar refetch imediato
+      queryClient.invalidateQueries({ queryKey: LICENSE_QUERY_KEY })
+    },
   })
 }
 
@@ -46,6 +52,8 @@ export function useCreateInitialLicense() {
  * Hook para validar e atualizar licença com código
  */
 export function useActivateLicense() {
+  const queryClient = useQueryClient()
+
   return useMutation({
     mutationFn: async ({
       inputCode,
@@ -72,6 +80,10 @@ export function useActivateLicense() {
 
       return validation
     },
+    onSuccess: () => {
+      // Invalida o cache para atualizar a licença
+      queryClient.invalidateQueries({ queryKey: LICENSE_QUERY_KEY })
+    },
   })
 }
 
@@ -79,6 +91,8 @@ export function useActivateLicense() {
  * Hook para renovar antecipadamente a licença
  */
 export function useRenewLicense() {
+  const queryClient = useQueryClient()
+
   return useMutation({
     mutationFn: async ({
       inputCode,
@@ -103,6 +117,10 @@ export function useRenewLicense() {
       )
 
       return validation
+    },
+    onSuccess: () => {
+      // Invalida o cache para atualizar a licença
+      queryClient.invalidateQueries({ queryKey: LICENSE_QUERY_KEY })
     },
   })
 }
