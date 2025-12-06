@@ -40,11 +40,12 @@ const db = initDrizzleClient()
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutos - dados considerados frescos
+      staleTime: 1000 * 30, // 30 segundos - permite refetch após invalidação
       gcTime: 1000 * 60 * 10, // 10 minutos - tempo no cache
       retry: 1, // Tentar apenas 1 vez em caso de erro
       refetchOnWindowFocus: false, // Não refetch ao focar na janela
-      refetchOnMount: false, // Não refetch ao montar se dados estiverem frescos
+      refetchOnMount: true, // IMPORTANTE: refetch ao montar se dados estiverem stale (invalidados)
+      structuralSharing: false, // Desabilita structural sharing para garantir novos objetos
     },
   },
 })

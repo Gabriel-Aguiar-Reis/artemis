@@ -121,7 +121,7 @@ export function createRepositoryHooks<TRepo extends Record<string, any>>(
         useQuery({
           queryKey: [key, name, ...args],
           queryFn: () => fn.apply(repo, args),
-          staleTime: 1000 * 60 * 5, // 5 minutos
+          staleTime: 1000 * 30, // 30 segundos
         })
       continue
     }
@@ -146,8 +146,12 @@ export function createRepositoryHooks<TRepo extends Record<string, any>>(
             // Invalida a query principal e todas suas dependências
             const keysToInvalidate = getQueryKeysToInvalidate(key)
 
+            // Invalida e força refetch imediato de todas as queries
             keysToInvalidate.forEach((queryKey) => {
-              queryClient.invalidateQueries({ queryKey: [queryKey] })
+              queryClient.invalidateQueries({
+                queryKey: [queryKey],
+                refetchType: 'all', // Força refetch de todas as queries (ativas e inativas)
+              })
             })
 
             Toast.show({

@@ -31,7 +31,10 @@ export function useInvalidateQueries() {
     })
 
     Array.from(allKeysToInvalidate).forEach((queryKey) => {
-      queryClient.invalidateQueries({ queryKey: [queryKey] })
+      queryClient.invalidateQueries({
+        queryKey: [queryKey],
+        refetchType: 'active',
+      })
     })
   }
 }
@@ -55,7 +58,10 @@ export function useInvalidateQueriesExact() {
     const keysArray = Array.isArray(keys) ? keys : [keys]
 
     keysArray.forEach((queryKey) => {
-      queryClient.invalidateQueries({ queryKey: [queryKey] })
+      queryClient.invalidateQueries({
+        queryKey: [queryKey],
+        refetchType: 'all', // Força refetch de todas as queries
+      })
     })
   }
 }
