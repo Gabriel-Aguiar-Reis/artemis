@@ -93,6 +93,8 @@ export default function CustomerFormScreen() {
           icon: Search,
           isSearch: true,
           isSearchLoading: isLoading,
+          helperText:
+            'Clique no botão de pesquisa para preencher automaticamente',
           inputProps: { mask: Masks.ZIP_CODE },
           onSearchPress: () => {
             const zipCode = form.getValues('addressZipCode')

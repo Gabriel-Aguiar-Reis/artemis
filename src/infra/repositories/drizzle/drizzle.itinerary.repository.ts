@@ -28,7 +28,7 @@ import { workOrderResultItem } from '@/src/infra/db/drizzle/schema/drizzle.work-
 import { workOrderResult } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result.schema'
 import { workOrder } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
 import { UUID } from '@/src/lib/utils'
-import { and, asc, eq, gte, lte } from 'drizzle-orm'
+import { and, asc, eq, gte, isNull, lte } from 'drizzle-orm'
 import uuid from 'react-native-uuid'
 
 export default class DrizzleItineraryRepository implements ItineraryRepository {
@@ -218,7 +218,7 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
       .where(
         and(
           gte(workOrder.scheduledDate, startDate.toISOString()),
-          lte(workOrder.scheduledDate, endDate.toISOString())
+          isNull(workOrder.visitDate)
         )
       )
       .orderBy(asc(workOrder.scheduledDate))

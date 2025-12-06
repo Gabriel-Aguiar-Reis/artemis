@@ -49,6 +49,7 @@ import WheelPicker from '@quidone/react-native-wheel-picker'
 type BaseProps = {
   label: string
   error?: string
+  helperText?: string
   className?: string
   rightIcon?: LucideIcon
   rightIconTooltip?: ReactNode
@@ -105,6 +106,7 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
   const {
     label,
     error,
+    helperText,
     className,
     rightIcon,
     rightIconTooltip,
@@ -464,7 +466,13 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
       </View>
 
       <View className="min-h-4 justify-center">
-        {error && <Text className="ml-2 text-xs text-red-500">{error}</Text>}
+        {error ? (
+          <Text className="ml-2 text-xs text-red-500">{error}</Text>
+        ) : helperText ? (
+          <Text className="ml-2 text-xs text-muted-foreground">
+            {helperText}
+          </Text>
+        ) : null}
       </View>
     </View>
   )

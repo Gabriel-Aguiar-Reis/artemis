@@ -94,17 +94,22 @@ export function WorkOrderCard({
           </View>
         </ObjectCard.Title>
         <ObjectCard.Description>
-          <View className="ml-6 gap-1">
+          <View className="ml-6 gap-1 max-w-full">
             <View className="flex-row items-center">
               <Icon
                 as={Contact}
                 size={16}
                 className="text-muted-foreground mr-1"
               />
-              <Text className="text-xs text-muted-foreground">
-                {wo.customer.contactName}
-              </Text>
-              {renderContactNumber(wo.customer)}
+              <View className="flex-wrap flex-row items-center max-w-60">
+                <Text
+                  className="text-xs text-muted-foreground"
+                  numberOfLines={2}
+                >
+                  {wo.customer.contactName}
+                </Text>
+                {renderContactNumber(wo.customer)}
+              </View>
               {wo.customer.isActiveWhatsApp() && (
                 <WhatsAppIcon size={16} className="text-green-600 ml-1" />
               )}
@@ -115,9 +120,14 @@ export function WorkOrderCard({
                 size={16}
                 className="text-muted-foreground mr-1"
               />
-              <Text className="text-xs text-muted-foreground">
-                {wo.customer.storeAddress.getFullAddress()}
-              </Text>
+              <View className="flex-row items-center flex-wrap">
+                <Text
+                  className="text-xs text-muted-foreground"
+                  numberOfLines={2}
+                >
+                  {wo.customer.storeAddress.getFullAddress()}
+                </Text>
+              </View>
             </View>
           </View>
         </ObjectCard.Description>
