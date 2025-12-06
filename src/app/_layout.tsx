@@ -27,7 +27,7 @@ import * as NavigationBar from 'expo-navigation-bar'
 import { Stack } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { useColorScheme } from 'nativewind'
-import * as React from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import { Platform, View } from 'react-native'
 import { SheetProvider } from 'react-native-actions-sheet'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
@@ -35,8 +35,6 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 
 export { ErrorBoundary } from 'expo-router'
-
-const db = initDrizzleClient()
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -53,12 +51,12 @@ const queryClient = new QueryClient({
 
 const THEME_STORAGE_KEY = 'user-theme-preference'
 
-function LicenseCheck({ children }: { children: React.ReactNode }) {
+function LicenseCheck({ children }: { children: ReactNode }) {
   const { data: license, isLoading } = useLicense()
   const createLicenseMutation = useCreateInitialLicense()
 
   // Criar licença inicial se não existir
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isLoading && !license) {
       createLicenseMutation.mutate()
     }
@@ -88,14 +86,25 @@ function LicenseCheck({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout() {
   const { colorScheme, setColorScheme } = useColorScheme()
+  const [db] = useState(() => initDrizzleClient())
   const { success, error } = useMigrations(db, migrations)
-  const [migrationsComplete, setMigrationsComplete] = React.useState(false)
+  const [migrationsComplete, setMigrationsComplete] = useState(false)
 
   // Log de debug para migrations
-  React.useEffect(() => {
+  useEffect(() => {
     if (error) {
       console.error('Migration error:', error)
+      console.error('Error message:', error.message)
+      console.error('Error stack:', error.stack)
       console.error('Error details:', JSON.stringify(error, null, 2))
+
+      // Verificar se migrations foram carregadas
+      console.log('Migrations object:', migrations)
+      console.log('Migrations journal:', migrations?.journal)
+      console.log(
+        'Migrations count:',
+        Object.keys(migrations?.migrations || {}).length
+      )
     }
     if (success) {
       console.log('Migrations completed successfully')
@@ -103,7 +112,7 @@ export default function RootLayout() {
   }, [success, error])
 
   // Habilitar foreign keys APÓS migrations serem concluídas
-  React.useEffect(() => {
+  useEffect(() => {
     if (success && !migrationsComplete) {
       try {
         enableForeignKeys()
@@ -118,7 +127,7 @@ export default function RootLayout() {
   useDrizzleStudio(getExpoDb())
 
   // Carregar preferência de tema salva
-  React.useEffect(() => {
+  useEffect(() => {
     AsyncStorage.getItem(THEME_STORAGE_KEY).then((value: string | null) => {
       if (value === 'system') {
         setColorScheme(undefined as any)
@@ -128,7 +137,7 @@ export default function RootLayout() {
     })
   }, [setColorScheme])
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (Platform.OS === 'android') {
       const isDark = colorScheme === 'dark'
       NavigationBar.setBackgroundColorAsync(isDark ? '#0a0a0a' : '#ffffff')
@@ -144,11 +153,11 @@ export default function RootLayout() {
           Erro de Migração do Banco de Dados
         </Text>
         <Text className="text-center mb-2">{error.message}</Text>
-        {__DEV__ && (
-          <Text className="text-xs text-muted-foreground mt-2 text-center font-mono">
-            {JSON.stringify(error, null, 2)}
-          </Text>
-        )}
+
+        <Text className="text-xs text-muted-foreground mt-2 text-center font-mono">
+          {JSON.stringify(error, null, 2)}
+        </Text>
+
         <Text className="text-sm text-muted-foreground mt-4 text-center">
           Tente fechar e reabrir o app. Se o problema persistir, delete e
           reinstale o aplicativo.

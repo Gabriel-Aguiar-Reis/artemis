@@ -37,6 +37,12 @@ export function initDrizzleClient() {
   return drizzleInstance
 }
 
+export function resetDrizzleClient() {
+  drizzleInstance = null
+  expoDb = null
+  console.log('Drizzle client reset')
+}
+
 export const db = new Proxy({} as ReturnType<typeof drizzle>, {
   get(target, prop) {
     if (!drizzleInstance) {

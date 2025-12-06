@@ -1,7 +1,3 @@
-if (__DEV__) {
-  require('../../ReactotronConfig')
-}
-
 import { Button } from '@/src/components/ui/button'
 import { ButtonSettings } from '@/src/components/ui/button-settings'
 import { Text } from '@/src/components/ui/text'
