@@ -11,6 +11,7 @@ import { LicenseActivationDialog } from '@/src/components/ui/dialog/license-acti
 import { Text } from '@/src/components/ui/text'
 import { toastConfig } from '@/src/components/ui/toasts'
 import {
+  enableForeignKeys,
   getExpoDb,
   initDrizzleClient,
 } from '@/src/infra/db/drizzle/drizzle-client'
@@ -88,6 +89,31 @@ function LicenseCheck({ children }: { children: React.ReactNode }) {
 export default function RootLayout() {
   const { colorScheme, setColorScheme } = useColorScheme()
   const { success, error } = useMigrations(db, migrations)
+  const [migrationsComplete, setMigrationsComplete] = React.useState(false)
+
+  // Log de debug para migrations
+  React.useEffect(() => {
+    if (error) {
+      console.error('Migration error:', error)
+      console.error('Error details:', JSON.stringify(error, null, 2))
+    }
+    if (success) {
+      console.log('Migrations completed successfully')
+    }
+  }, [success, error])
+
+  // Habilitar foreign keys APÓS migrations serem concluídas
+  React.useEffect(() => {
+    if (success && !migrationsComplete) {
+      try {
+        enableForeignKeys()
+        setMigrationsComplete(true)
+        console.log('Foreign keys enabled successfully')
+      } catch (err) {
+        console.error('Error enabling foreign keys:', err)
+      }
+    }
+  }, [success, migrationsComplete])
 
   useDrizzleStudio(getExpoDb())
 
@@ -111,22 +137,32 @@ export default function RootLayout() {
   }, [colorScheme])
 
   if (error) {
+    console.error('Rendering migration error screen')
     return (
-      <View className="flex-1 items-center justify-center p-4">
+      <View className="flex-1 items-center justify-center p-4 bg-background">
         <Text className="text-red-600 font-bold text-lg mb-2">
-          Erro de Migração
+          Erro de Migração do Banco de Dados
         </Text>
-        <Text className="text-center">{error.message}</Text>
+        <Text className="text-center mb-2">{error.message}</Text>
+        {__DEV__ && (
+          <Text className="text-xs text-muted-foreground mt-2 text-center font-mono">
+            {JSON.stringify(error, null, 2)}
+          </Text>
+        )}
         <Text className="text-sm text-muted-foreground mt-4 text-center">
-          Tente deletar o app e reinstalar
+          Tente fechar e reabrir o app. Se o problema persistir, delete e
+          reinstale o aplicativo.
         </Text>
       </View>
     )
   }
-  if (!success) {
+  if (!success || !migrationsComplete) {
     return (
-      <View className="flex-1 items-center justify-center">
-        <Text>Configurando banco de dados...</Text>
+      <View className="flex-1 items-center justify-center bg-background">
+        <Text className="text-lg mb-2">Configurando banco de dados...</Text>
+        <Text className="text-sm text-muted-foreground">
+          Aguarde enquanto inicializamos o sistema
+        </Text>
       </View>
     )
   }

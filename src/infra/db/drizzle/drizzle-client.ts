@@ -7,17 +7,32 @@ let drizzleInstance: ReturnType<typeof drizzle> | null = null
 
 export function getExpoDb() {
   if (!expoDb) {
-    expoDb = openDatabaseSync('artemis.db')
-    // Habilitar foreign keys para suportar cascade delete
-    expoDb.execSync('PRAGMA foreign_keys = ON;')
+    try {
+      expoDb = openDatabaseSync('artemis.db', { enableChangeListener: true })
+      console.log('Database opened successfully')
+    } catch (error) {
+      console.error('Error opening database:', error)
+      throw error
+    }
   }
   return expoDb
 }
 
+export function enableForeignKeys() {
+  const db = getExpoDb()
+  try {
+    db.execSync('PRAGMA foreign_keys = ON;')
+    console.log('Foreign keys enabled')
+  } catch (error) {
+    console.error('Error enabling foreign keys:', error)
+  }
+}
+
 export function initDrizzleClient() {
-  const database = getExpoDb()
   if (!drizzleInstance) {
+    const database = getExpoDb()
     drizzleInstance = drizzle(database, { schema })
+    console.log('Drizzle client initialized')
   }
   return drizzleInstance
 }
