@@ -35,6 +35,9 @@ export function useAutoAddWorkOrderToItinerary() {
         return { added: false, reason: 'no-active-itinerary' }
       }
 
+      if (workOrder.visitDate) {
+        return { added: false, reason: 'has-visit-date' }
+      }
       // Verificar se a data agendada está dentro do período do itinerário
       const scheduledDate = workOrder.scheduledDate
       const isInPeriod =
