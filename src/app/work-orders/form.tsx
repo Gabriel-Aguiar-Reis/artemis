@@ -128,7 +128,7 @@ type WorkOrderFormData = z.infer<typeof workOrderFormSchema>
 
 export default function WorkOrderFormScreen() {
   const { mutateAsync: addWorkOrder, isPending: isWorkOrderPending } =
-    workOrderHooks.addWorkOrder()
+    workOrderHooks.useAddWorkOrderWithItinerary()
   const { mutateAsync: updateWorkOrderWithResult } =
     workOrderHooks.updateWorkOrderWithResult()
   const { mutateAsync: updateWorkOrderWithPayment } =
@@ -229,8 +229,9 @@ export default function WorkOrderFormScreen() {
         products: workOrderItems, // WorkOrderItems completos
       }
 
-      // Criar a work order (retorna o ID criado)
-      const workOrderId = await addWorkOrder(workOrderData)
+      // Criar a work order (retorna objeto com workOrder e itineraryResult)
+      const res = await addWorkOrder(workOrderData)
+      const workOrderId = res.workOrder.id
 
       // 2. CRIAR RELATÓRIO FINAL (se shouldCreateReport = true)
       if (data.shouldCreateReport) {
