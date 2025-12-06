@@ -104,6 +104,7 @@ export function CustomerForm<T extends FieldValues>({
                 label={fieldConfig.label}
                 placeholder={fieldConfig.placeholder}
                 error={getErrorMessage(errors?.[fieldConfig.name]?.message)}
+                helperText={fieldConfig.helperText}
                 icon={fieldConfig.icon}
                 alternate={
                   String(fieldConfig.name) === 'name' && fieldConfig.alternate
@@ -146,6 +147,7 @@ export function CustomerForm<T extends FieldValues>({
               label={fieldConfig.label}
               placeholder={fieldConfig.placeholder}
               error={getErrorMessage(errors?.[fieldConfig.name]?.message)}
+              helperText={fieldConfig.helperText}
               icon={fieldConfig.icon}
               alternate={
                 String(fieldConfig.name) === 'name' && fieldConfig.alternate

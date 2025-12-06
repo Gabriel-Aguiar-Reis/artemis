@@ -21,6 +21,7 @@ export type FormFieldProps<T extends FieldValues> = {
     type: 'toSecret' | 'toDisabled'
   }
   iconTooltip?: string
+  helperText?: string
   rules?: object
   inputProps?: Record<string, any>
   isCurrency?: boolean
@@ -58,6 +59,7 @@ function Input<T extends FieldValues>({
   label,
   placeholder,
   error,
+  helperText,
   icon,
   alternate,
   iconTooltip,
@@ -140,6 +142,7 @@ function Input<T extends FieldValues>({
             value: value,
             rightIcon: icon,
             rightIconTooltip: iconTooltip,
+            helperText,
             alignTooltip: iconTooltip ? ('end' as const) : undefined,
           }
           if (alternate?.icon && alternate.type === 'toSecret') {
@@ -176,6 +179,7 @@ function Input<T extends FieldValues>({
             value: value,
             rightIcon: icon,
             rightIconTooltip: iconTooltip,
+            helperText,
             alignTooltip: iconTooltip ? ('end' as const) : undefined,
           }
           if (alternate?.icon && alternate.type === 'toSecret') {
@@ -201,7 +205,9 @@ function Input<T extends FieldValues>({
           return <FloatingLabelInput {...dialogProps} />
         }
 
-        const renderNoIcon = () => <FloatingLabelInput {...baseProps} />
+        const renderNoIcon = () => (
+          <FloatingLabelInput {...baseProps} helperText={helperText} />
+        )
 
         const renderAlternate = () => {
           if (alternate?.type === 'toSecret') {
@@ -212,6 +218,7 @@ function Input<T extends FieldValues>({
                 alternateRightIcon={alternate!.icon}
                 alternateToSecret={true}
                 startSecreted={false}
+                helperText={helperText}
               />
             )
           }
@@ -222,6 +229,7 @@ function Input<T extends FieldValues>({
               alternateRightIcon={alternate!.icon}
               alternateToDisabled={true}
               startDisabled={true}
+              helperText={helperText}
             />
           )
         }
@@ -232,6 +240,7 @@ function Input<T extends FieldValues>({
             rightIcon={icon}
             rightIconTooltip={iconTooltip}
             alignTooltip="end"
+            helperText={helperText}
           />
         )
 
