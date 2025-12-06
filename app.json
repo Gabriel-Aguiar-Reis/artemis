@@ -2,7 +2,7 @@
   "expo": {
     "name": "Artemis",
     "slug": "artemis",
-    "version": "1.0.1",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./src/assets/images/icon.png",
     "scheme": "artemis",
@@ -16,7 +16,7 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.gabrielaguiar.artemis"
+      "bundleIdentifier": "br.com.artemis"
     },
     "android": {
       "edgeToEdgeEnabled": true,
@@ -24,7 +24,7 @@
         "foregroundImage": "./src/assets/images/adaptive-icon.png",
         "backgroundColor": "#0a1323"
       },
-      "package": "com.gabrielaguiar.artemis"
+      "package": "br.com.artemis"
     },
     "web": {
       "bundler": "metro",

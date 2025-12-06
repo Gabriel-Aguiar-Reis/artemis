@@ -7,10 +7,12 @@ import {
   useCreateInitialLicense,
   useLicense,
 } from '@/src/application/hooks/license.hooks'
+import { Button } from '@/src/components/ui/button'
 import { LicenseActivationDialog } from '@/src/components/ui/dialog/license-activation-dialog'
 import { Text } from '@/src/components/ui/text'
 import { toastConfig } from '@/src/components/ui/toasts'
 import {
+  enableForeignKeys,
   getExpoDb,
   initDrizzleClient,
 } from '@/src/infra/db/drizzle/drizzle-client'
@@ -26,7 +28,7 @@ import * as NavigationBar from 'expo-navigation-bar'
 import { Stack } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { useColorScheme } from 'nativewind'
-import * as React from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import { Platform, View } from 'react-native'
 import { SheetProvider } from 'react-native-actions-sheet'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
@@ -34,8 +36,6 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 
 export { ErrorBoundary } from 'expo-router'
-
-const db = initDrizzleClient()
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -52,12 +52,12 @@ const queryClient = new QueryClient({
 
 const THEME_STORAGE_KEY = 'user-theme-preference'
 
-function LicenseCheck({ children }: { children: React.ReactNode }) {
+function LicenseCheck({ children }: { children: ReactNode }) {
   const { data: license, isLoading } = useLicense()
   const createLicenseMutation = useCreateInitialLicense()
 
   // Criar licença inicial se não existir
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isLoading && !license) {
       createLicenseMutation.mutate()
     }
@@ -87,12 +87,83 @@ function LicenseCheck({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout() {
   const { colorScheme, setColorScheme } = useColorScheme()
+  const [db, setDb] = useState(() => initDrizzleClient())
   const { success, error } = useMigrations(db, migrations)
+  const [migrationsComplete, setMigrationsComplete] = useState(false)
+  const [isResetting, setIsResetting] = useState(false)
+
+  const handleResetDatabase = async () => {
+    setIsResetting(true)
+
+    try {
+      // Fechar conexão e resetar instâncias
+      const { resetDrizzleClient } =
+        await import('@/src/infra/db/drizzle/drizzle-client')
+      resetDrizzleClient()
+
+      // Aguardar para garantir que conexão foi fechada
+      await new Promise((resolve) => setTimeout(resolve, 200))
+
+      // Deletar o banco
+      const { deleteDatabaseSync } = require('expo-sqlite')
+      await deleteDatabaseSync('artemis.db')
+      console.log('Database deleted, reloading app...')
+
+      // Recarregar o app completamente
+      const { reloadAsync } = require('expo-updates')
+      await reloadAsync()
+    } catch (error) {
+      console.error('Error resetting database:', error)
+      setIsResetting(false)
+
+      // Se falhar, tentar apenas recarregar o app
+      try {
+        const { reloadAsync } = require('expo-updates')
+        await reloadAsync()
+      } catch (reloadError) {
+        console.error('Error reloading app:', reloadError)
+      }
+    }
+  }
+
+  // Log de debug para migrations
+  useEffect(() => {
+    if (error) {
+      console.error('Migration error:', error)
+      console.error('Error message:', error.message)
+      console.error('Error stack:', error.stack)
+      console.error('Error details:', JSON.stringify(error, null, 2))
+
+      // Verificar se migrations foram carregadas
+      console.log('Migrations object:', migrations)
+      console.log('Migrations journal:', migrations?.journal)
+      console.log(
+        'Migrations count:',
+        Object.keys(migrations?.migrations || {}).length
+      )
+    }
+    if (success) {
+      console.log('Migrations completed successfully')
+    }
+  }, [success, error])
+
+  // Habilitar foreign keys APÓS migrations serem concluídas
+  useEffect(() => {
+    if (success && !migrationsComplete) {
+      try {
+        enableForeignKeys()
+        setMigrationsComplete(true)
+        console.log('Foreign keys enabled successfully')
+      } catch (err) {
+        console.error('Error enabling foreign keys:', err)
+      }
+    }
+  }, [success, migrationsComplete])
 
   useDrizzleStudio(getExpoDb())
 
   // Carregar preferência de tema salva
-  React.useEffect(() => {
+  useEffect(() => {
     AsyncStorage.getItem(THEME_STORAGE_KEY).then((value: string | null) => {
       if (value === 'system') {
         setColorScheme(undefined as any)
@@ -102,7 +173,7 @@ export default function RootLayout() {
     })
   }, [setColorScheme])
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (Platform.OS === 'android') {
       const isDark = colorScheme === 'dark'
       NavigationBar.setBackgroundColorAsync(isDark ? '#0a0a0a' : '#ffffff')
@@ -111,22 +182,55 @@ export default function RootLayout() {
   }, [colorScheme])
 
   if (error) {
+    console.error('Rendering migration error screen')
     return (
-      <View className="flex-1 items-center justify-center p-4">
-        <Text className="text-red-600 font-bold text-lg mb-2">
-          Erro de Migração
+      <View className="flex-1 items-center justify-center p-4 bg-background">
+        <Text className="text-red-600 font-bold text-lg mb-2 text-center">
+          Erro de Migração do Banco de Dados
         </Text>
-        <Text className="text-center">{error.message}</Text>
-        <Text className="text-sm text-muted-foreground mt-4 text-center">
-          Tente deletar o app e reinstalar
+        <Text className="text-center mb-4 text-muted-foreground">
+          O banco de dados está corrompido e precisa ser resetado.
         </Text>
+
+        <View className="gap-3 w-full max-w-sm">
+          <Button
+            onPress={handleResetDatabase}
+            disabled={isResetting}
+            variant="destructive"
+            className="w-full"
+          >
+            <Text className="text-destructive-foreground">
+              {isResetting ? 'Resetando...' : 'Resetar e Recarregar App'}
+            </Text>
+          </Button>
+
+          <View className="gap-2 p-4 bg-muted rounded-lg">
+            <Text className="text-xs font-medium">⚠️ Instruções:</Text>
+            <Text className="text-xs text-muted-foreground">
+              1. Clique no botão acima para tentar resetar
+            </Text>
+            <Text className="text-xs text-muted-foreground">
+              2. Se não funcionar, vá em Configurações do Android → Apps →
+              Artemis
+            </Text>
+            <Text className="text-xs text-muted-foreground">
+              3. Clique em "Armazenamento" e depois "Limpar dados"
+            </Text>
+            <Text className="text-xs text-muted-foreground">
+              4. Abra o app novamente
+            </Text>
+          </View>
+        </View>
       </View>
     )
   }
-  if (!success) {
+  if (!success || !migrationsComplete) {
     return (
-      <View className="flex-1 items-center justify-center">
-        <Text>Configurando banco de dados...</Text>
+      <View className="flex-1 items-center justify-center bg-background">
+        <Text className="text-lg mb-2">Configurando banco de dados...</Text>
+        <Text className="text-sm text-muted-foreground">
+          Aguarde enquanto inicializamos o sistema
+        </Text>
       </View>
     )
   }
