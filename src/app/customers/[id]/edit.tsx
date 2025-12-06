@@ -9,7 +9,6 @@ import {
 } from '@/src/domain/validations/customer.schema'
 import { UUID } from '@/src/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useQueryClient } from '@tanstack/react-query'
 import { router, useLocalSearchParams } from 'expo-router'
 import { Pencil, PencilOff, Search } from 'lucide-react-native'
 import { useEffect, useState } from 'react'
@@ -18,7 +17,6 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function CustomersEditScreen() {
   const params = useLocalSearchParams<{ id: UUID }>()
-  const queryClient = useQueryClient()
 
   const { data: customer, isLoading: isLoadingCustomer } =
     customerHooks.getCustomer(params.id)
@@ -46,21 +44,10 @@ export default function CustomersEditScreen() {
   })
 
   const onSubmit = form.handleSubmit(async (data: CustomerUpdateDTO) => {
-    updateCustomer(
-      {
-        id: params.id,
-        ...data,
-      },
-      {
-        onSuccess: () => {
-          // Limpar cache completamente e voltar
-          queryClient.removeQueries({ queryKey: ['customers'] })
-          queryClient.removeQueries({ queryKey: ['workOrders'] })
-          queryClient.removeQueries({ queryKey: ['itineraryWorkOrders'] })
-          queryClient.removeQueries({ queryKey: ['itineraries'] })
-        },
-      }
-    )
+    updateCustomer({
+      id: params.id,
+      ...data,
+    })
     router.back()
   })
 

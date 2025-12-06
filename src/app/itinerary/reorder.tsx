@@ -5,7 +5,6 @@ import { Text } from '@/src/components/ui/text'
 import { WorkOrderCard } from '@/src/components/ui/work-order-card'
 import { ItineraryWorkOrder } from '@/src/domain/entities/itinerary-work-order/itinerary-work-order.entity'
 import { UUID } from '@/src/lib/utils'
-import { useQueryClient } from '@tanstack/react-query'
 import { Stack, useRouter } from 'expo-router'
 import React, { FC, useCallback, useEffect, useState } from 'react'
 import { ListRenderItemInfo, View } from 'react-native'
@@ -19,7 +18,6 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function ItineraryReorderScreen() {
   const router = useRouter()
-  const queryClient = useQueryClient()
 
   const { data: itinerary, isLoading } = itineraryHooks.getActiveItinerary()
   const { mutateAsync: updatePositions } =
@@ -64,9 +62,6 @@ export default function ItineraryReorderScreen() {
     }))
     try {
       await (updatePositions as any)([updates])
-      queryClient.removeQueries({ queryKey: ['itineraryWorkOrders'] })
-      queryClient.removeQueries({ queryKey: ['itineraries'] })
-
       router.back()
     } catch (err) {
       console.error('Falha ao salvar nova ordenação:', err)

@@ -12,7 +12,6 @@ import { Text } from '@/src/components/ui/text'
 import { db } from '@/src/infra/db/drizzle/drizzle-client'
 import { category } from '@/src/infra/db/drizzle/schema/drizzle.category.schema'
 import { UUID } from '@/src/lib/utils'
-import { useQueryClient } from '@tanstack/react-query'
 import { eq } from 'drizzle-orm'
 import * as DocumentPicker from 'expo-document-picker'
 import { File } from 'expo-file-system'
@@ -38,8 +37,6 @@ export default function DataTransferScreen() {
   const { mutateAsync: addCategory } = categoryHooks.addCategory()
   const { mutateAsync: addProduct } = productHooks.addProduct()
   const { mutateAsync: addCustomer } = customerHooks.addCustomer()
-
-  const queryClient = useQueryClient()
 
   // Função para copiar asset para cache e compartilhar
 
@@ -270,11 +267,6 @@ export default function DataTransferScreen() {
           } catch {}
         }
       }
-
-      // Limpar cache após importação completa
-      queryClient.removeQueries({ queryKey: ['customers'] })
-      queryClient.removeQueries({ queryKey: ['categories'] })
-      queryClient.removeQueries({ queryKey: ['products'] })
 
       Toast.show({
         type: 'success',

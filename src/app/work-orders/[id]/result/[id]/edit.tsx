@@ -13,7 +13,6 @@ import {
   WorkOrderResultItemType,
 } from '@/src/domain/entities/work-order-result-item/work-order-result-item.entity'
 import { UUID } from '@/src/lib/utils'
-import { useQueryClient } from '@tanstack/react-query'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
 import { Info } from 'lucide-react-native'
 import { useEffect, useState } from 'react'
@@ -30,7 +29,6 @@ type ResultItemInput = {
 
 export default function WorkOrderResultEditByIdScreen() {
   const params = useLocalSearchParams<{ id: UUID }>()
-  const queryClient = useQueryClient()
   const { data: result, isLoading } = workOrderResultHooks.getWorkOrderResult(
     params.id
   )
@@ -160,14 +158,6 @@ export default function WorkOrderResultEditByIdScreen() {
       if (allResultItems.length > 0) {
         await (addWorkOrderResultItems as any)([allResultItems])
       }
-
-      // Efeito cascata: limpar cache relacionado
-      queryClient.removeQueries({ queryKey: ['workOrderResultItems'] })
-      queryClient.removeQueries({ queryKey: ['workOrderResults'] })
-      queryClient.removeQueries({ queryKey: ['workOrders'] })
-      queryClient.removeQueries({ queryKey: ['itineraryWorkOrders'] })
-      queryClient.removeQueries({ queryKey: ['paymentOrders'] })
-      queryClient.removeQueries({ queryKey: ['itineraries'] })
 
       router.back()
     } catch (error) {

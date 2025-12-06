@@ -342,7 +342,7 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
     return itineraries
   }
 
-  async finishItinerary(id: UUID): Promise<void> {
+  async updateFinishItinerary(id: UUID): Promise<void> {
     const itin = await this.getItinerary(id)
     if (!itin) throw new Error('O itinerário não foi encontrado.')
 

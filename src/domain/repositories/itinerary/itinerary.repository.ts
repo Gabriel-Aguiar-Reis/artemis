@@ -16,5 +16,5 @@ export abstract class ItineraryRepository {
     startDate: Date,
     endDate: Date
   ) => Promise<Itinerary[]>
-  abstract finishItinerary: (id: UUID) => Promise<void>
+  abstract updateFinishItinerary: (id: UUID) => Promise<void>
 }

@@ -11,7 +11,6 @@ import {
 } from '@/src/domain/validations/payment-order.schema'
 import { getErrorMessage, UUID } from '@/src/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useQueryClient } from '@tanstack/react-query'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
 import { CircleQuestionMark, CreditCard, Info } from 'lucide-react-native'
 import { useEffect } from 'react'
@@ -30,8 +29,6 @@ export default function WorkOrderPaymentCreateScreen() {
     mutateAsync: updateWorkOrderWithPayment,
     isPending: isUpdatingWorkOrder,
   } = workOrderHooks.updateWorkOrderWithPayment()
-
-  const queryClient = useQueryClient()
 
   const form = useForm<PaymentOrderInsertDTO>({
     resolver: zodResolver(paymentOrderInsertSchema),
@@ -97,12 +94,6 @@ export default function WorkOrderPaymentCreateScreen() {
       })
       // 2. Associar payment order à work order
       await (updateWorkOrderWithPayment as any)([params.id, paymentOrderId])
-
-      queryClient.removeQueries({ queryKey: ['itineraryWorkOrders'] })
-      queryClient.removeQueries({ queryKey: ['workOrders'] })
-      queryClient.removeQueries({ queryKey: ['paymentOrders'] })
-      queryClient.removeQueries({ queryKey: ['itineraries'] })
-
       router.back()
     } catch (error) {
       console.error('Erro ao criar pagamento:', error)

@@ -11,7 +11,6 @@ import {
 import { Icon } from '@/src/components/ui/icon'
 import { Text } from '@/src/components/ui/text'
 import { UUID } from '@/src/lib/utils'
-import { useQueryClient } from '@tanstack/react-query'
 import { Stack, useRouter } from 'expo-router'
 import {
   AlertCircle,
@@ -27,12 +26,14 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function ItineraryFinishScreen() {
   const router = useRouter()
-  const queryClient = useQueryClient()
   const { data: itinerary, isLoading } = itineraryHooks.getActiveItinerary()
   const { data: itineraryWorkOrders } =
     itineraryWorkOrderHooks.getItineraryWorkOrdersByItineraryId(
       itinerary?.id || ('' as UUID)
     )
+
+  const { mutate: updateFinishItinerary } =
+    itineraryHooks.updateFinishItinerary()
 
   const [isFinishing, setIsFinishing] = useState(false)
 
@@ -105,13 +106,7 @@ export default function ItineraryFinishScreen() {
     if (!itinerary) return
     setIsFinishing(true)
     try {
-      await itineraryHooks.finishItinerary(itinerary.id)
-
-      queryClient.removeQueries({ queryKey: ['itineraryWorkOrders'] })
-      queryClient.removeQueries({ queryKey: ['itineraries'] })
-      queryClient.removeQueries({ queryKey: ['itinerary', itinerary.id] })
-      queryClient.removeQueries({ queryKey: ['workOrders'] })
-
+      updateFinishItinerary(itinerary.id)
       router.replace('/itinerary')
     } catch (error) {
       console.error('Erro ao finalizar itinerário:', error)

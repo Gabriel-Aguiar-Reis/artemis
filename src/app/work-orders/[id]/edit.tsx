@@ -10,7 +10,6 @@ import {
 } from '@/src/domain/validations/work-order.schema'
 import { getErrorMessage, UUID } from '@/src/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useQueryClient } from '@tanstack/react-query'
 import { router, useLocalSearchParams } from 'expo-router'
 import { Pen, PenOff } from 'lucide-react-native'
 import { useEffect } from 'react'
@@ -20,8 +19,6 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function WorkOrderEditScreen() {
   const params = useLocalSearchParams<{ id: UUID }>()
-
-  const queryClient = useQueryClient()
 
   const { data: workOrder, isLoading: isLoadingWorkOrder } =
     workOrderHooks.getWorkOrder(params.id)
@@ -40,22 +37,13 @@ export default function WorkOrderEditScreen() {
   })
 
   const onSubmit = form.handleSubmit(async (data: WorkOrderUpdateDTO) => {
-    updateWorkOrder(
-      {
-        id: params.id,
-        customerId: data.customerId as UUID,
-        scheduledDate: data.scheduledDate,
-        notes: data.notes,
-        updatedAt: new Date(),
-      },
-      {
-        onSuccess: () => {
-          queryClient.removeQueries({ queryKey: ['itineraryWorkOrders'] })
-          queryClient.removeQueries({ queryKey: ['workOrders'] })
-          queryClient.removeQueries({ queryKey: ['itineraries'] })
-        },
-      }
-    )
+    updateWorkOrder({
+      id: params.id,
+      customerId: data.customerId as UUID,
+      scheduledDate: data.scheduledDate,
+      notes: data.notes,
+      updatedAt: new Date(),
+    })
     router.back()
   })
 

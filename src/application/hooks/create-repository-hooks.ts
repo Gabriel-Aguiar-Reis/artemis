@@ -1,4 +1,8 @@
 import {
+  getQueryKeysToInvalidate,
+  QueryKey,
+} from '@/src/application/hooks/query-invalidation.config'
+import {
   useMutation,
   UseMutationResult,
   useQuery,
@@ -82,7 +86,7 @@ const formatToastText = (
 
 export function createRepositoryHooks<TRepo extends Record<string, any>>(
   repo: TRepo,
-  key: string,
+  key: QueryKey,
   repoName: string,
   gender: 'M' | 'F' = 'M'
 ) {
@@ -139,7 +143,13 @@ export function createRepositoryHooks<TRepo extends Record<string, any>>(
           mutationFn: (args: any) =>
             fn.apply(repo, Array.isArray(args) ? args : [args]),
           onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [key] })
+            // Invalida a query principal e todas suas dependências
+            const keysToInvalidate = getQueryKeysToInvalidate(key)
+
+            keysToInvalidate.forEach((queryKey) => {
+              queryClient.invalidateQueries({ queryKey: [queryKey] })
+            })
+
             Toast.show({
               type: 'success',
               text1: formatToastText(

@@ -13,7 +13,6 @@ import {
   WorkOrderResultItemType,
 } from '@/src/domain/entities/work-order-result-item/work-order-result-item.entity'
 import { UUID } from '@/src/lib/utils'
-import { useQueryClient } from '@tanstack/react-query'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
 import { useState } from 'react'
 import { ScrollView, View } from 'react-native'
@@ -38,8 +37,6 @@ export default function WorkOrderResultCreateScreen() {
     workOrderResultItemHooks.addWorkOrderResultItems()
   const { mutateAsync: updateWorkOrderWithResult } =
     workOrderHooks.updateWorkOrderWithResult()
-
-  const queryClient = useQueryClient()
 
   const [exchangedProducts, setExchangedProducts] = useState<ResultItemInput[]>(
     []
@@ -126,13 +123,6 @@ export default function WorkOrderResultCreateScreen() {
         'completed',
         new Date(),
       ])
-
-      queryClient.removeQueries({ queryKey: ['itineraryWorkOrders'] })
-      queryClient.removeQueries({ queryKey: ['workOrders'] })
-      queryClient.removeQueries({ queryKey: ['workOrderResults'] })
-      queryClient.removeQueries({ queryKey: ['workOrderResultItems'] })
-      queryClient.removeQueries({ queryKey: ['itineraries'] })
-
       router.back()
     } catch (error) {
       console.error('Erro ao criar relatório:', error)

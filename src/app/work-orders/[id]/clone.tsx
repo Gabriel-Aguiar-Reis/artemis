@@ -13,7 +13,6 @@ import { Separator } from '@/src/components/ui/separator'
 import { Text } from '@/src/components/ui/text'
 import { WhatsAppIcon } from '@/src/components/ui/whatsapp-icon'
 import { formatPhoneBrazil, UUID } from '@/src/lib/utils'
-import { useQueryClient } from '@tanstack/react-query'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
 import {
   Calendar,
@@ -30,7 +29,6 @@ import Toast from 'react-native-toast-message'
 
 export default function CloneWorkOrderScreen() {
   const params = useLocalSearchParams<{ id: UUID }>()
-  const queryClient = useQueryClient()
   const { data: workOrder, isLoading } = workOrderHooks.getWorkOrder(params.id)
   const { mutateAsync: addCreateFromFinished } =
     workOrderHooks.addCreateFromFinished()
