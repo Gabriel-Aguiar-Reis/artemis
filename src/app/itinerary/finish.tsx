@@ -107,7 +107,7 @@ export default function ItineraryFinishScreen() {
     setIsFinishing(true)
     try {
       updateFinishItinerary(itinerary.id)
-      router.replace('/itinerary')
+      router.back()
     } catch (error) {
       console.error('Erro ao finalizar itinerário:', error)
     } finally {

@@ -227,6 +227,8 @@ export default function WorkOrderFormScreen() {
         status: WorkOrderStatus.PENDING,
         notes: data.notes,
         products: workOrderItems, // WorkOrderItems completos
+        // Previne auto-adicionar ao itinerário quando será criado relatório
+        preventItineraryAutoAdd: data.shouldCreateReport === true,
       }
 
       // Criar a work order (retorna objeto com workOrder e itineraryResult)

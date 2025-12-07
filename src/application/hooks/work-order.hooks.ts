@@ -21,7 +21,7 @@ export const workOrderHooks = {
    */
   useAddWorkOrderWithItinerary: () => {
     const invalidateQueries = useInvalidateQueries()
-    const autoAddToItinerary = useAutoAddWorkOrderToItinerary()
+    const { mutateAsync: autoAddToItinerary } = useAutoAddWorkOrderToItinerary()
 
     return useMutation({
       mutationFn: async (data: WorkOrderInsertDTO) => {
@@ -35,8 +35,30 @@ export const workOrderHooks = {
           throw new Error('Work order criada mas não encontrada')
         }
 
+        // Se já houver resultado, nunca adicionar ao itinerário
+        if (wo.result) {
+          return {
+            workOrder: wo,
+            itineraryResult: {
+              added: false,
+              reason: 'has-result',
+            },
+          }
+        }
+
+        // Permitir que o caller previna a adição automática ao itinerário
+        const preventAutoAdd = (data as any).preventItineraryAutoAdd === true
+        if (preventAutoAdd) {
+          return {
+            workOrder: wo,
+            itineraryResult: {
+              added: false,
+              reason: 'prevented',
+            },
+          }
+        }
         // Tentar adicionar ao itinerário automaticamente
-        const result = await autoAddToItinerary.mutateAsync(wo)
+        const result = await autoAddToItinerary(wo)
 
         return { workOrder: wo, itineraryResult: result }
       },
