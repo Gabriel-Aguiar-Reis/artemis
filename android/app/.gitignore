@@ -1,0 +1,6 @@
+# Keystore files
+*.keystore
+*.jks
+
+# Local release configuration
+release.properties
