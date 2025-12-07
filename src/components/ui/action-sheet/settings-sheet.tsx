@@ -11,6 +11,7 @@ import {
   AlertCircle,
   CalendarClock,
   Database,
+  FileSpreadsheet,
   KeyRound,
   Monitor,
   Moon,
@@ -156,6 +157,22 @@ export function SettingsSheet(props: SheetProps<'settings-sheet'>) {
                 >
                   <Icon as={Database} size={20} className="text-foreground" />
                   <Text>Importar/Exportar Dados</Text>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onPress={async () => {
+                    await SheetManager.hide(props.sheetId)
+                    router.push('/admin/data-dump' as any)
+                  }}
+                  className="flex-row gap-2"
+                >
+                  <Icon
+                    as={FileSpreadsheet}
+                    size={20}
+                    className="text-foreground"
+                  />
+                  <Text>Backup (Dump JSON)</Text>
                 </Button>
               </View>
             ) : (
