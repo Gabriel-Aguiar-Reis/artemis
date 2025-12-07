@@ -293,6 +293,10 @@ export default function RootLayout() {
                     options={{ title: 'Gerar Código de Licença' }}
                   />
                   <Stack.Screen
+                    name="admin/data-dump"
+                    options={{ title: 'Exportar Dados' }}
+                  />
+                  <Stack.Screen
                     name="license/renew"
                     options={{ title: 'Renovar Licença' }}
                   />
