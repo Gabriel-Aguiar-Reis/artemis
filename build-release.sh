@@ -30,9 +30,8 @@ else
 fi
 
 echo ""
-echo "1️⃣  Limpando builds anteriores..."
+echo "1️⃣  Preparando build..."
 cd android
-./gradlew clean
 
 echo ""
 echo "2️⃣  Gerando bundle de release (AAB)..."
