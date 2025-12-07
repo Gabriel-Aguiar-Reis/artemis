@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/src/components/ui/card'
+import { Icon } from '@/src/componentes/ui/icon'
 import { DatePickerRangeInput } from '@/src/components/ui/date-picker-range-input'
 import { Text } from '@/src/components/ui/text'
 import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
@@ -162,7 +163,8 @@ export function ItineraryForm<T extends FieldValues>({
                     {/* Quantidade de ordens de serviço */}
                     <View className="flex-row items-center gap-3">
                       <View className="bg-primary/10 p-3 rounded-full">
-                        <FileText
+                        <Icon
+                          as={FileText}
                           size={20}
                           className="text-primary"
                           strokeWidth={2}
@@ -181,7 +183,8 @@ export function ItineraryForm<T extends FieldValues>({
                     {/* Dias no período */}
                     <View className="flex-row items-center gap-3">
                       <View className="bg-primary/10 p-3 rounded-full">
-                        <Calendar
+                        <Icon
+                          as={Calendar}
                           size={20}
                           className="text-primary"
                           strokeWidth={2}
@@ -200,7 +203,8 @@ export function ItineraryForm<T extends FieldValues>({
                     {/* Faturamento estimado */}
                     <View className="flex-row items-center gap-3">
                       <View className="bg-primary/10 p-3 rounded-full">
-                        <DollarSign
+                        <Icon
+                          as={DollarSign}
                           size={20}
                           className="text-primary"
                           strokeWidth={2}
