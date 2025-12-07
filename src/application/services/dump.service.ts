@@ -45,7 +45,9 @@ import {
 } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
 import { eq } from 'drizzle-orm'
 import * as DocumentPicker from 'expo-document-picker'
+import * as FS from 'expo-file-system'
 import { File } from 'expo-file-system'
+import * as Sharing from 'expo-sharing'
 
 export type ArtemisDump = {
   version: number
@@ -97,6 +99,23 @@ export async function buildDumpJsonString(): Promise<string> {
   }
 
   return JSON.stringify(dump)
+}
+
+export async function saveDumpJsonToTempAndShare(): Promise<string> {
+  const json = await buildDumpJsonString()
+  // Use a known writable path; fall back to app root if types don't expose constants
+  const baseDir =
+    (FS as any).cacheDirectory ?? (FS as any).documentDirectory ?? '/'
+  const targetPath = `${baseDir}artemis-dump.json`
+  await FS.writeAsStringAsync(targetPath, json)
+  if (await Sharing.isAvailableAsync()) {
+    await Sharing.shareAsync(targetPath, {
+      mimeType: 'application/json',
+      UTI: 'public.json',
+      dialogTitle: 'Exportar dump JSON',
+    })
+  }
+  return targetPath
 }
 
 export async function pickDumpJson(): Promise<string | null> {

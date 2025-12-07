@@ -3,6 +3,7 @@ import {
   importDumpFromJsonString,
   importDumpFromPickedFile,
   pickDumpJson,
+  saveDumpJsonToTempAndShare,
 } from '@/src/application/services/dump.service'
 import { Alert, AlertDescription, AlertTitle } from '@/src/components/ui/alert'
 import { Button } from '@/src/components/ui/button'
@@ -42,6 +43,29 @@ export default function DataDumpScreen() {
         type: 'error',
         text1: 'Erro ao exportar',
         text2: error instanceof Error ? error.message : 'Falha ao gerar dump',
+      })
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  const handleExportToFile = async () => {
+    setIsExporting(true)
+    try {
+      await saveDumpJsonToTempAndShare()
+      Toast.show({
+        type: 'success',
+        text1: 'Arquivo gerado',
+        text2: 'Escolha onde salvar/compartilhar o JSON',
+      })
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Erro ao salvar',
+        text2:
+          error instanceof Error
+            ? error.message
+            : 'Falha ao salvar/compartilhar o JSON',
       })
     } finally {
       setIsExporting(false)
@@ -141,6 +165,21 @@ export default function DataDumpScreen() {
               )}
               <Text className="text-primary-foreground">
                 {isExporting ? 'Gerando...' : 'Gerar Dump e Copiar'}
+              </Text>
+            </Button>
+            <Button
+              onPress={handleExportToFile}
+              disabled={isExporting}
+              variant="outline"
+              className="flex-row gap-2"
+            >
+              {isExporting ? (
+                <ActivityIndicator />
+              ) : (
+                <Icon as={Download} size={20} className="text-foreground" />
+              )}
+              <Text>
+                {isExporting ? 'Gerando...' : 'Salvar/Compartilhar JSON'}
               </Text>
             </Button>
             {dumpPreview ? (
