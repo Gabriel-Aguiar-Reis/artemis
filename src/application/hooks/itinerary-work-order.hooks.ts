@@ -27,6 +27,12 @@ export function useAutoAddWorkOrderToItinerary() {
 
   return useMutation({
     mutationFn: async (workOrder: WorkOrder) => {
+      // IMPORTANTE: Verificar se a work order já tem resultado (finalizada)
+      // Work orders finalizadas NÃO devem ser adicionadas ao itinerário
+      if (workOrder.result) {
+        return { added: false, reason: 'has-result' }
+      }
+
       // Buscar itinerário ativo
       const itinerary = await itineraryRepo.getActiveItinerary()
 
@@ -35,9 +41,6 @@ export function useAutoAddWorkOrderToItinerary() {
         return { added: false, reason: 'no-active-itinerary' }
       }
 
-      if (workOrder.visitDate) {
-        return { added: false, reason: 'has-visit-date' }
-      }
       // Verificar se a data agendada está dentro do período do itinerário
       const scheduledDate = workOrder.scheduledDate
       const isInPeriod =
