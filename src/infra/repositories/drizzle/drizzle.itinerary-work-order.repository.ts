@@ -77,6 +77,13 @@ export class DrizzleItineraryWorkOrderRepository implements ItineraryWorkOrderRe
   }
 
   async addItineraryWorkOrder(item: ItineraryWorkOrder): Promise<void> {
+    // Validação: Work orders com resultado (finalizadas) NÃO devem ser adicionadas ao itinerário
+    if (item.workOrder.result) {
+      throw new Error(
+        'Não é possível adicionar uma ordem de serviço já finalizada ao itinerário.'
+      )
+    }
+
     await db
       .insert(itineraryWorkOrder)
       .values({
@@ -92,7 +99,23 @@ export class DrizzleItineraryWorkOrderRepository implements ItineraryWorkOrderRe
   async addItineraryWorkOrders(items: ItineraryWorkOrder[]): Promise<void> {
     if (items.length === 0) return
 
-    const data = items.map((item) => ({
+    // Validação: Filtrar work orders que já possuem resultado (finalizadas)
+    const validItems = items.filter((item) => !item.workOrder.result)
+
+    if (validItems.length === 0) {
+      console.warn(
+        'Todas as work orders fornecidas já estão finalizadas e não podem ser adicionadas ao itinerário.'
+      )
+      return
+    }
+
+    if (validItems.length < items.length) {
+      console.warn(
+        `${items.length - validItems.length} work order(s) finalizada(s) foram ignoradas ao adicionar ao itinerário.`
+      )
+    }
+
+    const data = validItems.map((item) => ({
       id: item.id,
       itineraryId: item.itineraryId,
       workOrderId: item.workOrder.id,
