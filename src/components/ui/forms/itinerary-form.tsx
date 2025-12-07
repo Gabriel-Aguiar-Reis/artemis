@@ -6,8 +6,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/src/components/ui/card'
-import { Icon } from '@/src/componentes/ui/icon'
 import { DatePickerRangeInput } from '@/src/components/ui/date-picker-range-input'
+import { Icon } from '@/src/components/ui/icon'
 import { Text } from '@/src/components/ui/text'
 import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
 import DrizzleWorkOrderRepository from '@/src/infra/repositories/drizzle/drizzle.work-order.repository'
