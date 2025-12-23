@@ -33,6 +33,12 @@ echo ""
 echo "1️⃣  Preparando build..."
 cd android
 
+# Limpeza preventiva de cache de autolinking e Gradle
+echo ""
+echo "🧹 Limpando caches (autolinking/Gradle)..."
+rm -rf build/generated/autolinking || true
+./gradlew clean || true
+
 echo ""
 echo "2️⃣  Gerando bundle de release (AAB)..."
 ./gradlew bundleRelease

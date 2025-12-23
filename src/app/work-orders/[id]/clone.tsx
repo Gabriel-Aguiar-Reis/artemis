@@ -30,8 +30,8 @@ import Toast from 'react-native-toast-message'
 export default function CloneWorkOrderScreen() {
   const params = useLocalSearchParams<{ id: UUID }>()
   const { data: workOrder, isLoading } = workOrderHooks.getWorkOrder(params.id)
-  const { mutateAsync: addCreateFromFinished } =
-    workOrderHooks.addCreateFromFinished()
+  const { mutateAsync: cloneWithItinerary } =
+    workOrderHooks.useCloneWorkOrderWithItinerary()
 
   const [newScheduledDate, setNewScheduledDate] = useState<Date>(new Date())
   const [isCloning, setIsCloning] = useState(false)
@@ -48,15 +48,11 @@ export default function CloneWorkOrderScreen() {
 
     setIsCloning(true)
     try {
-      await (addCreateFromFinished as any)([
+      await (cloneWithItinerary as any)([
         params.id,
         newScheduledDate,
         undefined,
       ])
-      Toast.show({
-        type: 'success',
-        text1: 'Ordem de serviço clonada com sucesso!',
-      })
 
       router.back()
     } catch (error) {

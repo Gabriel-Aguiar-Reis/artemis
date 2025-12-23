@@ -111,6 +111,9 @@ export class WorkOrder {
   }
 
   setStatus(newStatus: WorkOrderStatus): WorkOrderStatus {
+    // Permitir transições idempotentes (mesmo status) sem erro
+    if (newStatus === this.status) return this.status
+
     const validTransitions: Record<WorkOrderStatus, WorkOrderStatus[]> = {
       [WorkOrderStatus.PENDING]: [
         WorkOrderStatus.COMMITTED,
