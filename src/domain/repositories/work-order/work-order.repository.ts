@@ -39,5 +39,5 @@ export abstract class WorkOrderRepository {
     originalId: UUID,
     newScheduledDate: Date,
     newPaymentOrder?: PaymentOrderSerializableDTO
-  ) => Promise<void>
+  ) => Promise<UUID>
 }

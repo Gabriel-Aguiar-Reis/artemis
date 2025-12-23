@@ -618,7 +618,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
     originalId: UUID,
     newScheduledDate: Date,
     newPaymentOrder?: PaymentOrderSerializableDTO
-  ): Promise<void> {
+  ): Promise<UUID> {
     const original = await this.getWorkOrder(originalId)
     if (!original) throw new Error('Ordem de serviço original não encontrada.')
 
@@ -632,6 +632,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
     }
 
     // Criar payment order se fornecido
+    let createdId: UUID | null = null
     await db.transaction(async (tx) => {
       let paymentOrderId: UUID | null = null
       if (newPaymentOrder) {
@@ -659,6 +660,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
 
       try {
         await tx.insert(workOrder).values(newWoData).onConflictDoNothing()
+        createdId = newWo.id
       } catch {
         throw new Error('Falha ao criar a nova ordem de serviço.')
       }
@@ -680,6 +682,10 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
         }
       }
     })
+
+    if (!createdId)
+      throw new Error('Falha ao obter ID da nova ordem de serviço.')
+    return createdId
   }
 
   async getWorkOrdersByDateRange(
