@@ -84,6 +84,11 @@ const formatToastText = (
   }
 }
 
+export const __test__ = {
+  formatToastText,
+  actionWords,
+}
+
 export function createRepositoryHooks<TRepo extends Record<string, any>>(
   repo: TRepo,
   key: QueryKey,
