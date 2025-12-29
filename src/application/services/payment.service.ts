@@ -71,6 +71,14 @@ export class PaymentService {
 
     const po = PaymentOrderMapper.toDomain(pos[0])
 
+    const normalizedItems = items.map((r) => ({
+      id: r.item.id as UUID,
+      productId: r.item.productId as UUID,
+      quantity: r.item.quantity,
+      productName: r.product?.name ?? '',
+      salePrice: r.product?.salePrice ?? 0,
+    }))
+
     const newWo = WorkOrder.fromDTO({
       id: wo.id as UUID,
       customer: CustomerMapper.toDomain(cust),
@@ -78,13 +86,7 @@ export class PaymentService {
       updatedAt: wo.updatedAt ?? new Date().toISOString(),
       scheduledDate: wo.scheduledDate,
       paymentOrder: po,
-      products: (items || []).map((r) => ({
-        id: r.item.id as UUID,
-        productId: r.item.productId as UUID,
-        quantity: r.item.quantity,
-        productName: r.product?.name ?? '',
-        salePrice: r.product?.salePrice ?? 0,
-      })),
+      products: normalizedItems,
       status: WorkOrderStatus.COMPLETED,
       visitDate: wo.visitDate ?? undefined,
       notes: wo.notes ?? undefined,
