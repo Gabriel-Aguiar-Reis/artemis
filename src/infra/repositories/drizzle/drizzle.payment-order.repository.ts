@@ -31,7 +31,12 @@ export default class DrizzlePaymentOrderRepository implements PaymentOrderReposi
       dto.totalValue,
       dto.installments ?? 1,
       dto.isPaid ?? false,
-      dto.paidInstallments ?? 0
+      dto.paidInstallments ?? 0,
+      dto.paymentDate instanceof Date
+        ? dto.paymentDate
+        : dto.paymentDate
+          ? new Date(dto.paymentDate)
+          : null
     )
 
     const data = PaymentOrderMapper.toPersistence(po)
@@ -59,6 +64,10 @@ export default class DrizzlePaymentOrderRepository implements PaymentOrderReposi
       ...dto,
       id: dto.id as UUID,
       isPaid: dto.isPaid ?? false,
+      paymentDate:
+        dto.paymentDate instanceof Date
+          ? dto.paymentDate.toISOString()
+          : dto.paymentDate,
     })
 
     const data = PaymentOrderMapper.toPersistence(po)

@@ -1,0 +1,1 @@
+ALTER TABLE `payment_order` ADD `payment_date` text;
