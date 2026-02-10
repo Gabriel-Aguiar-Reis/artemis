@@ -73,7 +73,10 @@ export default function WorkOrderProductsScreen() {
           <ObjectCard.Root className="mb-4 dark:bg-input/30">
             <ObjectCard.Header>
               <ObjectCard.Title>Resumo</ObjectCard.Title>
-              <ObjectCard.Actions onPress={handleProductsOptions} />
+              {workOrder.status !== 'EXPIRED' &&
+                workOrder.status !== 'COPIED' && (
+                  <ObjectCard.Actions onPress={handleProductsOptions} />
+                )}
             </ObjectCard.Header>
             <ObjectCard.Content>
               <View className="gap-2">

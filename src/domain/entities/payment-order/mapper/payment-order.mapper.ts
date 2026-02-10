@@ -11,6 +11,7 @@ export class PaymentOrderMapper {
       installments: table.installments,
       isPaid: table.isPaid,
       paidInstallments: table.paidInstallments,
+      paymentDate: table.paymentDate,
     })
   }
 
@@ -22,6 +23,7 @@ export class PaymentOrderMapper {
       installments: entity.installments,
       isPaid: entity.isPaid,
       paidInstallments: entity.paidInstallments,
+      paymentDate: entity.paymentDate ? entity.paymentDate.toISOString() : null,
     }
   }
 }

@@ -54,12 +54,10 @@ export default function ItineraryFinishScreen() {
 
     const totalWorkOrders = itineraryWorkOrders.length
 
-    // Contar atrasadas
-    const lateWorkOrders = itineraryWorkOrders.filter((iwo) => {
-      const wo = iwo.workOrder
-      if (!wo.visitDate) return false
-      return wo.visitDate > wo.scheduledDate
-    }).length
+    // Contar atrasadas - usar o flag isLate que já está calculado
+    const lateWorkOrders = itineraryWorkOrders.filter(
+      (iwo) => iwo.isLate
+    ).length
 
     // Calcular dias no período
     const diffTime = Math.abs(
@@ -309,9 +307,10 @@ export default function ItineraryFinishScreen() {
                   />
                   <View className="flex-1">
                     <Text className="text-sm text-muted-foreground">
-                      Ao finalizar este itinerário, os atrasos (se houver) serão
-                      registrados permanentemente e não será mais possível
-                      editá-lo.
+                      Ao finalizar este itinerário, as ordens atrasadas (se
+                      houver) serão registradas como expiradas e não será mais
+                      possível editá-las. Para remarcá-las após isso, será
+                      necessário cloná-las.
                     </Text>
                   </View>
                 </View>

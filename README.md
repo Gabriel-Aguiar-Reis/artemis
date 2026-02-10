@@ -418,6 +418,8 @@ enum WorkOrderStatus {
   PARTIAL = 'PARTIAL',
   CANCELLED = 'CANCELLED',
   FAILED = 'FAILED',
+  EXPIRED = 'EXPIRED',
+  COPIED = 'COPIED',
 }
 
 class WorkOrder {

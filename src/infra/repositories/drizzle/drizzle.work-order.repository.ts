@@ -624,12 +624,19 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
 
     if (
       original.status !== WorkOrderStatus.COMPLETED &&
-      original.status !== WorkOrderStatus.PARTIAL
+      original.status !== WorkOrderStatus.PARTIAL &&
+      original.status !== WorkOrderStatus.EXPIRED
     ) {
       throw new Error(
-        'Só é possível criar nova OS a partir de uma OS finalizada ou parcial.'
+        'Só é possível criar nova OS a partir de uma OS finalizada, parcial ou expirada.'
       )
     }
+
+    // Marcar a ordem original como COPIED (EXPIRED, COMPLETED ou PARTIAL)
+    const shouldMarkAsCopied =
+      original.status === WorkOrderStatus.EXPIRED ||
+      original.status === WorkOrderStatus.COMPLETED ||
+      original.status === WorkOrderStatus.PARTIAL
 
     // Criar payment order se fornecido
     let createdId: UUID | null = null
@@ -680,6 +687,14 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
         } catch {
           throw new Error('Falha ao criar os itens da nova ordem de serviço.')
         }
+      }
+
+      // Marcar a ordem original como COPIED
+      if (shouldMarkAsCopied) {
+        await tx
+          .update(workOrder)
+          .set({ status: WorkOrderStatus.COPIED })
+          .where(eq(workOrder.id, originalId))
       }
     })
 

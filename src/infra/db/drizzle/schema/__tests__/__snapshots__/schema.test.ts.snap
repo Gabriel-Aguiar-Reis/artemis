@@ -1,0 +1,122 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`drizzle schema definitions > exposes category columns 1`] = `
+[
+  "id",
+  "name",
+  "isActive",
+]
+`;
+
+exports[`drizzle schema definitions > exposes customer columns 1`] = `
+[
+  "id",
+  "storeName",
+  "contactName",
+  "phoneNumber",
+  "phoneIsWhatsApp",
+  "landlineNumber",
+  "landlineIsWhatsApp",
+  "addressStreetName",
+  "addressStreetNumber",
+  "addressNeighborhood",
+  "addressCity",
+  "addressState",
+  "addressZipCode",
+]
+`;
+
+exports[`drizzle schema definitions > exposes itinerary columns 1`] = `
+[
+  "id",
+  "initialItineraryDate",
+  "finalItineraryDate",
+  "isFinished",
+]
+`;
+
+exports[`drizzle schema definitions > exposes itineraryWorkOrder columns 1`] = `
+[
+  "id",
+  "itineraryId",
+  "workOrderId",
+  "position",
+  "isLate",
+]
+`;
+
+exports[`drizzle schema definitions > exposes license columns 1`] = `
+[
+  "id",
+  "uniqueCode",
+  "expirationDate",
+  "isAdmin",
+  "createdAt",
+]
+`;
+
+exports[`drizzle schema definitions > exposes paymentOrder columns 1`] = `
+[
+  "id",
+  "method",
+  "totalValue",
+  "installments",
+  "isPaid",
+  "paidInstallments",
+]
+`;
+
+exports[`drizzle schema definitions > exposes product columns 1`] = `
+[
+  "id",
+  "name",
+  "categoryId",
+  "salePrice",
+  "isActive",
+  "expiration",
+]
+`;
+
+exports[`drizzle schema definitions > exposes workOrder columns 1`] = `
+[
+  "id",
+  "customerId",
+  "createdAt",
+  "updatedAt",
+  "scheduledDate",
+  "visitDate",
+  "paymentOrderId",
+  "status",
+  "resultId",
+  "notes",
+]
+`;
+
+exports[`drizzle schema definitions > exposes workOrderItem columns 1`] = `
+[
+  "id",
+  "workOrderId",
+  "productId",
+  "quantity",
+  "priceSnapshot",
+]
+`;
+
+exports[`drizzle schema definitions > exposes workOrderResult columns 1`] = `
+[
+  "id",
+  "totalValue",
+]
+`;
+
+exports[`drizzle schema definitions > exposes workOrderResultItem columns 1`] = `
+[
+  "id",
+  "resultId",
+  "productId",
+  "quantity",
+  "priceSnapshot",
+  "type",
+  "observation",
+]
+`;

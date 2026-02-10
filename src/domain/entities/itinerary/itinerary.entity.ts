@@ -54,7 +54,7 @@ export class Itinerary {
     this.workOrders.forEach((item) => {
       const wo = item.workOrder
       if (wo.result) wo.status = wo.applyResult(wo.result)
-      else if (item.isLate) wo.status = WorkOrderStatus.FAILED
+      else if (item.isLate) wo.status = WorkOrderStatus.EXPIRED
     })
 
     this.isFinished = true

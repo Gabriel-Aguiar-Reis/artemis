@@ -30,13 +30,14 @@ export function getErrorMessage(err: unknown): string | undefined {
 }
 
 export function formatPhoneBrazil(raw?: string) {
+  const fallback = raw ?? ''
   try {
-    if (!raw) return ''
+    if (!raw) return fallback
     const parsed = parsePhoneNumberFromString(raw, 'BR')
     if (!parsed || !parsed.isValid()) return raw
     return parsed.formatNational()
   } catch (e) {
-    return raw ?? ''
+    return fallback
   }
 }
 

@@ -359,6 +359,16 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
         })
         .where(eq(itinerary.id, id))
 
+      // Atualizar status das work orders
+      for (const item of itin.workOrders) {
+        await tx
+          .update(workOrder)
+          .set({
+            status: item.workOrder.status,
+          })
+          .where(eq(workOrder.id, item.workOrder.id))
+      }
+
       // Atualizar work orders (isLate)
       await tx
         .delete(itineraryWorkOrder)

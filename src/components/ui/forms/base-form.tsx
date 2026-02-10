@@ -36,14 +36,20 @@ export type FormFieldProps<T extends FieldValues> = {
 type RootProps = {
   title: string
   children: ReactNode
+  footer?: ReactNode
 }
-function Root({ title, children }: RootProps) {
+function Root({ title, children, footer }: RootProps) {
   return (
     <SafeAreaView className="flex-1">
       <Stack.Screen options={{ title }} />
       <ScrollView className="flex-1">
         <View className="p-4 gap-2">{children}</View>
       </ScrollView>
+      {footer && (
+        <View className="p-4 bg-background border-t border-border">
+          {footer}
+        </View>
+      )}
     </SafeAreaView>
   )
 }

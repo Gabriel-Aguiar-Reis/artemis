@@ -11,7 +11,7 @@ type PaymentOrderModelShape = Pick<
   | 'installments'
   | 'isPaid'
   | 'paidInstallments'
->
+> & { paymentDate?: string | null }
 
 export const paymentOrder = sqliteTable('payment_order', {
   id: text('id', { length: 36 })
@@ -22,6 +22,7 @@ export const paymentOrder = sqliteTable('payment_order', {
   installments: integer('installments').notNull().default(1),
   isPaid: integer('is_paid', { mode: 'boolean' }).notNull().default(false),
   paidInstallments: integer('paid_installments').notNull().default(0),
+  paymentDate: text('payment_date'),
 }) satisfies Record<keyof PaymentOrderModelShape, any>
 
 export type PaymentOrderTable = InferSelectModel<typeof paymentOrder>

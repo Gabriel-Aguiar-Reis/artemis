@@ -114,7 +114,38 @@ function WorkOrderFormCreateComponent<T extends FieldValues>(
       style={{ flex: 1 }}
       keyboardVerticalOffset={80}
     >
-      <BaseForm.Root title={title}>
+      <BaseForm.Root
+        title={title}
+        footer={
+          !step?.customRenderer ? (
+            <View className="flex-row justify-between w-full gap-2">
+              <Button
+                variant="outline"
+                size="default"
+                onPress={handlePrev}
+                disabled={currentStep === 0}
+                className="w-2/5"
+              >
+                <Text>Anterior</Text>
+              </Button>
+
+              {currentStep < totalSteps - 1 ? (
+                <Button
+                  variant="default"
+                  onPress={handleNext}
+                  className="w-2/5"
+                >
+                  <Text>Próximo</Text>
+                </Button>
+              ) : (
+                <BaseForm.SubmitButton onPress={onSubmit} loading={loading}>
+                  {submitLabel}
+                </BaseForm.SubmitButton>
+              )}
+            </View>
+          ) : undefined
+        }
+      >
         {totalSteps > 1 && (
           <Stepper currentStep={currentStep + 1} totalSteps={totalSteps} />
         )}
@@ -202,31 +233,6 @@ function WorkOrderFormCreateComponent<T extends FieldValues>(
                 />
               )
             })}
-
-        {/* Botões de navegação - só mostra se não tiver customRenderer */}
-        {!step?.customRenderer && (
-          <View className="flex-row justify-between w-full gap-2 mt-4">
-            <Button
-              variant="outline"
-              size="default"
-              onPress={handlePrev}
-              disabled={currentStep === 0}
-              className="w-2/5"
-            >
-              <Text>Anterior</Text>
-            </Button>
-
-            {currentStep < totalSteps - 1 ? (
-              <Button variant="default" onPress={handleNext} className="w-2/5">
-                <Text>Próximo</Text>
-              </Button>
-            ) : (
-              <BaseForm.SubmitButton onPress={onSubmit} loading={loading}>
-                {submitLabel}
-              </BaseForm.SubmitButton>
-            )}
-          </View>
-        )}
       </BaseForm.Root>
     </KeyboardAvoidingView>
   )

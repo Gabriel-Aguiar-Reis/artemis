@@ -113,7 +113,10 @@ export default function ItineraryScreen() {
           router.push(`/work-orders/${workOrder.id}/result`)
         },
       })
-    } else {
+    } else if (
+      workOrder.status !== 'EXPIRED' &&
+      workOrder.status !== 'COPIED'
+    ) {
       options.push({
         label: 'Criar Relatório',
         icon: Plus,
@@ -132,7 +135,11 @@ export default function ItineraryScreen() {
           router.push(`/work-orders/${workOrder.id}/payment`)
         },
       })
-    } else if (workOrder.result) {
+    } else if (
+      workOrder.result &&
+      workOrder.status !== 'EXPIRED' &&
+      workOrder.status !== 'COPIED'
+    ) {
       options.push({
         label: 'Criar Pagamento',
         icon: Plus,
@@ -169,8 +176,11 @@ export default function ItineraryScreen() {
       })
     }
 
-    // Clonar (apenas se tiver resultado e pagamento)
-    if (workOrder.result && workOrder.paymentOrder) {
+    // Clonar (se tiver resultado e pagamento OU se for EXPIRED)
+    if (
+      (workOrder.result && workOrder.paymentOrder) ||
+      workOrder.status === 'EXPIRED'
+    ) {
       options.push({
         label: 'Clonar Ordem de Serviço',
         icon: Copy,

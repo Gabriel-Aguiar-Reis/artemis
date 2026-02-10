@@ -18,6 +18,7 @@ const paymentOrderSchemaWithoutId = {
   paidInstallments: z
     .number()
     .min(0, 'O número de parcelas pagas deve ser pelo menos 0.'),
+  paymentDate: z.union([z.date(), z.string()]).optional().nullable(),
 }
 
 const paymentOrderSchema = {
