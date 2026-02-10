@@ -9,7 +9,10 @@ import {
 } from '@/src/components/ui/tooltip'
 import { WhatsAppIcon } from '@/src/components/ui/whatsapp-icon'
 import { Customer } from '@/src/domain/entities/customer/customer.entity'
-import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
+import {
+  WorkOrder,
+  WorkOrderStatus,
+} from '@/src/domain/entities/work-order/work-order.entity'
 import { cn, formatPhoneBrazil } from '@/src/lib/utils'
 import {
   Banknote,
@@ -57,6 +60,8 @@ export function WorkOrderCard({
 }) {
   // Verificar se tem resultado mas não tem pagamento
   const hasResultNoPay = wo.result && !wo.paymentOrder
+  const isExpired = wo.status === WorkOrderStatus.EXPIRED
+  const isCopied = wo.status === WorkOrderStatus.COPIED
 
   return (
     <ObjectCard.Root
@@ -64,7 +69,9 @@ export function WorkOrderCard({
       className={cn(
         'mb-4 dark:bg-input/30',
         isLate && 'border-2 border-warning',
-        hasResultNoPay && 'border-2 border-destructive'
+        hasResultNoPay && 'border-2 border-destructive',
+        isExpired && 'border-2 border-orange-500',
+        isCopied && 'border-2 border-cyan-500'
       )}
     >
       <ObjectCard.Header>
@@ -89,6 +96,18 @@ export function WorkOrderCard({
             {hasResultNoPay && (
               <View className="bg-destructive/40 rounded-full px-2 py-0.5">
                 <Text className="text-xs font-bold text-red-100">S/ PGTO</Text>
+              </View>
+            )}
+            {isExpired && (
+              <View className="bg-orange-500/40 rounded-full px-2 py-0.5">
+                <Text className="text-xs font-bold text-orange-100">
+                  EXPIRADA
+                </Text>
+              </View>
+            )}
+            {isCopied && (
+              <View className="bg-cyan-500/40 rounded-full px-2 py-0.5">
+                <Text className="text-xs font-bold text-cyan-100">CLONADA</Text>
               </View>
             )}
           </View>
@@ -246,7 +265,7 @@ export function WorkOrderCard({
                 >
                   {wo.paymentOrder ? (
                     <>
-                      {wo.paymentOrder.method} -{' '}
+                      {wo.paymentOrder.method} -
                       {wo.paymentOrder.isPaid
                         ? ' Pago'
                         : ` ${wo.paymentOrder.paidInstallments}/${wo.paymentOrder.installments} parcelas`}
