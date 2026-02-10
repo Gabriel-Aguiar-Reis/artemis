@@ -9,7 +9,10 @@ import { NotesDialog } from '@/src/components/ui/dialog/notes-dialog'
 import { WhatsAppSummaryDialog } from '@/src/components/ui/dialog/whatsapp-summary-dialog'
 import { Text } from '@/src/components/ui/text'
 import { WorkOrderCard } from '@/src/components/ui/work-order-card'
-import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
+import {
+  WorkOrder,
+  WorkOrderStatus,
+} from '@/src/domain/entities/work-order/work-order.entity'
 import { smartSearch, UUID } from '@/src/lib/utils'
 import { FlashList } from '@shopify/flash-list'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
@@ -83,6 +86,8 @@ export default function WorkOrdersScreen() {
     isPaid?: string
     hasPayment?: string
     hasResult?: string
+    isExpired?: string
+    isCopied?: string
   }>()
 
   const handleWorkOrderOptions = async (workOrder: WorkOrder) => {
@@ -113,13 +118,15 @@ export default function WorkOrdersScreen() {
       },
     })
     // Grupo: Ordem de Serviço
-    options.push({
-      label: 'Editar Cabeçalho da Ordem',
-      icon: Edit,
-      onPress: () => {
-        router.push(`/work-orders/${workOrder.id}/edit`)
-      },
-    })
+    if (workOrder.status !== 'EXPIRED' && workOrder.status !== 'COPIED') {
+      options.push({
+        label: 'Editar Cabeçalho da Ordem',
+        icon: Edit,
+        onPress: () => {
+          router.push(`/work-orders/${workOrder.id}/edit`)
+        },
+      })
+    }
 
     options.push({
       label: 'Acessar Produtos Agendados',
@@ -138,7 +145,10 @@ export default function WorkOrdersScreen() {
           router.push(`/work-orders/${workOrder.id}/result`)
         },
       })
-    } else {
+    } else if (
+      workOrder.status !== 'EXPIRED' &&
+      workOrder.status !== 'COPIED'
+    ) {
       options.push({
         label: 'Criar Relatório',
         icon: Plus,
@@ -157,7 +167,11 @@ export default function WorkOrdersScreen() {
           router.push(`/work-orders/${workOrder.id}/payment`)
         },
       })
-    } else if (workOrder.result) {
+    } else if (
+      workOrder.result &&
+      workOrder.status !== 'EXPIRED' &&
+      workOrder.status !== 'COPIED'
+    ) {
       options.push({
         label: 'Criar Pagamento',
         icon: Plus,
@@ -167,8 +181,11 @@ export default function WorkOrdersScreen() {
       })
     }
 
-    // Clonar (apenas se tiver resultado e pagamento)
-    if (workOrder.result && workOrder.paymentOrder) {
+    // Clonar (se tiver resultado e pagamento OU se for EXPIRED)
+    if (
+      (workOrder.result && workOrder.paymentOrder) ||
+      workOrder.status === 'EXPIRED'
+    ) {
       options.push({
         label: 'Clonar Ordem de Serviço',
         icon: Copy,
@@ -330,6 +347,14 @@ export default function WorkOrdersScreen() {
         ? (wo.result !== null && wo.result !== undefined) ===
           (params.hasResult === 'true')
         : true
+      const matchesIsExpired = params.isExpired
+        ? (wo.status === WorkOrderStatus.EXPIRED) ===
+          (params.isExpired === 'true')
+        : true
+      const matchesIsCopied = params.isCopied
+        ? (wo.status === WorkOrderStatus.COPIED) ===
+          (params.isCopied === 'true')
+        : true
 
       return (
         matchesSearch &&
@@ -342,7 +367,9 @@ export default function WorkOrdersScreen() {
         matchesMaxTotalValue &&
         matchesIsPaid &&
         matchesHasPayment &&
-        matchesHasResult
+        matchesHasResult &&
+        matchesIsExpired &&
+        matchesIsCopied
       )
     })
   }, [
@@ -358,6 +385,8 @@ export default function WorkOrdersScreen() {
     params.isPaid,
     params.hasPayment,
     params.hasResult,
+    params.isExpired,
+    params.isCopied,
   ])
   const hasActiveFilters =
     !!params.search ||
@@ -370,7 +399,9 @@ export default function WorkOrdersScreen() {
     !!params.maxTotalValue ||
     !!params.isPaid ||
     !!params.hasPayment ||
-    !!params.hasResult
+    !!params.hasResult ||
+    !!params.isExpired ||
+    !!params.isCopied
 
   const activeFilters = useMemo(() => {
     const filters = []
@@ -419,6 +450,18 @@ export default function WorkOrdersScreen() {
         value: params.hasResult === 'true' ? 'Sim' : 'Não',
       })
     }
+    if (params.isExpired) {
+      filters.push({
+        label: 'Ordem Expirada',
+        value: params.isExpired === 'true' ? 'Sim' : 'Não',
+      })
+    }
+    if (params.isCopied) {
+      filters.push({
+        label: 'Ordem Clonada',
+        value: params.isCopied === 'true' ? 'Sim' : 'Não',
+      })
+    }
     return filters
   }, [
     params.search,
@@ -432,6 +475,8 @@ export default function WorkOrdersScreen() {
     params.isPaid,
     params.hasPayment,
     params.hasResult,
+    params.isExpired,
+    params.isCopied,
   ])
 
   if (isLoading) {

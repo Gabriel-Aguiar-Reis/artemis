@@ -6,6 +6,7 @@ import { UUID } from '@/src/lib/utils'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
 import {
   Banknote,
+  Calendar,
   CheckCircle2,
   CreditCard,
   Edit,
@@ -82,6 +83,22 @@ export default function WorkOrderPaymentScreen() {
                 </Text>
                 <Text className="text-sm font-semibold">{payment.method}</Text>
               </View>
+
+              {payment.paymentDate && (
+                <View className="flex-row items-center gap-2">
+                  <Icon
+                    as={Calendar}
+                    className="text-muted-foreground"
+                    size={20}
+                  />
+                  <Text className="text-sm text-muted-foreground flex-1">
+                    Data de Pagamento
+                  </Text>
+                  <Text className="text-sm font-semibold">
+                    {new Date(payment.paymentDate).toLocaleDateString('pt-BR')}
+                  </Text>
+                </View>
+              )}
 
               <View className="flex-row items-center gap-2">
                 <Icon

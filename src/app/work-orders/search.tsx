@@ -26,6 +26,8 @@ export default function WorkOrdersSearch() {
     isPaid?: string
     hasPayment?: string
     hasResult?: string
+    isExpired?: string
+    isCopied?: string
   }>()
 
   const [searchQuery, setSearchQuery] = useState(params.search || '')
@@ -59,6 +61,12 @@ export default function WorkOrdersSearch() {
   const [hasResultFilter, setHasResultFilter] = useState<
     'all' | 'true' | 'false'
   >((params.hasResult as any) || 'all')
+  const [isExpiredFilter, setIsExpiredFilter] = useState<
+    'all' | 'true' | 'false'
+  >((params.isExpired as any) || 'all')
+  const [isCopiedFilter, setIsCopiedFilter] = useState<
+    'all' | 'true' | 'false'
+  >((params.isCopied as any) || 'all')
 
   const applyFilters = () => {
     router.back()
@@ -76,6 +84,8 @@ export default function WorkOrdersSearch() {
         isPaid: isPaidFilter !== 'all' ? isPaidFilter : undefined,
         hasPayment: hasPaymentFilter !== 'all' ? hasPaymentFilter : undefined,
         hasResult: hasResultFilter !== 'all' ? hasResultFilter : undefined,
+        isExpired: isExpiredFilter !== 'all' ? isExpiredFilter : undefined,
+        isCopied: isCopiedFilter !== 'all' ? isCopiedFilter : undefined,
       })
     }, 200)
   }
@@ -92,6 +102,8 @@ export default function WorkOrdersSearch() {
     setIsPaidFilter('all')
     setHasPaymentFilter('all')
     setHasResultFilter('all')
+    setIsExpiredFilter('all')
+    setIsCopiedFilter('all')
   }
 
   const hasActiveFilters =
@@ -105,7 +117,9 @@ export default function WorkOrdersSearch() {
     maxTotalValueFilter !== '' ||
     isPaidFilter !== 'all' ||
     hasPaymentFilter !== 'all' ||
-    hasResultFilter !== 'all'
+    hasResultFilter !== 'all' ||
+    isExpiredFilter !== 'all' ||
+    isCopiedFilter !== 'all'
 
   return (
     <SafeAreaView className="flex-1">
@@ -421,6 +435,116 @@ export default function WorkOrdersSearch() {
                     <Text
                       className={
                         hasResultFilter === 'false'
+                          ? 'text-primary-foreground'
+                          : 'text-foreground'
+                      }
+                    >
+                      Não
+                    </Text>
+                  </Button>
+                </View>
+              </View>
+
+              <View className="gap-2">
+                <Text className="text-sm font-medium">Ordem Expirada</Text>
+                <View className="flex-row gap-2">
+                  <Button
+                    variant={isExpiredFilter === 'all' ? 'default' : 'outline'}
+                    size="sm"
+                    onPress={() => setIsExpiredFilter('all')}
+                    className="flex-1"
+                  >
+                    <Text
+                      className={
+                        isExpiredFilter === 'all'
+                          ? 'text-primary-foreground'
+                          : 'text-foreground'
+                      }
+                    >
+                      Todos
+                    </Text>
+                  </Button>
+                  <Button
+                    variant={isExpiredFilter === 'true' ? 'default' : 'outline'}
+                    size="sm"
+                    onPress={() => setIsExpiredFilter('true')}
+                    className="flex-1"
+                  >
+                    <Text
+                      className={
+                        isExpiredFilter === 'true'
+                          ? 'text-primary-foreground'
+                          : 'text-foreground'
+                      }
+                    >
+                      Sim
+                    </Text>
+                  </Button>
+                  <Button
+                    variant={
+                      isExpiredFilter === 'false' ? 'default' : 'outline'
+                    }
+                    size="sm"
+                    onPress={() => setIsExpiredFilter('false')}
+                    className="flex-1"
+                  >
+                    <Text
+                      className={
+                        isExpiredFilter === 'false'
+                          ? 'text-primary-foreground'
+                          : 'text-foreground'
+                      }
+                    >
+                      Não
+                    </Text>
+                  </Button>
+                </View>
+              </View>
+
+              <View className="gap-2">
+                <Text className="text-sm font-medium">Ordem Clonada</Text>
+                <View className="flex-row gap-2">
+                  <Button
+                    variant={isCopiedFilter === 'all' ? 'default' : 'outline'}
+                    size="sm"
+                    onPress={() => setIsCopiedFilter('all')}
+                    className="flex-1"
+                  >
+                    <Text
+                      className={
+                        isCopiedFilter === 'all'
+                          ? 'text-primary-foreground'
+                          : 'text-foreground'
+                      }
+                    >
+                      Todos
+                    </Text>
+                  </Button>
+                  <Button
+                    variant={isCopiedFilter === 'true' ? 'default' : 'outline'}
+                    size="sm"
+                    onPress={() => setIsCopiedFilter('true')}
+                    className="flex-1"
+                  >
+                    <Text
+                      className={
+                        isCopiedFilter === 'true'
+                          ? 'text-primary-foreground'
+                          : 'text-foreground'
+                      }
+                    >
+                      Sim
+                    </Text>
+                  </Button>
+                  <Button
+                    variant={isCopiedFilter === 'false' ? 'default' : 'outline'}
+                    size="sm"
+                    onPress={() => setIsCopiedFilter('false')}
+                    className="flex-1"
+                  >
+                    <Text
+                      className={
+                        isCopiedFilter === 'false'
                           ? 'text-primary-foreground'
                           : 'text-foreground'
                       }
