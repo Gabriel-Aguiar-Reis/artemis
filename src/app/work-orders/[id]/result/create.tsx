@@ -198,14 +198,16 @@ export default function WorkOrderResultCreateScreen() {
             label="Produtos Removidos"
             placeholder="Produtos não trocados"
           />
-
-          <Button onPress={handleSubmit} disabled={isPending}>
-            <Text className="text-primary-foreground font-semibold">
-              {isPending ? 'Salvando...' : 'Salvar Relatório'}
-            </Text>
-          </Button>
         </View>
       </ScrollView>
+
+      <View className="p-4 bg-background border-t border-border">
+        <Button onPress={handleSubmit} disabled={isPending}>
+          <Text className="text-primary-foreground font-semibold">
+            {isPending ? 'Salvando...' : 'Salvar Relatório'}
+          </Text>
+        </Button>
+      </View>
     </SafeAreaView>
   )
 }

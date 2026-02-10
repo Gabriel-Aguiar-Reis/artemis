@@ -251,14 +251,16 @@ export default function WorkOrderResultEditByIdScreen() {
               </Text>
             </View>
           </View>
-
-          <Button onPress={handleSubmit} disabled={isPending}>
-            <Text className="text-primary-foreground font-semibold">
-              {isPending ? 'Salvando...' : 'Salvar Alterações'}
-            </Text>
-          </Button>
         </View>
       </ScrollView>
+
+      <View className="p-4 bg-background border-t border-border">
+        <Button onPress={handleSubmit} disabled={isPending}>
+          <Text className="text-primary-foreground font-semibold">
+            {isPending ? 'Salvando...' : 'Salvar Alterações'}
+          </Text>
+        </Button>
+      </View>
     </SafeAreaView>
   )
 }
