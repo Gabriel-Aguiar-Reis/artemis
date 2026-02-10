@@ -7,6 +7,7 @@ export type PaymentOrderSerializableDTO = {
   installments: number
   isPaid: boolean
   paidInstallments: number
+  paymentDate?: string | null
 }
 
 export class PaymentOrder {
@@ -16,7 +17,8 @@ export class PaymentOrder {
     public totalValue: number,
     public installments: number = 1,
     public isPaid: boolean = false,
-    public paidInstallments: number = 0
+    public paidInstallments: number = 0,
+    public paymentDate?: Date | null
   ) {
     if (installments < 1)
       throw new Error('O número de parcelas deve ser ao menos 1.')
@@ -69,6 +71,7 @@ export class PaymentOrder {
       installments: this.installments,
       isPaid: this.isPaid,
       paidInstallments: this.paidInstallments,
+      paymentDate: this.paymentDate ? this.paymentDate.toISOString() : null,
     }
   }
 
@@ -79,7 +82,8 @@ export class PaymentOrder {
       dto.totalValue,
       dto.installments,
       dto.isPaid,
-      dto.paidInstallments
+      dto.paidInstallments,
+      dto.paymentDate ? new Date(dto.paymentDate) : null
     )
   }
 
