@@ -23,7 +23,7 @@ export class WorkOrderMapper {
       createdAt: table.createdAt ?? new Date().toISOString(),
       updatedAt: table.updatedAt ?? new Date().toISOString(),
       scheduledDate: table.scheduledDate ?? new Date().toISOString(),
-      paymentOrder: paymentOrder ?? undefined,
+      paymentOrder: paymentOrder ? paymentOrder.toDTO() : undefined,
       products: items,
       status: table.status as WorkOrderStatus,
       result: result

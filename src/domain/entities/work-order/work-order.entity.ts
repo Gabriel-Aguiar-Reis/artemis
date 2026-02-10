@@ -27,6 +27,8 @@ export enum WorkOrderStatus {
   PARTIAL = 'PARTIAL',
   CANCELLED = 'CANCELLED',
   FAILED = 'FAILED',
+  EXPIRED = 'EXPIRED',
+  COPIED = 'COPIED',
 }
 
 export type WorkOrderSerializableDTO = {
@@ -128,10 +130,12 @@ export class WorkOrder {
         WorkOrderStatus.PARTIAL,
         WorkOrderStatus.FAILED,
       ],
-      [WorkOrderStatus.COMPLETED]: [],
-      [WorkOrderStatus.PARTIAL]: [],
+      [WorkOrderStatus.COMPLETED]: [WorkOrderStatus.COPIED],
+      [WorkOrderStatus.PARTIAL]: [WorkOrderStatus.COPIED],
       [WorkOrderStatus.CANCELLED]: [],
       [WorkOrderStatus.FAILED]: [],
+      [WorkOrderStatus.EXPIRED]: [WorkOrderStatus.COPIED],
+      [WorkOrderStatus.COPIED]: [],
     }
 
     const statusLabels: Record<WorkOrderStatus, string> = {
@@ -142,6 +146,8 @@ export class WorkOrder {
       [WorkOrderStatus.PARTIAL]: 'Parcial',
       [WorkOrderStatus.CANCELLED]: 'Cancelada',
       [WorkOrderStatus.FAILED]: 'Falhada',
+      [WorkOrderStatus.EXPIRED]: 'Expirada',
+      [WorkOrderStatus.COPIED]: 'Clonada',
     }
 
     if (!validTransitions[this.status]?.includes(newStatus))
@@ -195,10 +201,11 @@ export class WorkOrder {
   ): WorkOrder {
     if (
       this.status !== WorkOrderStatus.COMPLETED &&
-      this.status !== WorkOrderStatus.PARTIAL
+      this.status !== WorkOrderStatus.PARTIAL &&
+      this.status !== WorkOrderStatus.EXPIRED
     ) {
       throw new Error(
-        'Só é possível criar uma nova ordem de serviço a partir de uma ordem concluída ou parcial.'
+        'Só é possível criar uma nova ordem de serviço a partir de uma ordem concluída, parcial ou expirada.'
       )
     }
 
@@ -213,7 +220,12 @@ export class WorkOrder {
         })
       : undefined
 
-    const items = this.result?.getExchangedAndAddedProducts() ?? []
+    // Para ordens EXPIRED (sem resultado), usa produtos agendados
+    // Para ordens COMPLETED/PARTIAL, usa produtos do resultado (trocados + adicionados)
+    const items =
+      this.status === WorkOrderStatus.EXPIRED
+        ? (this.products?.map((p) => p.toDTO()) ?? [])
+        : (this.result?.getExchangedAndAddedProducts() ?? [])
 
     return WorkOrder.fromDTO({
       id: String(uuid.v4()) as UUID,
@@ -221,7 +233,7 @@ export class WorkOrder {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       scheduledDate: newScheduledDate.toISOString(),
-      paymentOrder,
+      paymentOrder: paymentOrder ? paymentOrder.toDTO() : undefined,
       products: items,
       status: WorkOrderStatus.PENDING,
       result: undefined,
@@ -247,9 +259,7 @@ export class WorkOrder {
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString(),
       scheduledDate: this.scheduledDate.toISOString(),
-      paymentOrder: this.paymentOrder?.toDTO
-        ? this.paymentOrder.toDTO()
-        : this.paymentOrder,
+      paymentOrder: this.paymentOrder ? this.paymentOrder.toDTO() : undefined,
       products: this.products?.map((p) => (p.toDTO ? p.toDTO() : p)),
       status: this.status,
       result: this.result?.toDTO(),
