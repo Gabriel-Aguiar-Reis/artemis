@@ -85,7 +85,7 @@ export class PaymentService {
       createdAt: wo.createdAt ?? new Date().toISOString(),
       updatedAt: wo.updatedAt ?? new Date().toISOString(),
       scheduledDate: wo.scheduledDate,
-      paymentOrder: po,
+      paymentOrder: po.toDTO(),
       products: normalizedItems,
       status: WorkOrderStatus.COMPLETED,
       visitDate: wo.visitDate ?? undefined,
