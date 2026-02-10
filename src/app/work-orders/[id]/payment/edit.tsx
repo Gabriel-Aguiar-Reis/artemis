@@ -2,6 +2,7 @@ import { paymentOrderHooks } from '@/src/application/hooks/payment-order.hooks'
 import { workOrderHooks } from '@/src/application/hooks/work-order.hooks'
 import { Alert, AlertDescription, AlertTitle } from '@/src/components/ui/alert'
 import { Button } from '@/src/components/ui/button'
+import { DatePickerInput } from '@/src/components/ui/date-picker-input'
 import { BaseForm } from '@/src/components/ui/forms/base-form'
 import { Masks } from '@/src/components/ui/masks'
 import { Text } from '@/src/components/ui/text'
@@ -14,7 +15,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
 import { CircleQuestionMark, CreditCard, Info } from 'lucide-react-native'
 import { useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { ScrollView, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -33,6 +34,7 @@ export default function PaymentEditScreen() {
       installments: 1,
       isPaid: false,
       paidInstallments: 0,
+      paymentDate: undefined,
     },
     mode: 'onBlur',
   })
@@ -40,14 +42,19 @@ export default function PaymentEditScreen() {
   const installments = form.watch('installments')
   const isPaid = form.watch('isPaid')
   const paidInstallments = form.watch('paidInstallments')
+  const paymentDate = form.watch('paymentDate')
 
-  // Se marcar como pago, força parcelas = 1 e paidInstallments = 1
+  // Se marcar como pago, força parcelas = 1, paidInstallments = 1 e data para hoje se não houver
   useEffect(() => {
     if (isPaid) {
       form.setValue('installments', 1)
       form.setValue('paidInstallments', 1)
+      // Se não houver data de pagamento, define como hoje
+      if (!paymentDate) {
+        form.setValue('paymentDate', new Date() as any)
+      }
     }
-  }, [isPaid, form])
+  }, [isPaid])
 
   // Se mudar parcelas para > 1, desmarca isPaid
   useEffect(() => {
@@ -55,6 +62,33 @@ export default function PaymentEditScreen() {
       form.setValue('isPaid', false)
     }
   }, [installments, isPaid, form])
+
+  // Se a data de pagamento for futura, desmarca isPaid
+  useEffect(() => {
+    if (paymentDate && isPaid) {
+      const selectedDate =
+        paymentDate instanceof Date ? paymentDate : new Date(paymentDate)
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      selectedDate.setHours(0, 0, 0, 0)
+
+      if (selectedDate > today) {
+        form.setValue('isPaid', false)
+        form.setValue('paidInstallments', 0)
+      }
+    }
+  }, [paymentDate])
+
+  // Verificar se a data de pagamento é futura
+  const isPaymentDateFuture = () => {
+    if (!paymentDate) return false
+    const selectedDate =
+      paymentDate instanceof Date ? paymentDate : new Date(paymentDate)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    selectedDate.setHours(0, 0, 0, 0)
+    return selectedDate > today
+  }
 
   const onSubmit = form.handleSubmit(async (data) => {
     if (!workOrder?.paymentOrder) return
@@ -67,6 +101,11 @@ export default function PaymentEditScreen() {
         installments: Number(data.installments),
         isPaid: data.isPaid ?? false,
         paidInstallments: Number(data.paidInstallments),
+        paymentDate: data.paymentDate
+          ? data.paymentDate instanceof Date
+            ? data.paymentDate.toISOString()
+            : data.paymentDate
+          : null,
       })
       router.back()
     } catch (error) {
@@ -83,6 +122,9 @@ export default function PaymentEditScreen() {
       installments: workOrder.paymentOrder.installments,
       isPaid: workOrder.paymentOrder.isPaid,
       paidInstallments: workOrder.paymentOrder.paidInstallments,
+      paymentDate: workOrder.paymentOrder.paymentDate
+        ? (new Date(workOrder.paymentOrder.paymentDate) as any)
+        : undefined,
     })
   }, [workOrder])
 
@@ -174,6 +216,20 @@ export default function PaymentEditScreen() {
             icon={CreditCard}
           />
 
+          <DatePickerInput
+            value={
+              form.watch('paymentDate')
+                ? typeof form.watch('paymentDate') === 'string'
+                  ? new Date(form.watch('paymentDate')!)
+                  : (form.watch('paymentDate') as Date)
+                : undefined
+            }
+            onDateChange={(date) => form.setValue('paymentDate', date as any)}
+            label="Data de Pagamento (Opcional)"
+            placeholder="Selecione a data de pagamento"
+            error={getErrorMessage(form.formState.errors?.paymentDate?.message)}
+          />
+
           <BaseForm.Input.Currency
             control={form.control}
             name="totalValue"
@@ -190,7 +246,9 @@ export default function PaymentEditScreen() {
               {isPaid
                 ? 'Pagamento à vista marcado como realizado. O número de parcelas é 1.'
                 : installments === 1
-                  ? 'Pagamento à vista. Marque "Pagamento à Vista Realizado" se o valor já foi recebido.'
+                  ? isPaymentDateFuture()
+                    ? 'A data de pagamento está no futuro. Pagamentos futuros não podem ser marcados como realizados.'
+                    : 'Pagamento à vista. Marque "Pagamento à Vista Realizado" se o valor já foi recebido.'
                   : `Pagamento parcelado em ${installments}x. ${paidInstallments} de ${installments} parcela(s) paga(s).`}
             </AlertDescription>
           </Alert>
@@ -200,44 +258,73 @@ export default function PaymentEditScreen() {
               control={form.control}
               name="isPaid"
               label="Pagamento à Vista Realizado"
+              inputProps={{ disabled: isPaymentDateFuture() }}
             />
           ) : (
-            <BaseForm.Input
+            <Controller
               control={form.control}
               name="paidInstallments"
-              label="Parcelas Pagas"
-              placeholder="0"
-              error={getErrorMessage(
-                form.formState.errors?.paidInstallments?.message
+              render={({ field: { onChange, value } }) => (
+                <BaseForm.Input
+                  control={form.control}
+                  name="paidInstallments"
+                  label="Parcelas Pagas"
+                  placeholder="0"
+                  error={getErrorMessage(
+                    form.formState.errors?.paidInstallments?.message
+                  )}
+                  inputProps={{
+                    keyboardType: 'numeric',
+                    value: String(value || ''),
+                    onChangeText: (text: string) => {
+                      const num = text === '' ? 0 : Number(text)
+                      if (!isNaN(num)) onChange(num)
+                    },
+                  }}
+                  icon={CircleQuestionMark}
+                />
               )}
-              inputProps={{ keyboardType: 'numeric' }}
-              icon={CircleQuestionMark}
             />
           )}
 
-          <BaseForm.Input
+          <Controller
             control={form.control}
             name="installments"
-            label="Número de Parcelas"
-            placeholder={isPaid ? '1' : 'Ex: 1 (à vista) ou mais (parcelado)'}
-            error={getErrorMessage(
-              form.formState.errors?.installments?.message
+            render={({ field: { onChange, value } }) => (
+              <BaseForm.Input
+                control={form.control}
+                name="installments"
+                label="Número de Parcelas"
+                placeholder={
+                  isPaid ? '1' : 'Ex: 1 (à vista) ou mais (parcelado)'
+                }
+                error={getErrorMessage(
+                  form.formState.errors?.installments?.message
+                )}
+                inputProps={{
+                  keyboardType: 'numeric',
+                  editable: !isPaid,
+                  value: String(value || ''),
+                  onChangeText: (text: string) => {
+                    const num = text === '' ? 1 : Number(text)
+                    if (!isNaN(num)) onChange(num)
+                  },
+                }}
+                icon={CircleQuestionMark}
+                iconTooltip="Para pagamento à vista, use 1. Para parcelado, defina o número de parcelas."
+              />
             )}
-            inputProps={{
-              keyboardType: 'numeric',
-              editable: !isPaid,
-            }}
-            icon={CircleQuestionMark}
-            iconTooltip="Para pagamento à vista, use 1. Para parcelado, defina o número de parcelas."
           />
-
-          <Button onPress={onSubmit} disabled={isPending}>
-            <Text className="text-primary-foreground font-semibold">
-              {isPending ? 'Salvando...' : 'Salvar Pagamento'}
-            </Text>
-          </Button>
         </View>
       </ScrollView>
+
+      <View className="p-4 bg-background border-t border-border">
+        <Button onPress={onSubmit} disabled={isPending}>
+          <Text className="text-primary-foreground font-semibold">
+            {isPending ? 'Salvando...' : 'Salvar Pagamento'}
+          </Text>
+        </Button>
+      </View>
     </SafeAreaView>
   )
 }

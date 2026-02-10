@@ -2,6 +2,7 @@ import { paymentOrderHooks } from '@/src/application/hooks/payment-order.hooks'
 import { workOrderHooks } from '@/src/application/hooks/work-order.hooks'
 import { Alert, AlertDescription, AlertTitle } from '@/src/components/ui/alert'
 import { Button } from '@/src/components/ui/button'
+import { DatePickerInput } from '@/src/components/ui/date-picker-input'
 import { BaseForm } from '@/src/components/ui/forms/base-form'
 import { Masks } from '@/src/components/ui/masks'
 import { Text } from '@/src/components/ui/text'
@@ -14,7 +15,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
 import { CircleQuestionMark, CreditCard, Info } from 'lucide-react-native'
 import { useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { ScrollView, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import uuid from 'react-native-uuid'
@@ -38,12 +39,14 @@ export default function WorkOrderPaymentCreateScreen() {
       installments: 1,
       isPaid: false,
       paidInstallments: 0,
+      paymentDate: undefined,
     },
     mode: 'onBlur',
   })
 
   const installments = form.watch('installments')
   const isPaid = form.watch('isPaid')
+  const paymentDate = form.watch('paymentDate')
 
   // Calcular total baseado nos produtos do resultado (se existir)
   useEffect(() => {
@@ -64,13 +67,17 @@ export default function WorkOrderPaymentCreateScreen() {
     }
   }, [workOrder])
 
-  // Se marcar como pago, força parcelas = 1 e paidInstallments = 1
+  // Se marcar como pago, força parcelas = 1, paidInstallments = 1 e data para hoje se não houver
   useEffect(() => {
     if (isPaid) {
       form.setValue('installments', 1)
       form.setValue('paidInstallments', 1)
+      // Se não houver data de pagamento, define como hoje
+      if (!paymentDate) {
+        form.setValue('paymentDate', new Date() as any)
+      }
     }
-  }, [isPaid, form])
+  }, [isPaid])
 
   // Se mudar parcelas para > 1, desmarca isPaid
   useEffect(() => {
@@ -80,6 +87,33 @@ export default function WorkOrderPaymentCreateScreen() {
     }
   }, [installments, isPaid, form])
 
+  // Se a data de pagamento for futura, desmarca isPaid
+  useEffect(() => {
+    if (paymentDate && isPaid) {
+      const selectedDate =
+        paymentDate instanceof Date ? paymentDate : new Date(paymentDate)
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      selectedDate.setHours(0, 0, 0, 0)
+
+      if (selectedDate > today) {
+        form.setValue('isPaid', false)
+        form.setValue('paidInstallments', 0)
+      }
+    }
+  }, [paymentDate])
+
+  // Verificar se a data de pagamento é futura
+  const isPaymentDateFuture = () => {
+    if (!paymentDate) return false
+    const selectedDate =
+      paymentDate instanceof Date ? paymentDate : new Date(paymentDate)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    selectedDate.setHours(0, 0, 0, 0)
+    return selectedDate > today
+  }
+
   const onSubmit = form.handleSubmit(async (data) => {
     try {
       // 1. Criar payment order
@@ -88,9 +122,14 @@ export default function WorkOrderPaymentCreateScreen() {
         id: paymentOrderId,
         method: data.method,
         totalValue: data.totalValue,
-        installments: data.installments,
+        installments: Number(data.installments),
         isPaid: data.isPaid ?? false,
-        paidInstallments: data.paidInstallments ?? 0,
+        paidInstallments: Number(data.paidInstallments ?? 0),
+        paymentDate: data.paymentDate
+          ? data.paymentDate instanceof Date
+            ? data.paymentDate.toISOString()
+            : data.paymentDate
+          : null,
       })
       // 2. Associar payment order à work order
       await (updateWorkOrderWithPayment as any)([params.id, paymentOrderId])
@@ -205,6 +244,20 @@ export default function WorkOrderPaymentCreateScreen() {
             icon={CreditCard}
           />
 
+          <DatePickerInput
+            value={
+              form.watch('paymentDate')
+                ? typeof form.watch('paymentDate') === 'string'
+                  ? new Date(form.watch('paymentDate')!)
+                  : (form.watch('paymentDate') as Date)
+                : undefined
+            }
+            onDateChange={(date) => form.setValue('paymentDate', date as any)}
+            label="Data de Pagamento (Opcional)"
+            placeholder="Selecione a data de pagamento"
+            error={getErrorMessage(form.formState.errors?.paymentDate?.message)}
+          />
+
           <BaseForm.Input.Currency
             control={form.control}
             name="totalValue"
@@ -222,7 +275,9 @@ export default function WorkOrderPaymentCreateScreen() {
                 ? 'Pagamento à vista foi marcado como realizado. O número de parcelas foi definido como 1.'
                 : (installments || 1) > 1
                   ? `Pagamento parcelado em ${installments}x. Você poderá marcar cada parcela como paga posteriormente.`
-                  : 'Marque "Pagamento à Vista Realizado" se o valor foi pago à vista, ou defina o número de parcelas para pagamento parcelado.'}
+                  : isPaymentDateFuture()
+                    ? 'A data de pagamento está no futuro. Pagamentos futuros não podem ser marcados como realizados.'
+                    : 'Marque "Pagamento à Vista Realizado" se o valor foi pago à vista, ou defina o número de parcelas para pagamento parcelado.'}
             </AlertDescription>
           </Alert>
 
@@ -231,44 +286,73 @@ export default function WorkOrderPaymentCreateScreen() {
               control={form.control}
               name="isPaid"
               label="Pagamento à Vista Realizado"
+              inputProps={{ disabled: isPaymentDateFuture() }}
             />
           ) : (
-            <BaseForm.Input
+            <Controller
               control={form.control}
               name="paidInstallments"
-              label="Parcelas Pagas"
-              placeholder="0"
-              error={getErrorMessage(
-                form.formState.errors?.paidInstallments?.message
+              render={({ field: { onChange, value } }) => (
+                <BaseForm.Input
+                  control={form.control}
+                  name="paidInstallments"
+                  label="Parcelas Pagas"
+                  placeholder="0"
+                  error={getErrorMessage(
+                    form.formState.errors?.paidInstallments?.message
+                  )}
+                  inputProps={{
+                    keyboardType: 'numeric',
+                    value: String(value || ''),
+                    onChangeText: (text: string) => {
+                      const num = text === '' ? 0 : Number(text)
+                      if (!isNaN(num)) onChange(num)
+                    },
+                  }}
+                  icon={CircleQuestionMark}
+                />
               )}
-              inputProps={{ keyboardType: 'numeric' }}
-              icon={CircleQuestionMark}
             />
           )}
 
-          <BaseForm.Input
+          <Controller
             control={form.control}
             name="installments"
-            label="Número de Parcelas"
-            placeholder={isPaid ? '1' : 'Ex: 1 (à vista) ou mais (parcelado)'}
-            error={getErrorMessage(
-              form.formState.errors?.installments?.message
+            render={({ field: { onChange, value } }) => (
+              <BaseForm.Input
+                control={form.control}
+                name="installments"
+                label="Número de Parcelas"
+                placeholder={
+                  isPaid ? '1' : 'Ex: 1 (à vista) ou mais (parcelado)'
+                }
+                error={getErrorMessage(
+                  form.formState.errors?.installments?.message
+                )}
+                inputProps={{
+                  keyboardType: 'numeric',
+                  editable: !isPaid,
+                  value: String(value || ''),
+                  onChangeText: (text: string) => {
+                    const num = text === '' ? 1 : Number(text)
+                    if (!isNaN(num)) onChange(num)
+                  },
+                }}
+                icon={CircleQuestionMark}
+                iconTooltip="Para pagamento à vista, use 1. Para parcelado, defina o número de parcelas."
+              />
             )}
-            inputProps={{
-              keyboardType: 'numeric',
-              editable: !isPaid,
-            }}
-            icon={CircleQuestionMark}
-            iconTooltip="Para pagamento à vista, use 1. Para parcelado, defina o número de parcelas."
           />
-
-          <Button onPress={onSubmit} disabled={isPending}>
-            <Text className="text-primary-foreground font-semibold">
-              {isPending ? 'Salvando...' : 'Salvar Pagamento'}
-            </Text>
-          </Button>
         </View>
       </ScrollView>
+
+      <View className="p-4 bg-background border-t border-border">
+        <Button onPress={onSubmit} disabled={isPending}>
+          <Text className="text-primary-foreground font-semibold">
+            {isPending ? 'Salvando...' : 'Salvar Pagamento'}
+          </Text>
+        </Button>
+      </View>
     </SafeAreaView>
   )
 }
