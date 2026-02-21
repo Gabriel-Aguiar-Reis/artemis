@@ -18,7 +18,10 @@ import {
   WorkOrder,
   WorkOrderStatus,
 } from '@/src/domain/entities/work-order/work-order.entity'
-import { WorkOrderRepository } from '@/src/domain/repositories/work-order/work-order.repository'
+import {
+  PaginatedWorkOrders,
+  WorkOrderRepository,
+} from '@/src/domain/repositories/work-order/work-order.repository'
 import {
   WorkOrderInsertDTO,
   WorkOrderUpdateDTO,
@@ -33,7 +36,7 @@ import { workOrderResultItem } from '@/src/infra/db/drizzle/schema/drizzle.work-
 import { workOrderResult } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result.schema'
 import { workOrder } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
 import { UUID } from '@/src/lib/utils'
-import { eq, isNull } from 'drizzle-orm'
+import { count, eq, isNull } from 'drizzle-orm'
 import uuid from 'react-native-uuid'
 
 export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
@@ -157,6 +160,60 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
     )
 
     return workOrders
+  }
+
+  async getWorkOrdersPaginated(
+    page: number,
+    pageSize: number
+  ): Promise<PaginatedWorkOrders> {
+    const offset = (page - 1) * pageSize
+
+    // Busca total de registros e registros da página em paralelo
+    const [rows, totalResult] = await Promise.all([
+      db
+        .select({
+          workOrder: workOrder,
+          customer: customer,
+          paymentOrder: paymentOrder,
+          result: workOrderResult,
+        })
+        .from(workOrder)
+        .leftJoin(customer, eq(workOrder.customerId, customer.id))
+        .leftJoin(paymentOrder, eq(workOrder.paymentOrderId, paymentOrder.id))
+        .leftJoin(workOrderResult, eq(workOrder.resultId, workOrderResult.id))
+        .limit(pageSize)
+        .offset(offset),
+      db.select({ count: count() }).from(workOrder),
+    ])
+
+    const totalCount = totalResult[0]?.count ?? 0
+    const hasMore = offset + rows.length < totalCount
+
+    const workOrders = await Promise.all(
+      rows.map(async (row) => {
+        if (!row.customer) {
+          throw new Error(
+            'A ordem de serviço está com dados incompletos: cliente ausente.'
+          )
+        }
+        const cust = CustomerMapper.toDomain(row.customer)
+        const po = row.paymentOrder
+          ? PaymentOrderMapper.toDomain(row.paymentOrder)
+          : undefined
+        const result = row.result
+          ? await this.loadWorkOrderResult(row.result.id as UUID)
+          : undefined
+        const items = await this.loadWorkOrderItems(row.workOrder.id as UUID)
+
+        return WorkOrderMapper.toDomain(row.workOrder, cust, items, po, result)
+      })
+    )
+
+    return {
+      data: workOrders,
+      hasMore,
+      totalCount,
+    }
   }
 
   async addWorkOrder(dto: WorkOrderInsertDTO): Promise<UUID> {

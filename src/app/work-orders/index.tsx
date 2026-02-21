@@ -1,7 +1,7 @@
+import { useWorkOrdersInfinite } from '@/src/application/hooks/use-work-orders-infinite'
 import { workOrderHooks } from '@/src/application/hooks/work-order.hooks'
 import { WhatsAppService } from '@/src/application/services/whatsapp.service'
 import { ActiveFiltersBanner } from '@/src/components/ui/active-filters-banner'
-import { BackToTopButton } from '@/src/components/ui/back-to-top-button'
 import { ButtonFilter } from '@/src/components/ui/button-filter'
 import { ButtonNew } from '@/src/components/ui/button-new'
 import { ConfirmDeleteDialog } from '@/src/components/ui/dialog/confirm-delete-dialog'
@@ -27,13 +27,8 @@ import {
   Trash2,
 } from 'lucide-react-native'
 import * as React from 'react'
-import { useMemo, useRef, useState } from 'react'
-import {
-  NativeScrollEvent,
-  NativeSyntheticEvent,
-  ScrollView,
-  View,
-} from 'react-native'
+import { useMemo, useState } from 'react'
+import { ActivityIndicator, View } from 'react-native'
 import { SheetManager } from 'react-native-actions-sheet'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
@@ -42,7 +37,9 @@ export default function WorkOrdersScreen() {
   const { createdWorkOrderId } = useLocalSearchParams<{
     createdWorkOrderId?: string
   }>()
-  const { data: workOrders, isLoading } = workOrderHooks.getWorkOrders()
+  const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
+    useWorkOrdersInfinite()
+  const { mutate: deleteWorkOrder } = workOrderHooks.deleteWorkOrder()
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<{
     id: UUID
     customerName: string
@@ -56,23 +53,18 @@ export default function WorkOrdersScreen() {
   } | null>(null)
   const [showWhatsAppDialog, setShowWhatsAppDialog] = useState(false)
 
-  const { mutate: deleteWorkOrder } = workOrderHooks.deleteWorkOrder()
-
-  // Adicionado useRef e useState para ScrollView e botão de voltar ao topo
-  const scrollRef = useRef<ScrollView>(null)
-  const [showScrollBtn, setShowScrollBtn] = useState(false)
-
-  const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const offsetY = e.nativeEvent.contentOffset.y
-    setShowScrollBtn(offsetY > 0)
-  }
+  // Combina todas as páginas de work orders em um único array
+  const allWorkOrders = useMemo(() => {
+    if (!data?.pages) return []
+    return data.pages.flatMap((page) => page.data)
+  }, [data])
 
   // Detectar quando uma work order foi criada e mostrar o dialog do WhatsApp
   React.useEffect(() => {
-    if (createdWorkOrderId && workOrders) {
+    if (createdWorkOrderId && allWorkOrders) {
       setShowWhatsAppDialog(true)
     }
-  }, [createdWorkOrderId, workOrders])
+  }, [createdWorkOrderId, allWorkOrders])
 
   const params = useLocalSearchParams<{
     search?: string // customer store name or contact name
@@ -255,7 +247,7 @@ export default function WorkOrdersScreen() {
 
   // Função para enviar mensagem do WhatsApp
   const handleSendWhatsApp = () => {
-    if (!createdWorkOrderId || !workOrders) {
+    if (!createdWorkOrderId || !allWorkOrders) {
       setShowWhatsAppDialog(false)
       router.setParams({ createdWorkOrderId: undefined })
       router.navigate('/work-orders', { dangerouslySingular: true })
@@ -264,7 +256,7 @@ export default function WorkOrdersScreen() {
 
     try {
       // Buscar a work order criada
-      const workOrder = workOrders.find((wo) => wo.id === createdWorkOrderId)
+      const workOrder = allWorkOrders.find((wo) => wo.id === createdWorkOrderId)
 
       if (!workOrder) {
         throw new Error('Ordem de serviço não encontrada')
@@ -297,8 +289,8 @@ export default function WorkOrdersScreen() {
   }
 
   const filteredWorkOrders = useMemo(() => {
-    if (!workOrders) return []
-    return workOrders.filter((wo) => {
+    if (!allWorkOrders) return []
+    return allWorkOrders.filter((wo: WorkOrder) => {
       const matchesSearch = params.search
         ? smartSearch(wo.customer.storeName, params.search)
         : true
@@ -373,7 +365,7 @@ export default function WorkOrdersScreen() {
       )
     })
   }, [
-    workOrders,
+    allWorkOrders,
     params.search,
     params.phoneNumber,
     params.landlineNumber,
@@ -479,13 +471,34 @@ export default function WorkOrdersScreen() {
     params.isCopied,
   ])
 
+  const handleLoadMore = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage()
+    }
+  }
+
+  const renderFooter = () => {
+    if (!isFetchingNextPage) return <View className="h-4" />
+    return (
+      <View className="py-4 items-center">
+        <ActivityIndicator size="small" />
+        <Text className="text-sm text-muted-foreground mt-2">
+          Carregando mais ordens...
+        </Text>
+      </View>
+    )
+  }
+
   if (isLoading) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center">
-        <Text>Carregando ordens de serviço...</Text>
+        <ActivityIndicator size="large" />
+        <Text className="mt-4">Carregando ordens de serviço...</Text>
       </SafeAreaView>
     )
   }
+
+  const totalWorkOrders = data?.pages[0]?.totalCount ?? 0
 
   return (
     <SafeAreaView className="flex-1">
@@ -508,7 +521,7 @@ export default function WorkOrdersScreen() {
           ),
         }}
       />
-      {!workOrders || workOrders.length === 0 ? (
+      {totalWorkOrders === 0 ? (
         <View className="flex-1 items-center justify-center px-4">
           <Text className="text-center text-muted-foreground">
             Nenhuma ordem de serviço cadastrada.{' \n'}
@@ -516,41 +529,33 @@ export default function WorkOrdersScreen() {
           </Text>
         </View>
       ) : (
-        <>
+        <View className="flex-1">
           <ActiveFiltersBanner
             filters={activeFilters}
             clearFiltersHref="/work-orders"
           />
-          <ScrollView
-            className="flex-1"
-            ref={scrollRef}
-            onScroll={handleScroll}
-            scrollEventThrottle={16}
-          >
-            <View className="gap-3 p-4">
-              {filteredWorkOrders.length === 0 ? (
-                <View className="items-center py-12">
-                  <Text className="text-center text-muted-foreground">
-                    Nenhum produto encontrado com os filtros aplicados.
-                  </Text>
-                </View>
-              ) : (
-                <FlashList
-                  data={filteredWorkOrders}
-                  renderItem={({ item }) => (
-                    <WorkOrderCard
-                      wo={item}
-                      onPress={() => handleWorkOrderOptions(item)}
-                    />
-                  )}
-                  ListFooterComponent={<View className="h-16" />}
-                />
-              )}
+          {filteredWorkOrders.length === 0 ? (
+            <View className="flex-1 items-center justify-center px-4">
+              <Text className="text-center text-muted-foreground">
+                Nenhuma ordem encontrada com os filtros aplicados.
+              </Text>
             </View>
-          </ScrollView>
-
-          {/* Botão de voltar ao topo */}
-          <BackToTopButton isVisible={showScrollBtn} scrollRef={scrollRef} />
+          ) : (
+            <View className="flex-1 px-4">
+              <FlashList
+                data={filteredWorkOrders}
+                renderItem={({ item }) => (
+                  <WorkOrderCard
+                    wo={item as WorkOrder}
+                    onPress={() => handleWorkOrderOptions(item as WorkOrder)}
+                  />
+                )}
+                onEndReached={handleLoadMore}
+                onEndReachedThreshold={0.5}
+                ListFooterComponent={renderFooter}
+              />
+            </View>
+          )}
 
           {selectedWorkOrder && (
             <ConfirmDeleteDialog
@@ -580,7 +585,7 @@ export default function WorkOrdersScreen() {
             onConfirm={handleSendWhatsApp}
             onCancel={handleCancelWhatsApp}
           />
-        </>
+        </View>
       )}
     </SafeAreaView>
   )

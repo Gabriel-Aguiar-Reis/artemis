@@ -7,8 +7,18 @@ import {
 } from '@/src/domain/validations/work-order.schema'
 import { UUID } from '@/src/lib/utils'
 
+export type PaginatedWorkOrders = {
+  data: WorkOrder[]
+  hasMore: boolean
+  totalCount: number
+}
+
 export abstract class WorkOrderRepository {
   abstract getWorkOrders: () => Promise<WorkOrder[]>
+  abstract getWorkOrdersPaginated: (
+    page: number,
+    pageSize: number
+  ) => Promise<PaginatedWorkOrders>
   abstract getWorkOrdersByDateRange: (
     startDate: Date,
     endDate: Date
