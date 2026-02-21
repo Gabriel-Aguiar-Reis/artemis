@@ -3,7 +3,10 @@ import { CustomerMapper } from '@/src/domain/entities/customer/mapper/customer.m
 import { Address } from '@/src/domain/entities/customer/value-objects/address.vo'
 import { LandlinePhoneNumber } from '@/src/domain/entities/customer/value-objects/landline-phone-number.vo'
 import { SmartphoneNumber } from '@/src/domain/entities/customer/value-objects/smartphone-number.vo'
-import { CustomerRepository } from '@/src/domain/repositories/customer/customer.repository'
+import {
+  CustomerRepository,
+  PaginatedCustomers,
+} from '@/src/domain/repositories/customer/customer.repository'
 import {
   CustomerInsertDTO,
   CustomerUpdateDTO,
@@ -11,7 +14,7 @@ import {
 import { db } from '@/src/infra/db/drizzle/drizzle-client'
 import { customer } from '@/src/infra/db/drizzle/schema/drizzle.customer.schema'
 import { UUID } from '@/src/lib/utils'
-import { eq } from 'drizzle-orm'
+import { count, eq } from 'drizzle-orm'
 import uuid from 'react-native-uuid'
 
 export default class DrizzleCustomerRepository implements CustomerRepository {
@@ -21,6 +24,28 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
       return []
     }
     return rows.map(CustomerMapper.toDomain)
+  }
+
+  async getCustomersPaginated(
+    page: number,
+    pageSize: number
+  ): Promise<PaginatedCustomers> {
+    const offset = (page - 1) * pageSize
+
+    // Busca total de registros e registros da página em paralelo
+    const [rows, totalResult] = await Promise.all([
+      db.select().from(customer).limit(pageSize).offset(offset),
+      db.select({ count: count() }).from(customer),
+    ])
+
+    const totalCount = totalResult[0]?.count ?? 0
+    const hasMore = offset + rows.length < totalCount
+
+    return {
+      data: rows.map(CustomerMapper.toDomain),
+      hasMore,
+      totalCount,
+    }
   }
 
   async addCustomer(dto: CustomerInsertDTO): Promise<void> {
