@@ -4,7 +4,7 @@
   "version": "1.1.3",
   "scripts": {
     "dev": "expo start -c",
-    "android": "expo start -c --android",
+    "android": "./start-android.sh",
     "ios": "expo start -c --ios",
     "web": "expo start -c --web",
     "clean": "rm -rf .expo node_modules",
