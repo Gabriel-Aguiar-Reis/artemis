@@ -71,12 +71,22 @@ vi.mock('drizzle-orm', async () => {
   }
 })
 
-const writeAsStringAsync = vi.fn(async (path: string, contents: string) => {
-  fileContents.set(path, contents)
-})
+class MockDirectory {
+  constructor(public uri: string) {}
+}
 
 class MockFile {
-  constructor(private readonly uri: string) {}
+  public uri: string
+
+  constructor(uriOrDirectory: MockDirectory | string, filename?: string) {
+    if (typeof uriOrDirectory === 'string') {
+      // Called as new File(uri)
+      this.uri = uriOrDirectory
+    } else {
+      // Called as new File(directory, filename)
+      this.uri = `${uriOrDirectory.uri}${filename}`
+    }
+  }
 
   async text() {
     if (!fileContents.has(this.uri)) {
@@ -84,12 +94,26 @@ class MockFile {
     }
     return fileContents.get(this.uri)!
   }
+
+  async create() {
+    // No-op for tests
+  }
+
+  async write(contents: string) {
+    fileContents.set(this.uri, contents)
+  }
 }
 
-const fsModule: any = {
+const fsLegacyModule: any = {
   cacheDirectory: '/cache/',
   documentDirectory: '/docs/',
-  writeAsStringAsync,
+}
+fsLegacyModule.__esModule = true
+fsLegacyModule.default = fsLegacyModule
+
+vi.mock('expo-file-system/legacy', () => fsLegacyModule)
+
+const fsModule: any = {
   File: MockFile,
 }
 fsModule.__esModule = true
@@ -277,8 +301,8 @@ beforeAll(async () => {
 beforeEach(() => {
   vi.clearAllMocks()
   fileContents.clear()
-  fsModule.cacheDirectory = '/cache/'
-  fsModule.documentDirectory = '/docs/'
+  fsLegacyModule.cacheDirectory = '/cache/'
+  fsLegacyModule.documentDirectory = '/docs/'
 })
 
 describe('dump.service', () => {
@@ -298,7 +322,7 @@ describe('dump.service', () => {
     sharingModule.isAvailableAsync.mockResolvedValueOnce(true)
 
     const path = await saveDumpJsonToTempAndShare()
-    const savedJson = writeAsStringAsync.mock.calls[0][1]
+    const savedJson = fileContents.get(path)!
     const parsed = JSON.parse(savedJson)
 
     expect(path).toBe('/cache/artemis-dump.json')
@@ -313,16 +337,15 @@ describe('dump.service', () => {
     )
   })
 
-  it('saveDumpJsonToTempAndShare uses fallback path when sharing is unavailable', async () => {
+  it('saveDumpJsonToTempAndShare throws when no directory is available', async () => {
     seedFullRows()
-    fsModule.cacheDirectory = undefined
-    fsModule.documentDirectory = undefined
+    fsLegacyModule.cacheDirectory = null
+    fsLegacyModule.documentDirectory = null
     sharingModule.isAvailableAsync.mockResolvedValueOnce(false)
 
-    const path = await saveDumpJsonToTempAndShare()
-
-    expect(path).toBe('/artemis-dump.json')
-    expect(sharingModule.shareAsync).not.toHaveBeenCalled()
+    await expect(saveDumpJsonToTempAndShare()).rejects.toThrow(
+      'No writable directory available'
+    )
   })
 
   it('pickDumpJson returns null when selection is canceled', async () => {

@@ -45,8 +45,8 @@ import {
 } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
 import { eq } from 'drizzle-orm'
 import * as DocumentPicker from 'expo-document-picker'
-import * as FS from 'expo-file-system'
 import { File } from 'expo-file-system'
+import * as FS from 'expo-file-system/legacy'
 import * as Sharing from 'expo-sharing'
 
 export type ArtemisDump = {
@@ -103,11 +103,17 @@ export async function buildDumpJsonString(): Promise<string> {
 
 export async function saveDumpJsonToTempAndShare(): Promise<string> {
   const json = await buildDumpJsonString()
-  // Use a known writable path; fall back to app root if types don't expose constants
-  const baseDir =
-    (FS as any).cacheDirectory ?? (FS as any).documentDirectory ?? '/'
+  // Use legacy API to get the cache directory path
+  const baseDir = FS.cacheDirectory ?? FS.documentDirectory
+  if (!baseDir) {
+    throw new Error('No writable directory available')
+  }
   const targetPath = `${baseDir}artemis-dump.json`
-  await FS.writeAsStringAsync(targetPath, json)
+  // Use new File API to write
+  const file = new File(targetPath)
+  await file.create()
+  await file.write(json)
+
   if (await Sharing.isAvailableAsync()) {
     await Sharing.shareAsync(targetPath, {
       mimeType: 'application/json',
