@@ -30,25 +30,25 @@ export default function PaymentEditScreen() {
     resolver: zodResolver(paymentOrderUpdateSchema),
     defaultValues: {
       method: '',
-      totalValue: 0,
-      installments: 1,
+      totalValue: '0',
+      installments: '1',
       isPaid: false,
-      paidInstallments: 0,
+      paidInstallments: '0',
       paymentDate: undefined,
     },
     mode: 'onBlur',
   })
 
-  const installments = form.watch('installments')
+  const installments = Number(form.watch('installments')) || 1
   const isPaid = form.watch('isPaid')
-  const paidInstallments = form.watch('paidInstallments')
+  const paidInstallments = Number(form.watch('paidInstallments')) || 0
   const paymentDate = form.watch('paymentDate')
 
   // Se marcar como pago, força parcelas = 1, paidInstallments = 1 e data para hoje se não houver
   useEffect(() => {
     if (isPaid) {
-      form.setValue('installments', 1)
-      form.setValue('paidInstallments', 1)
+      form.setValue('installments', '1')
+      form.setValue('paidInstallments', '1')
       // Se não houver data de pagamento, define como hoje
       if (!paymentDate) {
         form.setValue('paymentDate', new Date() as any)
@@ -74,7 +74,7 @@ export default function PaymentEditScreen() {
 
       if (selectedDate > today) {
         form.setValue('isPaid', false)
-        form.setValue('paidInstallments', 0)
+        form.setValue('paidInstallments', '0')
       }
     }
   }, [paymentDate])
@@ -97,16 +97,16 @@ export default function PaymentEditScreen() {
       await updatePayment({
         id: workOrder.paymentOrder.id,
         method: data.method,
-        totalValue: Number(data.totalValue),
-        installments: Number(data.installments),
+        totalValue: Number(data.totalValue) || 0,
+        installments: Number(data.installments) || 1,
         isPaid: data.isPaid ?? false,
-        paidInstallments: Number(data.paidInstallments),
+        paidInstallments: Number(data.paidInstallments) || 0,
         paymentDate: data.paymentDate
           ? data.paymentDate instanceof Date
             ? data.paymentDate.toISOString()
             : data.paymentDate
           : null,
-      })
+      } as any)
       router.back()
     } catch (error) {
       console.error('Erro ao atualizar pagamento:', error)
@@ -118,10 +118,10 @@ export default function PaymentEditScreen() {
 
     form.reset({
       method: workOrder.paymentOrder.method,
-      totalValue: workOrder.paymentOrder.totalValue,
-      installments: workOrder.paymentOrder.installments,
+      totalValue: workOrder.paymentOrder.totalValue.toString(),
+      installments: workOrder.paymentOrder.installments.toString(),
       isPaid: workOrder.paymentOrder.isPaid,
-      paidInstallments: workOrder.paymentOrder.paidInstallments,
+      paidInstallments: workOrder.paymentOrder.paidInstallments.toString(),
       paymentDate: workOrder.paymentOrder.paymentDate
         ? (new Date(workOrder.paymentOrder.paymentDate) as any)
         : undefined,

@@ -4,9 +4,17 @@ import { useInfiniteQuery } from '@tanstack/react-query'
 const customerRepo = new DrizzleCustomerRepository()
 const PAGE_SIZE = 50
 
-export const useCustomersInfinite = () => {
+export interface CustomerFilters {
+  search?: string
+  contactName?: string
+  phoneNumber?: string
+  landlineNumber?: string
+  isActiveWhatsApp?: string
+}
+
+export const useCustomersInfinite = (filters?: CustomerFilters) => {
   return useInfiniteQuery({
-    queryKey: ['customers', 'infinite'],
+    queryKey: ['customers', 'infinite', filters],
     queryFn: async ({ pageParam = 1 }) => {
       const result = await customerRepo.getCustomersPaginated(
         pageParam,

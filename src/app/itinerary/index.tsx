@@ -5,8 +5,8 @@ import { ActiveFiltersBanner } from '@/src/components/ui/active-filters-banner'
 import { BackToTopButton } from '@/src/components/ui/back-to-top-button'
 import { ButtonFilter } from '@/src/components/ui/button-filter'
 import { ButtonFinish } from '@/src/components/ui/button-finish'
+import { ButtonHistory } from '@/src/components/ui/button-history'
 import { ButtonNew } from '@/src/components/ui/button-new'
-import { ButtonReorder } from '@/src/components/ui/button-reorder'
 import { NotesDialog } from '@/src/components/ui/dialog/notes-dialog'
 import { Icon } from '@/src/components/ui/icon'
 import { Text } from '@/src/components/ui/text'
@@ -374,20 +374,25 @@ export default function ItineraryScreen() {
             headerTitle: 'Itinerário',
             headerRight: () => (
               <View className="flex-row gap-2">
-                {itinerary && <ButtonReorder href="/itinerary/reorder" />}
-                <ButtonFilter
-                  href={{
-                    pathname: '/itinerary/search',
-                    params: { ...params },
-                  }}
-                  isActive={hasActiveFilters}
-                />
+                {itinerary && (
+                  <ButtonFilter
+                    href={{
+                      pathname: '/itinerary/search',
+                      params: { ...params },
+                    }}
+                    isActive={hasActiveFilters}
+                  />
+                )}
                 {itinerary && !itinerary.isFinished ? (
                   <ButtonFinish href="/itinerary/finish" />
+                ) : !itinerary ? (
+                  <>
+                    <ButtonHistory href="/itinerary/history" />
+                    <ButtonNew href="/itinerary/form" />
+                  </>
                 ) : (
                   <ButtonNew href="/itinerary/form" />
                 )}
-                {/* Novo botão para editar ordenação */}
               </View>
             ),
           }}

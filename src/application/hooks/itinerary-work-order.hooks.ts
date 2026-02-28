@@ -1,7 +1,10 @@
 import { createRepositoryHooks } from '@/src/application/hooks/create-repository-hooks'
 import { useInvalidateQueries } from '@/src/application/hooks/use-invalidate-queries'
 import { ItineraryWorkOrder } from '@/src/domain/entities/itinerary-work-order/itinerary-work-order.entity'
-import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
+import {
+  WorkOrder,
+  WorkOrderStatus,
+} from '@/src/domain/entities/work-order/work-order.entity'
 import { DrizzleItineraryWorkOrderRepository } from '@/src/infra/repositories/drizzle/drizzle.itinerary-work-order.repository'
 import DrizzleItineraryRepository from '@/src/infra/repositories/drizzle/drizzle.itinerary.repository'
 import { UUID } from '@/src/lib/utils'
@@ -50,6 +53,11 @@ export function useAutoAddWorkOrderToItinerary() {
       if (!isInPeriod) {
         // Data fora do período, não adiciona
         return { added: false, reason: 'date-out-of-range' }
+      }
+
+      // Verificar se a ordem está expirada
+      if (workOrder.status === WorkOrderStatus.EXPIRED) {
+        return { added: false, reason: 'expired' }
       }
 
       // Verificar se já não está no itinerário

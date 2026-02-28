@@ -33,10 +33,6 @@ import { SheetManager } from 'react-native-actions-sheet'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function CustomersScreen() {
-  const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
-    useCustomersInfinite()
-  const { mutate: deleteCustomer } = customerHooks.deleteCustomer()
-
   const params = useLocalSearchParams<{
     search?: string
     contactName?: string
@@ -44,6 +40,18 @@ export default function CustomersScreen() {
     landlineNumber?: string
     isActiveWhatsApp?: string
   }>()
+
+  const filters = {
+    search: params.search,
+    contactName: params.contactName,
+    phoneNumber: params.phoneNumber,
+    landlineNumber: params.landlineNumber,
+    isActiveWhatsApp: params.isActiveWhatsApp,
+  }
+
+  const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
+    useCustomersInfinite(filters)
+  const { mutate: deleteCustomer } = customerHooks.deleteCustomer()
 
   // Combina todas as páginas de clientes em um único array
   const allCustomers = useMemo(() => {

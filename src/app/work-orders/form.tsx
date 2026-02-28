@@ -100,10 +100,11 @@ const workOrderFormSchema = z
 
     // Campos da PaymentOrder (condicionalmente obrigatórios)
     method: z.string().optional(),
-    totalValue: z.number().nonnegative().optional(),
-    installments: z.number().int().positive().optional(),
+    totalValue: z.string().optional(),
+    installments: z.string().optional(),
     isPaid: z.boolean().optional(),
-    paidInstallments: z.number().int().nonnegative().optional(),
+    paidInstallments: z.string().optional(),
+    paymentDate: z.union([z.date(), z.string()]).optional().nullable(),
 
     // Flags de controle do fluxo
     shouldCreateReport: z.boolean().optional(),
@@ -158,8 +159,9 @@ export default function WorkOrderFormScreen() {
       addedProducts: [],
       removedProducts: [],
       method: '',
-      installments: 1,
+      installments: '1',
       isPaid: false,
+      paymentDate: undefined,
     },
     mode: 'onBlur',
     reValidateMode: 'onBlur',
@@ -365,14 +367,19 @@ export default function WorkOrderFormScreen() {
       // 3. CRIAR ORDEM DE PAGAMENTO (se shouldCreatePayment = true)
       if (data.shouldCreatePayment) {
         // Usar totalValue do result se existir, senão calcular dos produtos
-        let paymentTotal = data.totalValue || 0
+        let paymentTotal = Number(data.totalValue) || 0
 
         const paymentOrderId = await addPaymentOrder({
           method: data.method || 'Dinheiro',
-          totalValue: paymentTotal,
-          installments: data.installments || 1,
+          totalValue: paymentTotal.toString(),
+          installments: data.installments || '1',
           isPaid: data.isPaid || false,
-          paidInstallments: data.isPaid ? data.installments || 1 : 0,
+          paidInstallments: data.isPaid ? (Number(data.installments) || 1).toString() : '0',
+          paymentDate: data.paymentDate
+            ? data.paymentDate instanceof Date
+              ? data.paymentDate.toISOString()
+              : data.paymentDate
+            : null,
         })
 
         // Vincular PaymentOrder à WorkOrder
@@ -404,13 +411,18 @@ export default function WorkOrderFormScreen() {
   const onSubmit = form.handleSubmit(onSubmitFinal)
 
   // Observar mudanças para condicionar visibilidade de campos
-  const installments = form.watch('installments')
+  const installments = Number(form.watch('installments')) || 1
   const isPaid = form.watch('isPaid')
+  const paymentDate = form.watch('paymentDate')
 
-  // Se marcar como pago, força parcelas = 1
+  // Se marcar como pago, força parcelas = 1 e data para hoje se não houver
   React.useEffect(() => {
     if (isPaid) {
-      form.setValue('installments', 1)
+      form.setValue('installments', '1')
+      // Se não houver data de pagamento, define como hoje
+      if (!paymentDate) {
+        form.setValue('paymentDate', new Date() as any)
+      }
     }
   }, [isPaid, form])
 
@@ -420,6 +432,22 @@ export default function WorkOrderFormScreen() {
       form.setValue('isPaid', false)
     }
   }, [installments, isPaid, form])
+
+  // Se a data de pagamento for futura, desmarca isPaid
+  React.useEffect(() => {
+    if (paymentDate && isPaid) {
+      const selectedDate =
+        paymentDate instanceof Date ? paymentDate : new Date(paymentDate)
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      selectedDate.setHours(0, 0, 0, 0)
+
+      if (selectedDate > today) {
+        form.setValue('isPaid', false)
+        form.setValue('paidInstallments', '0')
+      }
+    }
+  }, [paymentDate])
 
   return (
     <WorkOrderFormCreate
@@ -724,8 +752,9 @@ export default function WorkOrderFormScreen() {
               )
 
             // Atualizar totalValue no formulário (sem useEffect)
-            if (form.getValues('totalValue') !== totalValue) {
-              form.setValue('totalValue', totalValue, {
+            const currentTotal = Number(form.getValues('totalValue')) || 0
+            if (currentTotal !== totalValue) {
+              form.setValue('totalValue', totalValue.toString(), {
                 shouldValidate: false,
               })
             }
@@ -803,6 +832,24 @@ export default function WorkOrderFormScreen() {
                   icon={CreditCard}
                   error={getErrorMessage(
                     form.formState.errors?.method?.message
+                  )}
+                />
+
+                <DatePickerInput
+                  value={
+                    form.watch('paymentDate')
+                      ? typeof form.watch('paymentDate') === 'string'
+                        ? new Date(form.watch('paymentDate')!)
+                        : (form.watch('paymentDate') as Date)
+                      : undefined
+                  }
+                  onDateChange={(date) =>
+                    form.setValue('paymentDate', date as any)
+                  }
+                  label="Data de Pagamento (Opcional)"
+                  placeholder="Selecione a data de pagamento"
+                  error={getErrorMessage(
+                    form.formState.errors?.paymentDate?.message
                   )}
                 />
 

@@ -1,5 +1,15 @@
 import { itineraryWorkOrderHooks } from '@/src/application/hooks/itinerary-work-order.hooks'
 import { itineraryHooks } from '@/src/application/hooks/itinerary.hooks'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/src/components/ui/alert-dialog'
 import { Button } from '@/src/components/ui/button'
 import {
   Card,
@@ -19,6 +29,7 @@ import {
   Clock,
   DollarSign,
   FileText,
+  Trash2,
 } from 'lucide-react-native'
 import React, { useMemo, useState } from 'react'
 import { ActivityIndicator, ScrollView, View } from 'react-native'
@@ -34,8 +45,10 @@ export default function ItineraryFinishScreen() {
 
   const { mutate: updateFinishItinerary } =
     itineraryHooks.updateFinishItinerary()
+  const { mutate: deleteItinerary } = itineraryHooks.deleteItinerary()
 
   const [isFinishing, setIsFinishing] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   // Calcular estatísticas
   const stats = useMemo(() => {
@@ -115,6 +128,13 @@ export default function ItineraryFinishScreen() {
 
   const handleCancel = () => {
     router.back()
+  }
+
+  const handleDeleteItinerary = () => {
+    if (!itinerary) return
+    deleteItinerary(itinerary.id)
+    setDeleteDialogOpen(false)
+    router.replace('/itinerary')
   }
 
   return (
@@ -333,12 +353,47 @@ export default function ItineraryFinishScreen() {
                 onPress={handleCancel}
                 disabled={isFinishing}
               >
-                <Text>Cancelar</Text>
+                <Text>Voltar</Text>
+              </Button>
+              <Button
+                variant="destructive"
+                onPress={() => setDeleteDialogOpen(true)}
+                disabled={isFinishing}
+              >
+                <Icon
+                  as={Trash2}
+                  size={18}
+                  className="text-destructive-foreground mr-2"
+                />
+                <Text className="text-destructive-foreground">
+                  Cancelar Itinerário
+                </Text>
               </Button>
             </View>
           </View>
         </ScrollView>
       )}
+
+      {/* Dialog de confirmação de exclusão */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancelar Itinerário</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja cancelar este itinerário? Esta ação é
+              irreversível e todas as informações do itinerário serão perdidas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              <Text>Não</Text>
+            </AlertDialogCancel>
+            <AlertDialogAction onPress={handleDeleteItinerary}>
+              <Text>Sim, Cancelar</Text>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </SafeAreaView>
   )
 }

@@ -36,7 +36,7 @@ import { workOrderResultItem } from '@/src/infra/db/drizzle/schema/drizzle.work-
 import { workOrderResult } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result.schema'
 import { workOrder } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
 import { UUID } from '@/src/lib/utils'
-import { count, eq, isNull } from 'drizzle-orm'
+import { and, count, eq, gte, isNull, lte, ne } from 'drizzle-orm'
 import uuid from 'react-native-uuid'
 
 export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
@@ -639,7 +639,14 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
   }
 
   async getWorkOrdersByDate(date: Date): Promise<WorkOrder[]> {
-    const dateStr = date.toISOString().split('T')[0]
+    // Normalizar data para início e fim do dia
+    const startOfDay = new Date(date)
+    startOfDay.setHours(0, 0, 0, 0)
+    const endOfDay = new Date(date)
+    endOfDay.setHours(23, 59, 59, 999)
+
+    const startStr = startOfDay.toISOString()
+    const endStr = endOfDay.toISOString()
 
     const rows = await db
       .select({
@@ -650,13 +657,15 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       .from(workOrder)
       .leftJoin(customer, eq(workOrder.customerId, customer.id))
       .leftJoin(paymentOrder, eq(workOrder.paymentOrderId, paymentOrder.id))
-
-    const filtered = rows.filter((row) =>
-      row.workOrder.scheduledDate.startsWith(dateStr)
-    )
+      .where(
+        and(
+          gte(workOrder.scheduledDate, startStr),
+          lte(workOrder.scheduledDate, endStr)
+        )
+      )
 
     const workOrders = await Promise.all(
-      filtered
+      rows
         .filter((row) => row.customer)
         .map(async (row) => {
           const cust = CustomerMapper.toDomain(row.customer!)
@@ -764,6 +773,15 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
     startDate: Date,
     endDate: Date
   ): Promise<WorkOrder[]> {
+    // Normalizar datas para início e fim do dia
+    const startDateNormalized = new Date(startDate)
+    startDateNormalized.setHours(0, 0, 0, 0)
+    const endDateNormalized = new Date(endDate)
+    endDateNormalized.setHours(23, 59, 59, 999)
+
+    const startDateStr = startDateNormalized.toISOString()
+    const endDateStr = endDateNormalized.toISOString()
+
     const rows = await db
       .select({
         workOrder: workOrder,
@@ -775,15 +793,17 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       .leftJoin(customer, eq(workOrder.customerId, customer.id))
       .leftJoin(paymentOrder, eq(workOrder.paymentOrderId, paymentOrder.id))
       .leftJoin(workOrderResult, eq(workOrder.resultId, workOrderResult.id))
-      .where(isNull(workOrder.visitDate))
-
-    const filtered = rows.filter((row) => {
-      const scheduledDate = new Date(row.workOrder.scheduledDate)
-      return scheduledDate >= startDate && scheduledDate <= endDate
-    })
+      .where(
+        and(
+          isNull(workOrder.visitDate),
+          gte(workOrder.scheduledDate, startDateStr),
+          lte(workOrder.scheduledDate, endDateStr),
+          ne(workOrder.status, WorkOrderStatus.EXPIRED)
+        )
+      )
 
     const workOrders = await Promise.all(
-      filtered
+      rows
         .filter((row) => row.customer)
         .map(async (row) => {
           const cust = CustomerMapper.toDomain(row.customer!)

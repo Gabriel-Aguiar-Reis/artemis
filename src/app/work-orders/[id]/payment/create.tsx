@@ -35,16 +35,16 @@ export default function WorkOrderPaymentCreateScreen() {
     resolver: zodResolver(paymentOrderInsertSchema),
     defaultValues: {
       method: '',
-      totalValue: 0,
-      installments: 1,
+      totalValue: '0',
+      installments: '1',
       isPaid: false,
-      paidInstallments: 0,
+      paidInstallments: '0',
       paymentDate: undefined,
     },
     mode: 'onBlur',
   })
 
-  const installments = form.watch('installments')
+  const installments = Number(form.watch('installments')) || 1
   const isPaid = form.watch('isPaid')
   const paymentDate = form.watch('paymentDate')
 
@@ -63,15 +63,15 @@ export default function WorkOrderPaymentCreateScreen() {
       addedProducts.reduce((sum, p) => sum + p.priceSnapshot * p.quantity, 0)
 
     if (totalValue > 0) {
-      form.setValue('totalValue', totalValue)
+      form.setValue('totalValue', totalValue.toString())
     }
   }, [workOrder])
 
   // Se marcar como pago, força parcelas = 1, paidInstallments = 1 e data para hoje se não houver
   useEffect(() => {
     if (isPaid) {
-      form.setValue('installments', 1)
-      form.setValue('paidInstallments', 1)
+      form.setValue('installments', '1')
+      form.setValue('paidInstallments', '1')
       // Se não houver data de pagamento, define como hoje
       if (!paymentDate) {
         form.setValue('paymentDate', new Date() as any)
@@ -83,7 +83,7 @@ export default function WorkOrderPaymentCreateScreen() {
   useEffect(() => {
     if ((installments || 1) > 1 && isPaid) {
       form.setValue('isPaid', false)
-      form.setValue('paidInstallments', 0)
+      form.setValue('paidInstallments', '0')
     }
   }, [installments, isPaid, form])
 
@@ -98,7 +98,7 @@ export default function WorkOrderPaymentCreateScreen() {
 
       if (selectedDate > today) {
         form.setValue('isPaid', false)
-        form.setValue('paidInstallments', 0)
+        form.setValue('paidInstallments', '0')
       }
     }
   }, [paymentDate])
@@ -121,16 +121,16 @@ export default function WorkOrderPaymentCreateScreen() {
       await addPaymentOrder({
         id: paymentOrderId,
         method: data.method,
-        totalValue: data.totalValue,
-        installments: Number(data.installments),
+        totalValue: Number(data.totalValue) || 0,
+        installments: Number(data.installments) || 1,
         isPaid: data.isPaid ?? false,
-        paidInstallments: Number(data.paidInstallments ?? 0),
+        paidInstallments: Number(data.paidInstallments) || 0,
         paymentDate: data.paymentDate
           ? data.paymentDate instanceof Date
             ? data.paymentDate.toISOString()
             : data.paymentDate
           : null,
-      })
+      } as any)
       // 2. Associar payment order à work order
       await (updateWorkOrderWithPayment as any)([params.id, paymentOrderId])
       router.back()

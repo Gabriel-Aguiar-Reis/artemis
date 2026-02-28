@@ -28,7 +28,7 @@ export default function ProductsEditScreen() {
     defaultValues: {
       name: '',
       categoryId: undefined,
-      salePrice: undefined,
+      salePrice: '',
       isActive: true,
       expiration: undefined,
       id: params.id,
@@ -38,7 +38,12 @@ export default function ProductsEditScreen() {
   })
 
   const onSubmit = form.handleSubmit(async (data: ProductUpdateDTO) => {
-    updateProduct({ ...data, id: params.id })
+    const productData = {
+      ...data,
+      salePrice: Number(data.salePrice) || 0,
+      id: params.id,
+    }
+    updateProduct(productData as any)
     router.back()
   })
 
@@ -49,7 +54,7 @@ export default function ProductsEditScreen() {
       id: product.id as unknown as string,
       name: product.name,
       categoryId: product.categoryId as unknown as string,
-      salePrice: product.salePrice,
+      salePrice: product.salePrice.toString(),
       isActive: product.isActive,
       expiration: product.expiration.toDTO(),
     }

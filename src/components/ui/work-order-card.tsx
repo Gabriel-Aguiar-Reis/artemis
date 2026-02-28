@@ -58,21 +58,54 @@ export function WorkOrderCard({
   onPress?: () => void
   isLate?: boolean
 }) {
-  // Verificar se tem resultado mas não tem pagamento
+  // Verificar condições
   const hasResultNoPay = wo.result && !wo.paymentOrder
   const isExpired = wo.status === WorkOrderStatus.EXPIRED
   const isCopied = wo.status === WorkOrderStatus.COPIED
 
+  // Ordem de prioridade: CLONADA > S/ PGTO > EXPIRADA > ATRASADO
+  const getPriorityStatus = () => {
+    if (isCopied) {
+      return {
+        label: 'CLONADA',
+        borderClass: 'border-2 border-cyan-500',
+        badgeClass: 'bg-cyan-500/40',
+        textClass: 'text-xs font-bold text-cyan-100',
+      }
+    }
+    if (hasResultNoPay) {
+      return {
+        label: 'S/ PGTO',
+        borderClass: 'border-2 border-destructive',
+        badgeClass: 'bg-destructive/40',
+        textClass: 'text-xs font-bold text-red-100',
+      }
+    }
+    if (isExpired) {
+      return {
+        label: 'EXPIRADA',
+        borderClass: 'border-2 border-orange-500',
+        badgeClass: 'bg-orange-500/40',
+        textClass: 'text-xs font-bold text-orange-100',
+      }
+    }
+    if (isLate) {
+      return {
+        label: 'ATRASADO',
+        borderClass: 'border-2 border-warning',
+        badgeClass: 'bg-warning/40',
+        textClass: 'text-xs font-bold text-warning-foreground',
+      }
+    }
+    return null
+  }
+
+  const priorityStatus = getPriorityStatus()
+
   return (
     <ObjectCard.Root
       key={wo.id}
-      className={cn(
-        'mb-4 dark:bg-input/30',
-        isLate && 'border-2 border-warning',
-        hasResultNoPay && 'border-2 border-destructive',
-        isExpired && 'border-2 border-orange-500',
-        isCopied && 'border-2 border-cyan-500'
-      )}
+      className={cn('mb-4 dark:bg-input/30', priorityStatus?.borderClass)}
     >
       <ObjectCard.Header>
         <ObjectCard.Title>
@@ -86,28 +119,13 @@ export function WorkOrderCard({
             >
               {wo.customer.storeName}
             </Text>
-            {isLate && (
-              <View className="bg-warning/40 rounded-full px-2 py-0.5">
-                <Text className="text-xs font-bold text-warning-foreground">
-                  ATRASADO
+            {priorityStatus && (
+              <View
+                className={`${priorityStatus.badgeClass} rounded-full px-2 py-0.5`}
+              >
+                <Text className={priorityStatus.textClass}>
+                  {priorityStatus.label}
                 </Text>
-              </View>
-            )}
-            {hasResultNoPay && (
-              <View className="bg-destructive/40 rounded-full px-2 py-0.5">
-                <Text className="text-xs font-bold text-red-100">S/ PGTO</Text>
-              </View>
-            )}
-            {isExpired && (
-              <View className="bg-orange-500/40 rounded-full px-2 py-0.5">
-                <Text className="text-xs font-bold text-orange-100">
-                  EXPIRADA
-                </Text>
-              </View>
-            )}
-            {isCopied && (
-              <View className="bg-cyan-500/40 rounded-full px-2 py-0.5">
-                <Text className="text-xs font-bold text-cyan-100">CLONADA</Text>
               </View>
             )}
           </View>
