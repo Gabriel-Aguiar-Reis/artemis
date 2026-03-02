@@ -7,6 +7,7 @@ import { ButtonFilter } from '@/src/components/ui/button-filter'
 import { ButtonFinish } from '@/src/components/ui/button-finish'
 import { ButtonHistory } from '@/src/components/ui/button-history'
 import { ButtonNew } from '@/src/components/ui/button-new'
+import { ButtonReorder } from '@/src/components/ui/button-reorder'
 import { NotesDialog } from '@/src/components/ui/dialog/notes-dialog'
 import { Icon } from '@/src/components/ui/icon'
 import { Text } from '@/src/components/ui/text'
@@ -375,13 +376,16 @@ export default function ItineraryScreen() {
             headerRight: () => (
               <View className="flex-row gap-2">
                 {itinerary && (
-                  <ButtonFilter
-                    href={{
-                      pathname: '/itinerary/search',
-                      params: { ...params },
-                    }}
-                    isActive={hasActiveFilters}
-                  />
+                  <>
+                    <ButtonReorder href="/itinerary/reorder" />
+                    <ButtonFilter
+                      href={{
+                        pathname: '/itinerary/search',
+                        params: { ...params },
+                      }}
+                      isActive={hasActiveFilters}
+                    />
+                  </>
                 )}
                 {itinerary && !itinerary.isFinished ? (
                   <ButtonFinish href="/itinerary/finish" />
