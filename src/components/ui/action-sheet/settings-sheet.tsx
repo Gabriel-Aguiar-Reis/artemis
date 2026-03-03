@@ -1,4 +1,5 @@
 import { useLicense } from '@/src/application/hooks/license.hooks'
+import { saveLogDumpAndShare } from '@/src/application/services/error-logging.service'
 import { DefaultActionSheet } from '@/src/components/ui/action-sheet'
 import { Alert, AlertDescription, AlertTitle } from '@/src/components/ui/alert'
 import { Button } from '@/src/components/ui/button'
@@ -9,6 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useRouter } from 'expo-router'
 import {
   AlertCircle,
+  Bug,
   CalendarClock,
   Database,
   FileSpreadsheet,
@@ -23,6 +25,7 @@ import { useEffect, useState } from 'react'
 import { ActivityIndicator, View } from 'react-native'
 import { SheetManager, SheetProps } from 'react-native-actions-sheet'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import Toast from 'react-native-toast-message'
 
 const THEME_STORAGE_KEY = 'user-theme-preference'
 
@@ -34,6 +37,7 @@ export function SettingsSheet(props: SheetProps<'settings-sheet'>) {
   const { colorScheme, setColorScheme } = useColorScheme()
   const [themePreference, setThemePreference] =
     useState<ThemePreference>('system')
+  const [isExportingLogs, setIsExportingLogs] = useState(false)
 
   const { data: license, isLoading } = useLicense()
 
@@ -58,6 +62,26 @@ export function SettingsSheet(props: SheetProps<'settings-sheet'>) {
       setColorScheme(undefined as any)
     } else {
       setColorScheme(theme)
+    }
+  }
+
+  const handleExportLogs = async () => {
+    setIsExportingLogs(true)
+    try {
+      await saveLogDumpAndShare()
+      Toast.show({
+        type: 'success',
+        text1: 'Logs exportados com sucesso',
+        text2: 'Compartilhe o arquivo para análise',
+      })
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Erro ao exportar logs',
+        text2: error instanceof Error ? error.message : 'Erro desconhecido',
+      })
+    } finally {
+      setIsExportingLogs(false)
     }
   }
 
@@ -173,6 +197,30 @@ export function SettingsSheet(props: SheetProps<'settings-sheet'>) {
                     className="text-foreground"
                   />
                   <Text>Backup (Dump JSON)</Text>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onPress={handleExportLogs}
+                  disabled={isExportingLogs}
+                  className="flex-row gap-2"
+                >
+                  <Icon as={Bug} size={20} className="text-foreground" />
+                  <Text>
+                    {isExportingLogs ? 'Exportando...' : 'Logs (Dump JSON)'}
+                  </Text>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onPress={async () => {
+                    await SheetManager.hide(props.sheetId)
+                    router.push('/admin/logs-viewer' as any)
+                  }}
+                  className="flex-row gap-2"
+                >
+                  <Icon as={Bug} size={20} className="text-foreground" />
+                  <Text>Visualizar Logs</Text>
                 </Button>
               </View>
             ) : (

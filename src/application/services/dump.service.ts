@@ -192,7 +192,7 @@ function insertAllTablesInOrder(parsed: ArtemisDump) {
       .get()
     if (!exists) db.insert(product).values(p).run()
   }
-  // Itinerary tree
+  // Independent tables: itinerary, paymentOrder, workOrderResult
   for (const it of parsed.tables.itinerary) {
     const exists = db
       .select()
@@ -202,23 +202,14 @@ function insertAllTablesInOrder(parsed: ArtemisDump) {
       .get()
     if (!exists) db.insert(itinerary).values(it).run()
   }
-  for (const wo of parsed.tables.workOrder) {
+  for (const po of parsed.tables.paymentOrder) {
     const exists = db
       .select()
-      .from(workOrder)
-      .where(eq(workOrder.id, wo.id))
+      .from(paymentOrder)
+      .where(eq(paymentOrder.id, po.id))
       .limit(1)
       .get()
-    if (!exists) db.insert(workOrder).values(wo).run()
-  }
-  for (const woi of parsed.tables.workOrderItem) {
-    const exists = db
-      .select()
-      .from(workOrderItem)
-      .where(eq(workOrderItem.id, woi.id))
-      .limit(1)
-      .get()
-    if (!exists) db.insert(workOrderItem).values(woi).run()
+    if (!exists) db.insert(paymentOrder).values(po).run()
   }
   for (const wor of parsed.tables.workOrderResult) {
     const exists = db
@@ -229,6 +220,27 @@ function insertAllTablesInOrder(parsed: ArtemisDump) {
       .get()
     if (!exists) db.insert(workOrderResult).values(wor).run()
   }
+  // WorkOrder depends on customer, paymentOrder, and workOrderResult
+  for (const wo of parsed.tables.workOrder) {
+    const exists = db
+      .select()
+      .from(workOrder)
+      .where(eq(workOrder.id, wo.id))
+      .limit(1)
+      .get()
+    if (!exists) db.insert(workOrder).values(wo).run()
+  }
+  // WorkOrderItem depends on workOrder and product
+  for (const woi of parsed.tables.workOrderItem) {
+    const exists = db
+      .select()
+      .from(workOrderItem)
+      .where(eq(workOrderItem.id, woi.id))
+      .limit(1)
+      .get()
+    if (!exists) db.insert(workOrderItem).values(woi).run()
+  }
+  // WorkOrderResultItem depends on workOrderResult and product
   for (const wori of parsed.tables.workOrderResultItem) {
     const exists = db
       .select()
@@ -247,15 +259,5 @@ function insertAllTablesInOrder(parsed: ArtemisDump) {
       .limit(1)
       .get()
     if (!exists) db.insert(itineraryWorkOrder).values(iwo).run()
-  }
-  // Payment orders (likely independent)
-  for (const po of parsed.tables.paymentOrder) {
-    const exists = db
-      .select()
-      .from(paymentOrder)
-      .where(eq(paymentOrder.id, po.id))
-      .limit(1)
-      .get()
-    if (!exists) db.insert(paymentOrder).values(po).run()
   }
 }

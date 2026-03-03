@@ -7,6 +7,7 @@ import {
   useCreateInitialLicense,
   useLicense,
 } from '@/src/application/hooks/license.hooks'
+import { logError } from '@/src/application/services/error-logging.service'
 import { Button } from '@/src/components/ui/button'
 import { LicenseActivationDialog } from '@/src/components/ui/dialog/license-activation-dialog'
 import { Text } from '@/src/components/ui/text'
@@ -25,7 +26,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator'
 import { useDrizzleStudio } from 'expo-drizzle-studio-plugin'
 import * as NavigationBar from 'expo-navigation-bar'
-import { Stack } from 'expo-router'
+import { ErrorBoundaryProps, Stack } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { useColorScheme } from 'nativewind'
 import { ReactNode, useEffect, useState } from 'react'
@@ -35,7 +36,23 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 
-export { ErrorBoundary } from 'expo-router'
+// ErrorBoundary customizado que captura erros e os salva no banco
+export function ErrorBoundary(props: ErrorBoundaryProps) {
+  useEffect(() => {
+    // Capturar erro e salvar no banco
+    if (props.error) {
+      logError('ErrorBoundary caught error', props.error, 'ErrorBoundary', {
+        retry: props.retry,
+      }).catch((err) => {
+        console.error('Failed to log error in ErrorBoundary:', err)
+      })
+    }
+  }, [props.error])
+
+  // Delegar para o ErrorBoundary padrão do expo-router
+  const { ErrorBoundary: ExpoErrorBoundary } = require('expo-router')
+  return <ExpoErrorBoundary {...props} />
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,6 +63,20 @@ const queryClient = new QueryClient({
       refetchOnWindowFocus: false, // Não refetch ao focar na janela
       refetchOnMount: true, // IMPORTANTE: refetch ao montar se dados estiverem stale (invalidados)
       structuralSharing: false, // Desabilita structural sharing para garantir novos objetos
+    },
+  },
+})
+
+queryClient.setDefaultOptions({
+  queries: {
+    retry: 1,
+  },
+  mutations: {
+    onError: (error) => {
+      // Capturar erros de mutations
+      logError('Mutation error', error, 'TanStack Query').catch((err) => {
+        console.error('Failed to log mutation error:', err)
+      })
     },
   },
 })
@@ -154,6 +185,14 @@ export default function RootLayout() {
         enableForeignKeys()
         setMigrationsComplete(true)
         console.log('Foreign keys enabled successfully')
+
+        // Limpar logs antigos (>7 dias) após migrations
+        const {
+          cleanupOldLogs,
+        } = require('@/src/application/services/error-logging.service')
+        cleanupOldLogs(7).catch((err: Error) => {
+          console.error('Failed to cleanup old logs:', err)
+        })
       } catch (err) {
         console.error('Error enabling foreign keys:', err)
       }
@@ -295,6 +334,10 @@ export default function RootLayout() {
                   <Stack.Screen
                     name="admin/data-dump"
                     options={{ title: 'Exportar Dados' }}
+                  />
+                  <Stack.Screen
+                    name="admin/logs-viewer"
+                    options={{ title: 'Logs do Sistema' }}
                   />
                   <Stack.Screen
                     name="license/renew"

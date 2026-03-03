@@ -95,6 +95,7 @@ export default function DataDumpScreen() {
             ? error.message
             : 'Não foi possível importar o dump',
       })
+      console.error('Import error:', error)
     } finally {
       setIsImporting(false)
     }

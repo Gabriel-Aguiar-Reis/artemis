@@ -1,0 +1,2119 @@
+{
+  "version": 1,
+  "createdAt": "2026-03-03T10:00:00.000Z",
+  "tables": {
+    "category": [
+      {
+        "id": "cat-bebidas-001",
+        "name": "Bebidas",
+        "isActive": true
+      },
+      {
+        "id": "cat-alimentos-002",
+        "name": "Alimentos",
+        "isActive": true
+      },
+      {
+        "id": "cat-limpeza-003",
+        "name": "Limpeza",
+        "isActive": true
+      },
+      {
+        "id": "cat-higiene-004",
+        "name": "Higiene",
+        "isActive": true
+      },
+      {
+        "id": "cat-descartaveis-005",
+        "name": "Descartáveis",
+        "isActive": true
+      }
+    ],
+    "product": [
+      {
+        "id": "prod-coca2l-001",
+        "name": "Coca-Cola 2L",
+        "categoryId": "cat-bebidas-001",
+        "salePrice": 8.5,
+        "isActive": true,
+        "expiration": "90 dias"
+      },
+      {
+        "id": "prod-guarana2l-002",
+        "name": "Guaraná Antarctica 2L",
+        "categoryId": "cat-bebidas-001",
+        "salePrice": 7.9,
+        "isActive": true,
+        "expiration": "90 dias"
+      },
+      {
+        "id": "prod-sprite2l-003",
+        "name": "Sprite 2L",
+        "categoryId": "cat-bebidas-001",
+        "salePrice": 7.5,
+        "isActive": true,
+        "expiration": "90 dias"
+      },
+      {
+        "id": "prod-fanta2l-004",
+        "name": "Fanta Laranja 2L",
+        "categoryId": "cat-bebidas-001",
+        "salePrice": 7.5,
+        "isActive": true,
+        "expiration": "90 dias"
+      },
+      {
+        "id": "prod-agua500ml-005",
+        "name": "Água Mineral 500ml",
+        "categoryId": "cat-bebidas-001",
+        "salePrice": 2.5,
+        "isActive": true,
+        "expiration": "180 dias"
+      },
+      {
+        "id": "prod-suco1l-006",
+        "name": "Suco Del Valle 1L",
+        "categoryId": "cat-bebidas-001",
+        "salePrice": 6.9,
+        "isActive": true,
+        "expiration": "120 dias"
+      },
+      {
+        "id": "prod-arroz5kg-007",
+        "name": "Arroz Tipo 1 5kg",
+        "categoryId": "cat-alimentos-002",
+        "salePrice": 28.9,
+        "isActive": true,
+        "expiration": "12 meses"
+      },
+      {
+        "id": "prod-feijao1kg-008",
+        "name": "Feijão Carioca 1kg",
+        "categoryId": "cat-alimentos-002",
+        "salePrice": 7.5,
+        "isActive": true,
+        "expiration": "12 meses"
+      },
+      {
+        "id": "prod-acucar1kg-009",
+        "name": "Açúcar Cristal 1kg",
+        "categoryId": "cat-alimentos-002",
+        "salePrice": 4.2,
+        "isActive": true,
+        "expiration": "24 meses"
+      },
+      {
+        "id": "prod-oleo900ml-010",
+        "name": "Óleo de Soja 900ml",
+        "categoryId": "cat-alimentos-002",
+        "salePrice": 8.9,
+        "isActive": true,
+        "expiration": "18 meses"
+      },
+      {
+        "id": "prod-cafe500g-011",
+        "name": "Café Tradicional 500g",
+        "categoryId": "cat-alimentos-002",
+        "salePrice": 15.9,
+        "isActive": true,
+        "expiration": "12 meses"
+      },
+      {
+        "id": "prod-macarrao500g-012",
+        "name": "Macarrão Espaguete 500g",
+        "categoryId": "cat-alimentos-002",
+        "salePrice": 4.5,
+        "isActive": true,
+        "expiration": "24 meses"
+      },
+      {
+        "id": "prod-detergente-013",
+        "name": "Detergente Líquido 500ml",
+        "categoryId": "cat-limpeza-003",
+        "salePrice": 2.8,
+        "isActive": true,
+        "expiration": "36 meses"
+      },
+      {
+        "id": "prod-desinfetante-014",
+        "name": "Desinfetante 2L",
+        "categoryId": "cat-limpeza-003",
+        "salePrice": 9.9,
+        "isActive": true,
+        "expiration": "36 meses"
+      },
+      {
+        "id": "prod-amaciante-015",
+        "name": "Amaciante de Roupas 2L",
+        "categoryId": "cat-limpeza-003",
+        "salePrice": 12.9,
+        "isActive": true,
+        "expiration": "24 meses"
+      },
+      {
+        "id": "prod-sabao-po-016",
+        "name": "Sabão em Pó 1kg",
+        "categoryId": "cat-limpeza-003",
+        "salePrice": 14.9,
+        "isActive": true,
+        "expiration": "24 meses"
+      },
+      {
+        "id": "prod-agua-sanitaria-017",
+        "name": "Água Sanitária 2L",
+        "categoryId": "cat-limpeza-003",
+        "salePrice": 6.9,
+        "isActive": true,
+        "expiration": "12 meses"
+      },
+      {
+        "id": "prod-sabonete-018",
+        "name": "Sabonete em Barra 90g",
+        "categoryId": "cat-higiene-004",
+        "salePrice": 2.5,
+        "isActive": true,
+        "expiration": "36 meses"
+      },
+      {
+        "id": "prod-shampoo-019",
+        "name": "Shampoo 400ml",
+        "categoryId": "cat-higiene-004",
+        "salePrice": 12.9,
+        "isActive": true,
+        "expiration": "36 meses"
+      },
+      {
+        "id": "prod-condicionador-020",
+        "name": "Condicionador 400ml",
+        "categoryId": "cat-higiene-004",
+        "salePrice": 12.9,
+        "isActive": true,
+        "expiration": "36 meses"
+      },
+      {
+        "id": "prod-papel-higienico-021",
+        "name": "Papel Higiênico 12 rolos",
+        "categoryId": "cat-higiene-004",
+        "salePrice": 18.9,
+        "isActive": true,
+        "expiration": "60 meses"
+      },
+      {
+        "id": "prod-copo-desc-022",
+        "name": "Copo Descartável 200ml (100un)",
+        "categoryId": "cat-descartaveis-005",
+        "salePrice": 8.9,
+        "isActive": true,
+        "expiration": "60 meses"
+      },
+      {
+        "id": "prod-prato-desc-023",
+        "name": "Prato Descartável (50un)",
+        "categoryId": "cat-descartaveis-005",
+        "salePrice": 12.5,
+        "isActive": true,
+        "expiration": "60 meses"
+      },
+      {
+        "id": "prod-guardanapo-024",
+        "name": "Guardanapo de Papel (50un)",
+        "categoryId": "cat-descartaveis-005",
+        "salePrice": 3.9,
+        "isActive": true,
+        "expiration": "60 meses"
+      }
+    ],
+    "customer": [
+      {
+        "id": "cust-mercado-saojose-001",
+        "storeName": "Mercado São José",
+        "contactName": "João Silva",
+        "phoneNumber": "11999887766",
+        "phoneIsWhatsApp": true,
+        "landlineNumber": "1133334444",
+        "landlineIsWhatsApp": false,
+        "addressStreetName": "Rua das Flores",
+        "addressStreetNumber": "123",
+        "addressNeighborhood": "Centro",
+        "addressCity": "São Paulo",
+        "addressState": "SP",
+        "addressZipCode": "01000-000"
+      },
+      {
+        "id": "cust-minimercado-silva-002",
+        "storeName": "Minimercado Silva",
+        "contactName": "Maria Santos",
+        "phoneNumber": "11988776655",
+        "phoneIsWhatsApp": true,
+        "landlineNumber": null,
+        "landlineIsWhatsApp": null,
+        "addressStreetName": "Avenida Paulista",
+        "addressStreetNumber": "500",
+        "addressNeighborhood": "Bela Vista",
+        "addressCity": "São Paulo",
+        "addressState": "SP",
+        "addressZipCode": "01310-100"
+      },
+      {
+        "id": "cust-padaria-doce-sabor-003",
+        "storeName": "Padaria Doce Sabor",
+        "contactName": "Carlos Oliveira",
+        "phoneNumber": "11977665544",
+        "phoneIsWhatsApp": true,
+        "landlineNumber": "1122223333",
+        "landlineIsWhatsApp": false,
+        "addressStreetName": "Rua Aurora",
+        "addressStreetNumber": "789",
+        "addressNeighborhood": "Santa Cecília",
+        "addressCity": "São Paulo",
+        "addressState": "SP",
+        "addressZipCode": "01209-001"
+      },
+      {
+        "id": "cust-mercearia-bom-preco-004",
+        "storeName": "Mercearia Bom Preço",
+        "contactName": "Ana Costa",
+        "phoneNumber": "11966554433",
+        "phoneIsWhatsApp": true,
+        "landlineNumber": null,
+        "landlineIsWhatsApp": null,
+        "addressStreetName": "Rua da Consolação",
+        "addressStreetNumber": "1500",
+        "addressNeighborhood": "Consolação",
+        "addressCity": "São Paulo",
+        "addressState": "SP",
+        "addressZipCode": "01302-001"
+      },
+      {
+        "id": "cust-bar-do-ze-005",
+        "storeName": "Bar do Zé",
+        "contactName": "José Pereira",
+        "phoneNumber": "11955443322",
+        "phoneIsWhatsApp": false,
+        "landlineNumber": "1144445555",
+        "landlineIsWhatsApp": false,
+        "addressStreetName": "Rua Augusta",
+        "addressStreetNumber": "2500",
+        "addressNeighborhood": "Jardins",
+        "addressCity": "São Paulo",
+        "addressState": "SP",
+        "addressZipCode": "01412-100"
+      },
+      {
+        "id": "cust-lanchonete-central-006",
+        "storeName": "Lanchonete Central",
+        "contactName": "Roberto Mendes",
+        "phoneNumber": "11944332211",
+        "phoneIsWhatsApp": true,
+        "landlineNumber": null,
+        "landlineIsWhatsApp": null,
+        "addressStreetName": "Rua Barão de Itapetininga",
+        "addressStreetNumber": "350",
+        "addressNeighborhood": "República",
+        "addressCity": "São Paulo",
+        "addressState": "SP",
+        "addressZipCode": "01042-001"
+      },
+      {
+        "id": "cust-supermercado-familia-007",
+        "storeName": "Supermercado Família",
+        "contactName": "Paula Rodrigues",
+        "phoneNumber": "11933221100",
+        "phoneIsWhatsApp": true,
+        "landlineNumber": "1155556666",
+        "landlineIsWhatsApp": true,
+        "addressStreetName": "Rua Oscar Freire",
+        "addressStreetNumber": "800",
+        "addressNeighborhood": "Pinheiros",
+        "addressCity": "São Paulo",
+        "addressState": "SP",
+        "addressZipCode": "05409-010"
+      },
+      {
+        "id": "cust-emporio-gourmet-008",
+        "storeName": "Empório Gourmet",
+        "contactName": "Fernando Alves",
+        "phoneNumber": "11922110099",
+        "phoneIsWhatsApp": true,
+        "landlineNumber": null,
+        "landlineIsWhatsApp": null,
+        "addressStreetName": "Rua Haddock Lobo",
+        "addressStreetNumber": "1200",
+        "addressNeighborhood": "Cerqueira César",
+        "addressCity": "São Paulo",
+        "addressState": "SP",
+        "addressZipCode": "01414-001"
+      },
+      {
+        "id": "cust-mercadinho-vizinhanca-009",
+        "storeName": "Mercadinho da Vizinhança",
+        "contactName": "Sandra Lima",
+        "phoneNumber": "11911009988",
+        "phoneIsWhatsApp": true,
+        "landlineNumber": "1166667777",
+        "landlineIsWhatsApp": false,
+        "addressStreetName": "Rua dos Ingleses",
+        "addressStreetNumber": "450",
+        "addressNeighborhood": "Bela Vista",
+        "addressCity": "São Paulo",
+        "addressState": "SP",
+        "addressZipCode": "01329-000"
+      },
+      {
+        "id": "cust-adega-portugal-010",
+        "storeName": "Adega Portugal",
+        "contactName": "Manuel Sousa",
+        "phoneNumber": "11900998877",
+        "phoneIsWhatsApp": false,
+        "landlineNumber": "1177778888",
+        "landlineIsWhatsApp": false,
+        "addressStreetName": "Rua da Liberdade",
+        "addressStreetNumber": "600",
+        "addressNeighborhood": "Liberdade",
+        "addressCity": "São Paulo",
+        "addressState": "SP",
+        "addressZipCode": "01502-001"
+      },
+      {
+        "id": "cust-conveniencia-24h-011",
+        "storeName": "Conveniência 24h",
+        "contactName": "Lucas Martins",
+        "phoneNumber": "11988887766",
+        "phoneIsWhatsApp": true,
+        "landlineNumber": null,
+        "landlineIsWhatsApp": null,
+        "addressStreetName": "Avenida Brigadeiro Luís Antônio",
+        "addressStreetNumber": "2000",
+        "addressNeighborhood": "Bela Vista",
+        "addressCity": "São Paulo",
+        "addressState": "SP",
+        "addressZipCode": "01318-002"
+      },
+      {
+        "id": "cust-hortifruti-verdao-012",
+        "storeName": "Hortifruti Verdão",
+        "contactName": "Mariana Gomes",
+        "phoneNumber": "11977776655",
+        "phoneIsWhatsApp": true,
+        "landlineNumber": "1188889999",
+        "landlineIsWhatsApp": true,
+        "addressStreetName": "Rua Frei Caneca",
+        "addressStreetNumber": "900",
+        "addressNeighborhood": "Consolação",
+        "addressCity": "São Paulo",
+        "addressState": "SP",
+        "addressZipCode": "01307-002"
+      }
+    ],
+    "license": [],
+    "paymentOrder": [
+      {
+        "id": "pay-001",
+        "method": "Dinheiro",
+        "totalValue": 356.4,
+        "installments": 1,
+        "isPaid": true,
+        "paidInstallments": 1,
+        "paymentDate": "2026-02-17"
+      },
+      {
+        "id": "pay-002",
+        "method": "Pix",
+        "totalValue": 289.5,
+        "installments": 1,
+        "isPaid": true,
+        "paidInstallments": 1,
+        "paymentDate": "2026-02-17"
+      },
+      {
+        "id": "pay-003",
+        "method": "Cartão de Crédito",
+        "totalValue": 445.8,
+        "installments": 2,
+        "isPaid": false,
+        "paidInstallments": 1,
+        "paymentDate": null
+      },
+      {
+        "id": "pay-004",
+        "method": "Dinheiro",
+        "totalValue": 198.7,
+        "installments": 1,
+        "isPaid": true,
+        "paidInstallments": 1,
+        "paymentDate": "2026-02-18"
+      },
+      {
+        "id": "pay-005",
+        "method": "Pix",
+        "totalValue": 567.3,
+        "installments": 1,
+        "isPaid": true,
+        "paidInstallments": 1,
+        "paymentDate": "2026-02-18"
+      },
+      {
+        "id": "pay-006",
+        "method": "Cartão de Débito",
+        "totalValue": 234.6,
+        "installments": 1,
+        "isPaid": true,
+        "paidInstallments": 1,
+        "paymentDate": "2026-02-19"
+      },
+      {
+        "id": "pay-007",
+        "method": "Dinheiro",
+        "totalValue": 412.9,
+        "installments": 1,
+        "isPaid": true,
+        "paidInstallments": 1,
+        "paymentDate": "2026-02-19"
+      },
+      {
+        "id": "pay-008",
+        "method": "Cartão de Crédito",
+        "totalValue": 678.4,
+        "installments": 3,
+        "isPaid": false,
+        "paidInstallments": 1,
+        "paymentDate": null
+      },
+      {
+        "id": "pay-009",
+        "method": "Pix",
+        "totalValue": 324.8,
+        "installments": 1,
+        "isPaid": true,
+        "paidInstallments": 1,
+        "paymentDate": "2026-02-20"
+      },
+      {
+        "id": "pay-010",
+        "method": "Dinheiro",
+        "totalValue": 0,
+        "installments": 1,
+        "isPaid": false,
+        "paidInstallments": 0,
+        "paymentDate": null
+      },
+      {
+        "id": "pay-011",
+        "method": "Pix",
+        "totalValue": 0,
+        "installments": 1,
+        "isPaid": false,
+        "paidInstallments": 0,
+        "paymentDate": null
+      },
+      {
+        "id": "pay-012",
+        "method": "Cartão de Débito",
+        "totalValue": 0,
+        "installments": 1,
+        "isPaid": false,
+        "paidInstallments": 0,
+        "paymentDate": null
+      },
+      {
+        "id": "pay-013",
+        "method": "Dinheiro",
+        "totalValue": 0,
+        "installments": 1,
+        "isPaid": false,
+        "paidInstallments": 0,
+        "paymentDate": null
+      },
+      {
+        "id": "pay-014",
+        "method": "Pix",
+        "totalValue": 0,
+        "installments": 1,
+        "isPaid": false,
+        "paidInstallments": 0,
+        "paymentDate": null
+      },
+      {
+        "id": "pay-015",
+        "method": "Dinheiro",
+        "totalValue": 0,
+        "installments": 1,
+        "isPaid": false,
+        "paidInstallments": 0,
+        "paymentDate": null
+      },
+      {
+        "id": "pay-016",
+        "method": "Cartão de Crédito",
+        "totalValue": 0,
+        "installments": 2,
+        "isPaid": false,
+        "paidInstallments": 0,
+        "paymentDate": null
+      },
+      {
+        "id": "pay-017",
+        "method": "Pix",
+        "totalValue": 0,
+        "installments": 1,
+        "isPaid": false,
+        "paidInstallments": 0,
+        "paymentDate": null
+      },
+      {
+        "id": "pay-018",
+        "method": "Dinheiro",
+        "totalValue": 0,
+        "installments": 1,
+        "isPaid": false,
+        "paidInstallments": 0,
+        "paymentDate": null
+      },
+      {
+        "id": "pay-019",
+        "method": "Pix",
+        "totalValue": 0,
+        "installments": 1,
+        "isPaid": false,
+        "paidInstallments": 0,
+        "paymentDate": null
+      },
+      {
+        "id": "pay-020",
+        "method": "Cartão de Débito",
+        "totalValue": 0,
+        "installments": 1,
+        "isPaid": false,
+        "paidInstallments": 0,
+        "paymentDate": null
+      },
+      {
+        "id": "pay-021",
+        "method": "Dinheiro",
+        "totalValue": 0,
+        "installments": 1,
+        "isPaid": false,
+        "paidInstallments": 0,
+        "paymentDate": null
+      },
+      {
+        "id": "pay-022",
+        "method": "Pix",
+        "totalValue": 0,
+        "installments": 1,
+        "isPaid": false,
+        "paidInstallments": 0,
+        "paymentDate": null
+      },
+      {
+        "id": "pay-023",
+        "method": "Cartão de Crédito",
+        "totalValue": 0,
+        "installments": 1,
+        "isPaid": false,
+        "paidInstallments": 0,
+        "paymentDate": null
+      },
+      {
+        "id": "pay-024",
+        "method": "Dinheiro",
+        "totalValue": 0,
+        "installments": 1,
+        "isPaid": false,
+        "paidInstallments": 0,
+        "paymentDate": null
+      },
+      {
+        "id": "pay-025",
+        "method": "Pix",
+        "totalValue": 0,
+        "installments": 1,
+        "isPaid": false,
+        "paidInstallments": 0,
+        "paymentDate": null
+      }
+    ],
+    "itinerary": [
+      {
+        "id": "itin-week1-001",
+        "initialItineraryDate": "2026-02-17",
+        "finalItineraryDate": "2026-02-21",
+        "isFinished": true
+      },
+      {
+        "id": "itin-week2-002",
+        "initialItineraryDate": "2026-02-24",
+        "finalItineraryDate": "2026-02-28",
+        "isFinished": false
+      },
+      {
+        "id": "itin-week3-003",
+        "initialItineraryDate": "2026-03-03",
+        "finalItineraryDate": "2026-03-07",
+        "isFinished": false
+      }
+    ],
+    "workOrder": [
+      {
+        "id": "wo-001",
+        "customerId": "cust-mercado-saojose-001",
+        "createdAt": "2026-02-15T10:00:00.000Z",
+        "updatedAt": "2026-02-17T14:30:00.000Z",
+        "scheduledDate": "2026-02-17",
+        "visitDate": "2026-02-17",
+        "paymentOrderId": "pay-001",
+        "status": "COMPLETED",
+        "resultId": "result-001",
+        "notes": "Cliente solicitou entrega pela manhã"
+      },
+      {
+        "id": "wo-002",
+        "customerId": "cust-minimercado-silva-002",
+        "createdAt": "2026-02-15T11:00:00.000Z",
+        "updatedAt": "2026-02-17T15:45:00.000Z",
+        "scheduledDate": "2026-02-17",
+        "visitDate": "2026-02-17",
+        "paymentOrderId": "pay-002",
+        "status": "COMPLETED",
+        "resultId": "result-002",
+        "notes": null
+      },
+      {
+        "id": "wo-003",
+        "customerId": "cust-padaria-doce-sabor-003",
+        "createdAt": "2026-02-16T09:00:00.000Z",
+        "updatedAt": "2026-02-18T10:20:00.000Z",
+        "scheduledDate": "2026-02-18",
+        "visitDate": "2026-02-18",
+        "paymentOrderId": "pay-003",
+        "status": "COMPLETED",
+        "resultId": "result-003",
+        "notes": "Trocou alguns produtos"
+      },
+      {
+        "id": "wo-004",
+        "customerId": "cust-mercearia-bom-preco-004",
+        "createdAt": "2026-02-16T10:30:00.000Z",
+        "updatedAt": "2026-02-18T11:15:00.000Z",
+        "scheduledDate": "2026-02-18",
+        "visitDate": "2026-02-18",
+        "paymentOrderId": "pay-004",
+        "status": "COMPLETED",
+        "resultId": "result-004",
+        "notes": null
+      },
+      {
+        "id": "wo-005",
+        "customerId": "cust-bar-do-ze-005",
+        "createdAt": "2026-02-16T14:00:00.000Z",
+        "updatedAt": "2026-02-18T16:30:00.000Z",
+        "scheduledDate": "2026-02-18",
+        "visitDate": "2026-02-18",
+        "paymentOrderId": "pay-005",
+        "status": "COMPLETED",
+        "resultId": "result-005",
+        "notes": "Pedido extra de bebidas"
+      },
+      {
+        "id": "wo-006",
+        "customerId": "cust-lanchonete-central-006",
+        "createdAt": "2026-02-17T09:00:00.000Z",
+        "updatedAt": "2026-02-19T09:45:00.000Z",
+        "scheduledDate": "2026-02-19",
+        "visitDate": "2026-02-19",
+        "paymentOrderId": "pay-006",
+        "status": "COMPLETED",
+        "resultId": "result-006",
+        "notes": null
+      },
+      {
+        "id": "wo-007",
+        "customerId": "cust-supermercado-familia-007",
+        "createdAt": "2026-02-17T11:00:00.000Z",
+        "updatedAt": "2026-02-19T13:20:00.000Z",
+        "scheduledDate": "2026-02-19",
+        "visitDate": "2026-02-19",
+        "paymentOrderId": "pay-007",
+        "status": "COMPLETED",
+        "resultId": "result-007",
+        "notes": "Grande pedido, verificar estoque"
+      },
+      {
+        "id": "wo-008",
+        "customerId": "cust-emporio-gourmet-008",
+        "createdAt": "2026-02-18T10:00:00.000Z",
+        "updatedAt": "2026-02-20T11:30:00.000Z",
+        "scheduledDate": "2026-02-20",
+        "visitDate": "2026-02-20",
+        "paymentOrderId": "pay-008",
+        "status": "COMPLETED",
+        "resultId": "result-008",
+        "notes": null
+      },
+      {
+        "id": "wo-009",
+        "customerId": "cust-mercadinho-vizinhanca-009",
+        "createdAt": "2026-02-18T15:00:00.000Z",
+        "updatedAt": "2026-02-20T16:45:00.000Z",
+        "scheduledDate": "2026-02-20",
+        "visitDate": "2026-02-20",
+        "paymentOrderId": "pay-009",
+        "status": "COMPLETED",
+        "resultId": "result-009",
+        "notes": null
+      },
+      {
+        "id": "wo-010",
+        "customerId": "cust-adega-portugal-010",
+        "createdAt": "2026-02-22T09:00:00.000Z",
+        "updatedAt": "2026-02-24T10:00:00.000Z",
+        "scheduledDate": "2026-02-24",
+        "visitDate": "2026-02-24",
+        "paymentOrderId": "pay-010",
+        "status": "IN_PROGRESS",
+        "resultId": null,
+        "notes": "Cliente especial"
+      },
+      {
+        "id": "wo-011",
+        "customerId": "cust-conveniencia-24h-011",
+        "createdAt": "2026-02-22T10:00:00.000Z",
+        "updatedAt": "2026-02-25T11:00:00.000Z",
+        "scheduledDate": "2026-02-25",
+        "visitDate": "2026-02-25",
+        "paymentOrderId": "pay-011",
+        "status": "IN_PROGRESS",
+        "resultId": null,
+        "notes": null
+      },
+      {
+        "id": "wo-012",
+        "customerId": "cust-hortifruti-verdao-012",
+        "createdAt": "2026-02-23T09:00:00.000Z",
+        "updatedAt": "2026-02-26T10:30:00.000Z",
+        "scheduledDate": "2026-02-26",
+        "visitDate": "2026-02-26",
+        "paymentOrderId": "pay-012",
+        "status": "IN_PROGRESS",
+        "resultId": null,
+        "notes": null
+      },
+      {
+        "id": "wo-013",
+        "customerId": "cust-mercado-saojose-001",
+        "createdAt": "2026-02-23T11:00:00.000Z",
+        "updatedAt": "2026-02-27T09:00:00.000Z",
+        "scheduledDate": "2026-02-27",
+        "visitDate": "2026-02-27",
+        "paymentOrderId": "pay-013",
+        "status": "IN_PROGRESS",
+        "resultId": null,
+        "notes": "Pedido de reposição"
+      },
+      {
+        "id": "wo-014",
+        "customerId": "cust-minimercado-silva-002",
+        "createdAt": "2026-02-24T10:00:00.000Z",
+        "updatedAt": "2026-02-28T10:30:00.000Z",
+        "scheduledDate": "2026-02-28",
+        "visitDate": "2026-02-28",
+        "paymentOrderId": "pay-014",
+        "status": "IN_PROGRESS",
+        "resultId": null,
+        "notes": null
+      },
+      {
+        "id": "wo-015",
+        "customerId": "cust-padaria-doce-sabor-003",
+        "createdAt": "2026-02-25T09:00:00.000Z",
+        "updatedAt": "2026-02-25T09:00:00.000Z",
+        "scheduledDate": "2026-03-03",
+        "visitDate": null,
+        "paymentOrderId": "pay-015",
+        "status": "PENDING",
+        "resultId": null,
+        "notes": null
+      },
+      {
+        "id": "wo-016",
+        "customerId": "cust-mercearia-bom-preco-004",
+        "createdAt": "2026-02-25T10:00:00.000Z",
+        "updatedAt": "2026-02-25T10:00:00.000Z",
+        "scheduledDate": "2026-03-03",
+        "visitDate": null,
+        "paymentOrderId": "pay-016",
+        "status": "PENDING",
+        "resultId": null,
+        "notes": null
+      },
+      {
+        "id": "wo-017",
+        "customerId": "cust-bar-do-ze-005",
+        "createdAt": "2026-02-26T09:00:00.000Z",
+        "updatedAt": "2026-02-26T09:00:00.000Z",
+        "scheduledDate": "2026-03-04",
+        "visitDate": null,
+        "paymentOrderId": "pay-017",
+        "status": "PENDING",
+        "resultId": null,
+        "notes": null
+      },
+      {
+        "id": "wo-018",
+        "customerId": "cust-lanchonete-central-006",
+        "createdAt": "2026-02-26T11:00:00.000Z",
+        "updatedAt": "2026-02-26T11:00:00.000Z",
+        "scheduledDate": "2026-03-04",
+        "visitDate": null,
+        "paymentOrderId": "pay-018",
+        "status": "PENDING",
+        "resultId": null,
+        "notes": null
+      },
+      {
+        "id": "wo-019",
+        "customerId": "cust-supermercado-familia-007",
+        "createdAt": "2026-02-27T09:00:00.000Z",
+        "updatedAt": "2026-02-27T09:00:00.000Z",
+        "scheduledDate": "2026-03-05",
+        "visitDate": null,
+        "paymentOrderId": "pay-019",
+        "status": "PENDING",
+        "resultId": null,
+        "notes": null
+      },
+      {
+        "id": "wo-020",
+        "customerId": "cust-emporio-gourmet-008",
+        "createdAt": "2026-02-27T10:00:00.000Z",
+        "updatedAt": "2026-02-27T10:00:00.000Z",
+        "scheduledDate": "2026-03-05",
+        "visitDate": null,
+        "paymentOrderId": "pay-020",
+        "status": "PENDING",
+        "resultId": null,
+        "notes": null
+      },
+      {
+        "id": "wo-021",
+        "customerId": "cust-mercadinho-vizinhanca-009",
+        "createdAt": "2026-02-28T09:00:00.000Z",
+        "updatedAt": "2026-02-28T09:00:00.000Z",
+        "scheduledDate": "2026-03-06",
+        "visitDate": null,
+        "paymentOrderId": "pay-021",
+        "status": "PENDING",
+        "resultId": null,
+        "notes": null
+      },
+      {
+        "id": "wo-022",
+        "customerId": "cust-adega-portugal-010",
+        "createdAt": "2026-02-28T10:00:00.000Z",
+        "updatedAt": "2026-02-28T10:00:00.000Z",
+        "scheduledDate": "2026-03-06",
+        "visitDate": null,
+        "paymentOrderId": "pay-022",
+        "status": "PENDING",
+        "resultId": null,
+        "notes": null
+      },
+      {
+        "id": "wo-023",
+        "customerId": "cust-conveniencia-24h-011",
+        "createdAt": "2026-03-01T09:00:00.000Z",
+        "updatedAt": "2026-03-01T09:00:00.000Z",
+        "scheduledDate": "2026-03-07",
+        "visitDate": null,
+        "paymentOrderId": "pay-023",
+        "status": "PENDING",
+        "resultId": null,
+        "notes": null
+      },
+      {
+        "id": "wo-024",
+        "customerId": "cust-hortifruti-verdao-012",
+        "createdAt": "2026-03-01T10:00:00.000Z",
+        "updatedAt": "2026-03-01T10:00:00.000Z",
+        "scheduledDate": "2026-03-07",
+        "visitDate": null,
+        "paymentOrderId": "pay-024",
+        "status": "PENDING",
+        "resultId": null,
+        "notes": null
+      },
+      {
+        "id": "wo-025",
+        "customerId": "cust-mercado-saojose-001",
+        "createdAt": "2026-03-02T09:00:00.000Z",
+        "updatedAt": "2026-03-02T09:00:00.000Z",
+        "scheduledDate": "2026-03-07",
+        "visitDate": null,
+        "paymentOrderId": "pay-025",
+        "status": "PENDING",
+        "resultId": null,
+        "notes": "Pedido mensal grande"
+      }
+    ],
+    "workOrderItem": [
+      {
+        "id": "woi-001-001",
+        "workOrderId": "wo-001",
+        "productId": "prod-coca2l-001",
+        "quantity": 12,
+        "priceSnapshot": 8.5
+      },
+      {
+        "id": "woi-001-002",
+        "workOrderId": "wo-001",
+        "productId": "prod-guarana2l-002",
+        "quantity": 10,
+        "priceSnapshot": 7.9
+      },
+      {
+        "id": "woi-001-003",
+        "workOrderId": "wo-001",
+        "productId": "prod-arroz5kg-007",
+        "quantity": 5,
+        "priceSnapshot": 28.9
+      },
+      {
+        "id": "woi-001-004",
+        "workOrderId": "wo-001",
+        "productId": "prod-feijao1kg-008",
+        "quantity": 8,
+        "priceSnapshot": 7.5
+      },
+      {
+        "id": "woi-002-001",
+        "workOrderId": "wo-002",
+        "productId": "prod-agua500ml-005",
+        "quantity": 24,
+        "priceSnapshot": 2.5
+      },
+      {
+        "id": "woi-002-002",
+        "workOrderId": "wo-002",
+        "productId": "prod-cafe500g-011",
+        "quantity": 6,
+        "priceSnapshot": 15.9
+      },
+      {
+        "id": "woi-002-003",
+        "workOrderId": "wo-002",
+        "productId": "prod-detergente-013",
+        "quantity": 20,
+        "priceSnapshot": 2.8
+      },
+      {
+        "id": "woi-002-004",
+        "workOrderId": "wo-002",
+        "productId": "prod-sabonete-018",
+        "quantity": 30,
+        "priceSnapshot": 2.5
+      },
+      {
+        "id": "woi-003-001",
+        "workOrderId": "wo-003",
+        "productId": "prod-sprite2l-003",
+        "quantity": 8,
+        "priceSnapshot": 7.5
+      },
+      {
+        "id": "woi-003-002",
+        "workOrderId": "wo-003",
+        "productId": "prod-fanta2l-004",
+        "quantity": 8,
+        "priceSnapshot": 7.5
+      },
+      {
+        "id": "woi-003-003",
+        "workOrderId": "wo-003",
+        "productId": "prod-suco1l-006",
+        "quantity": 15,
+        "priceSnapshot": 6.9
+      },
+      {
+        "id": "woi-003-004",
+        "workOrderId": "wo-003",
+        "productId": "prod-macarrao500g-012",
+        "quantity": 20,
+        "priceSnapshot": 4.5
+      },
+      {
+        "id": "woi-003-005",
+        "workOrderId": "wo-003",
+        "productId": "prod-oleo900ml-010",
+        "quantity": 12,
+        "priceSnapshot": 8.9
+      },
+      {
+        "id": "woi-004-001",
+        "workOrderId": "wo-004",
+        "productId": "prod-acucar1kg-009",
+        "quantity": 10,
+        "priceSnapshot": 4.2
+      },
+      {
+        "id": "woi-004-002",
+        "workOrderId": "wo-004",
+        "productId": "prod-desinfetante-014",
+        "quantity": 8,
+        "priceSnapshot": 9.9
+      },
+      {
+        "id": "woi-004-003",
+        "workOrderId": "wo-004",
+        "productId": "prod-agua-sanitaria-017",
+        "quantity": 6,
+        "priceSnapshot": 6.9
+      },
+      {
+        "id": "woi-005-001",
+        "workOrderId": "wo-005",
+        "productId": "prod-coca2l-001",
+        "quantity": 24,
+        "priceSnapshot": 8.5
+      },
+      {
+        "id": "woi-005-002",
+        "workOrderId": "wo-005",
+        "productId": "prod-guarana2l-002",
+        "quantity": 18,
+        "priceSnapshot": 7.9
+      },
+      {
+        "id": "woi-005-003",
+        "workOrderId": "wo-005",
+        "productId": "prod-agua500ml-005",
+        "quantity": 30,
+        "priceSnapshot": 2.5
+      },
+      {
+        "id": "woi-005-004",
+        "workOrderId": "wo-005",
+        "productId": "prod-copo-desc-022",
+        "quantity": 10,
+        "priceSnapshot": 8.9
+      },
+      {
+        "id": "woi-005-005",
+        "workOrderId": "wo-005",
+        "productId": "prod-guardanapo-024",
+        "quantity": 15,
+        "priceSnapshot": 3.9
+      },
+      {
+        "id": "woi-006-001",
+        "workOrderId": "wo-006",
+        "productId": "prod-cafe500g-011",
+        "quantity": 4,
+        "priceSnapshot": 15.9
+      },
+      {
+        "id": "woi-006-002",
+        "workOrderId": "wo-006",
+        "productId": "prod-acucar1kg-009",
+        "quantity": 8,
+        "priceSnapshot": 4.2
+      },
+      {
+        "id": "woi-006-003",
+        "workOrderId": "wo-006",
+        "productId": "prod-copo-desc-022",
+        "quantity": 8,
+        "priceSnapshot": 8.9
+      },
+      {
+        "id": "woi-006-004",
+        "workOrderId": "wo-006",
+        "productId": "prod-prato-desc-023",
+        "quantity": 6,
+        "priceSnapshot": 12.5
+      },
+      {
+        "id": "woi-007-001",
+        "workOrderId": "wo-007",
+        "productId": "prod-arroz5kg-007",
+        "quantity": 10,
+        "priceSnapshot": 28.9
+      },
+      {
+        "id": "woi-007-002",
+        "workOrderId": "wo-007",
+        "productId": "prod-feijao1kg-008",
+        "quantity": 15,
+        "priceSnapshot": 7.5
+      },
+      {
+        "id": "woi-007-003",
+        "workOrderId": "wo-007",
+        "productId": "prod-oleo900ml-010",
+        "quantity": 8,
+        "priceSnapshot": 8.9
+      },
+      {
+        "id": "woi-007-004",
+        "workOrderId": "wo-007",
+        "productId": "prod-papel-higienico-021",
+        "quantity": 5,
+        "priceSnapshot": 18.9
+      },
+      {
+        "id": "woi-008-001",
+        "workOrderId": "wo-008",
+        "productId": "prod-coca2l-001",
+        "quantity": 20,
+        "priceSnapshot": 8.5
+      },
+      {
+        "id": "woi-008-002",
+        "workOrderId": "wo-008",
+        "productId": "prod-suco1l-006",
+        "quantity": 18,
+        "priceSnapshot": 6.9
+      },
+      {
+        "id": "woi-008-003",
+        "workOrderId": "wo-008",
+        "productId": "prod-cafe500g-011",
+        "quantity": 12,
+        "priceSnapshot": 15.9
+      },
+      {
+        "id": "woi-008-004",
+        "workOrderId": "wo-008",
+        "productId": "prod-shampoo-019",
+        "quantity": 10,
+        "priceSnapshot": 12.9
+      },
+      {
+        "id": "woi-008-005",
+        "workOrderId": "wo-008",
+        "productId": "prod-condicionador-020",
+        "quantity": 10,
+        "priceSnapshot": 12.9
+      },
+      {
+        "id": "woi-009-001",
+        "workOrderId": "wo-009",
+        "productId": "prod-detergente-013",
+        "quantity": 24,
+        "priceSnapshot": 2.8
+      },
+      {
+        "id": "woi-009-002",
+        "workOrderId": "wo-009",
+        "productId": "prod-amaciante-015",
+        "quantity": 8,
+        "priceSnapshot": 12.9
+      },
+      {
+        "id": "woi-009-003",
+        "workOrderId": "wo-009",
+        "productId": "prod-sabao-po-016",
+        "quantity": 6,
+        "priceSnapshot": 14.9
+      },
+      {
+        "id": "woi-009-004",
+        "workOrderId": "wo-009",
+        "productId": "prod-sabonete-018",
+        "quantity": 20,
+        "priceSnapshot": 2.5
+      },
+      {
+        "id": "woi-010-001",
+        "workOrderId": "wo-010",
+        "productId": "prod-coca2l-001",
+        "quantity": 15,
+        "priceSnapshot": 8.5
+      },
+      {
+        "id": "woi-010-002",
+        "workOrderId": "wo-010",
+        "productId": "prod-guarana2l-002",
+        "quantity": 12,
+        "priceSnapshot": 7.9
+      },
+      {
+        "id": "woi-010-003",
+        "workOrderId": "wo-010",
+        "productId": "prod-agua500ml-005",
+        "quantity": 20,
+        "priceSnapshot": 2.5
+      },
+      {
+        "id": "woi-011-001",
+        "workOrderId": "wo-011",
+        "productId": "prod-arroz5kg-007",
+        "quantity": 4,
+        "priceSnapshot": 28.9
+      },
+      {
+        "id": "woi-011-002",
+        "workOrderId": "wo-011",
+        "productId": "prod-feijao1kg-008",
+        "quantity": 6,
+        "priceSnapshot": 7.5
+      },
+      {
+        "id": "woi-011-003",
+        "workOrderId": "wo-011",
+        "productId": "prod-cafe500g-011",
+        "quantity": 3,
+        "priceSnapshot": 15.9
+      },
+      {
+        "id": "woi-012-001",
+        "workOrderId": "wo-012",
+        "productId": "prod-detergente-013",
+        "quantity": 12,
+        "priceSnapshot": 2.8
+      },
+      {
+        "id": "woi-012-002",
+        "workOrderId": "wo-012",
+        "productId": "prod-sabonete-018",
+        "quantity": 15,
+        "priceSnapshot": 2.5
+      },
+      {
+        "id": "woi-012-003",
+        "workOrderId": "wo-012",
+        "productId": "prod-papel-higienico-021",
+        "quantity": 3,
+        "priceSnapshot": 18.9
+      },
+      {
+        "id": "woi-013-001",
+        "workOrderId": "wo-013",
+        "productId": "prod-coca2l-001",
+        "quantity": 10,
+        "priceSnapshot": 8.5
+      },
+      {
+        "id": "woi-013-002",
+        "workOrderId": "wo-013",
+        "productId": "prod-agua500ml-005",
+        "quantity": 18,
+        "priceSnapshot": 2.5
+      },
+      {
+        "id": "woi-013-003",
+        "workOrderId": "wo-013",
+        "productId": "prod-macarrao500g-012",
+        "quantity": 12,
+        "priceSnapshot": 4.5
+      },
+      {
+        "id": "woi-014-001",
+        "workOrderId": "wo-014",
+        "productId": "prod-cafe500g-011",
+        "quantity": 5,
+        "priceSnapshot": 15.9
+      },
+      {
+        "id": "woi-014-002",
+        "workOrderId": "wo-014",
+        "productId": "prod-acucar1kg-009",
+        "quantity": 8,
+        "priceSnapshot": 4.2
+      },
+      {
+        "id": "woi-014-003",
+        "workOrderId": "wo-014",
+        "productId": "prod-oleo900ml-010",
+        "quantity": 6,
+        "priceSnapshot": 8.9
+      },
+      {
+        "id": "woi-015-001",
+        "workOrderId": "wo-015",
+        "productId": "prod-sprite2l-003",
+        "quantity": 10,
+        "priceSnapshot": 7.5
+      },
+      {
+        "id": "woi-015-002",
+        "workOrderId": "wo-015",
+        "productId": "prod-fanta2l-004",
+        "quantity": 10,
+        "priceSnapshot": 7.5
+      },
+      {
+        "id": "woi-015-003",
+        "workOrderId": "wo-015",
+        "productId": "prod-suco1l-006",
+        "quantity": 12,
+        "priceSnapshot": 6.9
+      },
+      {
+        "id": "woi-016-001",
+        "workOrderId": "wo-016",
+        "productId": "prod-arroz5kg-007",
+        "quantity": 6,
+        "priceSnapshot": 28.9
+      },
+      {
+        "id": "woi-016-002",
+        "workOrderId": "wo-016",
+        "productId": "prod-feijao1kg-008",
+        "quantity": 10,
+        "priceSnapshot": 7.5
+      },
+      {
+        "id": "woi-016-003",
+        "workOrderId": "wo-016",
+        "productId": "prod-desinfetante-014",
+        "quantity": 5,
+        "priceSnapshot": 9.9
+      },
+      {
+        "id": "woi-017-001",
+        "workOrderId": "wo-017",
+        "productId": "prod-coca2l-001",
+        "quantity": 18,
+        "priceSnapshot": 8.5
+      },
+      {
+        "id": "woi-017-002",
+        "workOrderId": "wo-017",
+        "productId": "prod-guarana2l-002",
+        "quantity": 15,
+        "priceSnapshot": 7.9
+      },
+      {
+        "id": "woi-017-003",
+        "workOrderId": "wo-017",
+        "productId": "prod-copo-desc-022",
+        "quantity": 8,
+        "priceSnapshot": 8.9
+      },
+      {
+        "id": "woi-018-001",
+        "workOrderId": "wo-018",
+        "productId": "prod-cafe500g-011",
+        "quantity": 6,
+        "priceSnapshot": 15.9
+      },
+      {
+        "id": "woi-018-002",
+        "workOrderId": "wo-018",
+        "productId": "prod-prato-desc-023",
+        "quantity": 8,
+        "priceSnapshot": 12.5
+      },
+      {
+        "id": "woi-018-003",
+        "workOrderId": "wo-018",
+        "productId": "prod-guardanapo-024",
+        "quantity": 12,
+        "priceSnapshot": 3.9
+      },
+      {
+        "id": "woi-019-001",
+        "workOrderId": "wo-019",
+        "productId": "prod-arroz5kg-007",
+        "quantity": 12,
+        "priceSnapshot": 28.9
+      },
+      {
+        "id": "woi-019-002",
+        "workOrderId": "wo-019",
+        "productId": "prod-oleo900ml-010",
+        "quantity": 10,
+        "priceSnapshot": 8.9
+      },
+      {
+        "id": "woi-019-003",
+        "workOrderId": "wo-019",
+        "productId": "prod-papel-higienico-021",
+        "quantity": 6,
+        "priceSnapshot": 18.9
+      },
+      {
+        "id": "woi-020-001",
+        "workOrderId": "wo-020",
+        "productId": "prod-coca2l-001",
+        "quantity": 15,
+        "priceSnapshot": 8.5
+      },
+      {
+        "id": "woi-020-002",
+        "workOrderId": "wo-020",
+        "productId": "prod-suco1l-006",
+        "quantity": 12,
+        "priceSnapshot": 6.9
+      },
+      {
+        "id": "woi-020-003",
+        "workOrderId": "wo-020",
+        "productId": "prod-shampoo-019",
+        "quantity": 8,
+        "priceSnapshot": 12.9
+      },
+      {
+        "id": "woi-021-001",
+        "workOrderId": "wo-021",
+        "productId": "prod-detergente-013",
+        "quantity": 18,
+        "priceSnapshot": 2.8
+      },
+      {
+        "id": "woi-021-002",
+        "workOrderId": "wo-021",
+        "productId": "prod-amaciante-015",
+        "quantity": 6,
+        "priceSnapshot": 12.9
+      },
+      {
+        "id": "woi-021-003",
+        "workOrderId": "wo-021",
+        "productId": "prod-sabonete-018",
+        "quantity": 15,
+        "priceSnapshot": 2.5
+      },
+      {
+        "id": "woi-022-001",
+        "workOrderId": "wo-022",
+        "productId": "prod-coca2l-001",
+        "quantity": 12,
+        "priceSnapshot": 8.5
+      },
+      {
+        "id": "woi-022-002",
+        "workOrderId": "wo-022",
+        "productId": "prod-agua500ml-005",
+        "quantity": 24,
+        "priceSnapshot": 2.5
+      },
+      {
+        "id": "woi-023-001",
+        "workOrderId": "wo-023",
+        "productId": "prod-arroz5kg-007",
+        "quantity": 5,
+        "priceSnapshot": 28.9
+      },
+      {
+        "id": "woi-023-002",
+        "workOrderId": "wo-023",
+        "productId": "prod-feijao1kg-008",
+        "quantity": 8,
+        "priceSnapshot": 7.5
+      },
+      {
+        "id": "woi-024-001",
+        "workOrderId": "wo-024",
+        "productId": "prod-cafe500g-011",
+        "quantity": 4,
+        "priceSnapshot": 15.9
+      },
+      {
+        "id": "woi-024-002",
+        "workOrderId": "wo-024",
+        "productId": "prod-papel-higienico-021",
+        "quantity": 4,
+        "priceSnapshot": 18.9
+      },
+      {
+        "id": "woi-025-001",
+        "workOrderId": "wo-025",
+        "productId": "prod-coca2l-001",
+        "quantity": 20,
+        "priceSnapshot": 8.5
+      },
+      {
+        "id": "woi-025-002",
+        "workOrderId": "wo-025",
+        "productId": "prod-guarana2l-002",
+        "quantity": 15,
+        "priceSnapshot": 7.9
+      },
+      {
+        "id": "woi-025-003",
+        "workOrderId": "wo-025",
+        "productId": "prod-arroz5kg-007",
+        "quantity": 8,
+        "priceSnapshot": 28.9
+      }
+    ],
+    "workOrderResult": [
+      {
+        "id": "result-001",
+        "totalValue": 356.4
+      },
+      {
+        "id": "result-002",
+        "totalValue": 289.5
+      },
+      {
+        "id": "result-003",
+        "totalValue": 445.8
+      },
+      {
+        "id": "result-004",
+        "totalValue": 198.7
+      },
+      {
+        "id": "result-005",
+        "totalValue": 567.3
+      },
+      {
+        "id": "result-006",
+        "totalValue": 234.6
+      },
+      {
+        "id": "result-007",
+        "totalValue": 412.9
+      },
+      {
+        "id": "result-008",
+        "totalValue": 678.4
+      },
+      {
+        "id": "result-009",
+        "totalValue": 324.8
+      }
+    ],
+    "workOrderResultItem": [
+      {
+        "id": "result-item-001-001",
+        "resultId": "result-001",
+        "productId": "prod-coca2l-001",
+        "quantity": 12,
+        "priceSnapshot": 8.5,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-001-002",
+        "resultId": "result-001",
+        "productId": "prod-guarana2l-002",
+        "quantity": 10,
+        "priceSnapshot": 7.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-001-003",
+        "resultId": "result-001",
+        "productId": "prod-arroz5kg-007",
+        "quantity": 5,
+        "priceSnapshot": 28.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-001-004",
+        "resultId": "result-001",
+        "productId": "prod-feijao1kg-008",
+        "quantity": 8,
+        "priceSnapshot": 7.5,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-002-001",
+        "resultId": "result-002",
+        "productId": "prod-agua500ml-005",
+        "quantity": 24,
+        "priceSnapshot": 2.5,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-002-002",
+        "resultId": "result-002",
+        "productId": "prod-cafe500g-011",
+        "quantity": 6,
+        "priceSnapshot": 15.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-002-003",
+        "resultId": "result-002",
+        "productId": "prod-detergente-013",
+        "quantity": 20,
+        "priceSnapshot": 2.8,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-002-004",
+        "resultId": "result-002",
+        "productId": "prod-sabonete-018",
+        "quantity": 30,
+        "priceSnapshot": 2.5,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-003-001",
+        "resultId": "result-003",
+        "productId": "prod-sprite2l-003",
+        "quantity": 8,
+        "priceSnapshot": 7.5,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-003-002",
+        "resultId": "result-003",
+        "productId": "prod-fanta2l-004",
+        "quantity": 6,
+        "priceSnapshot": 7.5,
+        "type": "EXCHANGED",
+        "observation": "Cliente trocou 2 unidades por Sprite"
+      },
+      {
+        "id": "result-item-003-003",
+        "resultId": "result-003",
+        "productId": "prod-sprite2l-003",
+        "quantity": 2,
+        "priceSnapshot": 7.5,
+        "type": "ADDED",
+        "observation": "Troca do Fanta"
+      },
+      {
+        "id": "result-item-003-004",
+        "resultId": "result-003",
+        "productId": "prod-suco1l-006",
+        "quantity": 15,
+        "priceSnapshot": 6.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-003-005",
+        "resultId": "result-003",
+        "productId": "prod-macarrao500g-012",
+        "quantity": 20,
+        "priceSnapshot": 4.5,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-003-006",
+        "resultId": "result-003",
+        "productId": "prod-oleo900ml-010",
+        "quantity": 12,
+        "priceSnapshot": 8.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-004-001",
+        "resultId": "result-004",
+        "productId": "prod-acucar1kg-009",
+        "quantity": 10,
+        "priceSnapshot": 4.2,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-004-002",
+        "resultId": "result-004",
+        "productId": "prod-desinfetante-014",
+        "quantity": 8,
+        "priceSnapshot": 9.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-004-003",
+        "resultId": "result-004",
+        "productId": "prod-agua-sanitaria-017",
+        "quantity": 6,
+        "priceSnapshot": 6.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-005-001",
+        "resultId": "result-005",
+        "productId": "prod-coca2l-001",
+        "quantity": 24,
+        "priceSnapshot": 8.5,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-005-002",
+        "resultId": "result-005",
+        "productId": "prod-guarana2l-002",
+        "quantity": 18,
+        "priceSnapshot": 7.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-005-003",
+        "resultId": "result-005",
+        "productId": "prod-agua500ml-005",
+        "quantity": 30,
+        "priceSnapshot": 2.5,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-005-004",
+        "resultId": "result-005",
+        "productId": "prod-copo-desc-022",
+        "quantity": 12,
+        "priceSnapshot": 8.9,
+        "type": "ADDED",
+        "observation": "Pedido extra"
+      },
+      {
+        "id": "result-item-005-005",
+        "resultId": "result-005",
+        "productId": "prod-guardanapo-024",
+        "quantity": 15,
+        "priceSnapshot": 3.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-006-001",
+        "resultId": "result-006",
+        "productId": "prod-cafe500g-011",
+        "quantity": 4,
+        "priceSnapshot": 15.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-006-002",
+        "resultId": "result-006",
+        "productId": "prod-acucar1kg-009",
+        "quantity": 8,
+        "priceSnapshot": 4.2,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-006-003",
+        "resultId": "result-006",
+        "productId": "prod-copo-desc-022",
+        "quantity": 8,
+        "priceSnapshot": 8.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-006-004",
+        "resultId": "result-006",
+        "productId": "prod-prato-desc-023",
+        "quantity": 6,
+        "priceSnapshot": 12.5,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-007-001",
+        "resultId": "result-007",
+        "productId": "prod-arroz5kg-007",
+        "quantity": 10,
+        "priceSnapshot": 28.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-007-002",
+        "resultId": "result-007",
+        "productId": "prod-feijao1kg-008",
+        "quantity": 15,
+        "priceSnapshot": 7.5,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-007-003",
+        "resultId": "result-007",
+        "productId": "prod-oleo900ml-010",
+        "quantity": 8,
+        "priceSnapshot": 8.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-007-004",
+        "resultId": "result-007",
+        "productId": "prod-papel-higienico-021",
+        "quantity": 5,
+        "priceSnapshot": 18.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-008-001",
+        "resultId": "result-008",
+        "productId": "prod-coca2l-001",
+        "quantity": 20,
+        "priceSnapshot": 8.5,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-008-002",
+        "resultId": "result-008",
+        "productId": "prod-suco1l-006",
+        "quantity": 18,
+        "priceSnapshot": 6.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-008-003",
+        "resultId": "result-008",
+        "productId": "prod-cafe500g-011",
+        "quantity": 12,
+        "priceSnapshot": 15.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-008-004",
+        "resultId": "result-008",
+        "productId": "prod-shampoo-019",
+        "quantity": 10,
+        "priceSnapshot": 12.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-008-005",
+        "resultId": "result-008",
+        "productId": "prod-condicionador-020",
+        "quantity": 10,
+        "priceSnapshot": 12.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-009-001",
+        "resultId": "result-009",
+        "productId": "prod-detergente-013",
+        "quantity": 20,
+        "priceSnapshot": 2.8,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-009-002",
+        "resultId": "result-009",
+        "productId": "prod-detergente-013",
+        "quantity": 4,
+        "priceSnapshot": 2.8,
+        "type": "REMOVED",
+        "observation": "Cliente devolveu 4 unidades - vencimento próximo"
+      },
+      {
+        "id": "result-item-009-003",
+        "resultId": "result-009",
+        "productId": "prod-amaciante-015",
+        "quantity": 8,
+        "priceSnapshot": 12.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-009-004",
+        "resultId": "result-009",
+        "productId": "prod-sabao-po-016",
+        "quantity": 6,
+        "priceSnapshot": 14.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "result-item-009-005",
+        "resultId": "result-009",
+        "productId": "prod-sabonete-018",
+        "quantity": 20,
+        "priceSnapshot": 2.5,
+        "type": "EXCHANGED",
+        "observation": null
+      }
+    ],
+    "itineraryWorkOrder": [
+      {
+        "id": "iwo-001",
+        "itineraryId": "itin-week1-001",
+        "workOrderId": "wo-001",
+        "position": 1,
+        "isLate": false
+      },
+      {
+        "id": "iwo-002",
+        "itineraryId": "itin-week1-001",
+        "workOrderId": "wo-002",
+        "position": 2,
+        "isLate": false
+      },
+      {
+        "id": "iwo-003",
+        "itineraryId": "itin-week1-001",
+        "workOrderId": "wo-003",
+        "position": 3,
+        "isLate": false
+      },
+      {
+        "id": "iwo-004",
+        "itineraryId": "itin-week1-001",
+        "workOrderId": "wo-004",
+        "position": 4,
+        "isLate": false
+      },
+      {
+        "id": "iwo-005",
+        "itineraryId": "itin-week1-001",
+        "workOrderId": "wo-005",
+        "position": 5,
+        "isLate": false
+      },
+      {
+        "id": "iwo-006",
+        "itineraryId": "itin-week1-001",
+        "workOrderId": "wo-006",
+        "position": 6,
+        "isLate": false
+      },
+      {
+        "id": "iwo-007",
+        "itineraryId": "itin-week1-001",
+        "workOrderId": "wo-007",
+        "position": 7,
+        "isLate": false
+      },
+      {
+        "id": "iwo-008",
+        "itineraryId": "itin-week1-001",
+        "workOrderId": "wo-008",
+        "position": 8,
+        "isLate": false
+      },
+      {
+        "id": "iwo-009",
+        "itineraryId": "itin-week1-001",
+        "workOrderId": "wo-009",
+        "position": 9,
+        "isLate": false
+      },
+      {
+        "id": "iwo-010",
+        "itineraryId": "itin-week2-002",
+        "workOrderId": "wo-010",
+        "position": 1,
+        "isLate": false
+      },
+      {
+        "id": "iwo-011",
+        "itineraryId": "itin-week2-002",
+        "workOrderId": "wo-011",
+        "position": 2,
+        "isLate": false
+      },
+      {
+        "id": "iwo-012",
+        "itineraryId": "itin-week2-002",
+        "workOrderId": "wo-012",
+        "position": 3,
+        "isLate": false
+      },
+      {
+        "id": "iwo-013",
+        "itineraryId": "itin-week2-002",
+        "workOrderId": "wo-013",
+        "position": 4,
+        "isLate": false
+      },
+      {
+        "id": "iwo-014",
+        "itineraryId": "itin-week2-002",
+        "workOrderId": "wo-014",
+        "position": 5,
+        "isLate": false
+      },
+      {
+        "id": "iwo-015",
+        "itineraryId": "itin-week3-003",
+        "workOrderId": "wo-015",
+        "position": 1,
+        "isLate": false
+      },
+      {
+        "id": "iwo-016",
+        "itineraryId": "itin-week3-003",
+        "workOrderId": "wo-016",
+        "position": 2,
+        "isLate": false
+      },
+      {
+        "id": "iwo-017",
+        "itineraryId": "itin-week3-003",
+        "workOrderId": "wo-017",
+        "position": 3,
+        "isLate": false
+      },
+      {
+        "id": "iwo-018",
+        "itineraryId": "itin-week3-003",
+        "workOrderId": "wo-018",
+        "position": 4,
+        "isLate": false
+      },
+      {
+        "id": "iwo-019",
+        "itineraryId": "itin-week3-003",
+        "workOrderId": "wo-019",
+        "position": 5,
+        "isLate": false
+      },
+      {
+        "id": "iwo-020",
+        "itineraryId": "itin-week3-003",
+        "workOrderId": "wo-020",
+        "position": 6,
+        "isLate": false
+      },
+      {
+        "id": "iwo-021",
+        "itineraryId": "itin-week3-003",
+        "workOrderId": "wo-021",
+        "position": 7,
+        "isLate": false
+      },
+      {
+        "id": "iwo-022",
+        "itineraryId": "itin-week3-003",
+        "workOrderId": "wo-022",
+        "position": 8,
+        "isLate": false
+      },
+      {
+        "id": "iwo-023",
+        "itineraryId": "itin-week3-003",
+        "workOrderId": "wo-023",
+        "position": 9,
+        "isLate": false
+      },
+      {
+        "id": "iwo-024",
+        "itineraryId": "itin-week3-003",
+        "workOrderId": "wo-024",
+        "position": 10,
+        "isLate": false
+      },
+      {
+        "id": "iwo-025",
+        "itineraryId": "itin-week3-003",
+        "workOrderId": "wo-025",
+        "position": 11,
+        "isLate": false
+      }
+    ]
+  }
+}
