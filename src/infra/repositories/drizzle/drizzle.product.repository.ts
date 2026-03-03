@@ -11,8 +11,17 @@ import { db } from '@/src/infra/db/drizzle/drizzle-client'
 import { category } from '@/src/infra/db/drizzle/schema/drizzle.category.schema'
 import { product } from '@/src/infra/db/drizzle/schema/drizzle.product.schema'
 import { UUID } from '@/src/lib/utils'
-import { eq } from 'drizzle-orm'
+import { and, eq, gte, like, lte } from 'drizzle-orm'
 import uuid from 'react-native-uuid'
+
+export interface ProductFilters {
+  search?: string
+  categoryName?: string
+  expiration?: string
+  salePriceMin?: string
+  salePriceMax?: string
+  status?: 'all' | 'active' | 'inactive'
+}
 
 export default class DrizzleProductRepository implements ProductRepository {
   async getProducts(): Promise<Product[]> {
@@ -23,7 +32,46 @@ export default class DrizzleProductRepository implements ProductRepository {
     return rows.map(ProductMapper.toDomain)
   }
 
-  async getProductsWithCategory(): Promise<ProductWithCategoryDTO[]> {
+  async getProductsWithCategory(
+    filters?: ProductFilters
+  ): Promise<ProductWithCategoryDTO[]> {
+    // Construir condições de filtro dinamicamente
+    const conditions = []
+
+    // Filtro de busca por nome
+    if (filters?.search) {
+      conditions.push(like(product.name, `%${filters.search}%`))
+    }
+
+    // Filtro por nome da categoria
+    if (filters?.categoryName) {
+      conditions.push(like(category.name, `%${filters.categoryName}%`))
+    }
+
+    // Filtro por validade
+    if (filters?.expiration) {
+      conditions.push(like(product.expiration, `%${filters.expiration}%`))
+    }
+
+    // Filtro por preço mínimo
+    if (filters?.salePriceMin) {
+      conditions.push(gte(product.salePrice, Number(filters.salePriceMin)))
+    }
+
+    // Filtro por preço máximo
+    if (filters?.salePriceMax) {
+      conditions.push(lte(product.salePrice, Number(filters.salePriceMax)))
+    }
+
+    // Filtro por status
+    if (filters?.status && filters.status !== 'all') {
+      const isActive = filters.status === 'active'
+      conditions.push(eq(product.isActive, isActive))
+    }
+
+    // Aplicar WHERE com todas as condições
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined
+
     const rows = await db
       .select({
         id: product.id,
@@ -36,6 +84,7 @@ export default class DrizzleProductRepository implements ProductRepository {
       })
       .from(product)
       .leftJoin(category, eq(product.categoryId, category.id))
+      .where(whereClause)
 
     return rows.map((row) => ({
       id: row.id as UUID,
@@ -56,7 +105,7 @@ export default class DrizzleProductRepository implements ProductRepository {
       id,
       dto.name,
       dto.categoryId as UUID,
-      dto.salePrice,
+      dto.salePrice ? Number(dto.salePrice) : 0,
       dto.isActive ?? true,
       expiration
     )
@@ -76,7 +125,7 @@ export default class DrizzleProductRepository implements ProductRepository {
       dto.id as UUID,
       dto.name ?? existing.name,
       dto.categoryId as UUID,
-      dto.salePrice ?? existing.salePrice,
+      dto.salePrice ? Number(dto.salePrice) : existing.salePrice,
       dto.isActive ?? existing.isActive,
       expiration
     )

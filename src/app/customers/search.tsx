@@ -1,3 +1,4 @@
+import { useDebouncedValue } from '@/src/application/hooks/use-debounced-value'
 import { Button } from '@/src/components/ui/button'
 import { FloatingLabelInput } from '@/src/components/ui/floating-label-input'
 import { Icon } from '@/src/components/ui/icon'
@@ -32,9 +33,45 @@ export default function CustomerSearchScreen() {
     (params.landlineNumber as string) || ''
   )
 
+  // Aplicar debounce nos inputs de texto (300ms)
+  const debouncedSearch = useDebouncedValue(searchQuery, 300)
+  const debouncedContactName = useDebouncedValue(contactNameFilter, 300)
+  const debouncedPhoneNumber = useDebouncedValue(phoneNumberFilter, 300)
+  const debouncedLandlineNumber = useDebouncedValue(landlineNumberFilter, 300)
+
   const [isActiveWhatsAppFilter, setIsActiveWhatsAppFilter] = useState<
     'all' | 'true' | 'false'
   >((params.isActiveWhatsApp as any) || 'all')
+
+  // Auto-aplicar filtros quando valores debounced mudarem
+  React.useEffect(() => {
+    const filters = {
+      search: debouncedSearch || undefined,
+      contactName: debouncedContactName || undefined,
+      phoneNumber: debouncedPhoneNumber || undefined,
+      landlineNumber: debouncedLandlineNumber || undefined,
+      isActiveWhatsApp:
+        isActiveWhatsAppFilter !== 'all' ? isActiveWhatsAppFilter : undefined,
+    }
+
+    // Só aplica se houver mudança real nos filtros
+    const hasChanges =
+      filters.search !== params.search ||
+      filters.contactName !== params.contactName ||
+      filters.phoneNumber !== params.phoneNumber ||
+      filters.landlineNumber !== params.landlineNumber ||
+      filters.isActiveWhatsApp !== params.isActiveWhatsApp
+
+    if (hasChanges) {
+      router.setParams(filters)
+    }
+  }, [
+    debouncedSearch,
+    debouncedContactName,
+    debouncedPhoneNumber,
+    debouncedLandlineNumber,
+    isActiveWhatsAppFilter,
+  ])
 
   const applyFilters = () => {
     router.back()

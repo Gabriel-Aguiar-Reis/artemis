@@ -36,8 +36,35 @@ import { workOrderResultItem } from '@/src/infra/db/drizzle/schema/drizzle.work-
 import { workOrderResult } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result.schema'
 import { workOrder } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
 import { UUID } from '@/src/lib/utils'
-import { and, count, eq, gte, isNull, lte, ne } from 'drizzle-orm'
+import {
+  and,
+  count,
+  eq,
+  gte,
+  isNotNull,
+  isNull,
+  like,
+  lte,
+  ne,
+  or,
+} from 'drizzle-orm'
 import uuid from 'react-native-uuid'
+
+export interface WorkOrderFilters {
+  search?: string
+  phoneNumber?: string
+  landlineNumber?: string
+  isWhatsApp?: string
+  scheduledDate?: string
+  visitDate?: string
+  minTotalValue?: string
+  maxTotalValue?: string
+  isPaid?: string
+  hasPayment?: string
+  hasResult?: string
+  isExpired?: string
+  isCopied?: string
+}
 
 export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
   private async loadWorkOrderItems(
@@ -164,9 +191,134 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
 
   async getWorkOrdersPaginated(
     page: number,
-    pageSize: number
+    pageSize: number,
+    filters?: WorkOrderFilters
   ): Promise<PaginatedWorkOrders> {
     const offset = (page - 1) * pageSize
+
+    // Construir condições de filtro dinamicamente
+    const conditions = []
+
+    // Filtro de busca por nome do cliente
+    if (filters?.search) {
+      conditions.push(like(customer.storeName, `%${filters.search}%`))
+    }
+
+    // Filtro por telefone (já vem normalizado sem formatação)
+    if (filters?.phoneNumber) {
+      const phoneDigits = filters.phoneNumber.replace(/\D+/g, '')
+      if (phoneDigits) {
+        conditions.push(like(customer.phoneNumber, `%${phoneDigits}%`))
+      }
+    }
+
+    // Filtro por telefone fixo (já vem normalizado sem formatação)
+    if (filters?.landlineNumber) {
+      const landlineDigits = filters.landlineNumber.replace(/\D+/g, '')
+      if (landlineDigits) {
+        conditions.push(like(customer.landlineNumber, `%${landlineDigits}%`))
+      }
+    }
+
+    // Filtro por WhatsApp
+    if (filters?.isWhatsApp && filters.isWhatsApp !== 'all') {
+      const isWhatsApp = filters.isWhatsApp === 'true'
+      conditions.push(
+        or(
+          eq(customer.phoneIsWhatsApp, isWhatsApp),
+          eq(customer.landlineIsWhatsApp, isWhatsApp)
+        )
+      )
+    }
+
+    // Filtro por data agendada
+    if (filters?.scheduledDate) {
+      const filterDate = new Date(filters.scheduledDate)
+      const startOfDay = new Date(filterDate)
+      startOfDay.setHours(0, 0, 0, 0)
+      const endOfDay = new Date(filterDate)
+      endOfDay.setHours(23, 59, 59, 999)
+
+      conditions.push(
+        and(
+          gte(workOrder.scheduledDate, startOfDay.toISOString()),
+          lte(workOrder.scheduledDate, endOfDay.toISOString())
+        )
+      )
+    }
+
+    // Filtro por data de visita
+    if (filters?.visitDate) {
+      const filterDate = new Date(filters.visitDate)
+      const startOfDay = new Date(filterDate)
+      startOfDay.setHours(0, 0, 0, 0)
+      const endOfDay = new Date(filterDate)
+      endOfDay.setHours(23, 59, 59, 999)
+
+      conditions.push(
+        and(
+          gte(workOrder.visitDate, startOfDay.toISOString()),
+          lte(workOrder.visitDate, endOfDay.toISOString())
+        )
+      )
+    }
+
+    // Filtro por valor mínimo total
+    if (filters?.minTotalValue) {
+      const minValue = Number(filters.minTotalValue)
+      conditions.push(gte(paymentOrder.totalValue, minValue))
+    }
+
+    // Filtro por valor máximo total
+    if (filters?.maxTotalValue) {
+      const maxValue = Number(filters.maxTotalValue)
+      conditions.push(lte(paymentOrder.totalValue, maxValue))
+    }
+
+    // Filtro por status de pagamento (isPaid)
+    if (filters?.isPaid && filters.isPaid !== 'all') {
+      const isPaid = filters.isPaid === 'true'
+      conditions.push(eq(paymentOrder.isPaid, isPaid))
+    }
+
+    // Filtro hasPayment
+    if (filters?.hasPayment && filters.hasPayment !== 'all') {
+      if (filters.hasPayment === 'true') {
+        conditions.push(isNotNull(workOrder.paymentOrderId))
+      } else {
+        conditions.push(isNull(workOrder.paymentOrderId))
+      }
+    }
+
+    // Filtro hasResult
+    if (filters?.hasResult && filters.hasResult !== 'all') {
+      if (filters.hasResult === 'true') {
+        conditions.push(isNotNull(workOrder.resultId))
+      } else {
+        conditions.push(isNull(workOrder.resultId))
+      }
+    }
+
+    // Filtro isExpired
+    if (filters?.isExpired && filters.isExpired !== 'all') {
+      if (filters.isExpired === 'true') {
+        conditions.push(eq(workOrder.status, WorkOrderStatus.EXPIRED))
+      } else {
+        conditions.push(ne(workOrder.status, WorkOrderStatus.EXPIRED))
+      }
+    }
+
+    // Filtro isCopied
+    if (filters?.isCopied && filters.isCopied !== 'all') {
+      if (filters.isCopied === 'true') {
+        conditions.push(eq(workOrder.status, WorkOrderStatus.COPIED))
+      } else {
+        conditions.push(ne(workOrder.status, WorkOrderStatus.COPIED))
+      }
+    }
+
+    // Aplicar WHERE com todas as condições
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined
 
     // Busca total de registros e registros da página em paralelo
     const [rows, totalResult] = await Promise.all([
@@ -181,9 +333,14 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
         .leftJoin(customer, eq(workOrder.customerId, customer.id))
         .leftJoin(paymentOrder, eq(workOrder.paymentOrderId, paymentOrder.id))
         .leftJoin(workOrderResult, eq(workOrder.resultId, workOrderResult.id))
+        .where(whereClause)
         .limit(pageSize)
         .offset(offset),
-      db.select({ count: count() }).from(workOrder),
+      db
+        .select({ count: count() })
+        .from(workOrder)
+        .leftJoin(customer, eq(workOrder.customerId, customer.id))
+        .where(whereClause),
     ])
 
     const totalCount = totalResult[0]?.count ?? 0

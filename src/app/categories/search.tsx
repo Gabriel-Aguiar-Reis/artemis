@@ -1,3 +1,4 @@
+import { useDebouncedValue } from '@/src/application/hooks/use-debounced-value'
 import { Button } from '@/src/components/ui/button'
 import { Icon } from '@/src/components/ui/icon'
 import { Input } from '@/src/components/ui/input'
@@ -20,6 +21,19 @@ export default function CategoriesSearchScreen() {
   const [statusFilter, setStatusFilter] = useState<
     'all' | 'active' | 'inactive'
   >(params.status || 'all')
+
+  // Aplicar debounce no input de texto (300ms)
+  const debouncedSearch = useDebouncedValue(searchQuery, 300)
+
+  // Auto-aplicar filtros quando valores debounced mudarem
+  React.useEffect(() => {
+    const filters = {
+      search: debouncedSearch || undefined,
+      status: statusFilter !== 'all' ? statusFilter : undefined,
+    }
+
+    router.setParams(filters)
+  }, [debouncedSearch, statusFilter])
 
   const applyFilters = () => {
     router.back()

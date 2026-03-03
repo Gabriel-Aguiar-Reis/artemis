@@ -233,7 +233,7 @@ export function WorkOrderCard({
           </Tooltip>
         </View>
 
-        <View className="flex-row items-center gap-2">
+        <View className="flex-row items-center gap-2 flex-wrap">
           <Tooltip>
             <TooltipTrigger>
               <View className="flex-row items-center mb-1 gap-2">
@@ -264,7 +264,7 @@ export function WorkOrderCard({
 
           <Tooltip>
             <TooltipTrigger>
-              <View className="flex-row items-center mb-1 gap-2">
+              <View className="flex-row items-center mb-1 gap-2 flex-wrap">
                 <Icon
                   as={Receipt}
                   size={16}

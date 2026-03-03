@@ -14,8 +14,16 @@ import {
 import { db } from '@/src/infra/db/drizzle/drizzle-client'
 import { customer } from '@/src/infra/db/drizzle/schema/drizzle.customer.schema'
 import { UUID } from '@/src/lib/utils'
-import { count, eq } from 'drizzle-orm'
+import { and, count, eq, like, or } from 'drizzle-orm'
 import uuid from 'react-native-uuid'
+
+export interface CustomerFilters {
+  search?: string
+  contactName?: string
+  phoneNumber?: string
+  landlineNumber?: string
+  isActiveWhatsApp?: string
+}
 
 export default class DrizzleCustomerRepository implements CustomerRepository {
   async getCustomers(): Promise<Customer[]> {
@@ -28,14 +36,65 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
 
   async getCustomersPaginated(
     page: number,
-    pageSize: number
+    pageSize: number,
+    filters?: CustomerFilters
   ): Promise<PaginatedCustomers> {
     const offset = (page - 1) * pageSize
 
+    // Construir condições de filtro dinamicamente
+    const conditions = []
+
+    if (filters?.search) {
+      conditions.push(
+        or(
+          like(customer.storeName, `%${filters.search}%`),
+          like(customer.contactName, `%${filters.search}%`)
+        )
+      )
+    }
+
+    if (filters?.contactName) {
+      conditions.push(like(customer.contactName, `%${filters.contactName}%`))
+    }
+
+    if (filters?.phoneNumber) {
+      // Remove formatação antes de buscar
+      const phoneDigits = filters.phoneNumber.replace(/\D+/g, '')
+      if (phoneDigits) {
+        conditions.push(like(customer.phoneNumber, `%${phoneDigits}%`))
+      }
+    }
+
+    if (filters?.landlineNumber) {
+      // Remove formatação antes de buscar
+      const landlineDigits = filters.landlineNumber.replace(/\D+/g, '')
+      if (landlineDigits) {
+        conditions.push(like(customer.landlineNumber, `%${landlineDigits}%`))
+      }
+    }
+
+    if (filters?.isActiveWhatsApp && filters.isActiveWhatsApp !== 'all') {
+      const isWhatsApp = filters.isActiveWhatsApp === 'true'
+      conditions.push(
+        or(
+          eq(customer.phoneIsWhatsApp, isWhatsApp),
+          eq(customer.landlineIsWhatsApp, isWhatsApp)
+        )
+      )
+    }
+
+    // Aplicar WHERE com todas as condições
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined
+
     // Busca total de registros e registros da página em paralelo
     const [rows, totalResult] = await Promise.all([
-      db.select().from(customer).limit(pageSize).offset(offset),
-      db.select({ count: count() }).from(customer),
+      db
+        .select()
+        .from(customer)
+        .where(whereClause)
+        .limit(pageSize)
+        .offset(offset),
+      db.select({ count: count() }).from(customer).where(whereClause),
     ])
 
     const totalCount = totalResult[0]?.count ?? 0

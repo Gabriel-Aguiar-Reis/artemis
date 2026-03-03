@@ -9,11 +9,8 @@ import { NotesDialog } from '@/src/components/ui/dialog/notes-dialog'
 import { WhatsAppSummaryDialog } from '@/src/components/ui/dialog/whatsapp-summary-dialog'
 import { Text } from '@/src/components/ui/text'
 import { WorkOrderCard } from '@/src/components/ui/work-order-card'
-import {
-  WorkOrder,
-  WorkOrderStatus,
-} from '@/src/domain/entities/work-order/work-order.entity'
-import { smartSearch, UUID } from '@/src/lib/utils'
+import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
+import { UUID } from '@/src/lib/utils'
 import { FlashList } from '@shopify/flash-list'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
 import {
@@ -37,8 +34,41 @@ export default function WorkOrdersScreen() {
   const { createdWorkOrderId } = useLocalSearchParams<{
     createdWorkOrderId?: string
   }>()
+
+  const params = useLocalSearchParams<{
+    search?: string // customer store name or contact name
+    phoneNumber?: string
+    landlineNumber?: string
+    isWhatsApp?: string
+    scheduledDate?: string
+    visitDate?: string
+    minTotalValue?: string
+    maxTotalValue?: string
+    isPaid?: string
+    hasPayment?: string
+    hasResult?: string
+    isExpired?: string
+    isCopied?: string
+  }>()
+
+  const filters = {
+    search: params.search,
+    phoneNumber: params.phoneNumber,
+    landlineNumber: params.landlineNumber,
+    isWhatsApp: params.isWhatsApp,
+    scheduledDate: params.scheduledDate,
+    visitDate: params.visitDate,
+    minTotalValue: params.minTotalValue,
+    maxTotalValue: params.maxTotalValue,
+    isPaid: params.isPaid,
+    hasPayment: params.hasPayment,
+    hasResult: params.hasResult,
+    isExpired: params.isExpired,
+    isCopied: params.isCopied,
+  }
+
   const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
-    useWorkOrdersInfinite()
+    useWorkOrdersInfinite(filters)
   const { mutate: deleteWorkOrder } = workOrderHooks.deleteWorkOrder()
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<{
     id: UUID
@@ -65,22 +95,6 @@ export default function WorkOrdersScreen() {
       setShowWhatsAppDialog(true)
     }
   }, [createdWorkOrderId, allWorkOrders])
-
-  const params = useLocalSearchParams<{
-    search?: string // customer store name or contact name
-    phoneNumber?: string
-    landlineNumber?: string
-    isWhatsApp?: string
-    scheduledDate?: string
-    visitDate?: string
-    minTotalValue?: string
-    maxTotalValue?: string
-    isPaid?: string
-    hasPayment?: string
-    hasResult?: string
-    isExpired?: string
-    isCopied?: string
-  }>()
 
   const handleWorkOrderOptions = async (workOrder: WorkOrder) => {
     const customerName = workOrder.customer.storeName
@@ -288,98 +302,9 @@ export default function WorkOrdersScreen() {
     router.navigate('/work-orders', { dangerouslySingular: true })
   }
 
-  const filteredWorkOrders = useMemo(() => {
-    if (!allWorkOrders) return []
-    return allWorkOrders.filter((wo: WorkOrder) => {
-      const matchesSearch = params.search
-        ? smartSearch(wo.customer.storeName, params.search)
-        : true
+  // Os dados já vêm filtrados do servidor via repository
+  const displayedWorkOrders = allWorkOrders
 
-      const matchesPhoneNumber = (() => {
-        if (!params.phoneNumber) return true
-        if (!wo.customer.phoneNumber) return false
-        const needle = String(params.phoneNumber).replace(/\D+/g, '')
-        const hay = String(wo.customer.phoneNumber.value).replace(/\D+/g, '')
-        return needle === '' ? true : hay.includes(needle)
-      })()
-
-      const matchesLandlineNumber = (() => {
-        if (!params.landlineNumber) return true
-        if (!wo.customer.landlineNumber) return false
-        const needle = String(params.landlineNumber).replace(/\D+/g, '')
-        const hay = String(wo.customer.landlineNumber.value).replace(/\D+/g, '')
-        return needle === '' ? true : hay.includes(needle)
-      })()
-
-      const matchesIsWhatsApp = params.isWhatsApp
-        ? wo.customer.isActiveWhatsApp() === (params.isWhatsApp === 'true')
-        : true
-      const matchesScheduledDate = params.scheduledDate
-        ? wo.scheduledDate
-            .toLocaleDateString('pt-BR')
-            .includes(params.scheduledDate)
-        : true
-      const matchesVisitDate = params.visitDate
-        ? wo.visitDate?.toLocaleDateString('pt-BR').includes(params.visitDate)
-        : true
-      const matchesMinTotalValue = params.minTotalValue
-        ? wo.paymentOrder?.totalValue || 0 >= Number(params.minTotalValue)
-        : true
-      const matchesMaxTotalValue = params.maxTotalValue
-        ? wo.paymentOrder?.totalValue || 0 <= Number(params.maxTotalValue)
-        : true
-      const matchesIsPaid = params.isPaid
-        ? wo.paymentOrder?.isPaid === (params.isPaid === 'true')
-        : true
-      const matchesHasPayment = params.hasPayment
-        ? (wo.paymentOrder !== null && wo.paymentOrder !== undefined) ===
-          (params.hasPayment === 'true')
-        : true
-      const matchesHasResult = params.hasResult
-        ? (wo.result !== null && wo.result !== undefined) ===
-          (params.hasResult === 'true')
-        : true
-      const matchesIsExpired = params.isExpired
-        ? (wo.status === WorkOrderStatus.EXPIRED) ===
-          (params.isExpired === 'true')
-        : true
-      const matchesIsCopied = params.isCopied
-        ? (wo.status === WorkOrderStatus.COPIED) ===
-          (params.isCopied === 'true')
-        : true
-
-      return (
-        matchesSearch &&
-        matchesPhoneNumber &&
-        matchesLandlineNumber &&
-        matchesIsWhatsApp &&
-        matchesScheduledDate &&
-        matchesVisitDate &&
-        matchesMinTotalValue &&
-        matchesMaxTotalValue &&
-        matchesIsPaid &&
-        matchesHasPayment &&
-        matchesHasResult &&
-        matchesIsExpired &&
-        matchesIsCopied
-      )
-    })
-  }, [
-    allWorkOrders,
-    params.search,
-    params.phoneNumber,
-    params.landlineNumber,
-    params.isWhatsApp,
-    params.scheduledDate,
-    params.visitDate,
-    params.minTotalValue,
-    params.maxTotalValue,
-    params.isPaid,
-    params.hasPayment,
-    params.hasResult,
-    params.isExpired,
-    params.isCopied,
-  ])
   const hasActiveFilters =
     !!params.search ||
     !!params.phoneNumber ||
@@ -534,7 +459,7 @@ export default function WorkOrdersScreen() {
             filters={activeFilters}
             clearFiltersHref="/work-orders"
           />
-          {filteredWorkOrders.length === 0 ? (
+          {displayedWorkOrders.length === 0 ? (
             <View className="flex-1 items-center justify-center px-4">
               <Text className="text-center text-muted-foreground">
                 Nenhuma ordem encontrada com os filtros aplicados.
@@ -543,7 +468,7 @@ export default function WorkOrdersScreen() {
           ) : (
             <View className="flex-1 px-4">
               <FlashList
-                data={filteredWorkOrders}
+                data={displayedWorkOrders}
                 renderItem={({ item }) => (
                   <WorkOrderCard
                     wo={item as WorkOrder}

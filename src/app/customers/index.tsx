@@ -14,7 +14,7 @@ import {
 } from '@/src/components/ui/tooltip'
 import { WhatsAppIcon } from '@/src/components/ui/whatsapp-icon'
 import { Customer } from '@/src/domain/entities/customer/customer.entity'
-import { formatPhoneBrazil, smartSearch, UUID } from '@/src/lib/utils'
+import { formatPhoneBrazil, UUID } from '@/src/lib/utils'
 import { FlashList } from '@shopify/flash-list'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
 import {
@@ -59,54 +59,8 @@ export default function CustomersScreen() {
     return data.pages.flatMap((page) => page.data)
   }, [data])
 
-  const filteredCustomers = useMemo(() => {
-    if (!allCustomers) return []
-
-    return allCustomers.filter((customer: Customer) => {
-      const matchesSearch = params.search
-        ? smartSearch(customer.storeName, params.search)
-        : true
-
-      const matchesContactName = params.contactName
-        ? smartSearch(customer.contactName, params.contactName)
-        : true
-
-      const matchesPhoneNumber = (() => {
-        if (!params.phoneNumber) return true
-        if (!customer.phoneNumber) return false
-        const needle = String(params.phoneNumber).replace(/\D+/g, '')
-        const hay = String(customer.phoneNumber.value).replace(/\D+/g, '')
-        return needle === '' ? true : hay.includes(needle)
-      })()
-
-      const matchesLandlineNumber = (() => {
-        if (!params.landlineNumber) return true
-        if (!customer.landlineNumber) return false
-        const needle = String(params.landlineNumber).replace(/\D+/g, '')
-        const hay = String(customer.landlineNumber.value).replace(/\D+/g, '')
-        return needle === '' ? true : hay.includes(needle)
-      })()
-
-      const matchesIsActiveWhatsApp = params.isActiveWhatsApp
-        ? customer.isActiveWhatsApp().toString() === params.isActiveWhatsApp
-        : true
-
-      return (
-        matchesContactName &&
-        matchesPhoneNumber &&
-        matchesLandlineNumber &&
-        matchesIsActiveWhatsApp &&
-        matchesSearch
-      )
-    })
-  }, [
-    allCustomers,
-    params.search,
-    params.contactName,
-    params.phoneNumber,
-    params.landlineNumber,
-    params.isActiveWhatsApp,
-  ])
+  // Os dados já vêm filtrados do servidor via repository
+  const displayedCustomers = allCustomers
 
   const hasActiveFilters =
     !!params.search ||
@@ -329,7 +283,7 @@ export default function CustomersScreen() {
             filters={activeFilters}
             clearFiltersHref="/customers"
           />
-          {filteredCustomers.length === 0 ? (
+          {displayedCustomers.length === 0 ? (
             <View className="flex-1 items-center justify-center px-4">
               <Text className="text-center text-muted-foreground">
                 Nenhum cliente encontrado com os filtros aplicados.
@@ -338,7 +292,7 @@ export default function CustomersScreen() {
           ) : (
             <View className="flex-1 px-4">
               <FlashList
-                data={filteredCustomers}
+                data={displayedCustomers}
                 renderItem={({ item }) => renderItem(item as Customer)}
                 onEndReached={handleLoadMore}
                 onEndReachedThreshold={0.5}
