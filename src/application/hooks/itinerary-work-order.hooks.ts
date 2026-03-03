@@ -60,6 +60,16 @@ export function useAutoAddWorkOrderToItinerary() {
         return { added: false, reason: 'expired' }
       }
 
+      // Verificar se a ordem foi clonada
+      if (workOrder.status === WorkOrderStatus.COPIED) {
+        return { added: false, reason: 'copied' }
+      }
+
+      // Verificar se já possui ordem de pagamento
+      if (workOrder.paymentOrder) {
+        return { added: false, reason: 'has-payment-order' }
+      }
+
       // Verificar se já não está no itinerário
       const existingWorkOrders =
         await itineraryWorkOrderRepo.getItineraryWorkOrdersByItineraryId(

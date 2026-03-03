@@ -796,9 +796,12 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       .where(
         and(
           isNull(workOrder.visitDate),
+          isNull(workOrder.resultId),
+          isNull(workOrder.paymentOrderId),
+          ne(workOrder.status, WorkOrderStatus.EXPIRED),
+          ne(workOrder.status, WorkOrderStatus.COPIED),
           gte(workOrder.scheduledDate, startDateStr),
-          lte(workOrder.scheduledDate, endDateStr),
-          ne(workOrder.status, WorkOrderStatus.EXPIRED)
+          lte(workOrder.scheduledDate, endDateStr)
         )
       )
 

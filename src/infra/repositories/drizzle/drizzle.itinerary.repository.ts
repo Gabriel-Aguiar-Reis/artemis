@@ -218,9 +218,13 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
       .from(workOrder)
       .where(
         and(
-          gte(workOrder.scheduledDate, startDate.toISOString()),
           isNull(workOrder.visitDate),
-          ne(workOrder.status, WorkOrderStatus.EXPIRED)
+          isNull(workOrder.resultId),
+          isNull(workOrder.paymentOrderId),
+          ne(workOrder.status, WorkOrderStatus.EXPIRED),
+          ne(workOrder.status, WorkOrderStatus.COPIED),
+          gte(workOrder.scheduledDate, startDate.toISOString()),
+          lte(workOrder.scheduledDate, endDate.toISOString())
         )
       )
       .orderBy(asc(workOrder.scheduledDate))
