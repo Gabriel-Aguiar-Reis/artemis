@@ -66,7 +66,7 @@ describe('WhatsAppService', () => {
 
       expect(Linking.openURL).toHaveBeenCalled()
       const url = (Linking.openURL as Mock).mock.calls[0][0]
-      expect(url).toContain('wa.me/555511999999999')
+      expect(url).toContain('wa.me/5511999999999')
       expect(url).toContain('visita%20est%C3%A1%20confirmada')
     })
 
@@ -92,7 +92,7 @@ describe('WhatsAppService', () => {
 
       expect(Linking.openURL).toHaveBeenCalled()
       const url = (Linking.openURL as Mock).mock.calls[0][0]
-      expect(url).toContain('wa.me/555511999999999')
+      expect(url).toContain('wa.me/5511999999999')
       expect(url).toContain('Ordem%20de%20Servi%C3%A7o')
     })
 
@@ -103,10 +103,27 @@ describe('WhatsAppService', () => {
       WhatsAppService.sendWorkOrderMessage(workOrder, false)
 
       const url = (Linking.openURL as Mock).mock.calls[0][0]
-      expect(url).toContain('wa.me/555511999999999')
+      expect(url).toContain('wa.me/5511999999999')
       expect(url).not.toContain('+')
       expect(url).not.toContain(' ')
       expect(url).not.toContain('-')
+    })
+
+    it('should not duplicate country code if number already has it', () => {
+      // Simula um número que veio de planilha com código do país
+      const customer = createMockCustomer({
+        getMainNumber: () => ({ value: '5511987654321' }),
+      })
+      const workOrder = createMockWorkOrder()
+      workOrder.customer = customer
+      ;(Linking.openURL as Mock).mockResolvedValue(true)
+
+      WhatsAppService.sendWorkOrderMessage(workOrder, false)
+
+      const url = (Linking.openURL as Mock).mock.calls[0][0]
+      // Deve ter exatamente 13 dígitos (55 + DDD + número)
+      expect(url).toContain('wa.me/5511987654321')
+      expect(url).not.toContain('wa.me/555511987654321') // Não duplicar
     })
 
     it('should log an error when failing to open WhatsApp', async () => {

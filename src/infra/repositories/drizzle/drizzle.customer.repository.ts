@@ -13,7 +13,7 @@ import {
 } from '@/src/domain/validations/customer.schema'
 import { db } from '@/src/infra/db/drizzle/drizzle-client'
 import { customer } from '@/src/infra/db/drizzle/schema/drizzle.customer.schema'
-import { UUID } from '@/src/lib/utils'
+import { normalizePhoneBrazil, UUID } from '@/src/lib/utils'
 import { and, count, eq, like, or } from 'drizzle-orm'
 import uuid from 'react-native-uuid'
 
@@ -134,7 +134,7 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
     let smartphoneNumber: SmartphoneNumber | undefined
     if (dto.phoneNumber && typeof dto.phoneIsWhatsApp === 'boolean') {
       smartphoneNumber = SmartphoneNumber.fromDTO({
-        value: dto.phoneNumber!.replace(/\D/g, ''),
+        value: normalizePhoneBrazil(dto.phoneNumber),
         isWhatsApp: dto.phoneIsWhatsApp,
       })
     }
@@ -142,7 +142,7 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
     let landlineNumber: LandlinePhoneNumber | undefined
     if (dto.landlineNumber && typeof dto.landlineIsWhatsApp === 'boolean') {
       landlineNumber = LandlinePhoneNumber.fromDTO({
-        value: dto.landlineNumber!.replace(/\D/g, ''),
+        value: normalizePhoneBrazil(dto.landlineNumber),
         isWhatsApp: dto.landlineIsWhatsApp,
       })
     }
@@ -191,7 +191,7 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
     let smartphoneNumber: SmartphoneNumber | undefined
     if (dto.phoneNumber && typeof dto.phoneIsWhatsApp === 'boolean') {
       smartphoneNumber = SmartphoneNumber.fromDTO({
-        value: dto.phoneNumber!.replace(/\D/g, ''),
+        value: normalizePhoneBrazil(dto.phoneNumber),
         isWhatsApp: dto.phoneIsWhatsApp,
       })
     }
@@ -199,7 +199,7 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
     let landlineNumber: LandlinePhoneNumber | undefined
     if (dto.landlineNumber && typeof dto.landlineIsWhatsApp === 'boolean') {
       landlineNumber = LandlinePhoneNumber.fromDTO({
-        value: dto.landlineNumber!.replace(/\D/g, ''),
+        value: normalizePhoneBrazil(dto.landlineNumber),
         isWhatsApp: dto.landlineIsWhatsApp,
       })
     }

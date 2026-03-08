@@ -15,6 +15,7 @@ import {
   cn,
   formatPhoneBrazil,
   getErrorMessage,
+  normalizePhoneBrazil,
   PERIODS,
   smartSearch,
 } from '@/src/lib/utils'
@@ -153,6 +154,51 @@ describe('utils', () => {
 
     it('should return empty string when raw is empty', () => {
       expect(formatPhoneBrazil('')).toBe('')
+    })
+  })
+
+  describe('normalizePhoneBrazil', () => {
+    it('should remove country code from mobile phone with 55 prefix', () => {
+      expect(normalizePhoneBrazil('5511987654321')).toBe('11987654321')
+    })
+
+    it('should remove country code from landline phone with 55 prefix', () => {
+      expect(normalizePhoneBrazil('551234567890')).toBe('1234567890')
+    })
+
+    it('should keep number without country code unchanged', () => {
+      expect(normalizePhoneBrazil('11987654321')).toBe('11987654321')
+      expect(normalizePhoneBrazil('1234567890')).toBe('1234567890')
+    })
+
+    it('should remove formatting characters', () => {
+      expect(normalizePhoneBrazil('(11) 98765-4321')).toBe('11987654321')
+      expect(normalizePhoneBrazil('+55 11 98765-4321')).toBe('11987654321')
+      expect(normalizePhoneBrazil('55 (11) 98765-4321')).toBe('11987654321')
+    })
+
+    it('should handle formatted landline numbers', () => {
+      expect(normalizePhoneBrazil('(12) 3456-7890')).toBe('1234567890')
+      expect(normalizePhoneBrazil('+55 12 3456-7890')).toBe('1234567890')
+      expect(normalizePhoneBrazil('55 (12) 3456-7890')).toBe('1234567890')
+    })
+
+    it('should return empty string for undefined', () => {
+      expect(normalizePhoneBrazil(undefined)).toBe('')
+    })
+
+    it('should return empty string for empty string', () => {
+      expect(normalizePhoneBrazil('')).toBe('')
+    })
+
+    it('should not remove 55 if result would be invalid length', () => {
+      // 5512345 tem 7 dígitos, se remover 55 fica com 5 (inválido)
+      expect(normalizePhoneBrazil('5512345')).toBe('5512345')
+    })
+
+    it('should handle 12-digit numbers starting with 55 as country code + landline', () => {
+      // 555678901234 = 12 dígitos → 55 (país) + 5678901234 (10 dígitos de fixo)
+      expect(normalizePhoneBrazil('555678901234')).toBe('5678901234')
     })
   })
 
