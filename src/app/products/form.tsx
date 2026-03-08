@@ -16,7 +16,7 @@ import { useForm } from 'react-hook-form'
 import { View } from 'react-native'
 
 export default function ProductFormScreen() {
-  const { mutate: addProduct, isPending } = productHooks.addProduct()
+  const { mutateAsync: addProduct, isPending } = productHooks.addProduct()
 
   const form = useForm<ProductInsertDTO>({
     resolver: zodResolver(productInsertSchema),
@@ -31,13 +31,13 @@ export default function ProductFormScreen() {
     reValidateMode: 'onBlur',
   })
 
-  const onSubmit = form.handleSubmit((data: ProductInsertDTO) => {
-    const productData = {
-      ...data,
-      salePrice: Number(data.salePrice) || 0,
+  const onSubmit = form.handleSubmit(async (data: ProductInsertDTO) => {
+    try {
+      await addProduct(data)
+      router.back()
+    } catch (error) {
+      console.error('Error adding product:', error)
     }
-    addProduct(productData as any)
-    router.back()
   })
 
   return (

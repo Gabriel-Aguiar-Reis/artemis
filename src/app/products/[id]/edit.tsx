@@ -21,7 +21,7 @@ export default function ProductsEditScreen() {
   const params = useLocalSearchParams<{ id: UUID }>()
 
   const { data: product, isLoading } = productHooks.getProduct(params.id)
-  const { mutate: updateProduct, isPending } = productHooks.updateProduct()
+  const { mutateAsync: updateProduct, isPending } = productHooks.updateProduct()
 
   const form = useForm<ProductUpdateDTO>({
     resolver: zodResolver(productUpdateSchema),
@@ -37,15 +37,35 @@ export default function ProductsEditScreen() {
     reValidateMode: 'onBlur',
   })
 
-  const onSubmit = form.handleSubmit(async (data: ProductUpdateDTO) => {
-    const productData = {
-      ...data,
-      salePrice: Number(data.salePrice) || 0,
-      id: params.id,
+  const onSubmit = form.handleSubmit(
+    async (data: ProductUpdateDTO) => {
+      console.log('onSubmit - data:', data)
+      console.log('onSubmit - formState:', form.formState)
+
+      // Normalizar categoryId vazio para undefined
+      const normalizedData = {
+        ...data,
+        categoryId:
+          data.categoryId && data.categoryId !== ''
+            ? data.categoryId
+            : undefined,
+        id: params.id,
+      }
+
+      console.log('onSubmit - normalized data:', normalizedData)
+
+      try {
+        await updateProduct(normalizedData)
+        console.log('Update successful, navigating back')
+        router.back()
+      } catch (error) {
+        console.error('Error updating product:', error)
+      }
+    },
+    (errors) => {
+      console.log('onSubmit - validation errors:', errors)
     }
-    updateProduct(productData as any)
-    router.back()
-  })
+  )
 
   useEffect(() => {
     if (!product) return
@@ -53,18 +73,17 @@ export default function ProductsEditScreen() {
     const formValues: Partial<ProductUpdateDTO> = {
       id: product.id as unknown as string,
       name: product.name,
-      categoryId: product.categoryId as unknown as string,
-      salePrice: product.salePrice.toString(),
+      categoryId: product.categoryId
+        ? (product.categoryId as unknown as string)
+        : undefined,
+      salePrice: product.salePrice.toFixed(2).replace('.', ','),
       isActive: product.isActive,
       expiration: product.expiration.toDTO(),
     }
 
+    console.log('Resetting form with values:', formValues)
     form.reset(formValues)
   }, [product])
-
-  useEffect(() => {
-    form.reset()
-  }, [])
 
   if (isLoading) {
     return (
