@@ -24,6 +24,7 @@ import {
   ReceiptText,
   Store,
 } from 'lucide-react-native'
+import React from 'react'
 import { View } from 'react-native'
 
 const renderContactNumber = (customer: Customer) => {
@@ -49,7 +50,7 @@ const renderContactNumber = (customer: Customer) => {
   }
 }
 
-export function WorkOrderCard({
+function WorkOrderCardComponent({
   wo,
   onPress,
   isLate = false,
@@ -109,16 +110,17 @@ export function WorkOrderCard({
     >
       <ObjectCard.Header>
         <ObjectCard.Title>
-          <View className="flex-row items-center gap-2 flex-wrap">
+          <View className="flex-row items-center gap-2">
             <Icon as={Store} size={20} className="text-primary" />
-            <Text
-              className="text-lg font-semibold flex-shrink"
-              numberOfLines={2}
-              ellipsizeMode="tail"
-              style={{ flexShrink: 1, flexGrow: 1, flexBasis: 0 }}
-            >
-              {wo.customer.storeName}
-            </Text>
+            <View className="flex-1">
+              <Text
+                className="text-lg font-semibold"
+                numberOfLines={2}
+                ellipsizeMode="tail"
+              >
+                {wo.customer.storeName}
+              </Text>
+            </View>
             {priorityStatus && (
               <View
                 className={`${priorityStatus.badgeClass} rounded-full px-2 py-0.5`}
@@ -322,3 +324,67 @@ export function WorkOrderCard({
     </ObjectCard.Root>
   )
 }
+
+// Memoização com comparador customizado para evitar re-renders desnecessários
+export const WorkOrderCard = React.memo(
+  WorkOrderCardComponent,
+  (prevProps, nextProps) => {
+    // Retorna true se props são IGUAIS (não deve re-renderizar)
+    // Retorna false se props são DIFERENTES (deve re-renderizar)
+
+    // Comparação básica
+    if (
+      prevProps.wo.id !== nextProps.wo.id ||
+      prevProps.wo.status !== nextProps.wo.status ||
+      prevProps.isLate !== nextProps.isLate
+    ) {
+      return false
+    }
+
+    // Comparação de datas
+    if (
+      prevProps.wo.scheduledDate.getTime() !==
+      nextProps.wo.scheduledDate.getTime()
+    ) {
+      return false
+    }
+
+    const prevVisitTime = prevProps.wo.visitDate?.getTime()
+    const nextVisitTime = nextProps.wo.visitDate?.getTime()
+    if (prevVisitTime !== nextVisitTime) {
+      return false
+    }
+
+    // Comparação de customer
+    if (
+      prevProps.wo.customer.storeName !== nextProps.wo.customer.storeName ||
+      prevProps.wo.customer.contactName !== nextProps.wo.customer.contactName
+    ) {
+      return false
+    }
+
+    // Comparação de payment order
+    const prevPayment = prevProps.wo.paymentOrder
+    const nextPayment = nextProps.wo.paymentOrder
+    if (
+      prevPayment?.isPaid !== nextPayment?.isPaid ||
+      prevPayment?.method !== nextPayment?.method ||
+      prevPayment?.totalValue !== nextPayment?.totalValue
+    ) {
+      return false
+    }
+
+    // Comparação de result
+    if (Boolean(prevProps.wo.result) !== Boolean(nextProps.wo.result)) {
+      return false
+    }
+
+    // Comparação de onPress (referência)
+    if (prevProps.onPress !== nextProps.onPress) {
+      return false
+    }
+
+    // Se chegou aqui, props são iguais
+    return true
+  }
+)

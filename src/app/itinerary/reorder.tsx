@@ -1,12 +1,12 @@
 import { itineraryWorkOrderHooks } from '@/src/application/hooks/itinerary-work-order.hooks'
 import { itineraryHooks } from '@/src/application/hooks/itinerary.hooks'
 import { Button } from '@/src/components/ui/button'
+import { ReorderWorkOrderCard } from '@/src/components/ui/reorder-work-order-card'
 import { Text } from '@/src/components/ui/text'
-import { WorkOrderCard } from '@/src/components/ui/work-order-card'
 import { ItineraryWorkOrder } from '@/src/domain/entities/itinerary-work-order/itinerary-work-order.entity'
 import { UUID } from '@/src/lib/utils'
 import { Stack, useRouter } from 'expo-router'
-import React, { FC, useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { ListRenderItemInfo, View } from 'react-native'
 import { GestureHandlerRootView, Pressable } from 'react-native-gesture-handler'
 import ReorderableList, {
@@ -15,6 +15,28 @@ import ReorderableList, {
   useReorderableDrag,
 } from 'react-native-reorderable-list'
 import { SafeAreaView } from 'react-native-safe-area-context'
+
+// Componente extraído e memoizado para reordenação
+// IMPORTANTE: Deve estar FORA do componente pai para memoização funcionar corretamente
+const DraggableCard = React.memo<{ item: ItineraryWorkOrder }>(
+  ({ item }) => {
+    const drag = useReorderableDrag()
+    return (
+      <View className="px-4">
+        <Pressable onLongPress={drag}>
+          {/* Card otimizado para reordenação - sem Tooltips e estruturas complexas */}
+          <ReorderWorkOrderCard wo={item.workOrder} isLate={item.isLate} />
+        </Pressable>
+      </View>
+    )
+  },
+  (prevProps, nextProps) => {
+    // Comparação otimizada: só re-renderiza se o item mudar
+    return prevProps.item.id === nextProps.item.id
+  }
+)
+
+DraggableCard.displayName = 'DraggableCard'
 
 export default function ItineraryReorderScreen() {
   const router = useRouter()
@@ -35,25 +57,19 @@ export default function ItineraryReorderScreen() {
     }
   }, [workOrders])
 
-  const handleReorder = ({ from, to }: ReorderableListReorderEvent) => {
-    setListData((value) => reorderItems(value, from, to))
-  }
+  const handleReorder = useCallback(
+    ({ from, to }: ReorderableListReorderEvent) => {
+      setListData((value) => reorderItems(value, from, to))
+    },
+    []
+  )
 
-  const Card: FC<{ item: ItineraryWorkOrder }> = ({ item }) => {
-    const drag = useReorderableDrag()
-    return (
-      <Pressable onLongPress={drag}>
-        <WorkOrderCard wo={item.workOrder} isLate={item.isLate} />
-      </Pressable>
-    )
-  }
-  const renderItem = ({ item }: ListRenderItemInfo<ItineraryWorkOrder>) => {
-    return (
-      <View className="px-4">
-        <Card item={item} />
-      </View>
-    )
-  }
+  const renderItem = useCallback(
+    ({ item }: ListRenderItemInfo<ItineraryWorkOrder>) => {
+      return <DraggableCard item={item} />
+    },
+    []
+  )
 
   const handleSave = useCallback(async () => {
     const updates = listData.map((item, index) => ({
