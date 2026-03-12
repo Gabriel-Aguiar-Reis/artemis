@@ -63,7 +63,7 @@ export default function WorkOrderPaymentCreateScreen() {
       addedProducts.reduce((sum, p) => sum + p.priceSnapshot * p.quantity, 0)
 
     if (totalValue > 0) {
-      form.setValue('totalValue', totalValue.toString())
+      form.setValue('totalValue', totalValue.toFixed(2).replace('.', ','))
     }
   }, [workOrder])
 
@@ -116,12 +116,19 @@ export default function WorkOrderPaymentCreateScreen() {
 
   const onSubmit = form.handleSubmit(async (data) => {
     try {
+      // O BaseForm envia com coma decimal, converter para ponto
+      const normalized = String(data.totalValue || '0').replace(',', '.')
+      const totalValueNumber = Number(normalized) || 0
+      
+      console.log('Payment create - data.totalValue:', data.totalValue)
+      console.log('Payment create - totalValueNumber:', totalValueNumber)
+      
       // 1. Criar payment order
       const paymentOrderId = uuid.v4() as UUID
       await addPaymentOrder({
         id: paymentOrderId,
         method: data.method,
-        totalValue: Number(data.totalValue) || 0,
+        totalValue: totalValueNumber,
         installments: Number(data.installments) || 1,
         isPaid: data.isPaid ?? false,
         paidInstallments: Number(data.paidInstallments) || 0,

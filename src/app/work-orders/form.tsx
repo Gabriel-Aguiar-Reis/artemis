@@ -366,15 +366,18 @@ export default function WorkOrderFormScreen() {
 
       // 3. CRIAR ORDEM DE PAGAMENTO (se shouldCreatePayment = true)
       if (data.shouldCreatePayment) {
-        // Usar totalValue do result se existir, senão calcular dos produtos
-        let paymentTotal = Number(data.totalValue) || 0
+        // O BaseForm envia com coma decimal, converter para ponto
+        const normalized = String(data.totalValue || '0').replace(',', '.')
+        let paymentTotal = Number(normalized) || 0
 
         const paymentOrderId = await addPaymentOrder({
           method: data.method || 'Dinheiro',
           totalValue: paymentTotal.toString(),
           installments: data.installments || '1',
           isPaid: data.isPaid || false,
-          paidInstallments: data.isPaid ? (Number(data.installments) || 1).toString() : '0',
+          paidInstallments: data.isPaid
+            ? (Number(data.installments) || 1).toString()
+            : '0',
           paymentDate: data.paymentDate
             ? data.paymentDate instanceof Date
               ? data.paymentDate.toISOString()
@@ -752,11 +755,18 @@ export default function WorkOrderFormScreen() {
               )
 
             // Atualizar totalValue no formulário (sem useEffect)
-            const currentTotal = Number(form.getValues('totalValue')) || 0
+            const currentFormValue = String(
+              form.getValues('totalValue') || '0'
+            ).replace(',', '.')
+            const currentTotal = Number(currentFormValue) || 0
             if (currentTotal !== totalValue) {
-              form.setValue('totalValue', totalValue.toString(), {
-                shouldValidate: false,
-              })
+              form.setValue(
+                'totalValue',
+                totalValue.toFixed(2).replace('.', ','),
+                {
+                  shouldValidate: false,
+                }
+              )
             }
 
             const allProductItems = [

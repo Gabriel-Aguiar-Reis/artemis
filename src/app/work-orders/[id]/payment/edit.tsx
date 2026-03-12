@@ -94,10 +94,14 @@ export default function PaymentEditScreen() {
     if (!workOrder?.paymentOrder) return
 
     try {
+      // O BaseForm envia com coma decimal, converter para ponto
+      const normalized = String(data.totalValue || '0').replace(',', '.')
+      const totalValueNumber = Number(normalized) || 0
+
       await updatePayment({
         id: workOrder.paymentOrder.id,
         method: data.method,
-        totalValue: Number(data.totalValue) || 0,
+        totalValue: totalValueNumber,
         installments: Number(data.installments) || 1,
         isPaid: data.isPaid ?? false,
         paidInstallments: Number(data.paidInstallments) || 0,
@@ -118,7 +122,9 @@ export default function PaymentEditScreen() {
 
     form.reset({
       method: workOrder.paymentOrder.method,
-      totalValue: workOrder.paymentOrder.totalValue.toString(),
+      totalValue: workOrder.paymentOrder.totalValue
+        .toFixed(2)
+        .replace('.', ','),
       installments: workOrder.paymentOrder.installments.toString(),
       isPaid: workOrder.paymentOrder.isPaid,
       paidInstallments: workOrder.paymentOrder.paidInstallments.toString(),

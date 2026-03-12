@@ -33,7 +33,17 @@ export default function ProductFormScreen() {
 
   const onSubmit = form.handleSubmit(async (data: ProductInsertDTO) => {
     try {
-      await addProduct(data)
+      // O BaseForm envia com coma decimal, converter para ponto
+      const normalizedSalePrice = data.salePrice
+        ? String(data.salePrice).replace(',', '.')
+        : data.salePrice
+
+      const normalizedData = {
+        ...data,
+        salePrice: normalizedSalePrice,
+      }
+
+      await addProduct(normalizedData)
       router.back()
     } catch (error) {
       console.error('Error adding product:', error)
