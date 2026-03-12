@@ -74,7 +74,8 @@ export default function WorkOrderProductsScreen() {
             <ObjectCard.Header>
               <ObjectCard.Title>Resumo</ObjectCard.Title>
               {workOrder.status !== 'EXPIRED' &&
-                workOrder.status !== 'COPIED' && (
+                workOrder.status !== 'COPIED' &&
+                !workOrder.result && (
                   <ObjectCard.Actions onPress={handleProductsOptions} />
                 )}
             </ObjectCard.Header>

@@ -109,6 +109,29 @@ export default function WorkOrderProductsEditScreen() {
     )
   }
 
+  if (workOrder.result) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center px-4">
+        <View className="items-center gap-4">
+          <Text className="text-center text-lg font-semibold text-destructive">
+            Edição Bloqueada
+          </Text>
+          <Text className="text-center text-muted-foreground">
+            Não é possível editar produtos após criar um relatório final.
+          </Text>
+          <Button
+            variant="outline"
+            size="default"
+            onPress={() => router.back()}
+            className="mt-4"
+          >
+            <Text>Voltar</Text>
+          </Button>
+        </View>
+      </SafeAreaView>
+    )
+  }
+
   return (
     <SafeAreaView className="flex-1">
       <Stack.Screen
