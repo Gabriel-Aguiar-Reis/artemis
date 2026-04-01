@@ -111,8 +111,11 @@ export async function saveDumpJsonToTempAndShare(): Promise<string> {
   const targetPath = `${baseDir}artemis-dump.json`
   // Use new File API to write
   const file = new File(targetPath)
-  await file.create()
-  await file.write(json)
+  if (file.exists) {
+    file.delete()
+  }
+  file.create()
+  file.write(json)
 
   if (await Sharing.isAvailableAsync()) {
     await Sharing.shareAsync(targetPath, {

@@ -147,8 +147,11 @@ export async function saveLogDumpAndShare(): Promise<string> {
 
   const targetPath = `${baseDir}artemis-logs.json`
   const file = new File(targetPath)
-  await file.create()
-  await file.write(json)
+  if (file.exists) {
+    file.delete()
+  }
+  file.create()
+  file.write(json)
 
   if (await Sharing.isAvailableAsync()) {
     await Sharing.shareAsync(targetPath, {
