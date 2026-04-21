@@ -14,10 +14,12 @@ web-build/
 # Native
 *.orig.*
 *.jks
+*.keystore
 *.p8
 *.p12
 *.key
 *.mobileprovision
+release.properties
 
 # Metro
 .metro-health-check*
@@ -45,3 +47,8 @@ expo-env.d.ts
 
 # tests
 coverage
+
+# Brand overlays (commitar no repo privado do cliente)
+# Os arquivos brand/ ficam fora do repo Artemis
+brand/
+brand.config.js

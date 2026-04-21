@@ -1,6 +1,7 @@
 import { Button } from '@/src/components/ui/button'
 import { ButtonSettings } from '@/src/components/ui/button-settings'
 import { Text } from '@/src/components/ui/text'
+import Constants from 'expo-constants'
 import { Link, LinkProps, Stack } from 'expo-router'
 import {
   ClipboardList,
@@ -17,7 +18,7 @@ import { ScrollView, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const SCREEN_OPTIONS = {
-  title: 'Artemis',
+  title: Constants.expoConfig?.name ?? 'Artemis',
   headerRight: () => <ButtonSettings icon={Settings} />,
 }
 
@@ -54,7 +55,9 @@ export default function Screen() {
       <ScrollView className="flex-1">
         <View className="gap-4 p-6">
           <View className="mb-4">
-            <Text className="text-3xl font-bold">Bem-vindo ao Artemis</Text>
+            <Text className="text-3xl font-bold">
+              Bem-vindo ao {Constants.expoConfig?.name ?? 'Artemis'}
+            </Text>
             <Text className="mt-2 text-muted-foreground">
               Sistema de gerenciamento de rotas e ordens de serviço
             </Text>

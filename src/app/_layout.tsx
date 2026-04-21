@@ -24,6 +24,7 @@ import { ThemeProvider } from '@react-navigation/native'
 import { PortalHost } from '@rn-primitives/portal'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator'
+import Constants from 'expo-constants'
 import { useDrizzleStudio } from 'expo-drizzle-studio-plugin'
 import * as NavigationBar from 'expo-navigation-bar'
 import { ErrorBoundaryProps, Stack } from 'expo-router'
@@ -250,7 +251,7 @@ export default function RootLayout() {
             </Text>
             <Text className="text-xs text-muted-foreground">
               2. Se não funcionar, vá em Configurações do Android → Apps →
-              Artemis
+              {Constants.expoConfig?.name ?? 'Artemis'}
             </Text>
             <Text className="text-xs text-muted-foreground">
               3. Clique em "Armazenamento" e depois "Limpar dados"
@@ -290,7 +291,10 @@ export default function RootLayout() {
                         : 'slide_from_right',
                   }}
                 >
-                  <Stack.Screen name="index" options={{ title: 'Artemis' }} />
+                  <Stack.Screen
+                    name="index"
+                    options={{ title: Constants.expoConfig?.name ?? 'Artemis' }}
+                  />
                   <Stack.Screen
                     name="categories/index"
                     options={{ title: 'Categorias' }}
