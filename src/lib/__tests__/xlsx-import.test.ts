@@ -104,6 +104,7 @@ describe('xlsx import validation', () => {
       addressZipCode: '01234567',
       addressStreetNumber: '10',
     })
+
     const b = customerDedupeKeys({
       storeName: 'padaria sao jose',
       phoneNumber: '11987654321',
@@ -111,5 +112,35 @@ describe('xlsx import validation', () => {
       addressStreetNumber: '1',
     })
     expect(a.some((k) => b.includes(k))).toBe(true)
+  })
+
+  it('customerDedupeKeys matches DB rows stored with a dashed zip / formatted phone', () => {
+    const fromDb = customerDedupeKeys({
+      storeName: 'Padaria Central',
+      phoneNumber: null,
+      addressZipCode: '01234-567',
+      addressStreetNumber: '12',
+    })
+    const fromSheet = customerDedupeKeys({
+      storeName: 'padaria central',
+      phoneNumber: null,
+      addressZipCode: '01234567',
+      addressStreetNumber: '12',
+    })
+    expect(fromSheet.some((k) => fromDb.includes(k))).toBe(true)
+
+    const dbPhone = customerDedupeKeys({
+      storeName: 'Loja',
+      phoneNumber: '(12) 99999-8888',
+      addressZipCode: '',
+      addressStreetNumber: '',
+    })
+    const sheetPhone = customerDedupeKeys({
+      storeName: 'Loja',
+      phoneNumber: '12999998888',
+      addressZipCode: '',
+      addressStreetNumber: '',
+    })
+    expect(sheetPhone).toEqual(dbPhone)
   })
 })

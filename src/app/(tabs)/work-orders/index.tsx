@@ -44,6 +44,16 @@ import Toast from 'react-native-toast-message'
 
 const keyExtractor = (item: WorkOrder) => item.id
 
+/** Route value for the "Agendadas hoje" shortcut (resolved on every render) */
+const TODAY = 'today'
+
+function resolveRelativeDate(value?: string): string | undefined {
+  if (value !== TODAY) return value
+  const today = new Date()
+  today.setHours(12, 0, 0, 0)
+  return today.toISOString()
+}
+
 export default function WorkOrdersScreen() {
   const { createdWorkOrderId } = useLocalSearchParams<{
     createdWorkOrderId?: string
@@ -72,7 +82,7 @@ export default function WorkOrdersScreen() {
     phoneNumber: params.phoneNumber,
     landlineNumber: params.landlineNumber,
     isWhatsApp: params.isWhatsApp,
-    scheduledDate: params.scheduledDate,
+    scheduledDate: resolveRelativeDate(params.scheduledDate),
     visitDate: params.visitDate,
     minTotalValue: params.minTotalValue,
     maxTotalValue: params.maxTotalValue,
@@ -391,7 +401,10 @@ export default function WorkOrdersScreen() {
     if (params.scheduledDate) {
       filters.push({
         label: 'Data Agendada',
-        value: formatDate(new Date(params.scheduledDate)),
+        value:
+          params.scheduledDate === TODAY
+            ? 'Hoje'
+            : formatDate(new Date(params.scheduledDate)),
       })
     }
     if (params.visitDate) {
@@ -476,9 +489,8 @@ export default function WorkOrdersScreen() {
   }, [])
 
   const showToday = useCallback(() => {
-    const today = new Date()
-    today.setHours(12, 0, 0, 0)
-    router.setParams({ scheduledDate: today.toISOString() })
+    // Relative value: a filter restored on another day still means "today"
+    router.setParams({ scheduledDate: TODAY })
   }, [])
 
   const renderItem = useCallback(

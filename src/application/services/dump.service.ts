@@ -43,6 +43,7 @@ import {
   workOrder,
   WorkOrderTable,
 } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
+import { eq } from 'drizzle-orm'
 import * as DocumentPicker from 'expo-document-picker'
 import { File } from 'expo-file-system'
 import * as FS from 'expo-file-system/legacy'
@@ -145,6 +146,8 @@ export type ImportReport = {
   skipped: Record<DumpTableKey, number>
   /** Rows rejected (invalid data or missing reference) */
   rejected: { table: DumpTableKey; id: string; reason: string }[]
+  /** Rows imported with an adjustment the user should know about */
+  notes: string[]
 }
 
 export type ImportResult = ArtemisDump & { report: ImportReport }
@@ -228,6 +231,7 @@ function insertAllTablesInOrder(parsed: ArtemisDump): ImportReport {
     inserted: zero(),
     skipped: zero(),
     rejected: [],
+    notes: [],
   }
 
   const idsOf = (table: any): Set<string> =>
@@ -250,13 +254,24 @@ function insertAllTablesInOrder(parsed: ArtemisDump): ImportReport {
     workOrder: idsOf(workOrder),
   }
   const hasLicense = idsOf(license).size > 0
+  // Only one itinerary may be active: if the device (or the backup itself)
+  // already has one, extra active itineraries are imported as finished
+  let hasActiveItinerary =
+    db
+      .select({ id: itinerary.id })
+      .from(itinerary)
+      .where(eq(itinerary.isFinished, false))
+      .all().length > 0
 
   type Check = (row: any) => string | null
+  /** Applied to rows that will be inserted (after the checks) */
+  type Adjust = (row: any) => any
   const plan: {
     key: DumpTableKey
     table: any
     check: Check
     fix?: (row: any) => any
+    adjust?: Adjust
   }[] = [
     {
       key: 'category',
@@ -293,6 +308,17 @@ function insertAllTablesInOrder(parsed: ArtemisDump): ImportReport {
         isStr(r.initialItineraryDate) && isStr(r.finalItineraryDate)
           ? null
           : 'datas ausentes',
+      adjust: (r) => {
+        if (r.isFinished) return r
+        if (!hasActiveItinerary) {
+          hasActiveItinerary = true
+          return r
+        }
+        report.notes.push(
+          'Um itinerário ativo do backup foi importado como finalizado, pois já havia um itinerário ativo.'
+        )
+        return { ...r, isFinished: true }
+      },
     },
     {
       key: 'paymentOrder',
@@ -356,7 +382,7 @@ function insertAllTablesInOrder(parsed: ArtemisDump): ImportReport {
   ]
 
   db.transaction((tx: any) => {
-    for (const { key, table, check, fix } of plan) {
+    for (const { key, table, check, fix, adjust } of plan) {
       const existing = idsOf(table)
       const toInsert: any[] = []
       for (const original of t[key] as any[]) {
@@ -376,7 +402,7 @@ function insertAllTablesInOrder(parsed: ArtemisDump): ImportReport {
         }
         existing.add(row.id)
         if (key in known) (known as any)[key].add(row.id)
-        toInsert.push(row)
+        toInsert.push(adjust ? adjust(row) : row)
       }
       for (let i = 0; i < toInsert.length; i += INSERT_CHUNK) {
         tx.insert(table)

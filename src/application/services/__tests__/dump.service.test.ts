@@ -44,6 +44,15 @@ const dbMock: any = {
           if (fields) return rows.map((row) => ({ id: row.id }))
           return rows.map((row) => JSON.parse(JSON.stringify(row)))
         },
+        // only used to find active itineraries (isFinished = false)
+        where() {
+          return {
+            all: () =>
+              ensureStore(table)
+                .rows.filter((row) => !row.isFinished)
+                .map((row) => ({ id: row.id })),
+          }
+        },
       }
     },
   })),

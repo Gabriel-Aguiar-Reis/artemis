@@ -25,13 +25,19 @@ export function getExpoDb() {
   return expoDb
 }
 
-export function enableForeignKeys() {
+/**
+ * Turns on FK enforcement. Returns false on failure (logged): the app must not
+ * run without it, since cascades/restrictions protect the data.
+ */
+export function enableForeignKeys(): boolean {
   const db = getExpoDb()
   try {
     db.execSync('PRAGMA foreign_keys = ON;')
-    console.log('Foreign keys enabled')
+    if (__DEV__) console.log('Foreign keys enabled')
+    return true
   } catch (error) {
     console.error('Error enabling foreign keys:', error)
+    return false
   }
 }
 

@@ -26,6 +26,9 @@ import { ThemeProvider } from '@react-navigation/native'
 import { PortalHost } from '@rn-primitives/portal'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator'
+// reloadAppAsync ships with expo (expo-updates is not a dependency: the old
+// require('expo-updates') made the reset button fail at runtime)
+import { reloadAppAsync } from 'expo'
 import Constants from 'expo-constants'
 import { useDrizzleStudio } from 'expo-drizzle-studio-plugin'
 import * as NavigationBar from 'expo-navigation-bar'
@@ -135,7 +138,9 @@ function LicenseCheck({
     if (licenseReady && themeReady) hideSplash()
   }, [licenseReady, themeReady])
 
-  if (!licenseReady) return null
+  // Also wait for the stored theme/last tab/filters: the initial redirect
+  // (index → last tab) reads them synchronously
+  if (!licenseReady || !themeReady) return null
 
   return (
     <>
@@ -152,6 +157,7 @@ export default function RootLayout() {
   const [db, setDb] = useState(() => initDrizzleClient())
   const { success, error } = useMigrations(db, migrations)
   const [migrationsComplete, setMigrationsComplete] = useState(false)
+  const [fkError, setFkError] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
   const [themeReady, setThemeReady] = useState(false)
 
@@ -174,16 +180,14 @@ export default function RootLayout() {
       if (__DEV__) console.log('Database deleted, reloading app...')
 
       // Fully reload the app
-      const { reloadAsync } = require('expo-updates')
-      await reloadAsync()
+      await reloadAppAsync()
     } catch (error) {
       console.error('Error resetting database:', error)
       setIsResetting(false)
 
       // If it fails, just try reloading the app
       try {
-        const { reloadAsync } = require('expo-updates')
-        await reloadAsync()
+        await reloadAppAsync()
       } catch (reloadError) {
         console.error('Error reloading app:', reloadError)
       }
@@ -211,7 +215,11 @@ export default function RootLayout() {
   useEffect(() => {
     if (success && !migrationsComplete) {
       try {
-        enableForeignKeys()
+        if (!enableForeignKeys()) {
+          setFkError(true)
+          hideSplash()
+          return
+        }
         setMigrationsComplete(true)
 
         // Clear old logs (>7 days) after migrations
@@ -223,6 +231,7 @@ export default function RootLayout() {
         })
       } catch (err) {
         console.error('Error enabling foreign keys:', err)
+        setFkError(true)
         hideSplash()
       }
     }
@@ -253,6 +262,29 @@ export default function RootLayout() {
       NavigationBar.setButtonStyleAsync(isDark ? 'light' : 'dark')
     }
   }, [colorScheme])
+
+  // Database opened but could not be configured: data is intact, so offer a
+  // retry instead of the destructive reset used for migration errors
+  if (fkError) {
+    return (
+      <View className="flex-1 items-center justify-center p-4 bg-background gap-3">
+        <Text className="text-destructive font-bold text-lg text-center">
+          Não foi possível abrir o banco de dados
+        </Text>
+        <Text className="text-center text-muted-foreground">
+          Seus dados não foram apagados. Tente abrir o app novamente.
+        </Text>
+        <Button
+          className="w-full max-w-sm"
+          onPress={() => {
+            reloadAppAsync().catch(() => {})
+          }}
+        >
+          <Text>Tentar novamente</Text>
+        </Button>
+      </View>
+    )
+  }
 
   if (error) {
     return (

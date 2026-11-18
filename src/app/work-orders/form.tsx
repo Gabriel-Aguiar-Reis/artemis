@@ -245,8 +245,9 @@ export default function WorkOrderFormScreen() {
           : undefined,
       })
 
-      // Return to the index with the created work order ID
-      router.replace({
+      // Back to the OS tab (already in the stack below this form) with the
+      // created work order ID. replace() would push a second tab navigator
+      router.dismissTo({
         pathname: '/work-orders',
         params: { createdWorkOrderId: res.workOrder.id },
       })

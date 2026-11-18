@@ -31,15 +31,17 @@ function showImportReport(report: ImportReport) {
   const rejected = report.rejected.length
   if (rejected > 0 && __DEV__)
     console.warn('Linhas recusadas:', report.rejected)
+  const note = report.notes[0]
   Toast.show({
-    type: rejected > 0 ? 'info' : 'success',
+    type: rejected > 0 || note ? 'info' : 'success',
     text1: 'Importação concluída',
     text2:
       `${inserted} novos • ${skipped} já existiam` +
       (rejected > 0
         ? ` • ${rejected} recusados (ex.: ${report.rejected[0].table}: ${report.rejected[0].reason})`
-        : ''),
-    visibilityTime: rejected > 0 ? 8000 : 4000,
+        : '') +
+      (note ? ` • ${note}` : ''),
+    visibilityTime: rejected > 0 || note ? 8000 : 4000,
   })
 }
 

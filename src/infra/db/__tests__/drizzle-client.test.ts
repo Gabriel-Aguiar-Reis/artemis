@@ -96,7 +96,7 @@ describe('drizzle-client', () => {
     const module = await import('@/src/infra/db/drizzle/drizzle-client')
     module.getExpoDb()
 
-    module.enableForeignKeys()
+    expect(module.enableForeignKeys()).toBe(true)
 
     expect(execSyncMock).toHaveBeenCalledWith('PRAGMA foreign_keys = ON;')
   })
@@ -114,7 +114,8 @@ describe('drizzle-client', () => {
     execSyncMock.mockImplementationOnce(() => {
       throw error
     })
-    module.enableForeignKeys()
+    // reports the failure so the app can stop instead of running without FKs
+    expect(module.enableForeignKeys()).toBe(false)
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       'Error enabling foreign keys:',

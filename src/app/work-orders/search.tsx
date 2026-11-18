@@ -44,7 +44,14 @@ export default function WorkOrdersSearch() {
   >((params.isWhatsApp as any) || 'all')
   const [scheduledDateFilter, setScheduledDateFilter] = useState<
     Date | undefined
-  >(params.scheduledDate ? new Date(params.scheduledDate) : undefined)
+  >(
+    params.scheduledDate
+      ? // "today" comes from the list's "Agendadas hoje" shortcut
+        params.scheduledDate === 'today'
+        ? new Date()
+        : new Date(params.scheduledDate)
+      : undefined
+  )
   const [visitDateFilter, setVisitDateFilter] = useState<Date | undefined>(
     params.visitDate ? new Date(params.visitDate) : undefined
   )

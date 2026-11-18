@@ -115,4 +115,30 @@ describe('accent-insensitive search', () => {
     const cats = await categories.getCategories({ search: 'LATICINIOS' })
     expect(cats).toHaveLength(1)
   })
+
+  it('orders customers ignoring accents and case (Á is not after Z)', async () => {
+    const { raw } = getTestDb()
+    for (const [n, name] of [
+      [211, 'Ávila Bar'],
+      [212, 'zeca lanches'],
+      [213, 'Bar do Zé'],
+    ] as const) {
+      raw.exec(
+        `INSERT INTO customer (id, store_name, contact_name, address_street_name, address_street_number,
+           address_neighborhood, address_city, address_state, address_zip_code)
+         VALUES ('${ids(n)}', '${name}', 'X', 'Rua', '1', 'Centro', 'Taubaté', 'SP', '12000000')`
+      )
+    }
+    const names = (await customers.searchCustomersLight('', 50)).map(
+      (c) => c.storeName
+    )
+    expect(names.indexOf('Ávila Bar')).toBeLessThan(names.indexOf('Bar do Zé'))
+    expect(names.indexOf('Açaí da Praça')).toBeLessThan(
+      names.indexOf('Ávila Bar')
+    )
+    expect(names[names.length - 1]).toBe('zeca lanches')
+
+    const page = await customers.getCustomersPaginated(1, 50)
+    expect(page.data.map((c) => c.storeName)).toEqual(names)
+  })
 })

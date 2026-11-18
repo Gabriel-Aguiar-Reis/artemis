@@ -16,6 +16,7 @@ import {
   isKnownStatus,
   isOpenStatus,
   normalizePaymentState,
+  OPEN_STATUSES,
   resolveResultStatus,
   RESULT_EDITABLE_STATUSES,
   roundMoney,
@@ -49,6 +50,7 @@ import {
   desc,
   eq,
   gte,
+  inArray,
   isNotNull,
   isNull,
   like,
@@ -92,6 +94,8 @@ export type PaymentInput = {
   totalValue: number
   installments: number
   isPaid: boolean
+  /** Defaults to all installments when paid, otherwise 0 */
+  paidInstallments?: number
   paymentDate?: string | null
 }
 
@@ -493,6 +497,17 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
     paymentOrderId: UUID
   ): Promise<void> {
     db.transaction((tx) => {
+      // Never replace an existing link: the previous payment would be orphaned
+      const [current] = tx
+        .select({ paymentOrderId: workOrder.paymentOrderId })
+        .from(workOrder)
+        .where(eq(workOrder.id, id))
+        .limit(1)
+        .all()
+      if (!current) throw new Error('A ordem de serviço não foi encontrada.')
+      if (current.paymentOrderId && current.paymentOrderId !== paymentOrderId)
+        throw new Error('Esta ordem de serviço já possui pagamento.')
+
       // Link paymentOrder to workOrder
       tx.update(workOrder)
         .set({
@@ -881,8 +896,8 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
           isNull(workOrder.visitDate),
           isNull(workOrder.resultId),
           isNull(workOrder.paymentOrderId),
-          ne(workOrder.status, WorkOrderStatus.EXPIRED),
-          ne(workOrder.status, WorkOrderStatus.COPIED),
+          // Same criterion as itinerary creation, so the preview count matches
+          inArray(workOrder.status, [...OPEN_STATUSES]),
           gte(workOrder.scheduledDate, startDateStr),
           lte(workOrder.scheduledDate, endDateStr)
         )
@@ -1152,5 +1167,54 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
         .run()
       this.syncUnpaidPayment(tx, row.workOrder.paymentOrderId, total)
     })
+  }
+
+  /**
+   * Creates the payment of a work order and links it, atomically. Rejects when
+   * the work order already has one (double taps used to create two payments
+   * and orphan the first). A settled payment applies the result status.
+   */
+  async addPaymentToWorkOrder(
+    workOrderId: UUID,
+    payment: PaymentInput
+  ): Promise<UUID> {
+    const id = String(uuid.v4()) as UUID
+    const state = normalizePaymentState({
+      installments: payment.installments,
+      paidInstallments:
+        payment.paidInstallments ?? (payment.isPaid ? payment.installments : 0),
+      isPaid: payment.isPaid,
+    })
+
+    db.transaction((tx) => {
+      const [wo] = tx
+        .select({ paymentOrderId: workOrder.paymentOrderId })
+        .from(workOrder)
+        .where(eq(workOrder.id, workOrderId))
+        .limit(1)
+        .all()
+      if (!wo) throw new Error('A ordem de serviço não foi encontrada.')
+      if (wo.paymentOrderId)
+        throw new Error('Esta ordem de serviço já possui pagamento.')
+
+      tx.insert(paymentOrder)
+        .values({
+          id,
+          method: payment.method || 'Dinheiro',
+          totalValue: roundMoney(payment.totalValue),
+          installments: state.installments,
+          isPaid: state.isPaid,
+          paidInstallments: state.paidInstallments,
+          paymentDate: payment.paymentDate ?? null,
+        })
+        .run()
+      tx.update(workOrder)
+        .set({ paymentOrderId: id, updatedAt: new Date().toISOString() })
+        .where(eq(workOrder.id, workOrderId))
+        .run()
+      if (state.isPaid) PaymentService.finalizePayment(tx, id)
+    })
+
+    return id
   }
 }

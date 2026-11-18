@@ -14,7 +14,7 @@ import {
 } from '@/src/domain/validations/customer.schema'
 import { db } from '@/src/infra/db/drizzle/drizzle-client'
 import { customer } from '@/src/infra/db/drizzle/schema/drizzle.customer.schema'
-import { containsFolded } from '@/src/infra/db/drizzle/sql-search'
+import { containsFolded, foldedSql } from '@/src/infra/db/drizzle/sql-search'
 import { normalizePhoneBrazil, UUID } from '@/src/lib/utils'
 import { and, asc, count, eq, like, or } from 'drizzle-orm'
 import uuid from 'react-native-uuid'
@@ -60,7 +60,7 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
       .select(cols)
       .from(customer)
       .where(match)
-      .orderBy(asc(customer.storeName), asc(customer.id))
+      .orderBy(foldedSql(customer.storeName), asc(customer.id))
       .limit(limit)) as CustomerLight[]
   }
 
@@ -123,7 +123,7 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
         .from(customer)
         .where(whereClause)
         // Stable order: without ORDER BY the OFFSET may repeat/skip items
-        .orderBy(asc(customer.storeName), asc(customer.id))
+        .orderBy(foldedSql(customer.storeName), asc(customer.id))
         .limit(pageSize)
         .offset(offset),
       db.select({ count: count() }).from(customer).where(whereClause),

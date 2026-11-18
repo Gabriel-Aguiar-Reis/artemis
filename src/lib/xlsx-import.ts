@@ -222,13 +222,15 @@ export function customerDedupeKeys(c: {
   addressZipCode: string
   addressStreetNumber: string
 }): string[] {
+  // Normalized on both sides: the database may hold "01234-567" or a
+  // formatted phone while the sheet values are digits only
   const store = nameKey(c.storeName)
+  const phone = c.phoneNumber ? normalizePhoneDigits(c.phoneNumber) : ''
+  const zip = normalizeZip(c.addressZipCode)
   const keys: string[] = []
-  if (c.phoneNumber) keys.push(`p|${store}|${c.phoneNumber}`)
-  if (c.addressZipCode && c.addressStreetNumber) {
-    keys.push(
-      `a|${store}|${c.addressZipCode}|${nameKey(c.addressStreetNumber)}`
-    )
+  if (phone) keys.push(`p|${store}|${phone}`)
+  if (zip && c.addressStreetNumber) {
+    keys.push(`a|${store}|${zip}|${nameKey(c.addressStreetNumber)}`)
   }
   return keys
 }

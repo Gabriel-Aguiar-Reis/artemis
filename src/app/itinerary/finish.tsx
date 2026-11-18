@@ -145,8 +145,11 @@ export default function ItineraryFinishScreen() {
     if (!itinerary) return
     try {
       await deleteItinerary(itinerary.id)
-      setDeleteDialogOpen(false)
-      router.replace('/itinerary')
+      // Pop back to the itinerary tab below (replace() would duplicate the tabs).
+      // The dialog unmounts with the screen: closing it first runs its exit
+      // animation while the screen is being removed, which crashes Android
+      // (NPE in ViewGroup.dispatchGetDisplayList).
+      router.back()
     } catch (error) {
       if (__DEV__) console.error('Error canceling itinerary:', error)
     }

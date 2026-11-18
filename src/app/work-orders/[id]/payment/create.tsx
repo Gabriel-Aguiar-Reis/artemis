@@ -1,4 +1,3 @@
-import { paymentOrderHooks } from '@/src/application/hooks/payment-order.hooks'
 import { workOrderHooks } from '@/src/application/hooks/work-order.hooks'
 import { Alert, AlertDescription, AlertTitle } from '@/src/components/ui/alert'
 import { Button } from '@/src/components/ui/button'
@@ -18,18 +17,13 @@ import { useEffect } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { ScrollView, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import uuid from 'react-native-uuid'
 
 export default function WorkOrderPaymentCreateScreen() {
   const params = useLocalSearchParams<{ id: UUID }>()
   const { data: workOrder, isLoading: isLoadingWorkOrder } =
     workOrderHooks.getWorkOrder(params.id)
-  const { mutateAsync: addPaymentOrder, isPending: isAddingPayment } =
-    paymentOrderHooks.addPaymentOrder()
-  const {
-    mutateAsync: updateWorkOrderWithPayment,
-    isPending: isUpdatingWorkOrder,
-  } = workOrderHooks.updateWorkOrderWithPayment()
+  const { mutateAsync: addPayment, isPending: isSaving } =
+    workOrderHooks.useAddPaymentToWorkOrder()
 
   const form = useForm<PaymentOrderInsertDTO>({
     resolver: zodResolver(paymentOrderInsertSchema),
@@ -115,34 +109,31 @@ export default function WorkOrderPaymentCreateScreen() {
   }
 
   const onSubmit = form.handleSubmit(async (data) => {
+    // Avoid a double tap creating two payments
+    if (isSaving) return
     try {
       // BaseForm sends a decimal comma, convert to dot
       const normalized = String(data.totalValue || '0').replace(',', '.')
-      const totalValueNumber = Number(normalized) || 0
-
-      console.log('Payment create - data.totalValue:', data.totalValue)
-      console.log('Payment create - totalValueNumber:', totalValueNumber)
-
-      // 1. Create the payment order
-      const paymentOrderId = uuid.v4() as UUID
-      await addPaymentOrder({
-        id: paymentOrderId,
-        method: data.method,
-        totalValue: totalValueNumber,
-        installments: Number(data.installments) || 1,
-        isPaid: data.isPaid ?? false,
-        paidInstallments: Number(data.paidInstallments) || 0,
-        paymentDate: data.paymentDate
-          ? data.paymentDate instanceof Date
-            ? data.paymentDate.toISOString()
-            : data.paymentDate
-          : null,
-      } as any)
-      // 2. Associate the payment order with the work order
-      await (updateWorkOrderWithPayment as any)([params.id, paymentOrderId])
+      // One transaction: create the payment and link it to the work order
+      await addPayment({
+        workOrderId: params.id,
+        payment: {
+          method: data.method,
+          totalValue: Number(normalized) || 0,
+          installments: Number(data.installments) || 1,
+          isPaid: data.isPaid ?? false,
+          paidInstallments: Number(data.paidInstallments) || 0,
+          paymentDate: data.paymentDate
+            ? data.paymentDate instanceof Date
+              ? data.paymentDate.toISOString()
+              : data.paymentDate
+            : null,
+        },
+      })
       router.back()
     } catch (error) {
-      console.error('Error creating payment:', error)
+      // the hook shows the error toast
+      if (__DEV__) console.error('Error creating payment:', error)
     }
   })
 
@@ -190,7 +181,7 @@ export default function WorkOrderPaymentCreateScreen() {
     })) || []),
   ]
 
-  const isPending = isAddingPayment || isUpdatingWorkOrder
+  const isPending = isSaving
 
   return (
     <SafeAreaView edges={['left', 'right', 'bottom']} className="flex-1">

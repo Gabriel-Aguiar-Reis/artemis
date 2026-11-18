@@ -353,3 +353,83 @@ describe('clone', () => {
     expect(loaded?.products).toHaveLength(1)
   })
 })
+
+describe('addPaymentToWorkOrder', () => {
+  beforeEach(() => {
+    resetTestDb()
+    seed()
+  })
+
+  it('creates and links the payment in one go; a double tap is rejected without orphans', async () => {
+    const id = await repo.addWorkOrderWithDetails({
+      customerId: CUST,
+      scheduledDate: new Date(),
+      items: [item(P1, 1, 10.1)],
+    })
+    const pay = {
+      method: 'PIX',
+      totalValue: 10.1,
+      installments: 2,
+      isPaid: false,
+    }
+    const poId = await repo.addPaymentToWorkOrder(id as UUID, pay)
+    expect(woRow(id).payment_order_id).toBe(poId)
+
+    await expect(repo.addPaymentToWorkOrder(id as UUID, pay)).rejects.toThrow(
+      'já possui pagamento'
+    )
+    expect(countRows('payment_order')).toBe(1)
+  })
+
+  it('a settled payment on an open order with a report applies the report status', async () => {
+    const id = await repo.addWorkOrderWithDetails({
+      customerId: CUST,
+      scheduledDate: new Date(),
+      items: [item(P1, 2, 10.1)],
+    })
+    // report recorded without payment, then status forced back to open
+    await repo.addResultToWorkOrder(id as UUID, {
+      exchanged: [item(P1, 1, 10.1)],
+      added: [],
+      removed: [],
+    })
+    getTestDb()
+      .raw.prepare("UPDATE work_order SET status = 'PENDING' WHERE id = ?")
+      .run(id)
+
+    await repo.addPaymentToWorkOrder(id as UUID, {
+      method: 'Dinheiro',
+      totalValue: 10.1,
+      installments: 1,
+      isPaid: true,
+    })
+    const po = getTestDb()
+      .raw.prepare('SELECT * FROM payment_order')
+      .get() as any
+    expect(po.is_paid).toBe(1)
+    expect(po.paid_installments).toBe(1)
+    // the rule compares distinct products: P1 scheduled, P1 exchanged
+    expect(woRow(id).status).toBe(WorkOrderStatus.COMPLETED)
+  })
+
+  it('the legacy link method no longer replaces an existing payment', async () => {
+    const id = await repo.addWorkOrderWithDetails({
+      customerId: CUST,
+      scheduledDate: new Date(),
+      items: [item(P1, 1, 10.1)],
+      payment: {
+        method: 'PIX',
+        totalValue: 10,
+        installments: 1,
+        isPaid: false,
+      },
+    })
+    const other = await paymentRepo.addPaymentOrder({
+      method: 'PIX',
+      totalValue: '5',
+    } as any)
+    await expect(
+      repo.updateWorkOrderWithPayment(id as UUID, other as UUID)
+    ).rejects.toThrow('já possui pagamento')
+  })
+})

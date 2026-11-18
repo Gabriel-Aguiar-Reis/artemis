@@ -1,7 +1,7 @@
 import { ItineraryWorkOrder } from '@/src/domain/entities/itinerary-work-order/itinerary-work-order.entity'
 import { Itinerary } from '@/src/domain/entities/itinerary/itinerary.entity'
 import { ItineraryMapper } from '@/src/domain/entities/itinerary/mapper/itinerary.mapper'
-import { WorkOrderStatus } from '@/src/domain/entities/work-order/work-order.entity'
+import { OPEN_STATUSES } from '@/src/domain/entities/work-order/work-order-rules'
 import { ItineraryRepository } from '@/src/domain/repositories/itinerary/itinerary.repository'
 import {
   ItineraryInsertDTO,
@@ -28,13 +28,6 @@ export type ItinerarySummary = {
   ordersWithResult: number
   totalRevenue: number
 }
-
-// Only open work orders enter a new itinerary.
-const OPEN_STATUSES = [
-  WorkOrderStatus.PENDING,
-  WorkOrderStatus.COMMITTED,
-  WorkOrderStatus.IN_PROGRESS,
-]
 
 export default class DrizzleItineraryRepository implements ItineraryRepository {
   /**
@@ -136,7 +129,7 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
           isNull(workOrder.visitDate),
           isNull(workOrder.resultId),
           isNull(workOrder.paymentOrderId),
-          inArray(workOrder.status, OPEN_STATUSES),
+          inArray(workOrder.status, [...OPEN_STATUSES]),
           gte(workOrder.scheduledDate, startDate.toISOString()),
           lte(workOrder.scheduledDate, endDate.toISOString())
         )

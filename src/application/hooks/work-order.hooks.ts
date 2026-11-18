@@ -4,6 +4,7 @@ import { useInvalidateQueries } from '@/src/application/hooks/use-invalidate-que
 import { WorkOrderInsertDTO } from '@/src/domain/validations/work-order.schema'
 import DrizzleWorkOrderRepository, {
   CreateWorkOrderInput,
+  PaymentInput,
   ResultInput,
 } from '@/src/infra/repositories/drizzle/drizzle.work-order.repository'
 import { UUID } from '@/src/lib/utils'
@@ -191,6 +192,33 @@ export const workOrderHooks = {
         Toast.show({
           type: 'error',
           text1: 'Erro ao criar ordem de serviço',
+          text2: error.message,
+        })
+      },
+    })
+  },
+
+  /** Creates and links the work order's payment (transactional). */
+  useAddPaymentToWorkOrder: () => {
+    const invalidateQueries = useInvalidateQueries()
+    return useMutation({
+      mutationFn: ({
+        workOrderId,
+        payment,
+      }: {
+        workOrderId: UUID
+        payment: PaymentInput
+      }) => workOrderRepo.addPaymentToWorkOrder(workOrderId, payment),
+      onSuccess: () => {
+        invalidateQueries('workOrders')
+        invalidateQueries('paymentOrders')
+        invalidateQueries('itineraryWorkOrders')
+        Toast.show({ type: 'success', text1: 'Pagamento registrado!' })
+      },
+      onError: (error) => {
+        Toast.show({
+          type: 'error',
+          text1: 'Erro ao registrar pagamento',
           text2: error.message,
         })
       },

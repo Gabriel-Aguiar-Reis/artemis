@@ -42,7 +42,8 @@ maestro test .maestro/01-customer-search-accents.yaml \
   .maestro/11-work-orders-on-demand.yaml \
   .maestro/12-itinerary-details-search.yaml \
   .maestro/13-last-tab-restored.yaml \
-  .maestro/14-filters-survive-cold-start.yaml
+  .maestro/14-filters-survive-cold-start.yaml \
+  .maestro/15-form-return-navigation.yaml
 ```
 
 Os filtros de cada aba sobrevivem ao fechamento do app, então os fluxos que precisam de uma lista limpa chamam `subflows/reset-filters.yaml` no início.
@@ -65,3 +66,4 @@ Roteiros só de prints (sem asserções) ficam em `.maestro/visual/`: tema claro
 | 12 | Detalhes do itinerário: botão de busca filtra as OS do itinerário |
 | 13 | A última aba aberta volta após fechar o app (padrão: Itinerário) |
 | 14 | Os filtros de cada aba voltam após fechar o app; limpar também persiste |
+| 15 | Voltar de formulários reaproveita as abas existentes (sem pilha duplicada); cancela o itinerário, então roda por último |
