@@ -64,59 +64,54 @@ function MyComponent() {
 }
 ```
 
-## Mapa de Dependências
+## Mapa de Dependências (diretas, não transitivas)
 
-### Customers
+`getQueryKeysToInvalidate(key)` devolve a própria key mais as dependências
+**diretas** listadas em `QUERY_DEPENDENCIES`. Não há mais fecho transitivo:
+antes, mexer em um cliente acabava refazendo `workOrderItems`,
+`workOrderResults` e `workOrderResultItems` sem necessidade. Cada lista agora
+contém só o que realmente embute o dado alterado.
 
-Quando modificado, invalida:
+| Mutação em | Invalida | Motivo |
+| --- | --- | --- |
+| `customers` | `workOrders`, `itineraries`, `itineraryWorkOrders` | OS e itinerário exibem nome/endereço/telefone do cliente (join) |
+| `workOrders` | `itineraries`, `itineraryWorkOrders`, `workOrderItems`, `workOrderResults`, `workOrderResultItems` | escrita de OS toca itinerário, itens e resultado |
+| `workOrderItems` | `workOrders`, `itineraries` | OS e itinerário carregam os itens |
+| `itineraries` | `itineraryWorkOrders` | |
+| `itineraryWorkOrders` | `itineraries`, `workOrders` | |
+| `products` | `workOrders`, `itineraries`, `workOrderItems`, `workOrderResultItems` | nome do produto aparece nos itens |
+| `categories` | `products` | só a lista de produtos mostra a categoria; OS não depende dela |
+| `paymentOrders` | `workOrders`, `itineraries` | itinerário faz join com pagamento |
+| `workOrderResults` | `workOrders`, `itineraries`, `workOrderResultItems` | |
+| `workOrderResultItems` | `workOrders`, `itineraries`, `workOrderResults` | |
+| `license` | (nenhuma) | |
 
-- `workOrders` - ordens de serviço do cliente
-- `itineraries` - itinerários que contêm ordens do cliente
-- `itineraryWorkOrders` - relações de ordens nos itinerários
+Observação: como a OS mostra o nome do cliente (e itens mostram nome do
+produto), `customers`/`products` continuam invalidando `workOrders`. O custo
+foi reduzido por `refetchType: 'active'` (abaixo), não removendo a dependência.
 
-### Work Orders
+## Estratégia de refetch
 
-Quando modificado, invalida:
+- `create-repository-hooks.ts` e `useInvalidateQueries` usam
+  `refetchType: 'active'`: só queries montadas refazem a consulta
+  imediatamente; as demais ficam marcadas como stale e recarregam quando a
+  tela é aberta. Antes (`'all'`) toda lista de OS/itinerário, mesmo fora da
+  tela, era recarregada a cada mutação.
+- `structuralSharing` está no padrão (ligado) no `QueryClient`, preservando a
+  identidade de objetos inalterados (menos re-render). Entidades de domínio
+  são instâncias de classe e são tratadas como valores opacos.
+- `staleTime`: 5 min para dados cadastrais (`customers`, `products`,
+  `categories`), pois toda mutação os invalida; 30 s para o resto.
+- Infinite queries (se existirem) devem usar a key raiz da entidade
+  (`['workOrders', ...]`, `['customers', ...]`) para serem alcançadas por
+  `invalidateQueries({ queryKey: [key] })`. Nesta branch ainda não existem
+  `use-work-orders-infinite.ts` / `use-customers-infinite.ts`.
 
-- `itineraries` - itinerários que contêm essa ordem
-- `itineraryWorkOrders` - relações nos itinerários
-- `workOrderItems` - items da ordem
-- `workOrderResults` - resultados da ordem
-- `workOrderResultItems` - items dos resultados
+## Erros de exclusão (FK restrict)
 
-### Products
-
-Quando modificado, invalida:
-
-- `workOrderItems` - items que usam esse produto
-- `workOrderResultItems` - resultados que usam esse produto
-- `workOrders` - ordens que contêm esses items
-
-### Categories
-
-Quando modificado, invalida:
-
-- `products` - produtos dessa categoria
-  - E por cascata, tudo que depende de products
-
-### Payment Orders
-
-Quando modificado, invalida:
-
-- `workOrders` - ordens com esse pagamento
-
-### Itineraries
-
-Quando modificado, invalida:
-
-- `itineraryWorkOrders` - ordens no itinerário
-
-### Itinerary Work Orders
-
-Quando modificado, invalida:
-
-- `itineraries` - itinerário pai
-- `workOrders` - ordens relacionadas
+`create-repository-hooks.ts` converte `FOREIGN KEY constraint failed` em
+mensagem amigável (ex.: "Este cliente possui ordens de serviço e não pode ser
+excluído.") no toast de erro.
 
 ## Como Adicionar Novas Entidades
 
@@ -161,7 +156,7 @@ export const suaNovaEntidadeHooks = createRepositoryHooks(
 1. Verifique se a query key está corretamente mapeada em `QUERY_DEPENDENCIES`
 2. Confirme que o hook está usando `createRepositoryHooks` com a query key correta
 3. Use `useInvalidateQueries` manualmente se necessário
-4. Verifique se o `staleTime` não está muito alto (padrão: 5 minutos)
+4. Verifique se o `staleTime` não está muito alto (30 s por padrão; 5 min para dados cadastrais)
 
 ### Como debugar invalidações?
 

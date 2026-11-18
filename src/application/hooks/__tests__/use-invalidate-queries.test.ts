@@ -103,11 +103,11 @@ describe('useInvalidateQueries helpers', () => {
     expect(getQueryKeysToInvalidate).not.toHaveBeenCalled()
     expect(invalidateQueries).toHaveBeenNthCalledWith(1, {
       queryKey: ['customers'],
-      refetchType: 'all',
+      refetchType: 'active',
     })
     expect(invalidateQueries).toHaveBeenNthCalledWith(2, {
       queryKey: ['products'],
-      refetchType: 'all',
+      refetchType: 'active',
     })
   })
 
@@ -134,7 +134,7 @@ describe('useInvalidateQueries helpers', () => {
     expect(invalidateQueries).toHaveBeenCalledOnce()
     expect(invalidateQueries).toHaveBeenCalledWith({
       queryKey: ['customers'],
-      refetchType: 'all',
+      refetchType: 'active',
     })
   })
 })
