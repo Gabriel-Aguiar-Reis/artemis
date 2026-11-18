@@ -300,7 +300,11 @@ export default function ProductsScreen() {
             scrollEventThrottle={16}
             refreshing={refreshing}
             onRefresh={onRefresh}
-            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 64 }}
+            contentContainerStyle={{
+              paddingHorizontal: 16,
+              paddingTop: 16,
+              paddingBottom: 64,
+            }}
             ListHeaderComponent={
               <View className="-mx-4">
                 <ActiveFiltersBanner

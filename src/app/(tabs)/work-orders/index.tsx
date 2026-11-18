@@ -510,7 +510,7 @@ export default function WorkOrdersScreen() {
           ),
         }}
       />
-      <View className="px-4 pt-3 pb-2 gap-2">
+      <View className="px-4 py-4 gap-3">
         <InlineSearchBar
           value={params.search ?? ''}
           onSearch={handleInlineSearch}

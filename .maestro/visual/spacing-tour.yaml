@@ -1,0 +1,56 @@
+# Visual check of the spacing between the header and the first element of
+# every tab screen (with and without filters). Screenshots only.
+appId: br.com.artemis
+tags: [visual]
+---
+- runFlow: ../subflows/open-app.yaml
+- tapOn: Itinerário
+- extendedWaitUntil:
+    visible: ".* - SP.*"
+    timeout: 30000
+- takeScreenshot: sp-01-itinerary
+- tapOn: Clientes
+- extendedWaitUntil:
+    visible: ".* - SP.*"
+    timeout: 30000
+- takeScreenshot: sp-02-customers
+- openLink: artemis://customers?search=padaria
+- extendedWaitUntil:
+    visible: "Filtros ativos:"
+    timeout: 15000
+- takeScreenshot: sp-03-customers-filtered
+- tapOn: Produtos
+- extendedWaitUntil:
+    visible: ".*R\\$.*"
+    timeout: 30000
+- takeScreenshot: sp-04-products
+- tapOn: Categorias
+- extendedWaitUntil:
+    visible: Extintores
+    timeout: 30000
+- takeScreenshot: sp-05-categories
+- tapOn: OS
+- extendedWaitUntil:
+    visible: Encontre uma ordem de serviço
+    timeout: 30000
+- takeScreenshot: sp-06-os-empty
+- tapOn: Pesquisar por cliente ou contato...
+- inputText: padaria
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: ".* - SP.*"
+    timeout: 15000
+- takeScreenshot: sp-07-os-search
+- openLink: artemis://itinerary/history
+- extendedWaitUntil:
+    visible: ".* ordens"
+    timeout: 15000
+- takeScreenshot: sp-08-history
+- tapOn:
+    text: ".* ordens"
+    index: 0
+- extendedWaitUntil:
+    visible: Itinerário Finalizado|Itinerário
+    timeout: 15000
+- tapOn: Pesquisar ordens de serviço
+- takeScreenshot: sp-09-details-search

@@ -483,7 +483,7 @@ export default function ItineraryScreen() {
                   paddingBottom: 64,
                 }}
                 ListHeaderComponent={
-                  <View className="-mx-4 -mt-4 pt-4">
+                  <View className="-mx-4">
                     <ActiveFiltersBanner
                       filters={activeFilters}
                       clearFiltersHref="/itinerary"

@@ -318,10 +318,14 @@ export default function CustomersScreen() {
         </View>
       ) : (
         <View className="flex-1">
-          <ActiveFiltersBanner
-            filters={activeFilters}
-            clearFiltersHref="/customers"
-          />
+          {hasActiveFilters && (
+            <View className="pt-4">
+              <ActiveFiltersBanner
+                filters={activeFilters}
+                clearFiltersHref="/customers"
+              />
+            </View>
+          )}
           {displayedCustomers.length === 0 ? (
             <View className="flex-1 items-center justify-center px-4">
               <Text className="text-center text-muted-foreground">
@@ -339,7 +343,12 @@ export default function CustomersScreen() {
                 scrollEventThrottle={16}
                 refreshing={refreshing}
                 onRefresh={onRefresh}
-                contentContainerStyle={{ paddingHorizontal: 16 }}
+                contentContainerStyle={{
+                  paddingHorizontal: 16,
+                  // 16 below the header (same as the side padding and the gap
+                  // between cards); the filter banner already has it
+                  paddingTop: hasActiveFilters ? 0 : 16,
+                }}
                 onEndReached={handleLoadMore}
                 onEndReachedThreshold={0.5}
                 ListFooterComponent={renderFooter}

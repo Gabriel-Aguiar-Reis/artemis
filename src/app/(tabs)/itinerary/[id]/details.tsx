@@ -108,7 +108,7 @@ export default function ItineraryDetailsScreen() {
         }}
       />
       {searchOpen && (
-        <View className="px-4 pt-3 pb-1">
+        <View className="px-4 pt-4">
           <InlineSearchBar
             value={term}
             onSearch={setTerm}
