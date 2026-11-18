@@ -60,7 +60,7 @@ export default function CategoriesSearchScreen() {
   const hasActiveFilters = searchQuery !== '' || statusFilter !== 'all'
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView edges={['left', 'right', 'bottom']} className="flex-1">
       <Stack.Screen options={{ title: 'Filtrar Categorias' }} />
 
       <KeyboardAvoidingView

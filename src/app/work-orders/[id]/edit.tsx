@@ -60,14 +60,20 @@ export default function WorkOrderEditScreen() {
 
   if (isLoadingWorkOrder)
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Carregando ordem de serviço...</Text>
       </SafeAreaView>
     )
 
   if (!workOrder)
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Ordem de serviço não encontrada.</Text>
       </SafeAreaView>
     )

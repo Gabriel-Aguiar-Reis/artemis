@@ -34,7 +34,10 @@ export default function WorkOrderProductsScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Carregando produtos...</Text>
       </SafeAreaView>
     )
@@ -42,7 +45,10 @@ export default function WorkOrderProductsScreen() {
 
   if (!workOrder) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Ordem de serviço não encontrada.</Text>
       </SafeAreaView>
     )
@@ -56,7 +62,7 @@ export default function WorkOrderProductsScreen() {
   )
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView edges={['left', 'right']} className="flex-1">
       <Stack.Screen
         options={{
           title: 'Produtos Agendados',

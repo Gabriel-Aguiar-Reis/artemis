@@ -170,7 +170,7 @@ export default function WorkOrdersSearch() {
     isCopiedFilter !== 'all'
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView edges={['left', 'right', 'bottom']} className="flex-1">
       <Stack.Screen options={{ title: 'Filtrar Ordens de Serviço' }} />
 
       <KeyboardAvoidingView

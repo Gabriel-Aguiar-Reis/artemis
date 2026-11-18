@@ -269,7 +269,7 @@ export default function CustomersScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1">
+      <SafeAreaView edges={['left', 'right']} className="flex-1">
         <LoadingState label="Carregando clientes..." />
       </SafeAreaView>
     )
@@ -277,7 +277,7 @@ export default function CustomersScreen() {
 
   if (isError && !data) {
     return (
-      <SafeAreaView className="flex-1">
+      <SafeAreaView edges={['left', 'right']} className="flex-1">
         <ErrorState
           message="Não foi possível carregar os clientes."
           onRetry={() => refetch()}
@@ -289,7 +289,7 @@ export default function CustomersScreen() {
   const totalCustomers = data?.pages[0]?.totalCount ?? 0
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView edges={['left', 'right']} className="flex-1">
       <Stack.Screen
         options={{
           title: 'Clientes',

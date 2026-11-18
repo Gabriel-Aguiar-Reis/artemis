@@ -19,6 +19,7 @@ import {
   removeWalFiles,
 } from '@/src/infra/db/drizzle/drizzle-client'
 import migrations from '@/src/infra/db/drizzle/migrations'
+import { loadLastTab } from '@/src/lib/last-tab'
 import { NAV_THEME, THEME } from '@/src/lib/theme'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { ThemeProvider } from '@react-navigation/native'
@@ -229,7 +230,9 @@ export default function RootLayout() {
 
   // Load the saved theme preference
   useEffect(() => {
-    AsyncStorage.getItem(THEME_STORAGE_KEY)
+    // Theme and last tab are read before the splash hides, so the initial
+    // redirect (index → last tab) is synchronous and there's no theme flash
+    const theme = AsyncStorage.getItem(THEME_STORAGE_KEY)
       .then((value: string | null) => {
         if (value === 'system') {
           setColorScheme(undefined as any)
@@ -238,7 +241,7 @@ export default function RootLayout() {
         }
       })
       .catch(() => {})
-      .finally(() => setThemeReady(true))
+    Promise.all([theme, loadLastTab()]).finally(() => setThemeReady(true))
   }, [setColorScheme])
 
   useEffect(() => {
@@ -306,6 +309,8 @@ export default function RootLayout() {
               <SheetProvider context="global">
                 <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
                 <Stack
+                  // Root stack: the tabs plus every form, which opens above the
+                  // tab bar
                   screenOptions={{
                     animation:
                       Platform.OS === 'ios'
@@ -313,45 +318,26 @@ export default function RootLayout() {
                         : 'slide_from_right',
                   }}
                 >
+                  <Stack.Screen name="index" options={{ headerShown: false }} />
                   <Stack.Screen
-                    name="index"
-                    options={{ title: Constants.expoConfig?.name ?? 'Artemis' }}
-                  />
-                  <Stack.Screen
-                    name="categories/index"
-                    options={{ title: 'Categorias' }}
+                    name="(tabs)"
+                    options={{ headerShown: false }}
                   />
                   <Stack.Screen
                     name="categories/form"
                     options={{ title: 'Nova Categoria' }}
                   />
                   <Stack.Screen
-                    name="customers/index"
-                    options={{ title: 'Clientes' }}
-                  />
-                  <Stack.Screen
                     name="customers/form"
                     options={{ title: 'Cadastrar Cliente' }}
-                  />
-                  <Stack.Screen
-                    name="products/index"
-                    options={{ title: 'Produtos' }}
                   />
                   <Stack.Screen
                     name="products/form"
                     options={{ title: 'Cadastrar Produto' }}
                   />
                   <Stack.Screen
-                    name="work-orders/index"
-                    options={{ title: 'Ordens de Serviço' }}
-                  />
-                  <Stack.Screen
                     name="work-orders/form"
                     options={{ title: 'Criar Ordem' }}
-                  />
-                  <Stack.Screen
-                    name="itinerary/index"
-                    options={{ title: 'Itinerário' }}
                   />
                   <Stack.Screen
                     name="admin/generate-license"

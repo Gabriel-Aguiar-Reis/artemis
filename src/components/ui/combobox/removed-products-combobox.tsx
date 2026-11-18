@@ -10,6 +10,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/src/components/ui/dialog'
+import {
+  FIELD_LABEL_FLOAT_TOP,
+  FIELD_MESSAGE_CLASS,
+  FIELD_TOP_RESERVE,
+} from '@/src/components/ui/field-metrics'
 import { Icon } from '@/src/components/ui/icon'
 import { Input } from '@/src/components/ui/input'
 import { Text } from '@/src/components/ui/text'
@@ -330,7 +335,7 @@ export function RemovedProductsCombobox({
     zIndex: 10,
     top: animated.interpolate({
       inputRange: [0, 1],
-      outputRange: [-8, -8],
+      outputRange: [FIELD_LABEL_FLOAT_TOP, FIELD_LABEL_FLOAT_TOP],
     }),
     fontSize: animated.interpolate({
       inputRange: [0, 1],
@@ -339,7 +344,7 @@ export function RemovedProductsCombobox({
   }
 
   return (
-    <View className="relative">
+    <View className="relative" style={{ paddingTop: FIELD_TOP_RESERVE }}>
       {label && (
         <Animated.Text
           style={labelStyle}
@@ -490,7 +495,7 @@ export function RemovedProductsCombobox({
         </View>
       )}
 
-      <View className="min-h-4 justify-center">
+      <View className={FIELD_MESSAGE_CLASS}>
         {error && (
           <Text className="ml-2 text-xs text-destructive">{error}</Text>
         )}

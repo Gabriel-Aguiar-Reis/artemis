@@ -83,7 +83,10 @@ export default function CloneWorkOrderScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center"
+      >
         <ActivityIndicator size="large" />
         <Text className="text-center text-muted-foreground mt-2">
           Carregando ordem de serviço...
@@ -94,7 +97,10 @@ export default function CloneWorkOrderScreen() {
 
   if (!workOrder) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center px-4">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center px-4"
+      >
         <Text className="text-center text-muted-foreground">
           Ordem de serviço não encontrada
         </Text>
@@ -114,7 +120,10 @@ export default function CloneWorkOrderScreen() {
 
   if (!canClone) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center px-4">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center px-4"
+      >
         <Text className="text-center text-muted-foreground">
           A ordem de serviço deve estar com status Expirada, Concluída ou
           Parcial (com relatório e pagamento) para ser clonada.
@@ -129,7 +138,7 @@ export default function CloneWorkOrderScreen() {
       : (workOrder.result?.getExchangedAndAddedProducts() ?? [])
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView edges={['left', 'right', 'bottom']} className="flex-1">
       <Stack.Screen
         options={{
           title: 'Clonar Ordem de Serviço',

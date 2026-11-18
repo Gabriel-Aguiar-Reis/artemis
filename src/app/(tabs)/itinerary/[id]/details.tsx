@@ -28,7 +28,10 @@ export default function ItineraryDetailsScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Carregando itinerário...</Text>
       </SafeAreaView>
     )
@@ -36,7 +39,10 @@ export default function ItineraryDetailsScreen() {
 
   if (!itinerary) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Itinerário não encontrado.</Text>
       </SafeAreaView>
     )
@@ -55,7 +61,7 @@ export default function ItineraryDetailsScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView edges={['left', 'right']} className="flex-1">
       <Stack.Screen
         options={{
           title: 'Detalhes do Itinerário',

@@ -95,7 +95,10 @@ export default function WorkOrderProductsEditScreen() {
 
   if (isLoadingWorkOrder) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Carregando ordem de serviço...</Text>
       </SafeAreaView>
     )
@@ -103,7 +106,10 @@ export default function WorkOrderProductsEditScreen() {
 
   if (!workOrder) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Ordem de serviço não encontrada.</Text>
       </SafeAreaView>
     )
@@ -111,7 +117,10 @@ export default function WorkOrderProductsEditScreen() {
 
   if (workOrder.result) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center px-4">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center px-4"
+      >
         <View className="items-center gap-4">
           <Text className="text-center text-lg font-semibold text-destructive">
             Edição Bloqueada
@@ -133,7 +142,7 @@ export default function WorkOrderProductsEditScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView edges={['left', 'right', 'bottom']} className="flex-1">
       <Stack.Screen
         options={{
           title: 'Editar Produtos Agendados',

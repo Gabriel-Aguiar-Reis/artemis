@@ -1,3 +1,8 @@
+import {
+  FIELD_LABEL_FLOAT_TOP,
+  FIELD_MESSAGE_CLASS,
+  FIELD_TOP_RESERVE,
+} from '@/src/components/ui/field-metrics'
 import { Icon } from '@/src/components/ui/icon'
 import { Input } from '@/src/components/ui/input'
 import { Text } from '@/src/components/ui/text'
@@ -200,7 +205,7 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
     zIndex: 10,
     top: animated.interpolate({
       inputRange: [0, 1],
-      outputRange: [26, 10],
+      outputRange: [FIELD_TOP_RESERVE + 8, FIELD_LABEL_FLOAT_TOP],
     }),
     fontSize: animated.interpolate({
       inputRange: [0, 1],
@@ -221,7 +226,10 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
     : ((value as any) ?? '')
 
   return (
-    <View className={cn('relative', className)} style={{ paddingTop: 18 }}>
+    <View
+      className={cn('relative', className)}
+      style={{ paddingTop: FIELD_TOP_RESERVE }}
+    >
       <Animated.Text
         style={labelStyle}
         numberOfLines={1}
@@ -462,7 +470,7 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
           ))}
       </View>
 
-      <View className="min-h-4 justify-center">
+      <View className={FIELD_MESSAGE_CLASS}>
         {error ? (
           <Text className="ml-2 text-xs text-destructive">{error}</Text>
         ) : helperText ? (

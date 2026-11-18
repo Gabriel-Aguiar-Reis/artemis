@@ -105,7 +105,10 @@ export default function LogsViewerScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView
+      edges={['left', 'right', 'bottom']}
+      className="flex-1 bg-background"
+    >
       <Stack.Screen options={{ title: 'Logs do Sistema', headerShown: true }} />
       <ScrollView className="flex-1">
         <View className="gap-6 p-4">

@@ -86,7 +86,7 @@ export default function ItineraryReorderScreen() {
 
   return (
     <GestureHandlerRootView className="flex-1">
-      <SafeAreaView className="flex-1">
+      <SafeAreaView edges={['left', 'right', 'bottom']} className="flex-1">
         <Stack.Screen
           options={{
             headerTitle: 'Ordenar Itinerário',

@@ -93,7 +93,10 @@ export default function ProductsEditScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Carregando produto...</Text>
       </SafeAreaView>
     )
@@ -101,7 +104,10 @@ export default function ProductsEditScreen() {
 
   if (!product) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Produto não encontrado.</Text>
       </SafeAreaView>
     )

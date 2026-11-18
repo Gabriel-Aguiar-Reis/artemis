@@ -463,7 +463,7 @@ export default function WorkOrdersScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1">
+      <SafeAreaView edges={['left', 'right']} className="flex-1">
         <LoadingState label="Carregando ordens de serviço..." />
       </SafeAreaView>
     )
@@ -471,7 +471,7 @@ export default function WorkOrdersScreen() {
 
   if (isError && !data) {
     return (
-      <SafeAreaView className="flex-1">
+      <SafeAreaView edges={['left', 'right']} className="flex-1">
         <ErrorState
           message="Não foi possível carregar as ordens de serviço."
           onRetry={() => refetch()}
@@ -483,7 +483,7 @@ export default function WorkOrdersScreen() {
   const totalWorkOrders = data?.pages[0]?.totalCount ?? 0
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView edges={['left', 'right']} className="flex-1">
       <Stack.Screen
         options={{
           title: 'Ordens de Serviço',

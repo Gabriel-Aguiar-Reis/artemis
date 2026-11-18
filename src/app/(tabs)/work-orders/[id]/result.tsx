@@ -53,7 +53,10 @@ export default function WorkOrderResultScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Carregando resultado...</Text>
       </SafeAreaView>
     )
@@ -61,7 +64,10 @@ export default function WorkOrderResultScreen() {
 
   if (!workOrder || !workOrder.result) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Resultado não encontrado.</Text>
       </SafeAreaView>
     )
@@ -115,7 +121,7 @@ export default function WorkOrderResultScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView edges={['left', 'right']} className="flex-1">
       <Stack.Screen
         options={{
           title: 'Relatório do Serviço',

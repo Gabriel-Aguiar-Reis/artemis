@@ -160,7 +160,7 @@ export default function CategoriesScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1">
+      <SafeAreaView edges={['left', 'right']} className="flex-1">
         <LoadingState label="Carregando categorias..." />
       </SafeAreaView>
     )
@@ -168,7 +168,7 @@ export default function CategoriesScreen() {
 
   if (isError) {
     return (
-      <SafeAreaView className="flex-1">
+      <SafeAreaView edges={['left', 'right']} className="flex-1">
         <ErrorState
           message="Não foi possível carregar as categorias."
           onRetry={() => refetch()}
@@ -180,7 +180,7 @@ export default function CategoriesScreen() {
   const hasNoCategories = displayedCategories.length === 0 && !hasActiveFilters
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView edges={['left', 'right']} className="flex-1">
       <Stack.Screen
         options={{
           title: 'Categorias',

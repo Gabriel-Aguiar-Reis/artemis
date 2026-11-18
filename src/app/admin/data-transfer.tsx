@@ -201,7 +201,10 @@ export default function DataTransferScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView
+      edges={['left', 'right', 'bottom']}
+      className="flex-1 bg-background"
+    >
       <Stack.Screen
         options={{
           title: 'Importar/Exportar Dados',

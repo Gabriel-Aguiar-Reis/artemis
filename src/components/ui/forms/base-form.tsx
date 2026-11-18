@@ -46,7 +46,7 @@ type RootProps = {
 }
 function Root({ title, children, footer }: RootProps) {
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView edges={['left', 'right', 'bottom']} className="flex-1">
       <Stack.Screen options={{ title }} />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -54,7 +54,7 @@ function Root({ title, children, footer }: RootProps) {
         keyboardVerticalOffset={80}
       >
         <ScrollView className="flex-1" keyboardShouldPersistTaps="handled">
-          <View className="p-4 gap-2">{children}</View>
+          <View className="p-4 gap-4">{children}</View>
         </ScrollView>
         {footer && (
           <View className="p-4 bg-background border-t border-border">

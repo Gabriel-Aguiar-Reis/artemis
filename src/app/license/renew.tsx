@@ -70,7 +70,10 @@ export default function RenewLicenseScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 bg-background items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 bg-background items-center justify-center"
+      >
         <ActivityIndicator />
       </SafeAreaView>
     )
@@ -78,14 +81,20 @@ export default function RenewLicenseScreen() {
 
   if (!license) {
     return (
-      <SafeAreaView className="flex-1 bg-background items-center justify-center p-4">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 bg-background items-center justify-center p-4"
+      >
         <Text>Licença não encontrada</Text>
       </SafeAreaView>
     )
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView
+      edges={['left', 'right', 'bottom']}
+      className="flex-1 bg-background"
+    >
       <Stack.Screen
         options={{
           title: 'Renovar Licença',

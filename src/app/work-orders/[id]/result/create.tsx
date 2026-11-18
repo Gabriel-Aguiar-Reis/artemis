@@ -59,7 +59,10 @@ export default function WorkOrderResultCreateScreen() {
 
   if (isLoadingWorkOrder) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Carregando ordem de serviço...</Text>
       </SafeAreaView>
     )
@@ -67,7 +70,10 @@ export default function WorkOrderResultCreateScreen() {
 
   if (!workOrder) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Ordem de serviço não encontrada.</Text>
       </SafeAreaView>
     )
@@ -75,7 +81,10 @@ export default function WorkOrderResultCreateScreen() {
 
   if (workOrder.result) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Esta ordem de serviço já possui um relatório registrado.</Text>
       </SafeAreaView>
     )
@@ -84,7 +93,7 @@ export default function WorkOrderResultCreateScreen() {
   const scheduledProducts = workOrder.products || []
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView edges={['left', 'right', 'bottom']} className="flex-1">
       <Stack.Screen
         options={{
           title: 'Criar Relatório',

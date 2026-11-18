@@ -41,7 +41,10 @@ export default function WorkOrderPaymentScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Carregando pagamento...</Text>
       </SafeAreaView>
     )
@@ -49,7 +52,10 @@ export default function WorkOrderPaymentScreen() {
 
   if (!workOrder || !workOrder.paymentOrder) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Pagamento não encontrado.</Text>
       </SafeAreaView>
     )
@@ -58,7 +64,7 @@ export default function WorkOrderPaymentScreen() {
   const payment = workOrder.paymentOrder
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView edges={['left', 'right']} className="flex-1">
       <Stack.Screen
         options={{
           title: 'Detalhes do Pagamento',

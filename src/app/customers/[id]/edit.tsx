@@ -98,14 +98,20 @@ export default function CustomersEditScreen() {
 
   if (isLoadingCustomer)
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Carregando cliente...</Text>
       </SafeAreaView>
     )
 
   if (!customer)
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Cliente não encontrado.</Text>
       </SafeAreaView>
     )

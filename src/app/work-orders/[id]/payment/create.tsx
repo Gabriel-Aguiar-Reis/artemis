@@ -148,7 +148,10 @@ export default function WorkOrderPaymentCreateScreen() {
 
   if (isLoadingWorkOrder) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Carregando ordem de serviço...</Text>
       </SafeAreaView>
     )
@@ -156,7 +159,10 @@ export default function WorkOrderPaymentCreateScreen() {
 
   if (!workOrder) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Ordem de serviço não encontrada.</Text>
       </SafeAreaView>
     )
@@ -164,7 +170,10 @@ export default function WorkOrderPaymentCreateScreen() {
 
   if (workOrder.paymentOrder) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Esta ordem de serviço já possui um pagamento registrado.</Text>
       </SafeAreaView>
     )
@@ -184,7 +193,7 @@ export default function WorkOrderPaymentCreateScreen() {
   const isPending = isAddingPayment || isUpdatingWorkOrder
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView edges={['left', 'right', 'bottom']} className="flex-1">
       <Stack.Screen
         options={{
           title: 'Criar Pagamento',

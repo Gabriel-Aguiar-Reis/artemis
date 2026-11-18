@@ -404,7 +404,7 @@ export default function ItineraryScreen() {
 
   return (
     <GestureHandlerRootView className="flex-1">
-      <SafeAreaView className="flex-1">
+      <SafeAreaView edges={['left', 'right']} className="flex-1">
         <Stack.Screen
           options={{
             headerTitle: 'Itinerário',

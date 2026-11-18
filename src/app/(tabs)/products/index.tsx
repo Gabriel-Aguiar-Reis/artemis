@@ -237,7 +237,7 @@ export default function ProductsScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1">
+      <SafeAreaView edges={['left', 'right']} className="flex-1">
         <LoadingState label="Carregando produtos..." />
       </SafeAreaView>
     )
@@ -245,7 +245,7 @@ export default function ProductsScreen() {
 
   if (isError) {
     return (
-      <SafeAreaView className="flex-1">
+      <SafeAreaView edges={['left', 'right']} className="flex-1">
         <ErrorState
           message="Não foi possível carregar os produtos."
           onRetry={() => refetch()}
@@ -257,7 +257,7 @@ export default function ProductsScreen() {
   const hasNoProducts = displayedProducts.length === 0 && !hasActiveFilters
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView edges={['left', 'right']} className="flex-1">
       <Stack.Screen
         options={{
           title: 'Produtos',

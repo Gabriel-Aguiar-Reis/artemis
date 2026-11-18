@@ -62,7 +62,10 @@ export default function GenerateLicenseScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView
+      edges={['left', 'right', 'bottom']}
+      className="flex-1 bg-background"
+    >
       <Stack.Screen
         options={{
           title: 'Gerar Código de Licença',

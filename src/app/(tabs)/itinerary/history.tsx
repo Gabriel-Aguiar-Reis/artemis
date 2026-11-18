@@ -40,7 +40,7 @@ export default function ItineraryHistoryScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView edges={['left', 'right']} className="flex-1">
       <Stack.Screen options={{ title: 'Histórico de Itinerários' }} />
 
       {isLoading ? (
