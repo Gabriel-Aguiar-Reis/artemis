@@ -1,6 +1,6 @@
 export type AddressSerializableDTO = {
   streetName: string
-  streetNumber: number
+  streetNumber: string
   neighborhood: string
   city: string
   state: string
@@ -10,7 +10,7 @@ export type AddressSerializableDTO = {
 export class Address {
   constructor(
     public streetName: string,
-    public streetNumber: number,
+    public streetNumber: string,
     public neighborhood: string,
     public city: string,
     public state: string,

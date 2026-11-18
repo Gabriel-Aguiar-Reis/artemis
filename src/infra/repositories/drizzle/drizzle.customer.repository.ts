@@ -121,7 +121,7 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
     ) {
       address = Address.fromDTO({
         streetName: dto.addressStreetName,
-        streetNumber: Number(dto.addressStreetNumber),
+        streetNumber: String(dto.addressStreetNumber ?? '').trim(),
         neighborhood: dto.addressNeighborhood,
         city: dto.addressCity,
         state: dto.addressState,
@@ -180,7 +180,7 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
     ) {
       address = Address.fromDTO({
         streetName: dto.addressStreetName,
-        streetNumber: Number(dto.addressStreetNumber),
+        streetNumber: String(dto.addressStreetNumber ?? '').trim(),
         neighborhood: dto.addressNeighborhood,
         city: dto.addressCity,
         state: dto.addressState,
