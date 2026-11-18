@@ -2,7 +2,10 @@ import { createRepositoryHooks } from '@/src/application/hooks/create-repository
 import { useAutoAddWorkOrderToItinerary } from '@/src/application/hooks/itinerary-work-order.hooks'
 import { useInvalidateQueries } from '@/src/application/hooks/use-invalidate-queries'
 import { WorkOrderInsertDTO } from '@/src/domain/validations/work-order.schema'
-import DrizzleWorkOrderRepository from '@/src/infra/repositories/drizzle/drizzle.work-order.repository'
+import DrizzleWorkOrderRepository, {
+  CreateWorkOrderInput,
+  ResultInput,
+} from '@/src/infra/repositories/drizzle/drizzle.work-order.repository'
 import { UUID } from '@/src/lib/utils'
 import { useMutation } from '@tanstack/react-query'
 import Toast from 'react-native-toast-message'
@@ -144,6 +147,103 @@ export const workOrderHooks = {
         Toast.show({
           type: 'error',
           text1: 'Erro ao clonar ordem de serviço!',
+          text2: error.message,
+        })
+      },
+    })
+  },
+
+  /**
+   * Cria a OS completa (itens + relatório + pagamento) numa transação só e,
+   * se ainda estiver em aberto, tenta incluí-la no itinerário ativo.
+   */
+  useCreateWorkOrderWithDetails: () => {
+    const invalidateQueries = useInvalidateQueries()
+    const { mutateAsync: autoAddToItinerary } = useAutoAddWorkOrderToItinerary()
+
+    return useMutation({
+      mutationFn: async (input: CreateWorkOrderInput) => {
+        const id = await workOrderRepo.addWorkOrderWithDetails(input)
+        const wo = await workOrderRepo.getWorkOrder(id)
+        if (!wo) throw new Error('Ordem de serviço criada mas não encontrada.')
+        const itineraryResult = wo.result
+          ? { added: false, reason: 'has-result' }
+          : await autoAddToItinerary(wo)
+        return { workOrder: wo, itineraryResult }
+      },
+      onSuccess: (data) => {
+        invalidateQueries('workOrders')
+        invalidateQueries('paymentOrders')
+        invalidateQueries('itineraries')
+        invalidateQueries('itineraryWorkOrders')
+        Toast.show({
+          type: 'success',
+          text1: 'Ordem de serviço criada!',
+          text2: data.itineraryResult.added
+            ? 'Também foi adicionada ao itinerário ativo'
+            : undefined,
+        })
+      },
+      onError: (error) => {
+        Toast.show({
+          type: 'error',
+          text1: 'Erro ao criar ordem de serviço',
+          text2: error.message,
+        })
+      },
+    })
+  },
+
+  /** Registra o relatório de visita de uma OS em aberto (transacional). */
+  useSaveWorkOrderResult: () => {
+    const invalidateQueries = useInvalidateQueries()
+    return useMutation({
+      mutationFn: ({
+        workOrderId,
+        result,
+      }: {
+        workOrderId: UUID
+        result: ResultInput
+      }) => workOrderRepo.addResultToWorkOrder(workOrderId, result),
+      onSuccess: () => {
+        invalidateQueries('workOrders')
+        invalidateQueries('workOrderResults')
+        invalidateQueries('paymentOrders')
+        invalidateQueries('itineraryWorkOrders')
+        Toast.show({ type: 'success', text1: 'Relatório salvo!' })
+      },
+      onError: (error) => {
+        Toast.show({
+          type: 'error',
+          text1: 'Erro ao salvar relatório',
+          text2: error.message,
+        })
+      },
+    })
+  },
+
+  /** Corrige os itens de um relatório existente (transacional). */
+  useUpdateWorkOrderResult: () => {
+    const invalidateQueries = useInvalidateQueries()
+    return useMutation({
+      mutationFn: ({
+        resultId,
+        result,
+      }: {
+        resultId: UUID
+        result: ResultInput
+      }) => workOrderRepo.updateWorkOrderResultItems(resultId, result),
+      onSuccess: () => {
+        invalidateQueries('workOrders')
+        invalidateQueries('workOrderResults')
+        invalidateQueries('paymentOrders')
+        invalidateQueries('itineraryWorkOrders')
+        Toast.show({ type: 'success', text1: 'Relatório atualizado!' })
+      },
+      onError: (error) => {
+        Toast.show({
+          type: 'error',
+          text1: 'Erro ao atualizar relatório',
           text2: error.message,
         })
       },

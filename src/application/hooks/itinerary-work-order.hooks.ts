@@ -1,6 +1,7 @@
 import { createRepositoryHooks } from '@/src/application/hooks/create-repository-hooks'
 import { useInvalidateQueries } from '@/src/application/hooks/use-invalidate-queries'
 import { ItineraryWorkOrder } from '@/src/domain/entities/itinerary-work-order/itinerary-work-order.entity'
+import { isOpenStatus } from '@/src/domain/entities/work-order/work-order-rules'
 import {
   WorkOrder,
   WorkOrderStatus,
@@ -45,24 +46,30 @@ export function useAutoAddWorkOrderToItinerary() {
       }
 
       // Verificar se a data agendada está dentro do período do itinerário
+      // Compara por dia no fuso do aparelho: o fim do itinerário é guardado
+      // como 00:00 do último dia, e antes as OS desse dia ficavam de fora.
       const scheduledDate = workOrder.scheduledDate
+      const periodStart = new Date(itinerary.initialItineraryDate)
+      periodStart.setHours(0, 0, 0, 0)
+      const periodEnd = new Date(itinerary.finalItineraryDate)
+      periodEnd.setHours(23, 59, 59, 999)
       const isInPeriod =
-        scheduledDate >= itinerary.initialItineraryDate &&
-        scheduledDate <= itinerary.finalItineraryDate
+        scheduledDate >= periodStart && scheduledDate <= periodEnd
 
       if (!isInPeriod) {
         // Data fora do período, não adiciona
         return { added: false, reason: 'date-out-of-range' }
       }
 
-      // Verificar se a ordem está expirada
+      // Só OS em aberto entram no itinerário
       if (workOrder.status === WorkOrderStatus.EXPIRED) {
         return { added: false, reason: 'expired' }
       }
-
-      // Verificar se a ordem foi clonada
       if (workOrder.status === WorkOrderStatus.COPIED) {
         return { added: false, reason: 'copied' }
+      }
+      if (!isOpenStatus(workOrder.status)) {
+        return { added: false, reason: 'closed' }
       }
 
       // Verificar se já possui ordem de pagamento

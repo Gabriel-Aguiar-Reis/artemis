@@ -43,12 +43,14 @@ export default function ItineraryFinishScreen() {
       itinerary?.id || ('' as UUID)
     )
 
-  const { mutate: updateFinishItinerary } =
+  const { mutateAsync: updateFinishItinerary } =
     itineraryHooks.updateFinishItinerary()
-  const { mutate: deleteItinerary } = itineraryHooks.deleteItinerary()
+  const { mutateAsync: deleteItinerary, isPending: isDeleting } =
+    itineraryHooks.deleteItinerary()
 
   const [isFinishing, setIsFinishing] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [finishDialogOpen, setFinishDialogOpen] = useState(false)
 
   // Calcular estatísticas
   const stats = useMemo(() => {
@@ -113,28 +115,42 @@ export default function ItineraryFinishScreen() {
     }
   }, [itineraryWorkOrders, itinerary])
 
-  const handleFinish = async () => {
-    if (!itinerary) return
+  // Antes usava mutate() dentro de try/catch: o erro nunca caía no catch e a
+  // tela voltava como se tivesse dado certo. Agora espera o resultado.
+  const finish = async () => {
+    if (!itinerary || isFinishing) return
     setIsFinishing(true)
     try {
-      updateFinishItinerary(itinerary.id)
+      await updateFinishItinerary(itinerary.id)
       router.back()
     } catch (error) {
-      console.error('Erro ao finalizar itinerário:', error)
+      // toast de erro exibido pelo hook
+      if (__DEV__) console.error('Erro ao finalizar itinerário:', error)
     } finally {
       setIsFinishing(false)
+      setFinishDialogOpen(false)
     }
+  }
+
+  // Com OS ainda sem relatório, confirma antes: as atrasadas viram expiradas.
+  const handleFinish = () => {
+    if (stats.ordersWithoutResult > 0) setFinishDialogOpen(true)
+    else finish()
   }
 
   const handleCancel = () => {
     router.back()
   }
 
-  const handleDeleteItinerary = () => {
+  const handleDeleteItinerary = async () => {
     if (!itinerary) return
-    deleteItinerary(itinerary.id)
-    setDeleteDialogOpen(false)
-    router.replace('/itinerary')
+    try {
+      await deleteItinerary(itinerary.id)
+      setDeleteDialogOpen(false)
+      router.replace('/itinerary')
+    } catch (error) {
+      if (__DEV__) console.error('Erro ao cancelar itinerário:', error)
+    }
   }
 
   return (
@@ -388,8 +404,35 @@ export default function ItineraryFinishScreen() {
             <AlertDialogCancel>
               <Text>Não</Text>
             </AlertDialogCancel>
-            <AlertDialogAction onPress={handleDeleteItinerary}>
+            <AlertDialogAction
+              onPress={handleDeleteItinerary}
+              disabled={isDeleting}
+            >
               <Text>Sim, Cancelar</Text>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Confirmação quando há OS sem relatório */}
+      <AlertDialog open={finishDialogOpen} onOpenChange={setFinishDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Há ordens sem relatório</AlertDialogTitle>
+            <AlertDialogDescription>
+              {stats.ordersWithoutResult === 1
+                ? '1 ordem de serviço ainda não tem relatório.'
+                : `${stats.ordersWithoutResult} ordens de serviço ainda não têm relatório.`}{' '}
+              As atrasadas serão marcadas como expiradas e só poderão ser
+              remarcadas por clonagem. Deseja finalizar mesmo assim?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isFinishing}>
+              <Text>Revisar</Text>
+            </AlertDialogCancel>
+            <AlertDialogAction onPress={finish} disabled={isFinishing}>
+              <Text>Finalizar mesmo assim</Text>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,7 +1,4 @@
-import { paymentOrderHooks } from '@/src/application/hooks/payment-order.hooks'
 import { productHooks } from '@/src/application/hooks/product.hooks'
-import { workOrderResultItemHooks } from '@/src/application/hooks/work-order-result-item.hooks'
-import { workOrderResultHooks } from '@/src/application/hooks/work-order-result.hooks'
 import { workOrderHooks } from '@/src/application/hooks/work-order.hooks'
 import { Alert, AlertDescription, AlertTitle } from '@/src/components/ui/alert'
 import { Button } from '@/src/components/ui/button'
@@ -17,22 +14,14 @@ import {
   WorkOrderFormCreateRef,
 } from '@/src/components/ui/forms/work-order-form-create'
 import { Text } from '@/src/components/ui/text'
-import { ProductSnapshot } from '@/src/domain/entities/work-order-item/value-objects/product-snapshot.vo'
-import { WorkOrderItem } from '@/src/domain/entities/work-order-item/work-order-item.entity'
-import {
-  WorkOrderResultItem,
-  WorkOrderResultItemType,
-} from '@/src/domain/entities/work-order-result-item/work-order-result-item.entity'
-import { WorkOrderStatus } from '@/src/domain/entities/work-order/work-order.entity'
-import { getErrorMessage, UUID } from '@/src/lib/utils'
+import { computeResultTotal } from '@/src/domain/entities/work-order/work-order-rules'
+import { getErrorMessage } from '@/src/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { router } from 'expo-router'
 import { CircleQuestionMark, CreditCard, Info } from 'lucide-react-native'
 import * as React from 'react'
 import { useForm } from 'react-hook-form'
 import { View } from 'react-native'
-import Toast from 'react-native-toast-message'
-import uuid from 'react-native-uuid'
 import { z } from 'zod'
 
 // Tipo intermediário para os comboboxes (inclui productName)
@@ -61,7 +50,7 @@ const workOrderFormSchema = z
       .array(
         z.object({
           productId: z.uuid(),
-          quantity: z.number().positive(),
+          quantity: z.number().int().min(1),
         })
       )
       .optional(),
@@ -72,7 +61,7 @@ const workOrderFormSchema = z
         z.object({
           productId: z.uuid(),
           productName: z.string(),
-          quantity: z.number().positive(),
+          quantity: z.number().int().min(1),
           priceSnapshot: z.number().nonnegative(),
         })
       )
@@ -82,7 +71,7 @@ const workOrderFormSchema = z
         z.object({
           productId: z.uuid(),
           productName: z.string(),
-          quantity: z.number().positive(),
+          quantity: z.number().int().min(1),
           priceSnapshot: z.number().nonnegative(),
         })
       )
@@ -92,7 +81,7 @@ const workOrderFormSchema = z
         z.object({
           productId: z.uuid(),
           productName: z.string(),
-          quantity: z.number().positive(),
+          quantity: z.number().int().min(1),
           priceSnapshot: z.number().nonnegative(),
         })
       )
@@ -128,17 +117,8 @@ const workOrderFormSchema = z
 type WorkOrderFormData = z.infer<typeof workOrderFormSchema>
 
 export default function WorkOrderFormScreen() {
-  const { mutateAsync: addWorkOrder, isPending: isWorkOrderPending } =
-    workOrderHooks.useAddWorkOrderWithItinerary()
-  const { mutateAsync: updateWorkOrderWithResult } =
-    workOrderHooks.updateWorkOrderWithResult()
-  const { mutateAsync: updateWorkOrderWithPayment } =
-    workOrderHooks.updateWorkOrderWithPayment()
-  const { mutateAsync: addWorkOrderResult } =
-    workOrderResultHooks.addWorkOrderResult()
-  const { mutateAsync: addWorkOrderResultItems } =
-    workOrderResultItemHooks.addWorkOrderResultItems()
-  const { mutateAsync: addPaymentOrder } = paymentOrderHooks.addPaymentOrder()
+  const { mutateAsync: createWorkOrder, isPending: isWorkOrderPending } =
+    workOrderHooks.useCreateWorkOrderWithDetails()
 
   // Buscar produtos para usar nos comboboxes
   const { data: allProducts } = productHooks.getProductsWithCategory()
@@ -194,220 +174,72 @@ export default function WorkOrderFormScreen() {
   }
 
   const onSubmitFinal = async (data: WorkOrderFormData) => {
+    // Evita duplo toque criando duas OS
+    if (isWorkOrderPending) return
     try {
-      console.log('Submitting work order:', data)
+      const priceOf = (productId: string) => {
+        const info = allProducts?.find((prod) => prod.id === productId)
+        if (!info) throw new Error('Produto não encontrado. Atualize a lista.')
+        return info.salePrice
+      }
 
-      // 1. CRIAR WORK ORDER
-      // Converter produtos agendados para WorkOrderItems completos
-      const workOrderItems = (data.products || []).map((p) => {
-        if (!allProducts) {
-          throw new Error('Produtos não encontrados')
-        }
-        const productInfo = allProducts.find((prod) => prod.id === p.productId)
-        if (!productInfo) {
-          throw new Error(`Produto ${p.productId} não encontrado`)
-        }
-
-        const snapshot = new ProductSnapshot(
-          productInfo.id as UUID,
-          productInfo.name,
-          productInfo.salePrice
-        )
-
-        return WorkOrderItem.fromProductSnapshot(
-          snapshot,
-          p.quantity,
-          productInfo.salePrice
-        )
+      const toItem = (i: {
+        productId: string
+        quantity: number
+        priceSnapshot: number
+      }) => ({
+        productId: i.productId,
+        quantity: i.quantity,
+        priceSnapshot: i.priceSnapshot,
       })
 
-      const workOrderData = {
+      // O pagamento vale o total do relatório (trocados + adicionados)
+      const paymentTotal = computeResultTotal(
+        data.exchangedProducts || [],
+        data.addedProducts || []
+      )
+
+      // Tudo numa transação só (OS + itens + relatório + pagamento): se algo
+      // falhar nada é gravado, e um novo envio não duplica a OS.
+      const res = await createWorkOrder({
         customerId: data.customerId,
         scheduledDate: data.scheduledDate,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        status: WorkOrderStatus.PENDING,
         notes: data.notes,
-        products: workOrderItems, // WorkOrderItems completos
-        // Previne auto-adicionar ao itinerário quando será criado relatório
-        preventItineraryAutoAdd: data.shouldCreateReport === true,
-      }
-
-      // Criar a work order (retorna objeto com workOrder e itineraryResult)
-      const res = await addWorkOrder(workOrderData)
-      const workOrderId = res.workOrder.id
-
-      // 2. CRIAR RELATÓRIO FINAL (se shouldCreateReport = true)
-      if (data.shouldCreateReport) {
-        const workOrderResultId = uuid.v4() as UUID
-
-        // 2a. Calcular totalValue baseado nos produtos trocados + adicionados
-        let totalValue = 0
-
-        const exchangedItems: WorkOrderResultItem[] = []
-        const addedItems: WorkOrderResultItem[] = []
-        const removedItems: WorkOrderResultItem[] = []
-
-        // Processar produtos trocados
-        if (data.exchangedProducts && data.exchangedProducts.length > 0) {
-          data.exchangedProducts.forEach((item) => {
-            const snapshot = new ProductSnapshot(
-              item.productId as UUID,
-              item.productName,
-              item.priceSnapshot
-            )
-
-            const resultItem = WorkOrderResultItem.fromProductSnapshot(
-              uuid.v4() as UUID,
-              snapshot,
-              workOrderResultId,
-              item.quantity,
-              WorkOrderResultItemType.EXCHANGED,
-              item.priceSnapshot,
-              undefined
-            )
-
-            exchangedItems.push(resultItem)
-            totalValue += item.priceSnapshot * item.quantity
-          })
-        }
-
-        // Processar produtos adicionados
-        if (data.addedProducts && data.addedProducts.length > 0) {
-          data.addedProducts.forEach((item) => {
-            const snapshot = new ProductSnapshot(
-              item.productId as UUID,
-              item.productName,
-              item.priceSnapshot
-            )
-
-            const resultItem = WorkOrderResultItem.fromProductSnapshot(
-              uuid.v4() as UUID,
-              snapshot,
-              workOrderResultId,
-              item.quantity,
-              WorkOrderResultItemType.ADDED,
-              item.priceSnapshot,
-              undefined
-            )
-
-            addedItems.push(resultItem)
-            totalValue += item.priceSnapshot * item.quantity
-          })
-        }
-
-        // Processar produtos removidos (não afetam o totalValue)
-        if (data.removedProducts && data.removedProducts.length > 0) {
-          data.removedProducts.forEach((item) => {
-            const snapshot = new ProductSnapshot(
-              item.productId as UUID,
-              item.productName,
-              item.priceSnapshot
-            )
-
-            const resultItem = WorkOrderResultItem.fromProductSnapshot(
-              uuid.v4() as UUID,
-              snapshot,
-              workOrderResultId,
-              item.quantity,
-              WorkOrderResultItemType.REMOVED,
-              item.priceSnapshot,
-              undefined
-            )
-
-            removedItems.push(resultItem)
-          })
-        }
-
-        // 2b. Criar WorkOrderResult
-        await addWorkOrderResult({
-          id: workOrderResultId,
-          totalValue,
-        })
-
-        // 2c. Criar WorkOrderResultItems
-        const allResultItems = [
-          ...exchangedItems,
-          ...addedItems,
-          ...removedItems,
-        ]
-
-        if (allResultItems.length > 0) {
-          // Adicionar todos os items de uma vez (já são entidades WorkOrderResultItem)
-          // IMPORTANTE: Passar como [array] porque o hook usa apply e desestrutura arrays
-          await (addWorkOrderResultItems as any)([allResultItems])
-        }
-
-        // 2d. Determinar status baseado no resultado
-        let newStatus = WorkOrderStatus.COMPLETED
-
-        const scheduledProductsCount = data.products?.length || 0
-        const exchangedCount = exchangedItems.length
-        const removedCount = removedItems.length
-
-        if (exchangedCount === 0 && addedItems.length === 0) {
-          newStatus = WorkOrderStatus.FAILED
-        } else if (
-          removedCount > 0 ||
-          (scheduledProductsCount > 0 &&
-            exchangedCount < scheduledProductsCount)
-        ) {
-          newStatus = WorkOrderStatus.PARTIAL
-        }
-
-        // Atualizar WorkOrder com resultado e status
-        await updateWorkOrderWithResult([
-          workOrderId,
-          workOrderResultId,
-          newStatus,
-          new Date(),
-        ])
-      }
-
-      // 3. CRIAR ORDEM DE PAGAMENTO (se shouldCreatePayment = true)
-      if (data.shouldCreatePayment) {
-        // O BaseForm envia com coma decimal, converter para ponto
-        const normalized = String(data.totalValue || '0').replace(',', '.')
-        let paymentTotal = Number(normalized) || 0
-
-        const paymentOrderId = await addPaymentOrder({
-          method: data.method || 'Dinheiro',
-          totalValue: paymentTotal.toString(),
-          installments: data.installments || '1',
-          isPaid: data.isPaid || false,
-          paidInstallments: data.isPaid
-            ? (Number(data.installments) || 1).toString()
-            : '0',
-          paymentDate: data.paymentDate
-            ? data.paymentDate instanceof Date
-              ? data.paymentDate.toISOString()
-              : data.paymentDate
-            : null,
-        })
-
-        // Vincular PaymentOrder à WorkOrder
-        await updateWorkOrderWithPayment([workOrderId, paymentOrderId])
-      }
-
-      Toast.show({
-        type: 'success',
-        text1: 'Ordem de serviço criada com sucesso!',
+        items: (data.products || []).map((p) => ({
+          productId: p.productId,
+          quantity: p.quantity,
+          priceSnapshot: priceOf(p.productId),
+        })),
+        result: data.shouldCreateReport
+          ? {
+              exchanged: (data.exchangedProducts || []).map(toItem),
+              added: (data.addedProducts || []).map(toItem),
+              removed: (data.removedProducts || []).map(toItem),
+            }
+          : undefined,
+        payment: data.shouldCreatePayment
+          ? {
+              method: data.method || 'Dinheiro',
+              totalValue: paymentTotal,
+              installments: Number(data.installments) || 1,
+              isPaid: data.isPaid || false,
+              paymentDate: data.paymentDate
+                ? data.paymentDate instanceof Date
+                  ? data.paymentDate.toISOString()
+                  : data.paymentDate
+                : null,
+            }
+          : undefined,
       })
-
-      console.log('Work order created successfully')
 
       // Retornar para o index com o ID da work order criada
       router.replace({
         pathname: '/work-orders',
-        params: { createdWorkOrderId: workOrderId },
+        params: { createdWorkOrderId: res.workOrder.id },
       })
     } catch (error) {
-      console.error('Error creating work order:', error)
-      Toast.show({
-        type: 'error',
-        text1: 'Erro ao criar ordem de serviço',
-        text2: error instanceof Error ? error.message : 'Erro desconhecido',
-      })
+      // O toast de erro já é exibido pelo hook
+      if (__DEV__) console.error('Error creating work order:', error)
     }
   }
 
@@ -744,30 +576,13 @@ export default function WorkOrderFormScreen() {
             const exchangedProducts = form.watch('exchangedProducts') || []
             const addedProducts = form.watch('addedProducts') || []
 
-            const totalValue =
-              exchangedProducts.reduce(
-                (sum, p) => sum + p.priceSnapshot * p.quantity,
-                0
-              ) +
-              addedProducts.reduce(
-                (sum, p) => sum + p.priceSnapshot * p.quantity,
-                0
-              )
-
-            // Atualizar totalValue no formulário (sem useEffect)
-            const currentFormValue = String(
-              form.getValues('totalValue') || '0'
-            ).replace(',', '.')
-            const currentTotal = Number(currentFormValue) || 0
-            if (currentTotal !== totalValue) {
-              form.setValue(
-                'totalValue',
-                totalValue.toFixed(2).replace('.', ','),
-                {
-                  shouldValidate: false,
-                }
-              )
-            }
+            // Total derivado do relatório (não é editável): calculado aqui só
+            // para exibição e de novo no envio. Antes fazia setValue durante o
+            // render, o que dispara re-render em cascata.
+            const totalValue = computeResultTotal(
+              exchangedProducts,
+              addedProducts
+            )
 
             const allProductItems = [
               ...exchangedProducts.map((p) => ({ ...p, type: 'Trocado' })),
