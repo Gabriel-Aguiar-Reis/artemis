@@ -10,7 +10,7 @@ import z from 'zod'
 const productSchemaWithoutId = {
   name: () =>
     z.string().min(2, 'O nome do produto deve ter no mínimo 2 caracteres'),
-  salePrice: () => z.number().min(0, 'O preço de venda não pode ser negativo'),
+  salePrice: () => z.string().optional(),
   isActive: () => z.boolean().optional(),
   categoryId: () => z.uuid().optional(),
   expiration: () =>

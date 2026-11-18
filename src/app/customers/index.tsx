@@ -1,6 +1,6 @@
 import { customerHooks } from '@/src/application/hooks/customer.hooks'
+import { useCustomersInfinite } from '@/src/application/hooks/use-customers-infinite'
 import { ActiveFiltersBanner } from '@/src/components/ui/active-filters-banner'
-import { BackToTopButton } from '@/src/components/ui/back-to-top-button'
 import { ButtonFilter } from '@/src/components/ui/button-filter'
 import { ButtonNew } from '@/src/components/ui/button-new'
 import { ConfirmDeleteDialog } from '@/src/components/ui/dialog/confirm-delete-dialog'
@@ -14,7 +14,7 @@ import {
 } from '@/src/components/ui/tooltip'
 import { WhatsAppIcon } from '@/src/components/ui/whatsapp-icon'
 import { Customer } from '@/src/domain/entities/customer/customer.entity'
-import { formatPhoneBrazil, smartSearch, UUID } from '@/src/lib/utils'
+import { formatPhoneBrazil, UUID } from '@/src/lib/utils'
 import { FlashList } from '@shopify/flash-list'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
 import {
@@ -27,20 +27,12 @@ import {
   UtilityPole,
 } from 'lucide-react-native'
 import * as React from 'react'
-import { useMemo, useRef, useState } from 'react'
-import {
-  NativeScrollEvent,
-  NativeSyntheticEvent,
-  ScrollView,
-  View,
-} from 'react-native'
+import { useMemo, useState } from 'react'
+import { ActivityIndicator, View } from 'react-native'
 import { SheetManager } from 'react-native-actions-sheet'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function CustomersScreen() {
-  const { data: customers, isLoading } = customerHooks.getCustomers()
-  const { mutate: deleteCustomer } = customerHooks.deleteCustomer()
-
   const params = useLocalSearchParams<{
     search?: string
     contactName?: string
@@ -49,54 +41,26 @@ export default function CustomersScreen() {
     isActiveWhatsApp?: string
   }>()
 
-  const filteredCustomers = useMemo(() => {
-    if (!customers) return []
+  const filters = {
+    search: params.search,
+    contactName: params.contactName,
+    phoneNumber: params.phoneNumber,
+    landlineNumber: params.landlineNumber,
+    isActiveWhatsApp: params.isActiveWhatsApp,
+  }
 
-    return customers.filter((customer) => {
-      const matchesSearch = params.search
-        ? smartSearch(customer.storeName, params.search)
-        : true
+  const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
+    useCustomersInfinite(filters)
+  const { mutate: deleteCustomer } = customerHooks.deleteCustomer()
 
-      const matchesContactName = params.contactName
-        ? smartSearch(customer.contactName, params.contactName)
-        : true
+  // Combina todas as páginas de clientes em um único array
+  const allCustomers = useMemo(() => {
+    if (!data?.pages) return []
+    return data.pages.flatMap((page) => page.data)
+  }, [data])
 
-      const matchesPhoneNumber = (() => {
-        if (!params.phoneNumber) return true
-        if (!customer.phoneNumber) return false
-        const needle = String(params.phoneNumber).replace(/\D+/g, '')
-        const hay = String(customer.phoneNumber.value).replace(/\D+/g, '')
-        return needle === '' ? true : hay.includes(needle)
-      })()
-
-      const matchesLandlineNumber = (() => {
-        if (!params.landlineNumber) return true
-        if (!customer.landlineNumber) return false
-        const needle = String(params.landlineNumber).replace(/\D+/g, '')
-        const hay = String(customer.landlineNumber.value).replace(/\D+/g, '')
-        return needle === '' ? true : hay.includes(needle)
-      })()
-
-      const matchesIsActiveWhatsApp = params.isActiveWhatsApp
-        ? customer.isActiveWhatsApp().toString() === params.isActiveWhatsApp
-        : true
-
-      return (
-        matchesContactName &&
-        matchesPhoneNumber &&
-        matchesLandlineNumber &&
-        matchesIsActiveWhatsApp &&
-        matchesSearch
-      )
-    })
-  }, [
-    customers,
-    params.search,
-    params.contactName,
-    params.phoneNumber,
-    params.landlineNumber,
-    params.isActiveWhatsApp,
-  ])
+  // Os dados já vêm filtrados do servidor via repository
+  const displayedCustomers = allCustomers
 
   const hasActiveFilters =
     !!params.search ||
@@ -256,22 +220,34 @@ export default function CustomersScreen() {
     )
   }
 
-  // Adicionado useRef e useState para ScrollView e botão de voltar ao topo
-  const scrollRef = useRef<ScrollView>(null)
-  const [showScrollBtn, setShowScrollBtn] = useState(false)
+  const handleLoadMore = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage()
+    }
+  }
 
-  const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const offsetY = e.nativeEvent.contentOffset.y
-    setShowScrollBtn(offsetY > 0)
+  const renderFooter = () => {
+    if (!isFetchingNextPage) return <View className="h-4" />
+    return (
+      <View className="py-4 items-center">
+        <ActivityIndicator size="small" />
+        <Text className="text-sm text-muted-foreground mt-2">
+          Carregando mais clientes...
+        </Text>
+      </View>
+    )
   }
 
   if (isLoading) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center">
-        <Text>Carregando clientes...</Text>
+        <ActivityIndicator size="large" />
+        <Text className="mt-4">Carregando clientes...</Text>
       </SafeAreaView>
     )
   }
+
+  const totalCustomers = data?.pages[0]?.totalCount ?? 0
 
   return (
     <SafeAreaView className="flex-1">
@@ -294,7 +270,7 @@ export default function CustomersScreen() {
           ),
         }}
       />
-      {!customers || customers.length === 0 ? (
+      {totalCustomers === 0 ? (
         <View className="flex-1 items-center justify-center px-4">
           <Text className="text-center text-muted-foreground">
             Nenhum cliente cadastrado.{' \n'}
@@ -302,36 +278,28 @@ export default function CustomersScreen() {
           </Text>
         </View>
       ) : (
-        <>
+        <View className="flex-1">
           <ActiveFiltersBanner
             filters={activeFilters}
             clearFiltersHref="/customers"
           />
-          <ScrollView
-            className="flex-1"
-            ref={scrollRef}
-            onScroll={handleScroll}
-            scrollEventThrottle={16}
-          >
-            <View className="gap-3 p-4">
-              {filteredCustomers.length === 0 ? (
-                <View className="items-center py-12">
-                  <Text className="text-center text-muted-foreground">
-                    Nenhum cliente encontrado com os filtros aplicados.
-                  </Text>
-                </View>
-              ) : (
-                <FlashList
-                  data={filteredCustomers}
-                  renderItem={({ item }) => renderItem(item)}
-                  ListFooterComponent={<View className="h-16" />}
-                />
-              )}
+          {displayedCustomers.length === 0 ? (
+            <View className="flex-1 items-center justify-center px-4">
+              <Text className="text-center text-muted-foreground">
+                Nenhum cliente encontrado com os filtros aplicados.
+              </Text>
             </View>
-          </ScrollView>
-
-          {/* Botão de voltar ao topo */}
-          <BackToTopButton isVisible={showScrollBtn} scrollRef={scrollRef} />
+          ) : (
+            <View className="flex-1 px-4">
+              <FlashList
+                data={displayedCustomers}
+                renderItem={({ item }) => renderItem(item as Customer)}
+                onEndReached={handleLoadMore}
+                onEndReachedThreshold={0.5}
+                ListFooterComponent={renderFooter}
+              />
+            </View>
+          )}
           {selectedCustomer && (
             <ConfirmDeleteDialog
               open={deleteDialogOpen}
@@ -342,7 +310,7 @@ export default function CustomersScreen() {
               }}
             />
           )}
-        </>
+        </View>
       )}
     </SafeAreaView>
   )

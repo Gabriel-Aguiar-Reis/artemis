@@ -5,6 +5,7 @@ import { ActiveFiltersBanner } from '@/src/components/ui/active-filters-banner'
 import { BackToTopButton } from '@/src/components/ui/back-to-top-button'
 import { ButtonFilter } from '@/src/components/ui/button-filter'
 import { ButtonFinish } from '@/src/components/ui/button-finish'
+import { ButtonHistory } from '@/src/components/ui/button-history'
 import { ButtonNew } from '@/src/components/ui/button-new'
 import { ButtonReorder } from '@/src/components/ui/button-reorder'
 import { NotesDialog } from '@/src/components/ui/dialog/notes-dialog'
@@ -12,7 +13,7 @@ import { Icon } from '@/src/components/ui/icon'
 import { Text } from '@/src/components/ui/text'
 import { WorkOrderCard } from '@/src/components/ui/work-order-card'
 import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
-import { UUID } from '@/src/lib/utils'
+import { smartSearch, UUID } from '@/src/lib/utils'
 import { FlashList } from '@shopify/flash-list'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import {
@@ -216,26 +217,37 @@ export default function ItineraryScreen() {
     hasResult?: string
   }>()
 
+  // Helper to compare if two dates are the same day (ignoring time)
+  const isSameDay = (date1: Date, date2: Date): boolean => {
+    return (
+      date1.getFullYear() === date2.getFullYear() &&
+      date1.getMonth() === date2.getMonth() &&
+      date1.getDate() === date2.getDate()
+    )
+  }
+
   const filteredWorkOrders = useMemo(() => {
     if (!workOrders) return []
     return workOrders.filter((iwo) => {
       const wo = iwo.workOrder
       const matchesSearch = params.search
-        ? wo.customer.storeName
-            .toLowerCase()
-            .includes((params.search as string).toLowerCase())
+        ? smartSearch(wo.customer.storeName, params.search)
         : true
 
       const matchesPhoneNumber = (() => {
         if (!params.phoneNumber) return true
-        const phone = wo.customer.phoneNumber || ''
-        return String(phone).includes(params.phoneNumber as string)
+        if (!wo.customer.phoneNumber) return false
+        const needle = String(params.phoneNumber).replace(/\D+/g, '')
+        const hay = String(wo.customer.phoneNumber.value).replace(/\D+/g, '')
+        return needle === '' ? true : hay.includes(needle)
       })()
 
       const matchesLandlineNumber = (() => {
         if (!params.landlineNumber) return true
-        const phone = wo.customer.landlineNumber || ''
-        return String(phone).includes(params.landlineNumber as string)
+        if (!wo.customer.landlineNumber) return false
+        const needle = String(params.landlineNumber).replace(/\D+/g, '')
+        const hay = String(wo.customer.landlineNumber.value).replace(/\D+/g, '')
+        return needle === '' ? true : hay.includes(needle)
       })()
 
       const matchesIsWhatsApp = params.isWhatsApp
@@ -243,15 +255,11 @@ export default function ItineraryScreen() {
         : true
 
       const matchesScheduledDate = params.scheduledDate
-        ? wo.scheduledDate
-            .toLocaleDateString('pt-BR')
-            .includes(params.scheduledDate as string)
+        ? isSameDay(wo.scheduledDate, new Date(params.scheduledDate))
         : true
 
       const matchesVisitDate = params.visitDate
-        ? wo.visitDate
-            ?.toLocaleDateString('pt-BR')
-            .includes(params.visitDate as string)
+        ? wo.visitDate && isSameDay(wo.visitDate, new Date(params.visitDate))
         : true
 
       const totalValue = wo.paymentOrder?.totalValue || 0
@@ -374,20 +382,28 @@ export default function ItineraryScreen() {
             headerTitle: 'Itinerário',
             headerRight: () => (
               <View className="flex-row gap-2">
-                {itinerary && <ButtonReorder href="/itinerary/reorder" />}
-                <ButtonFilter
-                  href={{
-                    pathname: '/itinerary/search',
-                    params: { ...params },
-                  }}
-                  isActive={hasActiveFilters}
-                />
+                {itinerary && (
+                  <>
+                    <ButtonReorder href="/itinerary/reorder" />
+                    <ButtonFilter
+                      href={{
+                        pathname: '/itinerary/search',
+                        params: { ...params },
+                      }}
+                      isActive={hasActiveFilters}
+                    />
+                  </>
+                )}
                 {itinerary && !itinerary.isFinished ? (
                   <ButtonFinish href="/itinerary/finish" />
+                ) : !itinerary ? (
+                  <>
+                    <ButtonHistory href="/itinerary/history" />
+                    <ButtonNew href="/itinerary/form" />
+                  </>
                 ) : (
                   <ButtonNew href="/itinerary/form" />
                 )}
-                {/* Novo botão para editar ordenação */}
               </View>
             ),
           }}

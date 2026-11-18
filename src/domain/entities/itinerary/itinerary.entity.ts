@@ -51,8 +51,19 @@ export class Itinerary {
     if (this.isFinished) throw new Error('O itinerário já está finalizado.')
 
     this.markLateOrders()
+
+    const alreadyFinalizedStatuses: WorkOrderStatus[] = [
+      WorkOrderStatus.COMPLETED,
+      WorkOrderStatus.PARTIAL,
+      WorkOrderStatus.FAILED,
+      WorkOrderStatus.COPIED,
+      WorkOrderStatus.CANCELLED,
+      WorkOrderStatus.EXPIRED,
+    ]
+
     this.workOrders.forEach((item) => {
       const wo = item.workOrder
+      if (alreadyFinalizedStatuses.includes(wo.status)) return
       if (wo.result) wo.status = wo.applyResult(wo.result)
       else if (item.isLate) wo.status = WorkOrderStatus.EXPIRED
     })

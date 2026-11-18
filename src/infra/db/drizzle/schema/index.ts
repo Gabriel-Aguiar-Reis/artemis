@@ -1,5 +1,6 @@
 export * from '@/src/infra/db/drizzle/schema/drizzle.category.schema'
 export * from '@/src/infra/db/drizzle/schema/drizzle.customer.schema'
+export * from '@/src/infra/db/drizzle/schema/drizzle.error-log.schema'
 export * from '@/src/infra/db/drizzle/schema/drizzle.itinerary-work-order.schema'
 export * from '@/src/infra/db/drizzle/schema/drizzle.itinerary.schema'
 export * from '@/src/infra/db/drizzle/schema/drizzle.license.schema'

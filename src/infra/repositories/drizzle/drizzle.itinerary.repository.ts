@@ -12,6 +12,7 @@ import {
 } from '@/src/domain/entities/work-order-result-item/work-order-result-item.entity'
 import { WorkOrderResultMapper } from '@/src/domain/entities/work-order-result/mapper/work-order-result.mapper'
 import { WorkOrderMapper } from '@/src/domain/entities/work-order/mapper/work-order.mapper'
+import { WorkOrderStatus } from '@/src/domain/entities/work-order/work-order.entity'
 import { ItineraryRepository } from '@/src/domain/repositories/itinerary/itinerary.repository'
 import {
   ItineraryInsertDTO,
@@ -28,7 +29,7 @@ import { workOrderResultItem } from '@/src/infra/db/drizzle/schema/drizzle.work-
 import { workOrderResult } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result.schema'
 import { workOrder } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
 import { UUID } from '@/src/lib/utils'
-import { and, asc, eq, gte, isNull, lte } from 'drizzle-orm'
+import { and, asc, eq, gte, isNull, lte, ne } from 'drizzle-orm'
 import uuid from 'react-native-uuid'
 
 export default class DrizzleItineraryRepository implements ItineraryRepository {
@@ -217,8 +218,13 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
       .from(workOrder)
       .where(
         and(
+          isNull(workOrder.visitDate),
+          isNull(workOrder.resultId),
+          isNull(workOrder.paymentOrderId),
+          ne(workOrder.status, WorkOrderStatus.EXPIRED),
+          ne(workOrder.status, WorkOrderStatus.COPIED),
           gte(workOrder.scheduledDate, startDate.toISOString()),
-          isNull(workOrder.visitDate)
+          lte(workOrder.scheduledDate, endDate.toISOString())
         )
       )
       .orderBy(asc(workOrder.scheduledDate))

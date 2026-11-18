@@ -1,4 +1,5 @@
 import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
+import { normalizePhoneBrazil } from '@/src/lib/utils'
 import { Linking } from 'react-native'
 
 export class WhatsAppService {
@@ -18,8 +19,9 @@ export class WhatsAppService {
       throw new Error('O cliente não possui um número de telefone válido.')
     }
 
-    // Remove caracteres não numéricos do telefone
-    const phoneNumber = phone.value.replace(/\D/g, '')
+    // Normaliza o número removendo código do país caso exista
+    // Garante que temos apenas DDD + número (sem o código 55)
+    const phoneNumber = normalizePhoneBrazil(phone.value)
 
     // Monta a mensagem
     const message = this.buildWorkOrderMessage(workOrder, notifyVisit)
@@ -27,7 +29,7 @@ export class WhatsAppService {
     // Codifica a mensagem para URL
     const encodedMessage = encodeURIComponent(message)
 
-    // Monta o link do WhatsApp
+    // Monta o link do WhatsApp com código do país 55
     const whatsappUrl = `https://wa.me/55${phoneNumber}?text=${encodedMessage}`
 
     // Abre o link

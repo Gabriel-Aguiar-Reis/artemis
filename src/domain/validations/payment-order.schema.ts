@@ -8,16 +8,10 @@ import z from 'zod'
 
 const paymentOrderSchemaWithoutId = {
   method: z.string().min(1, 'O método de pagamento é obrigatório.'),
-  totalValue: z
-    .number()
-    .min(0, 'O valor total deve ser maior ou igual a zero.'),
-  installments: z
-    .number()
-    .min(1, 'O número de parcelas deve ser pelo menos 1.'),
+  totalValue: z.string().optional(),
+  installments: z.string().optional(),
   isPaid: z.boolean().default(false).optional(),
-  paidInstallments: z
-    .number()
-    .min(0, 'O número de parcelas pagas deve ser pelo menos 0.'),
+  paidInstallments: z.string().optional(),
   paymentDate: z.union([z.date(), z.string()]).optional().nullable(),
 }
 

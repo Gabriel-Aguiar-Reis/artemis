@@ -1,4 +1,6 @@
+import { useDebouncedValue } from '@/src/application/hooks/use-debounced-value'
 import { Button } from '@/src/components/ui/button'
+import { DatePickerInput } from '@/src/components/ui/date-picker-input'
 import { FloatingLabelInput } from '@/src/components/ui/floating-label-input'
 import { Icon } from '@/src/components/ui/icon'
 import { Input } from '@/src/components/ui/input'
@@ -40,11 +42,11 @@ export default function WorkOrdersSearch() {
   const [isWhatsAppFilter, setIsWhatsAppFilter] = useState<
     'all' | 'true' | 'false'
   >((params.isWhatsApp as any) || 'all')
-  const [scheduledDateFilter, setScheduledDateFilter] = useState(
-    (params.scheduledDate as string) || ''
-  )
-  const [visitDateFilter, setVisitDateFilter] = useState(
-    (params.visitDate as string) || ''
+  const [scheduledDateFilter, setScheduledDateFilter] = useState<
+    Date | undefined
+  >(params.scheduledDate ? new Date(params.scheduledDate) : undefined)
+  const [visitDateFilter, setVisitDateFilter] = useState<Date | undefined>(
+    params.visitDate ? new Date(params.visitDate) : undefined
   )
   const [minTotalValueFilter, setMinTotalValueFilter] = useState(
     (params.minTotalValue as string) || ''
@@ -68,6 +70,50 @@ export default function WorkOrdersSearch() {
     'all' | 'true' | 'false'
   >((params.isCopied as any) || 'all')
 
+  // Aplicar debounce nos inputs de texto (300ms)
+  const debouncedSearch = useDebouncedValue(searchQuery, 300)
+  const debouncedPhoneNumber = useDebouncedValue(phoneNumberFilter, 300)
+  const debouncedLandlineNumber = useDebouncedValue(landlineNumberFilter, 300)
+  const debouncedMinTotalValue = useDebouncedValue(minTotalValueFilter, 300)
+  const debouncedMaxTotalValue = useDebouncedValue(maxTotalValueFilter, 300)
+
+  // Auto-aplicar filtros quando valores debounced mudarem
+  React.useEffect(() => {
+    const filters = {
+      search: debouncedSearch || undefined,
+      phoneNumber: debouncedPhoneNumber || undefined,
+      landlineNumber: debouncedLandlineNumber || undefined,
+      isWhatsApp: isWhatsAppFilter !== 'all' ? isWhatsAppFilter : undefined,
+      scheduledDate: scheduledDateFilter
+        ? scheduledDateFilter.toISOString()
+        : undefined,
+      visitDate: visitDateFilter ? visitDateFilter.toISOString() : undefined,
+      minTotalValue: debouncedMinTotalValue || undefined,
+      maxTotalValue: debouncedMaxTotalValue || undefined,
+      isPaid: isPaidFilter !== 'all' ? isPaidFilter : undefined,
+      hasPayment: hasPaymentFilter !== 'all' ? hasPaymentFilter : undefined,
+      hasResult: hasResultFilter !== 'all' ? hasResultFilter : undefined,
+      isExpired: isExpiredFilter !== 'all' ? isExpiredFilter : undefined,
+      isCopied: isCopiedFilter !== 'all' ? isCopiedFilter : undefined,
+    }
+
+    router.setParams(filters)
+  }, [
+    debouncedSearch,
+    debouncedPhoneNumber,
+    debouncedLandlineNumber,
+    isWhatsAppFilter,
+    scheduledDateFilter,
+    visitDateFilter,
+    debouncedMinTotalValue,
+    debouncedMaxTotalValue,
+    isPaidFilter,
+    hasPaymentFilter,
+    hasResultFilter,
+    isExpiredFilter,
+    isCopiedFilter,
+  ])
+
   const applyFilters = () => {
     router.back()
 
@@ -77,8 +123,10 @@ export default function WorkOrdersSearch() {
         phoneNumber: phoneNumberFilter || undefined,
         landlineNumber: landlineNumberFilter || undefined,
         isWhatsApp: isWhatsAppFilter !== 'all' ? isWhatsAppFilter : undefined,
-        scheduledDate: scheduledDateFilter || undefined,
-        visitDate: visitDateFilter || undefined,
+        scheduledDate: scheduledDateFilter
+          ? scheduledDateFilter.toISOString()
+          : undefined,
+        visitDate: visitDateFilter ? visitDateFilter.toISOString() : undefined,
         minTotalValue: minTotalValueFilter || undefined,
         maxTotalValue: maxTotalValueFilter || undefined,
         isPaid: isPaidFilter !== 'all' ? isPaidFilter : undefined,
@@ -95,8 +143,8 @@ export default function WorkOrdersSearch() {
     setPhoneNumberFilter('')
     setLandlineNumberFilter('')
     setIsWhatsAppFilter('all')
-    setScheduledDateFilter('')
-    setVisitDateFilter('')
+    setScheduledDateFilter(undefined)
+    setVisitDateFilter(undefined)
     setMinTotalValueFilter('')
     setMaxTotalValueFilter('')
     setIsPaidFilter('all')
@@ -111,8 +159,8 @@ export default function WorkOrdersSearch() {
     phoneNumberFilter !== '' ||
     landlineNumberFilter !== '' ||
     isWhatsAppFilter !== 'all' ||
-    scheduledDateFilter !== '' ||
-    visitDateFilter !== '' ||
+    scheduledDateFilter !== undefined ||
+    visitDateFilter !== undefined ||
     minTotalValueFilter !== '' ||
     maxTotalValueFilter !== '' ||
     isPaidFilter !== 'all' ||
@@ -233,24 +281,18 @@ export default function WorkOrdersSearch() {
                 </View>
               </View>
 
-              <FloatingLabelInput
+              <DatePickerInput
                 label="Data Agendada"
-                mask={Masks.DATE_DDMMYYYY}
-                placeholder="Ex. 01/12/2025"
+                placeholder="Selecione a data"
                 value={scheduledDateFilter}
-                onChangeText={setScheduledDateFilter}
-                keyboardType="numeric"
-                gap={2}
+                onDateChange={setScheduledDateFilter}
               />
 
-              <FloatingLabelInput
+              <DatePickerInput
                 label="Data de Visita"
-                mask={Masks.DATE_DDMMYYYY}
-                placeholder="Ex. 01/12/2025"
+                placeholder="Selecione a data"
                 value={visitDateFilter}
-                onChangeText={setVisitDateFilter}
-                keyboardType="numeric"
-                gap={2}
+                onDateChange={setVisitDateFilter}
               />
 
               <FloatingLabelInput

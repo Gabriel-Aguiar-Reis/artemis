@@ -125,9 +125,11 @@ function Input<T extends FieldValues>({
           onBlur: () => {
             if (isCurrency) {
               let clean = (localCurrency || '').replace(/[^\d,.-]/g, '')
-              const normalized = clean.replace(',', '.')
+              // Remove separadores de milhar (pontos) antes de substituir a vírgula decimal
+              const withoutThousandsSeparator = clean.replace(/\./g, '')
+              const normalized = withoutThousandsSeparator.replace(',', '.')
               const num = Number(normalized)
-              onChange(normalized === '' || isNaN(num) ? 0 : num)
+              onChange(normalized === '' || isNaN(num) ? '' : normalized)
               onBlur?.()
             } else {
               onBlur?.()

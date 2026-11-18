@@ -1,0 +1,1390 @@
+{
+  "version": 1,
+  "createdAt": "2026-03-03T10:00:00.000Z",
+  "tables": {
+    "category": [
+      {
+        "id": "10000000-0000-4000-0000-000000000001",
+        "name": "Bebidas",
+        "isActive": true
+      },
+      {
+        "id": "10000000-0000-4000-0000-000000000002",
+        "name": "Alimentos",
+        "isActive": true
+      },
+      {
+        "id": "10000000-0000-4000-0000-000000000003",
+        "name": "Limpeza",
+        "isActive": true
+      },
+      {
+        "id": "10000000-0000-4000-0000-000000000004",
+        "name": "Higiene",
+        "isActive": true
+      },
+      {
+        "id": "10000000-0000-4000-0000-000000000005",
+        "name": "Descartáveis",
+        "isActive": true
+      }
+    ],
+    "product": [
+      {
+        "id": "20000000-0000-4000-0000-000000000001",
+        "name": "Coca-Cola 2L",
+        "categoryId": "10000000-0000-4000-0000-000000000001",
+        "salePrice": 8.5,
+        "isActive": true,
+        "expiration": "90 dias"
+      },
+      {
+        "id": "20000000-0000-4000-0000-000000000002",
+        "name": "Guaraná Antarctica 2L",
+        "categoryId": "10000000-0000-4000-0000-000000000001",
+        "salePrice": 7.9,
+        "isActive": true,
+        "expiration": "90 dias"
+      },
+      {
+        "id": "20000000-0000-4000-0000-000000000003",
+        "name": "Sprite 2L",
+        "categoryId": "10000000-0000-4000-0000-000000000001",
+        "salePrice": 7.5,
+        "isActive": true,
+        "expiration": "90 dias"
+      },
+      {
+        "id": "20000000-0000-4000-0000-000000000004",
+        "name": "Fanta Laranja 2L",
+        "categoryId": "10000000-0000-4000-0000-000000000001",
+        "salePrice": 7.5,
+        "isActive": true,
+        "expiration": "90 dias"
+      },
+      {
+        "id": "20000000-0000-4000-0000-000000000005",
+        "name": "Água Mineral 500ml",
+        "categoryId": "10000000-0000-4000-0000-000000000001",
+        "salePrice": 2.5,
+        "isActive": true,
+        "expiration": "180 dias"
+      },
+      {
+        "id": "20000000-0000-4000-0000-000000000006",
+        "name": "Suco Del Valle 1L",
+        "categoryId": "10000000-0000-4000-0000-000000000001",
+        "salePrice": 6.9,
+        "isActive": true,
+        "expiration": "120 dias"
+      },
+      {
+        "id": "20000000-0000-4000-0000-000000000007",
+        "name": "Arroz Tipo 1 5kg",
+        "categoryId": "10000000-0000-4000-0000-000000000002",
+        "salePrice": 28.9,
+        "isActive": true,
+        "expiration": "12 meses"
+      },
+      {
+        "id": "20000000-0000-4000-0000-000000000008",
+        "name": "Feijão Carioca 1kg",
+        "categoryId": "10000000-0000-4000-0000-000000000002",
+        "salePrice": 7.5,
+        "isActive": true,
+        "expiration": "12 meses"
+      },
+      {
+        "id": "20000000-0000-4000-0000-000000000009",
+        "name": "Açúcar Cristal 1kg",
+        "categoryId": "10000000-0000-4000-0000-000000000002",
+        "salePrice": 4.2,
+        "isActive": true,
+        "expiration": "24 meses"
+      },
+      {
+        "id": "20000000-0000-4000-0000-000000000010",
+        "name": "Óleo de Soja 900ml",
+        "categoryId": "10000000-0000-4000-0000-000000000002",
+        "salePrice": 8.9,
+        "isActive": true,
+        "expiration": "18 meses"
+      },
+      {
+        "id": "20000000-0000-4000-0000-000000000011",
+        "name": "Café Tradicional 500g",
+        "categoryId": "10000000-0000-4000-0000-000000000002",
+        "salePrice": 15.9,
+        "isActive": true,
+        "expiration": "12 meses"
+      },
+      {
+        "id": "20000000-0000-4000-0000-000000000012",
+        "name": "Macarrão Espaguete 500g",
+        "categoryId": "10000000-0000-4000-0000-000000000002",
+        "salePrice": 4.5,
+        "isActive": true,
+        "expiration": "24 meses"
+      },
+      {
+        "id": "20000000-0000-4000-0000-000000000013",
+        "name": "Detergente Líquido 500ml",
+        "categoryId": "10000000-0000-4000-0000-000000000003",
+        "salePrice": 2.8,
+        "isActive": true,
+        "expiration": "36 meses"
+      },
+      {
+        "id": "20000000-0000-4000-0000-000000000014",
+        "name": "Desinfetante 2L",
+        "categoryId": "10000000-0000-4000-0000-000000000003",
+        "salePrice": 9.9,
+        "isActive": true,
+        "expiration": "36 meses"
+      },
+      {
+        "id": "20000000-0000-4000-0000-000000000015",
+        "name": "Amaciante de Roupas 2L",
+        "categoryId": "10000000-0000-4000-0000-000000000003",
+        "salePrice": 12.9,
+        "isActive": true,
+        "expiration": "24 meses"
+      },
+      {
+        "id": "20000000-0000-4000-0000-000000000016",
+        "name": "Sabão em Pó 1kg",
+        "categoryId": "10000000-0000-4000-0000-000000000003",
+        "salePrice": 14.9,
+        "isActive": true,
+        "expiration": "24 meses"
+      },
+      {
+        "id": "20000000-0000-4000-0000-000000000017",
+        "name": "Água Sanitária 2L",
+        "categoryId": "10000000-0000-4000-0000-000000000003",
+        "salePrice": 6.9,
+        "isActive": true,
+        "expiration": "12 meses"
+      },
+      {
+        "id": "20000000-0000-4000-0000-000000000018",
+        "name": "Sabonete em Barra 90g",
+        "categoryId": "10000000-0000-4000-0000-000000000004",
+        "salePrice": 2.5,
+        "isActive": true,
+        "expiration": "36 meses"
+      },
+      {
+        "id": "20000000-0000-4000-0000-000000000019",
+        "name": "Shampoo 400ml",
+        "categoryId": "10000000-0000-4000-0000-000000000004",
+        "salePrice": 12.9,
+        "isActive": true,
+        "expiration": "36 meses"
+      },
+      {
+        "id": "20000000-0000-4000-0000-000000000020",
+        "name": "Condicionador 400ml",
+        "categoryId": "10000000-0000-4000-0000-000000000004",
+        "salePrice": 12.9,
+        "isActive": true,
+        "expiration": "36 meses"
+      },
+      {
+        "id": "20000000-0000-4000-0000-000000000021",
+        "name": "Papel Higiênico 12 rolos",
+        "categoryId": "10000000-0000-4000-0000-000000000004",
+        "salePrice": 18.9,
+        "isActive": true,
+        "expiration": "60 meses"
+      },
+      {
+        "id": "20000000-0000-4000-0000-000000000022",
+        "name": "Copo Descartável 200ml (100un)",
+        "categoryId": "10000000-0000-4000-0000-000000000005",
+        "salePrice": 8.9,
+        "isActive": true,
+        "expiration": "60 meses"
+      },
+      {
+        "id": "20000000-0000-4000-0000-000000000023",
+        "name": "Prato Descartável (50un)",
+        "categoryId": "10000000-0000-4000-0000-000000000005",
+        "salePrice": 12.5,
+        "isActive": true,
+        "expiration": "60 meses"
+      },
+      {
+        "id": "20000000-0000-4000-0000-000000000024",
+        "name": "Guardanapo de Papel (50un)",
+        "categoryId": "10000000-0000-4000-0000-000000000005",
+        "salePrice": 3.9,
+        "isActive": true,
+        "expiration": "60 meses"
+      }
+    ],
+    "customer": [
+      {
+        "id": "30000000-0000-4000-0000-000000000001",
+        "storeName": "Mercado São José",
+        "contactName": "João Silva",
+        "phoneNumber": "11999887766",
+        "phoneIsWhatsApp": true,
+        "landlineNumber": "1133334444",
+        "landlineIsWhatsApp": false,
+        "addressStreetName": "Rua das Flores",
+        "addressStreetNumber": "123",
+        "addressNeighborhood": "Centro",
+        "addressCity": "São Paulo",
+        "addressState": "SP",
+        "addressZipCode": "01000-000"
+      },
+      {
+        "id": "30000000-0000-4000-0000-000000000002",
+        "storeName": "Minimercado Silva",
+        "contactName": "Maria Santos",
+        "phoneNumber": "11988776655",
+        "phoneIsWhatsApp": true,
+        "landlineNumber": null,
+        "landlineIsWhatsApp": null,
+        "addressStreetName": "Avenida Paulista",
+        "addressStreetNumber": "500",
+        "addressNeighborhood": "Bela Vista",
+        "addressCity": "São Paulo",
+        "addressState": "SP",
+        "addressZipCode": "01310-100"
+      },
+      {
+        "id": "30000000-0000-4000-0000-000000000003",
+        "storeName": "Padaria Doce Sabor",
+        "contactName": "Carlos Oliveira",
+        "phoneNumber": "11977665544",
+        "phoneIsWhatsApp": true,
+        "landlineNumber": "1122223333",
+        "landlineIsWhatsApp": false,
+        "addressStreetName": "Rua Aurora",
+        "addressStreetNumber": "789",
+        "addressNeighborhood": "Santa Cecília",
+        "addressCity": "São Paulo",
+        "addressState": "SP",
+        "addressZipCode": "01209-001"
+      },
+      {
+        "id": "30000000-0000-4000-0000-000000000004",
+        "storeName": "Mercearia Bom Preço",
+        "contactName": "Ana Costa",
+        "phoneNumber": "11966554433",
+        "phoneIsWhatsApp": true,
+        "landlineNumber": null,
+        "landlineIsWhatsApp": null,
+        "addressStreetName": "Rua da Consolação",
+        "addressStreetNumber": "1500",
+        "addressNeighborhood": "Consolação",
+        "addressCity": "São Paulo",
+        "addressState": "SP",
+        "addressZipCode": "01302-001"
+      },
+      {
+        "id": "30000000-0000-4000-0000-000000000005",
+        "storeName": "Bar do Zé",
+        "contactName": "José Pereira",
+        "phoneNumber": "11955443322",
+        "phoneIsWhatsApp": false,
+        "landlineNumber": "1144445555",
+        "landlineIsWhatsApp": false,
+        "addressStreetName": "Rua Augusta",
+        "addressStreetNumber": "2500",
+        "addressNeighborhood": "Jardins",
+        "addressCity": "São Paulo",
+        "addressState": "SP",
+        "addressZipCode": "01412-100"
+      },
+      {
+        "id": "30000000-0000-4000-0000-000000000006",
+        "storeName": "Lanchonete Central",
+        "contactName": "Roberto Mendes",
+        "phoneNumber": "11944332211",
+        "phoneIsWhatsApp": true,
+        "landlineNumber": null,
+        "landlineIsWhatsApp": null,
+        "addressStreetName": "Rua Barão de Itapetininga",
+        "addressStreetNumber": "350",
+        "addressNeighborhood": "República",
+        "addressCity": "São Paulo",
+        "addressState": "SP",
+        "addressZipCode": "01042-001"
+      },
+      {
+        "id": "30000000-0000-4000-0000-000000000007",
+        "storeName": "Supermercado Família",
+        "contactName": "Paula Rodrigues",
+        "phoneNumber": "11933221100",
+        "phoneIsWhatsApp": true,
+        "landlineNumber": "1155556666",
+        "landlineIsWhatsApp": true,
+        "addressStreetName": "Rua Oscar Freire",
+        "addressStreetNumber": "800",
+        "addressNeighborhood": "Pinheiros",
+        "addressCity": "São Paulo",
+        "addressState": "SP",
+        "addressZipCode": "05409-010"
+      },
+      {
+        "id": "30000000-0000-4000-0000-000000000008",
+        "storeName": "Empório Gourmet",
+        "contactName": "Fernando Alves",
+        "phoneNumber": "11922110099",
+        "phoneIsWhatsApp": true,
+        "landlineNumber": null,
+        "landlineIsWhatsApp": null,
+        "addressStreetName": "Rua Haddock Lobo",
+        "addressStreetNumber": "1200",
+        "addressNeighborhood": "Cerqueira César",
+        "addressCity": "São Paulo",
+        "addressState": "SP",
+        "addressZipCode": "01414-001"
+      },
+      {
+        "id": "30000000-0000-4000-0000-000000000009",
+        "storeName": "Mercadinho da Vizinhança",
+        "contactName": "Sandra Lima",
+        "phoneNumber": "11911009988",
+        "phoneIsWhatsApp": true,
+        "landlineNumber": "1166667777",
+        "landlineIsWhatsApp": false,
+        "addressStreetName": "Rua dos Ingleses",
+        "addressStreetNumber": "450",
+        "addressNeighborhood": "Bela Vista",
+        "addressCity": "São Paulo",
+        "addressState": "SP",
+        "addressZipCode": "01329-000"
+      },
+      {
+        "id": "30000000-0000-4000-0000-000000000010",
+        "storeName": "Adega Portugal",
+        "contactName": "Manuel Sousa",
+        "phoneNumber": "11900998877",
+        "phoneIsWhatsApp": false,
+        "landlineNumber": "1177778888",
+        "landlineIsWhatsApp": false,
+        "addressStreetName": "Rua da Liberdade",
+        "addressStreetNumber": "600",
+        "addressNeighborhood": "Liberdade",
+        "addressCity": "São Paulo",
+        "addressState": "SP",
+        "addressZipCode": "01502-001"
+      },
+      {
+        "id": "30000000-0000-4000-0000-000000000011",
+        "storeName": "Conveniência 24h",
+        "contactName": "Lucas Martins",
+        "phoneNumber": "11988887766",
+        "phoneIsWhatsApp": true,
+        "landlineNumber": null,
+        "landlineIsWhatsApp": null,
+        "addressStreetName": "Avenida Brigadeiro Luís Antônio",
+        "addressStreetNumber": "2000",
+        "addressNeighborhood": "Bela Vista",
+        "addressCity": "São Paulo",
+        "addressState": "SP",
+        "addressZipCode": "01318-002"
+      },
+      {
+        "id": "30000000-0000-4000-0000-000000000012",
+        "storeName": "Hortifruti Verdão",
+        "contactName": "Mariana Gomes",
+        "phoneNumber": "11977776655",
+        "phoneIsWhatsApp": true,
+        "landlineNumber": "1188889999",
+        "landlineIsWhatsApp": true,
+        "addressStreetName": "Rua Frei Caneca",
+        "addressStreetNumber": "900",
+        "addressNeighborhood": "Consolação",
+        "addressCity": "São Paulo",
+        "addressState": "SP",
+        "addressZipCode": "01307-002"
+      }
+    ],
+    "license": [],
+    "paymentOrder": [
+      {
+        "id": "40000000-0000-4000-0000-000000000001",
+        "method": "Dinheiro",
+        "totalValue": 356.4,
+        "installments": 1,
+        "isPaid": true,
+        "paidInstallments": 1,
+        "paymentDate": "2026-02-17"
+      },
+      {
+        "id": "40000000-0000-4000-0000-000000000002",
+        "method": "Pix",
+        "totalValue": 289.5,
+        "installments": 1,
+        "isPaid": true,
+        "paidInstallments": 1,
+        "paymentDate": "2026-02-17"
+      },
+      {
+        "id": "40000000-0000-4000-0000-000000000003",
+        "method": "Cartão de Crédito",
+        "totalValue": 445.8,
+        "installments": 2,
+        "isPaid": false,
+        "paidInstallments": 1,
+        "paymentDate": null
+      },
+      {
+        "id": "40000000-0000-4000-0000-000000000004",
+        "method": "Dinheiro",
+        "totalValue": 198.7,
+        "installments": 1,
+        "isPaid": true,
+        "paidInstallments": 1,
+        "paymentDate": "2026-02-18"
+      },
+      {
+        "id": "40000000-0000-4000-0000-000000000005",
+        "method": "Pix",
+        "totalValue": 567.3,
+        "installments": 1,
+        "isPaid": true,
+        "paidInstallments": 1,
+        "paymentDate": "2026-02-18"
+      },
+      {
+        "id": "40000000-0000-4000-0000-000000000006",
+        "method": "Cartão de Débito",
+        "totalValue": 234.6,
+        "installments": 1,
+        "isPaid": true,
+        "paidInstallments": 1,
+        "paymentDate": "2026-02-19"
+      },
+      {
+        "id": "40000000-0000-4000-0000-000000000007",
+        "method": "Dinheiro",
+        "totalValue": 412.9,
+        "installments": 1,
+        "isPaid": true,
+        "paidInstallments": 1,
+        "paymentDate": "2026-02-19"
+      },
+      {
+        "id": "40000000-0000-4000-0000-000000000008",
+        "method": "Cartão de Crédito",
+        "totalValue": 678.4,
+        "installments": 3,
+        "isPaid": false,
+        "paidInstallments": 1,
+        "paymentDate": null
+      },
+      {
+        "id": "40000000-0000-4000-0000-000000000009",
+        "method": "Pix",
+        "totalValue": 324.8,
+        "installments": 1,
+        "isPaid": true,
+        "paidInstallments": 1,
+        "paymentDate": "2026-02-20"
+      }
+    ],
+    "itinerary": [
+      {
+        "id": "50000000-0000-4000-0000-000000000001",
+        "initialItineraryDate": "2026-02-17",
+        "finalItineraryDate": "2026-02-21",
+        "isFinished": true
+      },
+      {
+        "id": "50000000-0000-4000-0000-000000000002",
+        "initialItineraryDate": "2026-02-24",
+        "finalItineraryDate": "2026-02-28",
+        "isFinished": false
+      }
+    ],
+    "workOrder": [
+      {
+        "id": "60000000-0000-4000-0000-000000000001",
+        "customerId": "30000000-0000-4000-0000-000000000001",
+        "createdAt": "2026-02-15T10:00:00.000Z",
+        "updatedAt": "2026-02-17T14:30:00.000Z",
+        "scheduledDate": "2026-02-17",
+        "visitDate": "2026-02-17",
+        "paymentOrderId": "40000000-0000-4000-0000-000000000001",
+        "status": "COMPLETED",
+        "resultId": "80000000-0000-4000-0000-000000000001",
+        "notes": "Cliente solicitou entrega pela manhã"
+      },
+      {
+        "id": "60000000-0000-4000-0000-000000000002",
+        "customerId": "30000000-0000-4000-0000-000000000002",
+        "createdAt": "2026-02-15T11:00:00.000Z",
+        "updatedAt": "2026-02-17T15:45:00.000Z",
+        "scheduledDate": "2026-02-17",
+        "visitDate": "2026-02-17",
+        "paymentOrderId": "40000000-0000-4000-0000-000000000002",
+        "status": "COMPLETED",
+        "resultId": "80000000-0000-4000-0000-000000000002",
+        "notes": null
+      },
+      {
+        "id": "60000000-0000-4000-0000-000000000003",
+        "customerId": "30000000-0000-4000-0000-000000000003",
+        "createdAt": "2026-02-16T09:00:00.000Z",
+        "updatedAt": "2026-02-18T10:20:00.000Z",
+        "scheduledDate": "2026-02-18",
+        "visitDate": "2026-02-18",
+        "paymentOrderId": "40000000-0000-4000-0000-000000000003",
+        "status": "COMPLETED",
+        "resultId": "80000000-0000-4000-0000-000000000003",
+        "notes": "Trocou alguns produtos"
+      },
+      {
+        "id": "60000000-0000-4000-0000-000000000004",
+        "customerId": "30000000-0000-4000-0000-000000000004",
+        "createdAt": "2026-02-16T10:30:00.000Z",
+        "updatedAt": "2026-02-18T11:15:00.000Z",
+        "scheduledDate": "2026-02-18",
+        "visitDate": "2026-02-18",
+        "paymentOrderId": "40000000-0000-4000-0000-000000000004",
+        "status": "COMPLETED",
+        "resultId": "80000000-0000-4000-0000-000000000004",
+        "notes": null
+      },
+      {
+        "id": "60000000-0000-4000-0000-000000000005",
+        "customerId": "30000000-0000-4000-0000-000000000005",
+        "createdAt": "2026-02-16T14:00:00.000Z",
+        "updatedAt": "2026-02-18T16:30:00.000Z",
+        "scheduledDate": "2026-02-18",
+        "visitDate": "2026-02-18",
+        "paymentOrderId": "40000000-0000-4000-0000-000000000005",
+        "status": "COMPLETED",
+        "resultId": "80000000-0000-4000-0000-000000000005",
+        "notes": "Pedido extra de bebidas"
+      },
+      {
+        "id": "60000000-0000-4000-0000-000000000006",
+        "customerId": "30000000-0000-4000-0000-000000000006",
+        "createdAt": "2026-02-17T09:00:00.000Z",
+        "updatedAt": "2026-02-19T09:45:00.000Z",
+        "scheduledDate": "2026-02-19",
+        "visitDate": "2026-02-19",
+        "paymentOrderId": "40000000-0000-4000-0000-000000000006",
+        "status": "COMPLETED",
+        "resultId": "80000000-0000-4000-0000-000000000006",
+        "notes": null
+      },
+      {
+        "id": "60000000-0000-4000-0000-000000000007",
+        "customerId": "30000000-0000-4000-0000-000000000007",
+        "createdAt": "2026-02-17T11:00:00.000Z",
+        "updatedAt": "2026-02-19T13:20:00.000Z",
+        "scheduledDate": "2026-02-19",
+        "visitDate": "2026-02-19",
+        "paymentOrderId": "40000000-0000-4000-0000-000000000007",
+        "status": "COMPLETED",
+        "resultId": "80000000-0000-4000-0000-000000000007",
+        "notes": "Grande pedido, verificar estoque"
+      },
+      {
+        "id": "60000000-0000-4000-0000-000000000008",
+        "customerId": "30000000-0000-4000-0000-000000000008",
+        "createdAt": "2026-02-18T10:00:00.000Z",
+        "updatedAt": "2026-02-20T11:30:00.000Z",
+        "scheduledDate": "2026-02-20",
+        "visitDate": "2026-02-20",
+        "paymentOrderId": null,
+        "status": "COMPLETED",
+        "resultId": "80000000-0000-4000-0000-000000000008",
+        "notes": null
+      },
+      {
+        "id": "60000000-0000-4000-0000-000000000009",
+        "customerId": "30000000-0000-4000-0000-000000000009",
+        "createdAt": "2026-02-18T15:00:00.000Z",
+        "updatedAt": "2026-02-20T16:45:00.000Z",
+        "scheduledDate": "2026-02-20",
+        "visitDate": "2026-02-20",
+        "paymentOrderId": null,
+        "status": "COMPLETED",
+        "resultId": "80000000-0000-4000-0000-000000000009",
+        "notes": null
+      },
+      {
+        "id": "60000000-0000-4000-0000-000000000010",
+        "customerId": "30000000-0000-4000-0000-000000000010",
+        "createdAt": "2026-02-22T09:00:00.000Z",
+        "updatedAt": "2026-02-24T10:00:00.000Z",
+        "scheduledDate": "2026-02-24",
+        "visitDate": "2026-02-24",
+        "paymentOrderId": null,
+        "status": "IN_PROGRESS",
+        "resultId": null,
+        "notes": "Cliente especial"
+      }
+    ],
+    "workOrderItem": [
+      {
+        "id": "70000000-0000-4000-0000-000000000001",
+        "workOrderId": "60000000-0000-4000-0000-000000000001",
+        "productId": "20000000-0000-4000-0000-000000000001",
+        "quantity": 12,
+        "priceSnapshot": 8.5
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000002",
+        "workOrderId": "60000000-0000-4000-0000-000000000001",
+        "productId": "20000000-0000-4000-0000-000000000002",
+        "quantity": 10,
+        "priceSnapshot": 7.9
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000003",
+        "workOrderId": "60000000-0000-4000-0000-000000000001",
+        "productId": "20000000-0000-4000-0000-000000000003",
+        "quantity": 5,
+        "priceSnapshot": 28.9
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000004",
+        "workOrderId": "60000000-0000-4000-0000-000000000001",
+        "productId": "20000000-0000-4000-0000-000000000008",
+        "quantity": 8,
+        "priceSnapshot": 7.5
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000005",
+        "workOrderId": "60000000-0000-4000-0000-000000000002",
+        "productId": "20000000-0000-4000-0000-000000000005",
+        "quantity": 24,
+        "priceSnapshot": 2.5
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000006",
+        "workOrderId": "60000000-0000-4000-0000-000000000002",
+        "productId": "20000000-0000-4000-0000-000000000011",
+        "quantity": 6,
+        "priceSnapshot": 15.9
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000007",
+        "workOrderId": "60000000-0000-4000-0000-000000000002",
+        "productId": "20000000-0000-4000-0000-000000000013",
+        "quantity": 20,
+        "priceSnapshot": 2.8
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000008",
+        "workOrderId": "60000000-0000-4000-0000-000000000002",
+        "productId": "20000000-0000-4000-0000-000000000018",
+        "quantity": 30,
+        "priceSnapshot": 2.5
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000009",
+        "workOrderId": "60000000-0000-4000-0000-000000000003",
+        "productId": "20000000-0000-4000-0000-000000000003",
+        "quantity": 8,
+        "priceSnapshot": 7.5
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000010",
+        "workOrderId": "60000000-0000-4000-0000-000000000003",
+        "productId": "20000000-0000-4000-0000-000000000004",
+        "quantity": 8,
+        "priceSnapshot": 7.5
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000011",
+        "workOrderId": "60000000-0000-4000-0000-000000000003",
+        "productId": "20000000-0000-4000-0000-000000000006",
+        "quantity": 15,
+        "priceSnapshot": 6.9
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000012",
+        "workOrderId": "60000000-0000-4000-0000-000000000003",
+        "productId": "20000000-0000-4000-0000-000000000012",
+        "quantity": 20,
+        "priceSnapshot": 4.5
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000013",
+        "workOrderId": "60000000-0000-4000-0000-000000000003",
+        "productId": "20000000-0000-4000-0000-000000000010",
+        "quantity": 12,
+        "priceSnapshot": 8.9
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000014",
+        "workOrderId": "60000000-0000-4000-0000-000000000004",
+        "productId": "20000000-0000-4000-0000-000000000009",
+        "quantity": 10,
+        "priceSnapshot": 4.2
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000015",
+        "workOrderId": "60000000-0000-4000-0000-000000000004",
+        "productId": "20000000-0000-4000-0000-000000000014",
+        "quantity": 8,
+        "priceSnapshot": 9.9
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000016",
+        "workOrderId": "60000000-0000-4000-0000-000000000004",
+        "productId": "20000000-0000-4000-0000-000000000017",
+        "quantity": 6,
+        "priceSnapshot": 6.9
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000017",
+        "workOrderId": "60000000-0000-4000-0000-000000000005",
+        "productId": "20000000-0000-4000-0000-000000000001",
+        "quantity": 24,
+        "priceSnapshot": 8.5
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000018",
+        "workOrderId": "60000000-0000-4000-0000-000000000005",
+        "productId": "20000000-0000-4000-0000-000000000002",
+        "quantity": 18,
+        "priceSnapshot": 7.9
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000019",
+        "workOrderId": "60000000-0000-4000-0000-000000000005",
+        "productId": "20000000-0000-4000-0000-000000000005",
+        "quantity": 30,
+        "priceSnapshot": 2.5
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000020",
+        "workOrderId": "60000000-0000-4000-0000-000000000005",
+        "productId": "20000000-0000-4000-0000-000000000022",
+        "quantity": 10,
+        "priceSnapshot": 8.9
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000021",
+        "workOrderId": "60000000-0000-4000-0000-000000000005",
+        "productId": "20000000-0000-4000-0000-000000000024",
+        "quantity": 15,
+        "priceSnapshot": 3.9
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000022",
+        "workOrderId": "60000000-0000-4000-0000-000000000006",
+        "productId": "20000000-0000-4000-0000-000000000011",
+        "quantity": 4,
+        "priceSnapshot": 15.9
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000023",
+        "workOrderId": "60000000-0000-4000-0000-000000000006",
+        "productId": "20000000-0000-4000-0000-000000000009",
+        "quantity": 8,
+        "priceSnapshot": 4.2
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000024",
+        "workOrderId": "60000000-0000-4000-0000-000000000006",
+        "productId": "20000000-0000-4000-0000-000000000022",
+        "quantity": 8,
+        "priceSnapshot": 8.9
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000025",
+        "workOrderId": "60000000-0000-4000-0000-000000000006",
+        "productId": "20000000-0000-4000-0000-000000000023",
+        "quantity": 6,
+        "priceSnapshot": 12.5
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000026",
+        "workOrderId": "60000000-0000-4000-0000-000000000007",
+        "productId": "20000000-0000-4000-0000-000000000007",
+        "quantity": 10,
+        "priceSnapshot": 28.9
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000027",
+        "workOrderId": "60000000-0000-4000-0000-000000000007",
+        "productId": "20000000-0000-4000-0000-000000000008",
+        "quantity": 15,
+        "priceSnapshot": 7.5
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000028",
+        "workOrderId": "60000000-0000-4000-0000-000000000007",
+        "productId": "20000000-0000-4000-0000-000000000010",
+        "quantity": 8,
+        "priceSnapshot": 8.9
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000029",
+        "workOrderId": "60000000-0000-4000-0000-000000000007",
+        "productId": "20000000-0000-4000-0000-000000000021",
+        "quantity": 5,
+        "priceSnapshot": 18.9
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000030",
+        "workOrderId": "60000000-0000-4000-0000-000000000008",
+        "productId": "20000000-0000-4000-0000-000000000001",
+        "quantity": 20,
+        "priceSnapshot": 8.5
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000031",
+        "workOrderId": "60000000-0000-4000-0000-000000000008",
+        "productId": "20000000-0000-4000-0000-000000000006",
+        "quantity": 18,
+        "priceSnapshot": 6.9
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000032",
+        "workOrderId": "60000000-0000-4000-0000-000000000008",
+        "productId": "20000000-0000-4000-0000-000000000011",
+        "quantity": 12,
+        "priceSnapshot": 15.9
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000033",
+        "workOrderId": "60000000-0000-4000-0000-000000000008",
+        "productId": "20000000-0000-4000-0000-000000000019",
+        "quantity": 10,
+        "priceSnapshot": 12.9
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000034",
+        "workOrderId": "60000000-0000-4000-0000-000000000008",
+        "productId": "20000000-0000-4000-0000-000000000020",
+        "quantity": 10,
+        "priceSnapshot": 12.9
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000035",
+        "workOrderId": "60000000-0000-4000-0000-000000000009",
+        "productId": "20000000-0000-4000-0000-000000000013",
+        "quantity": 24,
+        "priceSnapshot": 2.8
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000036",
+        "workOrderId": "60000000-0000-4000-0000-000000000009",
+        "productId": "20000000-0000-4000-0000-000000000015",
+        "quantity": 8,
+        "priceSnapshot": 12.9
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000037",
+        "workOrderId": "60000000-0000-4000-0000-000000000009",
+        "productId": "20000000-0000-4000-0000-000000000016",
+        "quantity": 6,
+        "priceSnapshot": 14.9
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000038",
+        "workOrderId": "60000000-0000-4000-0000-000000000009",
+        "productId": "20000000-0000-4000-0000-000000000018",
+        "quantity": 20,
+        "priceSnapshot": 2.5
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000039",
+        "workOrderId": "60000000-0000-4000-0000-000000000010",
+        "productId": "20000000-0000-4000-0000-000000000001",
+        "quantity": 15,
+        "priceSnapshot": 8.5
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000040",
+        "workOrderId": "60000000-0000-4000-0000-000000000010",
+        "productId": "20000000-0000-4000-0000-000000000002",
+        "quantity": 12,
+        "priceSnapshot": 7.9
+      },
+      {
+        "id": "70000000-0000-4000-0000-000000000041",
+        "workOrderId": "60000000-0000-4000-0000-000000000010",
+        "productId": "20000000-0000-4000-0000-000000000005",
+        "quantity": 20,
+        "priceSnapshot": 2.5
+      }
+    ],
+    "workOrderResult": [
+      {
+        "id": "80000000-0000-4000-0000-000000000001",
+        "totalValue": 356.4
+      },
+      {
+        "id": "80000000-0000-4000-0000-000000000002",
+        "totalValue": 289.5
+      },
+      {
+        "id": "80000000-0000-4000-0000-000000000003",
+        "totalValue": 445.8
+      },
+      {
+        "id": "80000000-0000-4000-0000-000000000004",
+        "totalValue": 198.7
+      },
+      {
+        "id": "80000000-0000-4000-0000-000000000005",
+        "totalValue": 567.3
+      },
+      {
+        "id": "80000000-0000-4000-0000-000000000006",
+        "totalValue": 234.6
+      },
+      {
+        "id": "80000000-0000-4000-0000-000000000007",
+        "totalValue": 412.9
+      },
+      {
+        "id": "80000000-0000-4000-0000-000000000008",
+        "totalValue": 678.4
+      },
+      {
+        "id": "80000000-0000-4000-0000-000000000009",
+        "totalValue": 324.8
+      }
+    ],
+    "workOrderResultItem": [
+      {
+        "id": "90000000-0000-4000-0000-000000000001",
+        "resultId": "80000000-0000-4000-0000-000000000001",
+        "productId": "20000000-0000-4000-0000-000000000001",
+        "quantity": 12,
+        "priceSnapshot": 8.5,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000002",
+        "resultId": "80000000-0000-4000-0000-000000000001",
+        "productId": "20000000-0000-4000-0000-000000000002",
+        "quantity": 10,
+        "priceSnapshot": 7.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000003",
+        "resultId": "80000000-0000-4000-0000-000000000001",
+        "productId": "20000000-0000-4000-0000-000000000007",
+        "quantity": 5,
+        "priceSnapshot": 28.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000004",
+        "resultId": "80000000-0000-4000-0000-000000000001",
+        "productId": "20000000-0000-4000-0000-000000000008",
+        "quantity": 8,
+        "priceSnapshot": 7.5,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000005",
+        "resultId": "80000000-0000-4000-0000-000000000002",
+        "productId": "20000000-0000-4000-0000-000000000005",
+        "quantity": 24,
+        "priceSnapshot": 2.5,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000006",
+        "resultId": "80000000-0000-4000-0000-000000000002",
+        "productId": "20000000-0000-4000-0000-000000000011",
+        "quantity": 6,
+        "priceSnapshot": 15.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000007",
+        "resultId": "80000000-0000-4000-0000-000000000002",
+        "productId": "20000000-0000-4000-0000-000000000013",
+        "quantity": 20,
+        "priceSnapshot": 2.8,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000008",
+        "resultId": "80000000-0000-4000-0000-000000000002",
+        "productId": "20000000-0000-4000-0000-000000000018",
+        "quantity": 30,
+        "priceSnapshot": 2.5,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000009",
+        "resultId": "80000000-0000-4000-0000-000000000003",
+        "productId": "20000000-0000-4000-0000-000000000003",
+        "quantity": 8,
+        "priceSnapshot": 7.5,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000010",
+        "resultId": "80000000-0000-4000-0000-000000000003",
+        "productId": "20000000-0000-4000-0000-000000000004",
+        "quantity": 6,
+        "priceSnapshot": 7.5,
+        "type": "EXCHANGED",
+        "observation": "Cliente trocou 2 unidades por Sprite"
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000011",
+        "resultId": "80000000-0000-4000-0000-000000000003",
+        "productId": "20000000-0000-4000-0000-000000000003",
+        "quantity": 2,
+        "priceSnapshot": 7.5,
+        "type": "ADDED",
+        "observation": "Troca do Fanta"
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000012",
+        "resultId": "80000000-0000-4000-0000-000000000003",
+        "productId": "20000000-0000-4000-0000-000000000006",
+        "quantity": 15,
+        "priceSnapshot": 6.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000013",
+        "resultId": "80000000-0000-4000-0000-000000000003",
+        "productId": "20000000-0000-4000-0000-000000000012",
+        "quantity": 20,
+        "priceSnapshot": 4.5,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000014",
+        "resultId": "80000000-0000-4000-0000-000000000003",
+        "productId": "20000000-0000-4000-0000-000000000010",
+        "quantity": 12,
+        "priceSnapshot": 8.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000015",
+        "resultId": "80000000-0000-4000-0000-000000000004",
+        "productId": "20000000-0000-4000-0000-000000000009",
+        "quantity": 10,
+        "priceSnapshot": 4.2,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000016",
+        "resultId": "80000000-0000-4000-0000-000000000004",
+        "productId": "20000000-0000-4000-0000-000000000014",
+        "quantity": 8,
+        "priceSnapshot": 9.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000017",
+        "resultId": "80000000-0000-4000-0000-000000000004",
+        "productId": "20000000-0000-4000-0000-000000000017",
+        "quantity": 6,
+        "priceSnapshot": 6.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000018",
+        "resultId": "80000000-0000-4000-0000-000000000005",
+        "productId": "20000000-0000-4000-0000-000000000001",
+        "quantity": 24,
+        "priceSnapshot": 8.5,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000019",
+        "resultId": "80000000-0000-4000-0000-000000000005",
+        "productId": "20000000-0000-4000-0000-000000000002",
+        "quantity": 18,
+        "priceSnapshot": 7.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000020",
+        "resultId": "80000000-0000-4000-0000-000000000005",
+        "productId": "20000000-0000-4000-0000-000000000005",
+        "quantity": 30,
+        "priceSnapshot": 2.5,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000021",
+        "resultId": "80000000-0000-4000-0000-000000000005",
+        "productId": "20000000-0000-4000-0000-000000000022",
+        "quantity": 12,
+        "priceSnapshot": 8.9,
+        "type": "ADDED",
+        "observation": "Pedido extra"
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000022",
+        "resultId": "80000000-0000-4000-0000-000000000005",
+        "productId": "20000000-0000-4000-0000-000000000024",
+        "quantity": 15,
+        "priceSnapshot": 3.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000023",
+        "resultId": "80000000-0000-4000-0000-000000000006",
+        "productId": "20000000-0000-4000-0000-000000000011",
+        "quantity": 4,
+        "priceSnapshot": 15.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000024",
+        "resultId": "80000000-0000-4000-0000-000000000006",
+        "productId": "20000000-0000-4000-0000-000000000009",
+        "quantity": 8,
+        "priceSnapshot": 4.2,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000025",
+        "resultId": "80000000-0000-4000-0000-000000000006",
+        "productId": "20000000-0000-4000-0000-000000000022",
+        "quantity": 8,
+        "priceSnapshot": 8.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000026",
+        "resultId": "80000000-0000-4000-0000-000000000006",
+        "productId": "20000000-0000-4000-0000-000000000023",
+        "quantity": 6,
+        "priceSnapshot": 12.5,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000027",
+        "resultId": "80000000-0000-4000-0000-000000000007",
+        "productId": "20000000-0000-4000-0000-000000000007",
+        "quantity": 10,
+        "priceSnapshot": 28.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000028",
+        "resultId": "80000000-0000-4000-0000-000000000007",
+        "productId": "20000000-0000-4000-0000-000000000008",
+        "quantity": 15,
+        "priceSnapshot": 7.5,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000029",
+        "resultId": "80000000-0000-4000-0000-000000000007",
+        "productId": "20000000-0000-4000-0000-000000000010",
+        "quantity": 8,
+        "priceSnapshot": 8.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000030",
+        "resultId": "80000000-0000-4000-0000-000000000007",
+        "productId": "20000000-0000-4000-0000-000000000021",
+        "quantity": 5,
+        "priceSnapshot": 18.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000031",
+        "resultId": "80000000-0000-4000-0000-000000000008",
+        "productId": "20000000-0000-4000-0000-000000000001",
+        "quantity": 20,
+        "priceSnapshot": 8.5,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000032",
+        "resultId": "80000000-0000-4000-0000-000000000008",
+        "productId": "20000000-0000-4000-0000-000000000006",
+        "quantity": 18,
+        "priceSnapshot": 6.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000033",
+        "resultId": "80000000-0000-4000-0000-000000000008",
+        "productId": "20000000-0000-4000-0000-000000000011",
+        "quantity": 12,
+        "priceSnapshot": 15.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000034",
+        "resultId": "80000000-0000-4000-0000-000000000008",
+        "productId": "20000000-0000-4000-0000-000000000019",
+        "quantity": 10,
+        "priceSnapshot": 12.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000035",
+        "resultId": "80000000-0000-4000-0000-000000000008",
+        "productId": "20000000-0000-4000-0000-000000000020",
+        "quantity": 10,
+        "priceSnapshot": 12.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000036",
+        "resultId": "80000000-0000-4000-0000-000000000009",
+        "productId": "20000000-0000-4000-0000-000000000013",
+        "quantity": 20,
+        "priceSnapshot": 2.8,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000037",
+        "resultId": "80000000-0000-4000-0000-000000000009",
+        "productId": "20000000-0000-4000-0000-000000000013",
+        "quantity": 4,
+        "priceSnapshot": 2.8,
+        "type": "REMOVED",
+        "observation": "Cliente devolveu 4 unidades - vencimento próximo"
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000038",
+        "resultId": "80000000-0000-4000-0000-000000000009",
+        "productId": "20000000-0000-4000-0000-000000000015",
+        "quantity": 8,
+        "priceSnapshot": 12.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000039",
+        "resultId": "80000000-0000-4000-0000-000000000009",
+        "productId": "20000000-0000-4000-0000-000000000016",
+        "quantity": 6,
+        "priceSnapshot": 14.9,
+        "type": "EXCHANGED",
+        "observation": null
+      },
+      {
+        "id": "90000000-0000-4000-0000-000000000040",
+        "resultId": "80000000-0000-4000-0000-000000000009",
+        "productId": "20000000-0000-4000-0000-000000000018",
+        "quantity": 20,
+        "priceSnapshot": 2.5,
+        "type": "EXCHANGED",
+        "observation": null
+      }
+    ],
+    "itineraryWorkOrder": [
+      {
+        "id": "10100000-0000-4000-0000-000000000001",
+        "itineraryId": "50000000-0000-4000-0000-000000000001",
+        "workOrderId": "60000000-0000-4000-0000-000000000001",
+        "position": 1,
+        "isLate": false
+      },
+      {
+        "id": "10100000-0000-4000-0000-000000000002",
+        "itineraryId": "50000000-0000-4000-0000-000000000001",
+        "workOrderId": "60000000-0000-4000-0000-000000000002",
+        "position": 2,
+        "isLate": false
+      },
+      {
+        "id": "10100000-0000-4000-0000-000000000003",
+        "itineraryId": "50000000-0000-4000-0000-000000000001",
+        "workOrderId": "60000000-0000-4000-0000-000000000003",
+        "position": 3,
+        "isLate": false
+      },
+      {
+        "id": "10100000-0000-4000-0000-000000000004",
+        "itineraryId": "50000000-0000-4000-0000-000000000001",
+        "workOrderId": "60000000-0000-4000-0000-000000000004",
+        "position": 4,
+        "isLate": false
+      },
+      {
+        "id": "10100000-0000-4000-0000-000000000005",
+        "itineraryId": "50000000-0000-4000-0000-000000000001",
+        "workOrderId": "60000000-0000-4000-0000-000000000005",
+        "position": 5,
+        "isLate": false
+      },
+      {
+        "id": "10100000-0000-4000-0000-000000000006",
+        "itineraryId": "50000000-0000-4000-0000-000000000001",
+        "workOrderId": "60000000-0000-4000-0000-000000000006",
+        "position": 6,
+        "isLate": false
+      },
+      {
+        "id": "10100000-0000-4000-0000-000000000007",
+        "itineraryId": "50000000-0000-4000-0000-000000000001",
+        "workOrderId": "60000000-0000-4000-0000-000000000007",
+        "position": 7,
+        "isLate": false
+      },
+      {
+        "id": "10100000-0000-4000-0000-000000000008",
+        "itineraryId": "50000000-0000-4000-0000-000000000001",
+        "workOrderId": "60000000-0000-4000-0000-000000000008",
+        "position": 8,
+        "isLate": false
+      },
+      {
+        "id": "10100000-0000-4000-0000-000000000009",
+        "itineraryId": "50000000-0000-4000-0000-000000000001",
+        "workOrderId": "60000000-0000-4000-0000-000000000009",
+        "position": 9,
+        "isLate": false
+      },
+      {
+        "id": "10100000-0000-4000-0000-000000000010",
+        "itineraryId": "50000000-0000-4000-0000-000000000002",
+        "workOrderId": "60000000-0000-4000-0000-000000000010",
+        "position": 1,
+        "isLate": false
+      }
+    ]
+  }
+}

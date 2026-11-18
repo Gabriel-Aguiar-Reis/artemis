@@ -203,7 +203,7 @@ export default function DataTransferScreen() {
               id,
               name,
               categoryId,
-              salePrice,
+              salePrice: String(salePrice),
               isActive,
               expiration: expirationValue,
             }

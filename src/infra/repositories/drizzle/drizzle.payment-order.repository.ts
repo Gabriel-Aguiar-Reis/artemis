@@ -28,10 +28,16 @@ export default class DrizzlePaymentOrderRepository implements PaymentOrderReposi
     const po = new PaymentOrder(
       id,
       dto.method,
-      dto.totalValue,
-      dto.installments ?? 1,
+      dto.totalValue !== undefined && dto.totalValue !== null
+        ? Number(dto.totalValue)
+        : 0,
+      dto.installments !== undefined && dto.installments !== null
+        ? Number(dto.installments)
+        : 1,
       dto.isPaid ?? false,
-      dto.paidInstallments ?? 0,
+      dto.paidInstallments !== undefined && dto.paidInstallments !== null
+        ? Number(dto.paidInstallments)
+        : 0,
       dto.paymentDate instanceof Date
         ? dto.paymentDate
         : dto.paymentDate
@@ -61,9 +67,21 @@ export default class DrizzlePaymentOrderRepository implements PaymentOrderReposi
     }
 
     const po = PaymentOrder.fromDTO({
-      ...dto,
       id: dto.id as UUID,
-      isPaid: dto.isPaid ?? false,
+      method: dto.method,
+      totalValue:
+        dto.totalValue !== undefined && dto.totalValue !== null
+          ? Number(dto.totalValue)
+          : existing.totalValue,
+      installments:
+        dto.installments !== undefined && dto.installments !== null
+          ? Number(dto.installments)
+          : existing.installments,
+      isPaid: dto.isPaid ?? existing.isPaid,
+      paidInstallments:
+        dto.paidInstallments !== undefined && dto.paidInstallments !== null
+          ? Number(dto.paidInstallments)
+          : existing.paidInstallments,
       paymentDate:
         dto.paymentDate instanceof Date
           ? dto.paymentDate.toISOString()

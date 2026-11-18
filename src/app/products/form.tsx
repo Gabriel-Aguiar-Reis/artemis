@@ -16,14 +16,14 @@ import { useForm } from 'react-hook-form'
 import { View } from 'react-native'
 
 export default function ProductFormScreen() {
-  const { mutate: addProduct, isPending } = productHooks.addProduct()
+  const { mutateAsync: addProduct, isPending } = productHooks.addProduct()
 
   const form = useForm<ProductInsertDTO>({
     resolver: zodResolver(productInsertSchema),
     defaultValues: {
       name: '',
       categoryId: '',
-      salePrice: undefined,
+      salePrice: '',
       isActive: true,
       expiration: '30 dias',
     },
@@ -31,9 +31,23 @@ export default function ProductFormScreen() {
     reValidateMode: 'onBlur',
   })
 
-  const onSubmit = form.handleSubmit((data: ProductInsertDTO) => {
-    addProduct(data)
-    router.back()
+  const onSubmit = form.handleSubmit(async (data: ProductInsertDTO) => {
+    try {
+      // O BaseForm envia com coma decimal, converter para ponto
+      const normalizedSalePrice = data.salePrice
+        ? String(data.salePrice).replace(',', '.')
+        : data.salePrice
+
+      const normalizedData = {
+        ...data,
+        salePrice: normalizedSalePrice,
+      }
+
+      await addProduct(normalizedData)
+      router.back()
+    } catch (error) {
+      console.error('Error adding product:', error)
+    }
   })
 
   return (

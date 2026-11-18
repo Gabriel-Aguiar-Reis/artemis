@@ -31,6 +31,21 @@ fi
 
 echo ""
 echo "1️⃣  Preparando build..."
+
+# Regenerar assets nativos a partir dos assets do Expo
+echo ""
+echo "🎨 Regenerando assets nativos (ícones, splash screen)..."
+npx expo prebuild --clean --no-install
+
+# Restaurar local.properties após o prebuild (ele é removido pelo --clean)
+echo ""
+echo "⚙️  Restaurando configuração do Android SDK..."
+cat > android/local.properties << EOF
+# Este arquivo foi gerado automaticamente pelo build-release.sh
+# Não edite manualmente - ele é recriado a cada build
+sdk.dir=$HOME/Library/Android/sdk
+EOF
+
 cd android
 
 # Limpeza preventiva de cache de autolinking e Gradle

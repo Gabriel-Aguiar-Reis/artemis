@@ -1,4 +1,5 @@
 import { categoryHooks } from '@/src/application/hooks/category.hooks'
+import { useDebouncedValue } from '@/src/application/hooks/use-debounced-value'
 import { Button } from '@/src/components/ui/button'
 import { FloatingLabelInput } from '@/src/components/ui/floating-label-input'
 import { Icon } from '@/src/components/ui/icon'
@@ -51,6 +52,46 @@ export default function ProductsSearchScreen() {
   const [maxSalePriceFilter, setMaxSalePriceFilter] = useState(
     params.salePriceMax || ''
   )
+
+  // Aplicar debounce nos inputs de texto (300ms)
+  const debouncedSearch = useDebouncedValue(searchQuery, 300)
+  const debouncedCategoryName = useDebouncedValue(categoryNameFilter, 300)
+  const debouncedExpiration = useDebouncedValue(expirationFilter, 300)
+  const debouncedMinSalePrice = useDebouncedValue(minSalePriceFilter, 300)
+  const debouncedMaxSalePrice = useDebouncedValue(maxSalePriceFilter, 300)
+
+  // Helper para normalizar valores numéricos
+  const normalizeNumberParam = (val: string) => {
+    if (!val) return undefined
+    const cleaned = String(val)
+      .replace(/R\$\s?/, '')
+      .replace(/\s/g, '')
+      .replace(/\.(?=\d{3}(?:\.|,|$))/g, '')
+      .replace(/,/g, '.')
+    const num = Number(cleaned)
+    return isNaN(num) ? undefined : String(num)
+  }
+
+  // Auto-aplicar filtros quando valores debounced mudarem
+  React.useEffect(() => {
+    const filters = {
+      search: debouncedSearch || undefined,
+      salePriceMin: normalizeNumberParam(debouncedMinSalePrice),
+      salePriceMax: normalizeNumberParam(debouncedMaxSalePrice),
+      status: statusFilter !== 'all' ? statusFilter : undefined,
+      categoryName: debouncedCategoryName || undefined,
+      expiration: debouncedExpiration || undefined,
+    }
+
+    router.setParams(filters)
+  }, [
+    debouncedSearch,
+    statusFilter,
+    debouncedCategoryName,
+    debouncedExpiration,
+    debouncedMinSalePrice,
+    debouncedMaxSalePrice,
+  ])
 
   const applyFilters = () => {
     router.back()

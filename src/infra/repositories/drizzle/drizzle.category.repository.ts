@@ -8,12 +8,34 @@ import {
 import { db } from '@/src/infra/db/drizzle/drizzle-client'
 import { category } from '@/src/infra/db/drizzle/schema/drizzle.category.schema'
 import { UUID } from '@/src/lib/utils'
-import { eq } from 'drizzle-orm'
+import { and, eq, like } from 'drizzle-orm'
 import uuid from 'react-native-uuid'
 
+export interface CategoryFilters {
+  search?: string
+  status?: 'all' | 'active' | 'inactive'
+}
+
 export default class DrizzleCategoryRepository implements CategoryRepository {
-  async getCategories(): Promise<Category[]> {
-    const rows = await db.select().from(category)
+  async getCategories(filters?: CategoryFilters): Promise<Category[]> {
+    // Construir condições de filtro dinamicamente
+    const conditions = []
+
+    // Filtro de busca por nome
+    if (filters?.search) {
+      conditions.push(like(category.name, `%${filters.search}%`))
+    }
+
+    // Filtro por status
+    if (filters?.status && filters.status !== 'all') {
+      const isActive = filters.status === 'active'
+      conditions.push(eq(category.isActive, isActive))
+    }
+
+    // Aplicar WHERE com todas as condições
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined
+
+    const rows = await db.select().from(category).where(whereClause)
     if (rows.length === 0) {
       return []
     }

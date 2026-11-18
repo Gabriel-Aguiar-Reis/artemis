@@ -23,7 +23,7 @@ export const ActiveFiltersBanner = ({
   if (filters.length === 0) return null
 
   return (
-    <View className="rounded-lg border-b border-border bg-muted/50 mx-4 px-4 py-3">
+    <View className="rounded-lg border-b border-border bg-muted/50 mx-4 mb-2 px-4 py-3">
       <View className="flex-row items-center justify-between">
         <View className="flex-1">
           <Text className="text-sm font-medium">Filtros ativos:</Text>

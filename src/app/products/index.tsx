@@ -1,4 +1,7 @@
-import { productHooks } from '@/src/application/hooks/product.hooks'
+import {
+  productHooks,
+  useProductsWithCategoryFiltered,
+} from '@/src/application/hooks/product.hooks'
 import { ActiveFiltersBanner } from '@/src/components/ui/active-filters-banner'
 import { BackToTopButton } from '@/src/components/ui/back-to-top-button'
 import { ButtonFilter } from '@/src/components/ui/button-filter'
@@ -13,7 +16,7 @@ import {
   TooltipTrigger,
 } from '@/src/components/ui/tooltip'
 import { ProductWithCategoryDTO } from '@/src/domain/repositories/product/dtos/product-with-category.dto'
-import { cn, smartSearch, UUID } from '@/src/lib/utils'
+import { cn, UUID } from '@/src/lib/utils'
 import { FlashList } from '@shopify/flash-list'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
 import {
@@ -35,15 +38,6 @@ import { SheetManager } from 'react-native-actions-sheet'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function ProductsScreen() {
-  const { data: products, isLoading } = productHooks.getProductsWithCategory()
-  const { mutate: deleteProduct } = productHooks.deleteProduct()
-
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [selectedProduct, setSelectedProduct] = useState<{
-    id: UUID
-    name: string
-  } | null>(null)
-
   const params = useLocalSearchParams<{
     search?: string
     salePriceMin?: string
@@ -53,52 +47,26 @@ export default function ProductsScreen() {
     expiration?: string
   }>()
 
-  const filteredProducts = useMemo(() => {
-    if (!products) return []
-    return products.filter((product) => {
-      const matchesSearch = params.search
-        ? smartSearch(product.name, params.search)
-        : true
-      const matchesCategory = params.categoryName
-        ? product.categoryName
-            ?.toLowerCase()
-            .includes(String(params.categoryName).toLowerCase())
-        : true
-      const matchesExpiration = params.expiration
-        ? product.expiration
-            ?.toLowerCase()
-            .includes(String(params.expiration).toLowerCase())
-        : true
-      const matchesSalePriceMin = params.salePriceMin
-        ? product.salePrice >= Number(params.salePriceMin)
-        : true
-      const matchesSalePriceMax = params.salePriceMax
-        ? product.salePrice <= Number(params.salePriceMax)
-        : true
+  const filters = {
+    search: params.search,
+    salePriceMin: params.salePriceMin,
+    salePriceMax: params.salePriceMax,
+    status: params.status,
+    categoryName: params.categoryName,
+    expiration: params.expiration,
+  }
 
-      const matchesStatus =
-        !params.status ||
-        params.status === 'all' ||
-        (params.status === 'active' && product.isActive) ||
-        (params.status === 'inactive' && !product.isActive)
-      return (
-        matchesSearch &&
-        matchesCategory &&
-        matchesExpiration &&
-        matchesSalePriceMin &&
-        matchesSalePriceMax &&
-        matchesStatus
-      )
-    })
-  }, [
-    products,
-    params.search,
-    params.salePriceMin,
-    params.salePriceMax,
-    params.status,
-    params.categoryName,
-    params.expiration,
-  ])
+  const { data: products, isLoading } = useProductsWithCategoryFiltered(filters)
+  const { mutate: deleteProduct } = productHooks.deleteProduct()
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState<{
+    id: UUID
+    name: string
+  } | null>(null)
+
+  // Os dados já vêm filtrados do servidor via repository
+  const displayedProducts = products || []
 
   const hasActiveFilters =
     !!params.search ||
@@ -310,7 +278,7 @@ export default function ProductsScreen() {
             scrollEventThrottle={16}
           >
             <View className="gap-3 p-4">
-              {filteredProducts.length === 0 ? (
+              {displayedProducts.length === 0 ? (
                 <View className="items-center py-12">
                   <Text className="text-center text-muted-foreground">
                     Nenhum produto encontrado com os filtros aplicados.
@@ -318,7 +286,7 @@ export default function ProductsScreen() {
                 </View>
               ) : (
                 <FlashList
-                  data={filteredProducts}
+                  data={displayedProducts}
                   renderItem={({ item }) => renderItem(item)}
                   ListFooterComponent={<View className="h-16" />}
                 />

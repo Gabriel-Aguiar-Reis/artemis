@@ -150,6 +150,13 @@ export class WorkOrder {
       [WorkOrderStatus.COPIED]: 'Clonada',
     }
 
+    if (!validTransitions[this.status]) {
+      // Status atual desconhecido ou inválido (ex: dado corrompido) — recupera silenciosamente
+      this.status = newStatus
+      this.updatedAt = new Date()
+      return this.status
+    }
+
     if (!validTransitions[this.status]?.includes(newStatus))
       throw new Error(
         `Transição de status inválida: ${statusLabels[this.status]} → ${statusLabels[newStatus]}`

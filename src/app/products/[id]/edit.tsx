@@ -21,14 +21,14 @@ export default function ProductsEditScreen() {
   const params = useLocalSearchParams<{ id: UUID }>()
 
   const { data: product, isLoading } = productHooks.getProduct(params.id)
-  const { mutate: updateProduct, isPending } = productHooks.updateProduct()
+  const { mutateAsync: updateProduct, isPending } = productHooks.updateProduct()
 
   const form = useForm<ProductUpdateDTO>({
     resolver: zodResolver(productUpdateSchema),
     defaultValues: {
       name: '',
       categoryId: undefined,
-      salePrice: undefined,
+      salePrice: '',
       isActive: true,
       expiration: undefined,
       id: params.id,
@@ -37,10 +37,41 @@ export default function ProductsEditScreen() {
     reValidateMode: 'onBlur',
   })
 
-  const onSubmit = form.handleSubmit(async (data: ProductUpdateDTO) => {
-    updateProduct({ ...data, id: params.id })
-    router.back()
-  })
+  const onSubmit = form.handleSubmit(
+    async (data: ProductUpdateDTO) => {
+      console.log('onSubmit - data:', data)
+      console.log('onSubmit - formState:', form.formState)
+
+      // Normalizar salePrice removendo coma decimal para ponto
+      const normalizedSalePrice = data.salePrice
+        ? String(data.salePrice).replace(',', '.')
+        : undefined
+
+      // Normalizar categoryId vazio para undefined
+      const normalizedData = {
+        ...data,
+        salePrice: normalizedSalePrice,
+        categoryId:
+          data.categoryId && data.categoryId !== ''
+            ? data.categoryId
+            : undefined,
+        id: params.id,
+      }
+
+      console.log('onSubmit - normalized data:', normalizedData)
+
+      try {
+        await updateProduct(normalizedData)
+        console.log('Update successful, navigating back')
+        router.back()
+      } catch (error) {
+        console.error('Error updating product:', error)
+      }
+    },
+    (errors) => {
+      console.log('onSubmit - validation errors:', errors)
+    }
+  )
 
   useEffect(() => {
     if (!product) return
@@ -48,18 +79,17 @@ export default function ProductsEditScreen() {
     const formValues: Partial<ProductUpdateDTO> = {
       id: product.id as unknown as string,
       name: product.name,
-      categoryId: product.categoryId as unknown as string,
-      salePrice: product.salePrice,
+      categoryId: product.categoryId
+        ? (product.categoryId as unknown as string)
+        : undefined,
+      salePrice: product.salePrice.toFixed(2).replace('.', ','),
       isActive: product.isActive,
       expiration: product.expiration.toDTO(),
     }
 
+    console.log('Resetting form with values:', formValues)
     form.reset(formValues)
   }, [product])
-
-  useEffect(() => {
-    form.reset()
-  }, [])
 
   if (isLoading) {
     return (

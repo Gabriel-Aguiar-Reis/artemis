@@ -1,4 +1,7 @@
-import { categoryHooks } from '@/src/application/hooks/category.hooks'
+import {
+  categoryHooks,
+  useCategoriesFiltered,
+} from '@/src/application/hooks/category.hooks'
 import { ActiveFiltersBanner } from '@/src/components/ui/active-filters-banner'
 import { BackToTopButton } from '@/src/components/ui/back-to-top-button'
 import { ButtonFilter } from '@/src/components/ui/button-filter'
@@ -7,7 +10,7 @@ import { ConfirmDeleteDialog } from '@/src/components/ui/dialog/confirm-delete-d
 import { ObjectCard } from '@/src/components/ui/object-card'
 import { Text } from '@/src/components/ui/text'
 import { Category } from '@/src/domain/entities/category/category.entity'
-import { cn, smartSearch, UUID } from '@/src/lib/utils'
+import { cn, UUID } from '@/src/lib/utils'
 import { FlashList } from '@shopify/flash-list'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
 import { EditIcon, TrashIcon } from 'lucide-react-native'
@@ -23,31 +26,20 @@ import { SheetManager } from 'react-native-actions-sheet'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function CategoriesScreen() {
-  const { data: categories, isLoading } = categoryHooks.getCategories()
-  const { mutate: deleteCategory } = categoryHooks.deleteCategory()
-
   const params = useLocalSearchParams<{
     search?: string
     status?: 'all' | 'active' | 'inactive'
   }>()
 
-  const filteredCategories = useMemo(() => {
-    if (!categories) return []
+  const filters = {
+    search: params.search,
+    status: params.status || 'all',
+  }
 
-    return categories.filter((category) => {
-      const matchesSearch = params.search
-        ? smartSearch(category.name, params.search)
-        : true
+  const { data: allCategories, isLoading } = useCategoriesFiltered(filters)
+  const { mutate: deleteCategory } = categoryHooks.deleteCategory()
 
-      const matchesStatus =
-        !params.status ||
-        params.status === 'all' ||
-        (params.status === 'active' && category.isActive) ||
-        (params.status === 'inactive' && !category.isActive)
-
-      return matchesSearch && matchesStatus
-    })
-  }, [categories, params.search, params.status])
+  const displayedCategories = allCategories || []
 
   const hasActiveFilters =
     !!params.search || (params.status && params.status !== 'all')
@@ -171,7 +163,7 @@ export default function CategoriesScreen() {
           ),
         }}
       />
-      {!categories || categories.length === 0 ? (
+      {!allCategories || allCategories.length === 0 ? (
         <View className="flex-1 items-center justify-center px-4">
           <Text className="text-center text-muted-foreground">
             Nenhuma categoria cadastrada.{' \n'}
@@ -191,7 +183,7 @@ export default function CategoriesScreen() {
             scrollEventThrottle={16}
           >
             <View className="gap-3 p-4">
-              {filteredCategories.length === 0 ? (
+              {displayedCategories.length === 0 ? (
                 <View className="items-center py-12">
                   <Text className="text-center text-muted-foreground">
                     Nenhuma categoria encontrada com os filtros aplicados.
@@ -199,7 +191,7 @@ export default function CategoriesScreen() {
                 </View>
               ) : (
                 <FlashList
-                  data={filteredCategories}
+                  data={displayedCategories}
                   renderItem={({ item }) => renderItem(item)}
                   ListFooterComponent={<View className="h-16" />}
                 />

@@ -17,6 +17,7 @@ export type QueryKey =
   | 'workOrderResults'
   | 'workOrderResultItems'
   | 'license'
+  | 'errorLogs'
 
 /**
  * Mapa de dependências: quando uma query key é modificada,
@@ -48,6 +49,9 @@ export const QUERY_DEPENDENCIES: Record<QueryKey, QueryKey[]> = {
   products: ['workOrderItems', 'workOrderResultItems', 'workOrders'],
 
   // Quando categoria muda, invalida produtos (que podem invalidar outras)
+
+  // Error logs não dependem de nenhuma outra entidade
+  errorLogs: [],
   categories: ['products'],
 
   // Quando payment order muda, invalida work orders
