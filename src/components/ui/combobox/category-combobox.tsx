@@ -1,4 +1,5 @@
 import { categoryHooks } from '@/src/application/hooks/category.hooks'
+import { useNormalizedSearch } from '@/src/application/hooks/use-normalized-search'
 import { Button } from '@/src/components/ui/button'
 import {
   Dialog,
@@ -39,12 +40,11 @@ export function CategoryCombobox({
   const [open, setOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
-  const filteredCategories = useMemo(() => {
-    if (!searchQuery) return categories
-    return categories.filter((c) =>
-      c.name.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  }, [categories, searchQuery])
+  const filteredCategories = useNormalizedSearch(
+    categories,
+    (c) => c.name,
+    searchQuery
+  )
 
   const isSelected = (categoryId: string) => {
     return selectedCategoryId === categoryId
@@ -231,6 +231,8 @@ export function CategoryCombobox({
               <View className="flex-1 w-full">
                 <FlashList
                   data={filteredCategories}
+                  keyExtractor={(item) => item.id}
+                  keyboardShouldPersistTaps="handled"
                   renderItem={renderCategoryItem}
                 />
               </View>
