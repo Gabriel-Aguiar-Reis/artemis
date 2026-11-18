@@ -102,10 +102,10 @@ foi reduzido por `refetchType: 'active'` (abaixo), não removendo a dependência
   são instâncias de classe e são tratadas como valores opacos.
 - `staleTime`: 5 min para dados cadastrais (`customers`, `products`,
   `categories`), pois toda mutação os invalida; 30 s para o resto.
-- Infinite queries (se existirem) devem usar a key raiz da entidade
-  (`['workOrders', ...]`, `['customers', ...]`) para serem alcançadas por
-  `invalidateQueries({ queryKey: [key] })`. Nesta branch ainda não existem
-  `use-work-orders-infinite.ts` / `use-customers-infinite.ts`.
+- Infinite queries (`use-work-orders-infinite.ts`, `use-customers-infinite.ts`)
+  usam as keys `['workOrders', 'infinite', ...]` e `['customers', 'infinite', ...]`,
+  portanto continuam sendo alcançadas por `invalidateQueries({ queryKey: ['workOrders'] })`
+  (match por prefixo) e entram no refetch quando a lista está montada.
 
 ## Erros de exclusão (FK restrict)
 

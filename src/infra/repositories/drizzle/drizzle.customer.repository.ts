@@ -4,6 +4,7 @@ import { Address } from '@/src/domain/entities/customer/value-objects/address.vo
 import { LandlinePhoneNumber } from '@/src/domain/entities/customer/value-objects/landline-phone-number.vo'
 import { SmartphoneNumber } from '@/src/domain/entities/customer/value-objects/smartphone-number.vo'
 import {
+  CustomerLight,
   CustomerRepository,
   PaginatedCustomers,
 } from '@/src/domain/repositories/customer/customer.repository'
@@ -13,8 +14,8 @@ import {
 } from '@/src/domain/validations/customer.schema'
 import { db } from '@/src/infra/db/drizzle/drizzle-client'
 import { customer } from '@/src/infra/db/drizzle/schema/drizzle.customer.schema'
-import { normalizePhoneBrazil, UUID } from '@/src/lib/utils'
-import { and, count, eq, like, or } from 'drizzle-orm'
+import { normalizePhoneBrazil, normalizeString, UUID } from '@/src/lib/utils'
+import { and, asc, count, eq, like, or } from 'drizzle-orm'
 import uuid from 'react-native-uuid'
 
 export interface CustomerFilters {
@@ -32,6 +33,57 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
       return []
     }
     return rows.map(CustomerMapper.toDomain)
+  }
+
+  /**
+   * Busca leve para comboboxes: só colunas necessárias, limitada e ordenada.
+   * LIKE do SQLite não ignora acento, então o termo normalizado vira padrão
+   * com `_` no lugar das letras acentuáveis (superset no SQL) e o resultado é
+   * refinado em JS com normalização (acento/caixa-insensível).
+   */
+  async searchCustomersLight(
+    term: string,
+    limit = 50
+  ): Promise<CustomerLight[]> {
+    const normalized = normalizeString(term.trim())
+    const cols = {
+      id: customer.id,
+      storeName: customer.storeName,
+      contactName: customer.contactName,
+      city: customer.addressCity,
+      phone: customer.phoneNumber,
+    }
+
+    if (!normalized) {
+      return (await db
+        .select(cols)
+        .from(customer)
+        .orderBy(asc(customer.storeName), asc(customer.id))
+        .limit(limit)) as CustomerLight[]
+    }
+
+    const pattern = `%${normalized
+      .replace(/[%_\\]/g, '')
+      .replace(/[aeioucn]/g, '_')}%`
+    const rows = (await db
+      .select(cols)
+      .from(customer)
+      .where(
+        or(
+          like(customer.storeName, pattern),
+          like(customer.contactName, pattern)
+        )
+      )
+      .orderBy(asc(customer.storeName), asc(customer.id))
+      .limit(Math.max(limit * 4, 200))) as CustomerLight[]
+
+    return rows
+      .filter(
+        (r) =>
+          normalizeString(r.storeName ?? '').includes(normalized) ||
+          normalizeString(r.contactName ?? '').includes(normalized)
+      )
+      .slice(0, limit)
   }
 
   async getCustomersPaginated(
@@ -92,6 +144,8 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
         .select()
         .from(customer)
         .where(whereClause)
+        // Ordem estável: sem ORDER BY o OFFSET pode repetir/pular itens
+        .orderBy(asc(customer.storeName), asc(customer.id))
         .limit(pageSize)
         .offset(offset),
       db.select({ count: count() }).from(customer).where(whereClause),
