@@ -90,3 +90,58 @@ describe('work order scheduled period', () => {
     })
   })
 })
+
+describe('next visit reminder', () => {
+  beforeEach(() => {
+    resetTestDb()
+    seedBase()
+  })
+
+  const novRange = {
+    scheduledFrom: iso(new Date(2026, 10, 1)),
+    scheduledTo: iso(new Date(2026, 10, 30, 23, 59, 59, 999)),
+  }
+
+  it('is saved on a closed work order without leaving its period', async () => {
+    const id = await order(new Date(2026, 10, 18, 12), WorkOrderStatus.COMPLETED)
+
+    await repo.updateWorkOrder({
+      id,
+      scheduledDate: new Date(2026, 10, 18, 12),
+      nextVisitDate: new Date(2027, 8, 1, 12),
+    } as any)
+
+    const wo = await repo.getWorkOrder(id)
+    expect(wo?.nextVisitDate?.getFullYear()).toBe(2027)
+    expect(wo?.scheduledDate.getFullYear()).toBe(2026)
+
+    const nov = await repo.getWorkOrdersPaginated(1, 50, novRange)
+    expect(nov.totalCount).toBe(1)
+    expect(nov.data[0].nextVisitDate?.getMonth()).toBe(8)
+  })
+
+  it('does not unlock changing the scheduled date of a closed work order', async () => {
+    const id = await order(new Date(2026, 10, 18, 12), WorkOrderStatus.COMPLETED)
+
+    await expect(
+      repo.updateWorkOrder({
+        id,
+        scheduledDate: new Date(2027, 8, 1, 12),
+      } as any)
+    ).rejects.toThrow('já foi encerrada')
+  })
+
+  it('keeps the reminder when other fields are edited and clears it with null', async () => {
+    const id = await order(new Date(2026, 10, 18, 12))
+    await repo.updateWorkOrder({
+      id,
+      nextVisitDate: new Date(2027, 8, 1, 12),
+    } as any)
+
+    await repo.updateWorkOrder({ id, notes: 'obs' } as any)
+    expect((await repo.getWorkOrder(id))?.nextVisitDate).toBeDefined()
+
+    await repo.updateWorkOrder({ id, nextVisitDate: null } as any)
+    expect((await repo.getWorkOrder(id))?.nextVisitDate).toBeUndefined()
+  })
+})

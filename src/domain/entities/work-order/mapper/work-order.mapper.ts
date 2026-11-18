@@ -39,6 +39,7 @@ export class WorkOrderMapper {
         : undefined,
       visitDate: table.visitDate ?? undefined,
       notes: table.notes ?? undefined,
+      nextVisitDate: table.nextVisitDate ?? undefined,
     })
   }
 
@@ -54,6 +55,7 @@ export class WorkOrderMapper {
       status: entity.status,
       resultId: entity.result?.id ?? null,
       notes: entity.notes ?? null,
+      nextVisitDate: entity.nextVisitDate?.toISOString() ?? null,
     }
   }
 }

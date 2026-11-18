@@ -1,5 +1,6 @@
 import { workOrderHooks } from '@/src/application/hooks/work-order.hooks'
 import { CustomerCombobox } from '@/src/components/ui/combobox/customer-combobox'
+import { Button } from '@/src/components/ui/button'
 import { DatePickerInput } from '@/src/components/ui/date-picker-input'
 import { BaseForm } from '@/src/components/ui/forms/base-form'
 import { WorkOrderFormEdit } from '@/src/components/ui/forms/work-order-form-edit'
@@ -31,6 +32,7 @@ export default function WorkOrderEditScreen() {
       customerId: '',
       scheduledDate: new Date(),
       notes: '',
+      nextVisitDate: null,
     },
     mode: 'onBlur',
     reValidateMode: 'onBlur',
@@ -42,6 +44,7 @@ export default function WorkOrderEditScreen() {
       customerId: data.customerId as UUID,
       scheduledDate: data.scheduledDate,
       notes: data.notes,
+      nextVisitDate: data.nextVisitDate ?? null,
       updatedAt: new Date(),
     })
     router.back()
@@ -54,6 +57,7 @@ export default function WorkOrderEditScreen() {
       customerId: workOrder.customer.id,
       scheduledDate: workOrder.scheduledDate,
       notes: workOrder.notes || '',
+      nextVisitDate: workOrder.nextVisitDate ?? null,
     }
     form.reset(formValues)
   }, [workOrder])
@@ -109,7 +113,7 @@ export default function WorkOrderEditScreen() {
       steps={[
         {
           label: 'Informações Básicas',
-          fields: ['customerId', 'scheduledDate', 'notes'],
+          fields: ['customerId', 'scheduledDate', 'nextVisitDate', 'notes'],
           customRenderer: () => (
             <View className="flex-1 gap-4">
               <CustomerCombobox
@@ -135,6 +139,38 @@ export default function WorkOrderEditScreen() {
                   form.formState.errors?.scheduledDate?.message
                 )}
               />
+
+              <View className="gap-2">
+                <DatePickerInput
+                  value={form.watch('nextVisitDate') ?? undefined}
+                  onDateChange={(date) =>
+                    form.setValue('nextVisitDate', date, { shouldDirty: true })
+                  }
+                  label="Próxima visita (Opcional)"
+                  placeholder="Quando vender de novo para este cliente?"
+                  minDate={new Date()}
+                  error={getErrorMessage(
+                    form.formState.errors?.nextVisitDate?.message
+                  )}
+                />
+                <Text className="text-xs text-muted-foreground">
+                  Use este campo como lembrete. Mudar a data agendada move a
+                  ordem para outro período da lista.
+                </Text>
+                {form.watch('nextVisitDate') ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onPress={() =>
+                      form.setValue('nextVisitDate', null, {
+                        shouldDirty: true,
+                      })
+                    }
+                  >
+                    <Text>Limpar próxima visita</Text>
+                  </Button>
+                ) : null}
+              </View>
 
               <BaseForm.Input
                 control={form.control}

@@ -449,6 +449,13 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       wo.visitDate = new Date(dto.visitDate)
     }
 
+    // Next visit reminder (null clears it; undefined leaves it untouched)
+    if (dto.nextVisitDate !== undefined) {
+      wo.nextVisitDate = dto.nextVisitDate
+        ? new Date(dto.nextVisitDate)
+        : undefined
+    }
+
     // Use setStatus()
     if (dto.status && dto.status !== wo.status) {
       wo.setStatus(dto.status)
@@ -469,6 +476,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
         customerId: data.customerId,
         scheduledDate: data.scheduledDate,
         visitDate: data.visitDate,
+        nextVisitDate: data.nextVisitDate,
         status: data.status,
         notes: data.notes,
         updatedAt: data.updatedAt,

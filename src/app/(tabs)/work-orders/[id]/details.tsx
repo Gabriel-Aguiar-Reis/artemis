@@ -14,6 +14,7 @@ import { UUID } from '@/src/lib/utils'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
 import {
   Calendar,
+  CalendarClock,
   CheckCircle2,
   Clock,
   Copy,
@@ -165,6 +166,23 @@ export default function WorkOrderDetailsScreen() {
                   </Text>
                   <Text className="text-sm font-semibold">
                     {formatDate(workOrder.visitDate)}
+                  </Text>
+                </View>
+              )}
+
+              {/* Next visit reminder */}
+              {workOrder.nextVisitDate && (
+                <View className="flex-row items-center gap-2">
+                  <Icon
+                    as={CalendarClock}
+                    className="text-muted-foreground"
+                    size={20}
+                  />
+                  <Text className="text-sm text-muted-foreground flex-1">
+                    Próxima Visita
+                  </Text>
+                  <Text className="text-sm font-semibold">
+                    {formatDate(workOrder.nextVisitDate)}
                   </Text>
                 </View>
               )}

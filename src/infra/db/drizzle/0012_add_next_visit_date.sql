@@ -1,0 +1,1 @@
+ALTER TABLE `work_order` ADD `next_visit_date` text;

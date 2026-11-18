@@ -47,6 +47,7 @@ export type WorkOrderSerializableDTO = {
   result?: WorkOrderResultSerializableDTO
   visitDate?: string
   notes?: string
+  nextVisitDate?: string
 }
 
 export class WorkOrder {
@@ -61,7 +62,8 @@ export class WorkOrder {
     public status: WorkOrderStatus = WorkOrderStatus.PENDING,
     public result?: WorkOrderResult,
     public visitDate?: Date,
-    public notes?: string
+    public notes?: string,
+    public nextVisitDate?: Date
   ) {}
 
   addProduct(product: Product, quantity: number) {
@@ -293,6 +295,7 @@ export class WorkOrder {
       result: this.result?.toDTO(),
       visitDate: this.visitDate?.toISOString(),
       notes: this.notes,
+      nextVisitDate: this.nextVisitDate?.toISOString(),
     }
   }
 
@@ -308,7 +311,8 @@ export class WorkOrder {
       dto.status,
       dto.result ? WorkOrderResult.fromDTO(dto.result) : undefined,
       dto.visitDate ? new Date(dto.visitDate) : undefined,
-      dto.notes
+      dto.notes,
+      dto.nextVisitDate ? new Date(dto.nextVisitDate) : undefined
     )
   }
 }

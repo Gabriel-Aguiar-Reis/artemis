@@ -14,6 +14,8 @@ const workOrderSchemaWithoutId = {
   updatedAt: () => z.date('Data de atualização inválida'),
   scheduledDate: () => z.date('Data agendada inválida'),
   visitDate: () => z.date('Data de visita inválida').nullable().optional(),
+  nextVisitDate: () =>
+    z.date('Data da próxima visita inválida').nullable().optional(),
   paymentOrderId: () => z.uuid('UUID inválido').optional(),
   status: () => z.enum(Object.values(WorkOrderStatus)),
   resultId: () => z.uuid('UUID inválido').optional(),
