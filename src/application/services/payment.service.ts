@@ -1,102 +1,90 @@
-import { CustomerMapper } from '@/src/domain/entities/customer/mapper/customer.mapper'
-import { PaymentOrderMapper } from '@/src/domain/entities/payment-order/mapper/payment-order.mapper'
+import { WorkOrderResultItemType } from '@/src/domain/entities/work-order-result-item/work-order-result-item.entity'
 import {
-  WorkOrder,
-  WorkOrderStatus,
-} from '@/src/domain/entities/work-order/work-order.entity'
+  isFinalStatus,
+  resolveResultStatus,
+} from '@/src/domain/entities/work-order/work-order-rules'
+import { WorkOrderStatus } from '@/src/domain/entities/work-order/work-order.entity'
 import { paymentOrder } from '@/src/infra/db/drizzle/schema'
-import { customer } from '@/src/infra/db/drizzle/schema/drizzle.customer.schema'
-import { product } from '@/src/infra/db/drizzle/schema/drizzle.product.schema'
 import { workOrderItem } from '@/src/infra/db/drizzle/schema/drizzle.work-order-item.schema'
+import { workOrderResultItem } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result-item.schema'
 import { workOrder } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
-import { UUID } from '@/src/lib/utils'
 import { eq, ExtractTablesWithRelations } from 'drizzle-orm'
 import { SQLiteTransaction } from 'drizzle-orm/sqlite-core'
 import { SQLiteRunResult } from 'expo-sqlite'
 
+export type AppTransaction = SQLiteTransaction<
+  'sync',
+  SQLiteRunResult,
+  Record<string, unknown>,
+  ExtractTablesWithRelations<Record<string, unknown>>
+>
+
 export class PaymentService {
+  /**
+   * Chamado quando um pagamento é vinculado ou atualizado.
+   *
+   * Pagamento quitado não decide sozinho o status da OS (antes forçava
+   * COMPLETED, apagando PARTIAL/FAILED e "desclonando" OS COPIED):
+   * - OS em status final: nada muda
+   * - OS em aberto com relatório: recebe o status calculado do relatório
+   * - OS em aberto sem relatório: nada muda (pagamento antecipado)
+   *
+   * Retorna o status final da OS.
+   */
   static async finalizePayment(
-    tx: SQLiteTransaction<
-      'sync',
-      SQLiteRunResult,
-      Record<string, unknown>,
-      ExtractTablesWithRelations<Record<string, unknown>>
-    >,
+    tx: AppTransaction,
     paymentOrderId: string
-  ) {
-    // Buscar a work order vinculada ao paymentOrder
-    const workOrders = await tx
+  ): Promise<WorkOrderStatus> {
+    const [wo] = await tx
       .select()
       .from(workOrder)
       .where(eq(workOrder.paymentOrderId, paymentOrderId))
       .limit(1)
 
-    const wo = workOrders[0]
     if (!wo)
       throw new Error(
         'Ordem de serviço vinculada à ordem de pagamento não encontrada.'
       )
 
-    // Certificar que cliente existe
-    const customers = await tx
-      .select()
-      .from(customer)
-      .where(eq(customer.id, wo.customerId))
-      .limit(1)
-
-    const cust = customers[0]
-    if (!cust)
-      throw new Error('Cliente vinculado à ordem de serviço não encontrado.')
-
-    // Verificar existência de items (apenas validação)
-    const items = await tx
-      .select({ item: workOrderItem, product: product })
-      .from(workOrderItem)
-      .leftJoin(product, eq(workOrderItem.productId, product.id))
-      .where(eq(workOrderItem.workOrderId, wo.id))
-
-    if (!items || items.length === 0)
-      throw new Error('Itens da ordem de serviço não encontrados.')
-
-    const pos = await tx
+    const [po] = await tx
       .select()
       .from(paymentOrder)
       .where(eq(paymentOrder.id, paymentOrderId))
       .limit(1)
 
-    if (pos.length === 0)
+    if (!po)
       throw new Error(
         'Ordem de pagamento não encontrada para a ordem de serviço.'
       )
 
-    const po = PaymentOrderMapper.toDomain(pos[0])
+    const current = wo.status as WorkOrderStatus
+    if (!po.isPaid || isFinalStatus(current) || !wo.resultId) return current
 
-    const normalizedItems = items.map((r) => ({
-      id: r.item.id as UUID,
-      productId: r.item.productId as UUID,
-      quantity: r.item.quantity,
-      productName: r.product?.name ?? '',
-      salePrice: r.product?.salePrice ?? 0,
-    }))
+    const resultItems = await tx
+      .select({ type: workOrderResultItem.type })
+      .from(workOrderResultItem)
+      .where(eq(workOrderResultItem.resultId, wo.resultId))
 
-    const newWo = WorkOrder.fromDTO({
-      id: wo.id as UUID,
-      customer: CustomerMapper.toDomain(cust),
-      createdAt: wo.createdAt ?? new Date().toISOString(),
-      updatedAt: wo.updatedAt ?? new Date().toISOString(),
-      scheduledDate: wo.scheduledDate,
-      paymentOrder: po.toDTO(),
-      products: normalizedItems,
-      status: WorkOrderStatus.COMPLETED,
-      visitDate: wo.visitDate ?? undefined,
-      notes: wo.notes ?? undefined,
+    const scheduled = await tx
+      .select({ id: workOrderItem.id })
+      .from(workOrderItem)
+      .where(eq(workOrderItem.workOrderId, wo.id))
+
+    const countOf = (t: WorkOrderResultItemType) =>
+      resultItems.filter((i) => i.type === t).length
+
+    const status = resolveResultStatus({
+      scheduled: scheduled.length,
+      exchanged: countOf(WorkOrderResultItemType.EXCHANGED),
+      added: countOf(WorkOrderResultItemType.ADDED),
+      removed: countOf(WorkOrderResultItemType.REMOVED),
     })
-
-    const status = newWo.finalizeAfterPayment()
 
     await tx
       .update(workOrder)
-      .set({ status })
-      .where(eq(workOrder.paymentOrderId, paymentOrderId))
+      .set({ status, updatedAt: new Date().toISOString() })
+      .where(eq(workOrder.id, wo.id))
+
+    return status
   }
 }

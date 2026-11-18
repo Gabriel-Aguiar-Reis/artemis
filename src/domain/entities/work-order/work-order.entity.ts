@@ -16,6 +16,10 @@ import {
   WorkOrderResult,
   WorkOrderResultSerializableDTO,
 } from '@/src/domain/entities/work-order-result/work-order-result.entity'
+import {
+  isFinalStatus,
+  resolveResultStatus,
+} from '@/src/domain/entities/work-order/work-order-rules'
 import { UUID } from '@/src/lib/utils'
 import uuid from 'react-native-uuid'
 
@@ -117,13 +121,24 @@ export class WorkOrder {
     if (newStatus === this.status) return this.status
 
     const validTransitions: Record<WorkOrderStatus, WorkOrderStatus[]> = {
+      // Na prática a visita é registrada direto de PENDING (não há tela de
+      // "iniciar visita"), então o relatório pode encerrar a OS a partir dela.
       [WorkOrderStatus.PENDING]: [
         WorkOrderStatus.COMMITTED,
+        WorkOrderStatus.IN_PROGRESS,
         WorkOrderStatus.CANCELLED,
+        WorkOrderStatus.COMPLETED,
+        WorkOrderStatus.PARTIAL,
+        WorkOrderStatus.FAILED,
+        WorkOrderStatus.EXPIRED,
       ],
       [WorkOrderStatus.COMMITTED]: [
         WorkOrderStatus.IN_PROGRESS,
         WorkOrderStatus.CANCELLED,
+        WorkOrderStatus.COMPLETED,
+        WorkOrderStatus.PARTIAL,
+        WorkOrderStatus.FAILED,
+        WorkOrderStatus.EXPIRED,
       ],
       [WorkOrderStatus.IN_PROGRESS]: [
         WorkOrderStatus.COMPLETED,
@@ -168,16 +183,14 @@ export class WorkOrder {
   }
 
   private resolveStatusFromResult(result: WorkOrderResult): WorkOrderStatus {
-    const exchanged = result.exchangedProducts?.length ?? 0
-    const removed = result.removedProducts?.length ?? 0
-    const added = result.addedProducts?.length ?? 0
-
-    if (exchanged === 0 && added === 0)
-      return this.setStatus(WorkOrderStatus.FAILED)
-
-    if (removed > 0 || exchanged < (this.products?.length ?? 0))
-      return this.setStatus(WorkOrderStatus.PARTIAL)
-    return this.setStatus(WorkOrderStatus.COMPLETED)
+    return this.setStatus(
+      resolveResultStatus({
+        scheduled: this.products?.length ?? 0,
+        exchanged: result.exchangedProducts?.length ?? 0,
+        added: result.addedProducts?.length ?? 0,
+        removed: result.removedProducts?.length ?? 0,
+      })
+    )
   }
 
   applyResult(result: WorkOrderResult): WorkOrderStatus {
@@ -249,13 +262,21 @@ export class WorkOrder {
     })
   }
 
+  /**
+   * Pagamento quitado não decide o status da OS: quem decide é o relatório.
+   * Antes forçava COMPLETED em qualquer caso (PARTIAL/FAILED viravam
+   * COMPLETED e uma OS já clonada voltava a poder ser clonada).
+   * - status final: mantém
+   * - em aberto com relatório: aplica o status do relatório
+   * - em aberto sem relatório: mantém (pagamento antecipado)
+   */
   finalizeAfterPayment(): WorkOrderStatus {
     if (!this.paymentOrder || !this.paymentOrder.isPaid)
       throw new Error(
         'Não é possível finalizar a ordem de serviço sem o pagamento concluído.'
       )
-    this.status = WorkOrderStatus.COMPLETED
-    this.updatedAt = new Date()
+    if (isFinalStatus(this.status)) return this.status
+    if (this.result) return this.applyResult(this.result)
     return this.status
   }
 
