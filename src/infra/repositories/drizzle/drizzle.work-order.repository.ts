@@ -57,6 +57,7 @@ import {
   lte,
   ne,
   or,
+  sql,
 } from 'drizzle-orm'
 import uuid from 'react-native-uuid'
 
@@ -66,6 +67,9 @@ export interface WorkOrderFilters {
   landlineNumber?: string
   isWhatsApp?: string
   scheduledDate?: string
+  /** Inclusive scheduled-date range (ISO instants, already resolved) */
+  scheduledFrom?: string
+  scheduledTo?: string
   visitDate?: string
   minTotalValue?: string
   maxTotalValue?: string
@@ -142,14 +146,8 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
     return workOrders
   }
 
-  async getWorkOrdersPaginated(
-    page: number,
-    pageSize: number,
-    filters?: WorkOrderFilters
-  ): Promise<PaginatedWorkOrders> {
-    const offset = (page - 1) * pageSize
-
-    // Build filter conditions dynamically
+  /** WHERE shared by the paginated list, its count and the month counts */
+  private buildFilterWhere(filters?: WorkOrderFilters) {
     const conditions = []
 
     // Customer name search filter
@@ -203,6 +201,14 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
           lte(workOrder.scheduledDate, endOfDay.toISOString())
         )
       )
+    }
+
+    // Scheduled period (inclusive)
+    if (filters?.scheduledFrom) {
+      conditions.push(gte(workOrder.scheduledDate, filters.scheduledFrom))
+    }
+    if (filters?.scheduledTo) {
+      conditions.push(lte(workOrder.scheduledDate, filters.scheduledTo))
     }
 
     // Visit date filter
@@ -275,8 +281,37 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       }
     }
 
-    // Apply WHERE with all conditions
-    const whereClause = conditions.length > 0 ? and(...conditions) : undefined
+    return conditions.length > 0 ? and(...conditions) : undefined
+  }
+
+  /**
+   * Work orders per scheduled month ("2026-10") for the same filters, so the
+   * list can show "Outubro 2026 · 12 ordens" without loading every page.
+   */
+  async getWorkOrderMonthCounts(
+    filters?: WorkOrderFilters
+  ): Promise<Record<string, number>> {
+    // Dates are stored as UTC ISO strings: shift to local time before taking
+    // the month, otherwise late-evening orders fall into the next month.
+    const offset = `${-new Date().getTimezoneOffset()} minutes`
+    const month = sql<string>`strftime('%Y-%m', ${workOrder.scheduledDate}, ${offset})`
+    const rows = await db
+      .select({ month, count: count() })
+      .from(workOrder)
+      .leftJoin(customer, eq(workOrder.customerId, customer.id))
+      .leftJoin(paymentOrder, eq(workOrder.paymentOrderId, paymentOrder.id))
+      .where(this.buildFilterWhere(filters))
+      .groupBy(month)
+    return Object.fromEntries(rows.map((r) => [r.month, r.count]))
+  }
+
+  async getWorkOrdersPaginated(
+    page: number,
+    pageSize: number,
+    filters?: WorkOrderFilters
+  ): Promise<PaginatedWorkOrders> {
+    const offset = (page - 1) * pageSize
+    const whereClause = this.buildFilterWhere(filters)
 
     // Fetch the total record count and the page's records in parallel
     const [rows, totalResult] = await Promise.all([

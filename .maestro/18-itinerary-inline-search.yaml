@@ -1,0 +1,33 @@
+# The active itinerary has a search bar and "A visitar"/"Visitadas" toggles
+# on top of the list, so a customer is found without scrolling to it.
+appId: br.com.artemis
+tags: [qa]
+---
+- runFlow: subflows/open-app.yaml
+- runFlow: subflows/reset-filters.yaml
+- tapOn: Itinerário
+- extendedWaitUntil:
+    visible: ".* - SP.*"
+    timeout: 30000
+- tapOn: Pesquisar cliente no itinerário...
+- eraseText: 40
+- inputText: padaria
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: "Busca: padaria"
+    timeout: 10000
+- assertVisible: ".*Padaria.*"
+- takeScreenshot: 18-itinerary-search
+- tapOn: Limpar busca
+- extendedWaitUntil:
+    notVisible: "Busca: padaria"
+    timeout: 10000
+- tapOn: A visitar
+- extendedWaitUntil:
+    visible: "Relatório da ordem de serviço criado: Não"
+    timeout: 10000
+- takeScreenshot: 18-to-visit
+- tapOn: A visitar
+- extendedWaitUntil:
+    notVisible: "Relatório da ordem de serviço criado: Não"
+    timeout: 10000

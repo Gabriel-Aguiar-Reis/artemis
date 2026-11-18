@@ -1,0 +1,50 @@
+# Browsing work orders month by month without loading all of them: the
+# "Expiradas" and "Este mês" shortcuts, month headers with per-month counts,
+# and the scheduled period (preset or custom range) in "Mais filtros".
+appId: br.com.artemis
+tags: [qa]
+---
+- runFlow: subflows/open-app.yaml
+- runFlow: subflows/reset-filters.yaml
+- tapOn: OS
+- extendedWaitUntil:
+    visible: Encontre uma ordem de serviço
+    timeout: 30000
+
+# Expired orders, grouped by month (newest first)
+- tapOn: Expiradas
+- extendedWaitUntil:
+    visible: "Ordem Expirada: Sim"
+    timeout: 15000
+- extendedWaitUntil:
+    visible: "(Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro) 20\\d\\d"
+    timeout: 15000
+- assertVisible: "\\d+ ordens?"
+- assertVisible: EXPIRADA
+- takeScreenshot: 16-expired-by-month
+
+# Add a period on top: last month's expired orders
+- tapOn: # header filter button
+    point: 79%,8%
+- extendedWaitUntil:
+    visible: Período agendado
+    timeout: 10000
+- tapOn: Mês passado
+- scrollUntilVisible:
+    element: Aplicar Filtros
+    direction: DOWN
+- tapOn: Aplicar Filtros
+- extendedWaitUntil:
+    visible: "Período: Mês passado"
+    timeout: 10000
+- assertVisible: "Ordem Expirada: Sim"
+- takeScreenshot: 16-expired-last-month
+
+# "Este mês" shortcut from a clean state
+- runFlow: subflows/reset-filters.yaml
+- tapOn: OS
+- tapOn: Este mês
+- extendedWaitUntil:
+    visible: "Período: Este mês"
+    timeout: 10000
+- takeScreenshot: 16-this-month

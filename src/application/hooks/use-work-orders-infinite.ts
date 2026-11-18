@@ -1,7 +1,7 @@
 import DrizzleWorkOrderRepository, {
   WorkOrderFilters,
 } from '@/src/infra/repositories/drizzle/drizzle.work-order.repository'
-import { useInfiniteQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 
 const workOrderRepo = new DrizzleWorkOrderRepository()
 const PAGE_SIZE = 50
@@ -24,6 +24,8 @@ export const useWorkOrdersInfinite = (
           : undefined,
         isWhatsApp: filters.isWhatsApp,
         scheduledDate: filters.scheduledDate,
+        scheduledFrom: filters.scheduledFrom,
+        scheduledTo: filters.scheduledTo,
         visitDate: filters.visitDate,
         minTotalValue: filters.minTotalValue,
         maxTotalValue: filters.maxTotalValue,
@@ -60,3 +62,21 @@ export const useWorkOrdersInfinite = (
     staleTime: 1000 * 30, // 30 seconds
   })
 }
+
+/** Work orders per scheduled month for the same filters (list headers) */
+export const useWorkOrderMonthCounts = (
+  filters?: WorkOrderFilters,
+  options: { enabled?: boolean } = {}
+) =>
+  useQuery({
+    queryKey: ['workOrders', 'monthCounts', filters],
+    queryFn: () =>
+      workOrderRepo.getWorkOrderMonthCounts({
+        ...filters,
+        phoneNumber: filters?.phoneNumber?.replace(/\D+/g, '') || undefined,
+        landlineNumber:
+          filters?.landlineNumber?.replace(/\D+/g, '') || undefined,
+      }),
+    enabled: options.enabled ?? true,
+    staleTime: 1000 * 30,
+  })
