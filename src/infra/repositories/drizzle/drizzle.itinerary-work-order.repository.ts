@@ -161,12 +161,12 @@ export class DrizzleItineraryWorkOrderRepository implements ItineraryWorkOrderRe
   ): Promise<void> {
     // Uma transação só: antes cada UPDATE era um commit (fsync) separado,
     // e uma falha no meio deixava posições duplicadas.
-    await db.transaction(async (tx) => {
+    db.transaction((tx) => {
       for (const item of items) {
-        await tx
-          .update(itineraryWorkOrder)
+        tx.update(itineraryWorkOrder)
           .set({ position: item.position })
           .where(eq(itineraryWorkOrder.id, item.id))
+          .run()
       }
     })
   }

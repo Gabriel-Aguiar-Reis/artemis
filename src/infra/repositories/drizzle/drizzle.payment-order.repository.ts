@@ -61,8 +61,8 @@ export default class DrizzlePaymentOrderRepository implements PaymentOrderReposi
 
     const data = PaymentOrderMapper.toPersistence(po)
 
-    await db.transaction(async (tx) => {
-      await tx.insert(paymentOrder).values(data).onConflictDoNothing()
+    db.transaction((tx) => {
+      tx.insert(paymentOrder).values(data).onConflictDoNothing().run()
     })
 
     return id
@@ -113,9 +113,8 @@ export default class DrizzlePaymentOrderRepository implements PaymentOrderReposi
 
     const data = PaymentOrderMapper.toPersistence(po)
 
-    await db.transaction(async (tx) => {
-      await tx
-        .update(paymentOrder)
+    db.transaction((tx) => {
+      tx.update(paymentOrder)
         .set({
           method: data.method,
           totalValue: data.totalValue,
@@ -126,23 +125,24 @@ export default class DrizzlePaymentOrderRepository implements PaymentOrderReposi
           paymentDate: data.paymentDate,
         })
         .where(eq(paymentOrder.id, dto.id as UUID))
+        .run()
 
       if (data.isPaid) {
-        await PaymentService.finalizePayment(tx, dto.id as UUID)
+        PaymentService.finalizePayment(tx, dto.id as UUID)
       }
     })
   }
 
   async deletePaymentOrder(id: UUID): Promise<void> {
-    await db.transaction(async (tx) => {
+    db.transaction((tx) => {
       // Remover referência em work orders
-      await tx
-        .update(workOrder)
+      tx.update(workOrder)
         .set({ paymentOrderId: null })
         .where(eq(workOrder.paymentOrderId, id))
+        .run()
 
       // Deletar payment order
-      await tx.delete(paymentOrder).where(eq(paymentOrder.id, id))
+      tx.delete(paymentOrder).where(eq(paymentOrder.id, id)).run()
     })
   }
 

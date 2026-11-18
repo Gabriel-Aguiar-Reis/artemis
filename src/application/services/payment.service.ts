@@ -31,26 +31,30 @@ export class PaymentService {
    *
    * Retorna o status final da OS.
    */
-  static async finalizePayment(
+  // Síncrono de propósito: roda dentro de db.transaction, que no driver
+  // expo-sqlite só é atômica com chamadas síncronas (.all/.run).
+  static finalizePayment(
     tx: AppTransaction,
     paymentOrderId: string
-  ): Promise<WorkOrderStatus> {
-    const [wo] = await tx
+  ): WorkOrderStatus {
+    const [wo] = tx
       .select()
       .from(workOrder)
       .where(eq(workOrder.paymentOrderId, paymentOrderId))
       .limit(1)
+      .all()
 
     if (!wo)
       throw new Error(
         'Ordem de serviço vinculada à ordem de pagamento não encontrada.'
       )
 
-    const [po] = await tx
+    const [po] = tx
       .select()
       .from(paymentOrder)
       .where(eq(paymentOrder.id, paymentOrderId))
       .limit(1)
+      .all()
 
     if (!po)
       throw new Error(
@@ -60,15 +64,17 @@ export class PaymentService {
     const current = wo.status as WorkOrderStatus
     if (!po.isPaid || isFinalStatus(current) || !wo.resultId) return current
 
-    const resultItems = await tx
+    const resultItems = tx
       .select({ type: workOrderResultItem.type })
       .from(workOrderResultItem)
       .where(eq(workOrderResultItem.resultId, wo.resultId))
+      .all()
 
-    const scheduled = await tx
+    const scheduled = tx
       .select({ id: workOrderItem.id })
       .from(workOrderItem)
       .where(eq(workOrderItem.workOrderId, wo.id))
+      .all()
 
     const countOf = (t: WorkOrderResultItemType) =>
       resultItems.filter((i) => i.type === t).length
@@ -80,10 +86,10 @@ export class PaymentService {
       removed: countOf(WorkOrderResultItemType.REMOVED),
     })
 
-    await tx
-      .update(workOrder)
+    tx.update(workOrder)
       .set({ status, updatedAt: new Date().toISOString() })
       .where(eq(workOrder.id, wo.id))
+      .run()
 
     return status
   }

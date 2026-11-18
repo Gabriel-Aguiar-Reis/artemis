@@ -162,9 +162,11 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
     }
     const now = new Date()
 
-    await db.transaction(async (tx) => {
+    db.transaction((tx) => {
       // Criar o itinerário
-      await tx.insert(itinerary).values({ ...dto, id })
+      tx.insert(itinerary)
+        .values({ ...dto, id })
+        .run()
 
       // Criar os itinerary-work-orders
       for (let i = 0; i < workOrdersInPeriod.length; i++) {
@@ -172,13 +174,15 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
 
         const isOverdue = new Date(wo.scheduledDate) < now
 
-        await tx.insert(itineraryWorkOrder).values({
-          id: uuid.v4() as string,
-          itineraryId: id,
-          workOrderId: wo.id,
-          position: i + 1,
-          isLate: lateBefore.has(wo.id) || isOverdue,
-        })
+        tx.insert(itineraryWorkOrder)
+          .values({
+            id: uuid.v4() as string,
+            itineraryId: id,
+            workOrderId: wo.id,
+            position: i + 1,
+            isLate: lateBefore.has(wo.id) || isOverdue,
+          })
+          .run()
       }
     })
   }
@@ -271,27 +275,27 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
 
     const data = ItineraryMapper.toPersistence(itin)
 
-    await db.transaction(async (tx) => {
+    db.transaction((tx) => {
       // Atualizar itinerary
-      await tx
-        .update(itinerary)
+      tx.update(itinerary)
         .set({
           isFinished: data.isFinished,
         })
         .where(eq(itinerary.id, id))
+        .run()
 
       // Atualizar status das OS e a marcação de atraso de cada vínculo,
       // preservando os ids dos vínculos (antes eram apagados e recriados).
       const updatedAt = new Date().toISOString()
       for (const item of itin.workOrders) {
-        await tx
-          .update(workOrder)
+        tx.update(workOrder)
           .set({ status: item.workOrder.status, updatedAt })
           .where(eq(workOrder.id, item.workOrder.id))
-        await tx
-          .update(itineraryWorkOrder)
+          .run()
+        tx.update(itineraryWorkOrder)
           .set({ isLate: item.isLate })
           .where(eq(itineraryWorkOrder.id, item.id))
+          .run()
       }
     })
   }

@@ -343,8 +343,8 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       data.paymentOrderId = (dto as any).paymentOrderId as string
     }
 
-    await db.transaction(async (tx) => {
-      await tx.insert(workOrder).values(data).onConflictDoNothing()
+    db.transaction((tx) => {
+      tx.insert(workOrder).values(data).onConflictDoNothing().run()
 
       // Inserir WorkOrderItems se fornecidos
       const products = (dto as any).products as WorkOrderItem[] | undefined
@@ -352,7 +352,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
         const itemsData = products.map((item) =>
           WorkOrderItemMapper.toPersistence(item, id)
         )
-        await tx.insert(workOrderItem).values(itemsData).onConflictDoNothing()
+        tx.insert(workOrderItem).values(itemsData).onConflictDoNothing().run()
       }
     })
 
@@ -462,10 +462,9 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       throw new Error(`Status de ordem de serviço inválido: ${status}`)
     }
     status = normalized
-    await db.transaction(async (tx) => {
+    db.transaction((tx) => {
       // Atualizar a work order
-      await tx
-        .update(workOrder)
+      tx.update(workOrder)
         .set({
           resultId,
           status: status as WorkOrderStatus,
@@ -473,12 +472,13 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
           updatedAt: new Date().toISOString(),
         })
         .where(eq(workOrder.id, id))
+        .run()
 
       // Limpar isLate de todas as itinerary_work_orders desta work order
-      await tx
-        .update(itineraryWorkOrder)
+      tx.update(itineraryWorkOrder)
         .set({ isLate: false })
         .where(eq(itineraryWorkOrder.workOrderId, id))
+        .run()
     })
   }
 
@@ -486,26 +486,27 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
     id: UUID,
     paymentOrderId: UUID
   ): Promise<void> {
-    await db.transaction(async (tx) => {
+    db.transaction((tx) => {
       // Vincular paymentOrder à workOrder
-      await tx
-        .update(workOrder)
+      tx.update(workOrder)
         .set({
           paymentOrderId,
           updatedAt: new Date().toISOString(),
         })
         .where(eq(workOrder.id, id))
+        .run()
 
       // Verificar se a ordem de pagamento está paga
-      const po = await tx
+      const po = tx
         .select()
         .from(paymentOrder)
         .where(eq(paymentOrder.id, paymentOrderId))
         .limit(1)
+        .all()
 
       if (po.length > 0 && po[0].isPaid) {
         // Se já está paga, finalizar a work order
-        await PaymentService.finalizePayment(tx, paymentOrderId)
+        PaymentService.finalizePayment(tx, paymentOrderId)
       }
     })
   }
@@ -524,80 +525,87 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
 
     const woData = WorkOrderMapper.toPersistence(wo)
 
-    await db.transaction(async (tx) => {
+    db.transaction((tx) => {
       // Salvar resultado primeiro
-      await tx
-        .insert(workOrderResult)
+      tx.insert(workOrderResult)
         .values(WorkOrderResultMapper.toPersistence(result))
         .onConflictDoNothing()
+        .run()
 
       // Salvar items do resultado
       if (result.exchangedProducts) {
         for (const item of result.exchangedProducts) {
-          await tx.insert(workOrderResultItem).values({
-            id: uuid.v4() as string,
-            resultId: result.id,
-            productId: item.productId,
-            quantity: item.quantity,
-            priceSnapshot: item.salePrice,
-            type: WorkOrderResultItemType.EXCHANGED,
-            observation: item.observation ?? null,
-          })
+          tx.insert(workOrderResultItem)
+            .values({
+              id: uuid.v4() as string,
+              resultId: result.id,
+              productId: item.productId,
+              quantity: item.quantity,
+              priceSnapshot: item.salePrice,
+              type: WorkOrderResultItemType.EXCHANGED,
+              observation: item.observation ?? null,
+            })
+            .run()
         }
       }
 
       if (result.addedProducts) {
         for (const item of result.addedProducts) {
-          await tx.insert(workOrderResultItem).values({
-            id: uuid.v4() as string,
-            resultId: result.id,
-            productId: item.productId,
-            quantity: item.quantity,
-            priceSnapshot: item.salePrice,
-            type: WorkOrderResultItemType.ADDED,
-            observation: item.observation ?? null,
-          })
+          tx.insert(workOrderResultItem)
+            .values({
+              id: uuid.v4() as string,
+              resultId: result.id,
+              productId: item.productId,
+              quantity: item.quantity,
+              priceSnapshot: item.salePrice,
+              type: WorkOrderResultItemType.ADDED,
+              observation: item.observation ?? null,
+            })
+            .run()
         }
       }
 
       if (result.removedProducts) {
         for (const item of result.removedProducts) {
-          await tx.insert(workOrderResultItem).values({
-            id: uuid.v4() as string,
-            resultId: result.id,
-            productId: item.productId,
-            quantity: item.quantity,
-            priceSnapshot: item.salePrice,
-            type: WorkOrderResultItemType.REMOVED,
-            observation: item.observation ?? null,
-          })
+          tx.insert(workOrderResultItem)
+            .values({
+              id: uuid.v4() as string,
+              resultId: result.id,
+              productId: item.productId,
+              quantity: item.quantity,
+              priceSnapshot: item.salePrice,
+              type: WorkOrderResultItemType.REMOVED,
+              observation: item.observation ?? null,
+            })
+            .run()
         }
       }
 
       // Criar ou atualizar payment order, se aplicável
       if (wo.paymentOrder) {
         const poData = PaymentOrderMapper.toPersistence(wo.paymentOrder)
-        await tx
-          .update(paymentOrder)
+        tx.update(paymentOrder)
           .set(poData)
           .where(eq(paymentOrder.id, wo.paymentOrder.id))
+          .run()
       } else if (result.totalValue > 0) {
         const newPoId = uuid.v4() as string
-        await tx.insert(paymentOrder).values({
-          id: newPoId,
-          method: 'Dinheiro',
-          totalValue: result.totalValue,
-          installments: 1,
-          isPaid: false,
-          paidInstallments: 0,
-        })
+        tx.insert(paymentOrder)
+          .values({
+            id: newPoId,
+            method: 'Dinheiro',
+            totalValue: result.totalValue,
+            installments: 1,
+            isPaid: false,
+            paidInstallments: 0,
+          })
+          .run()
         // set payment_order_id on work order persistence object
         woData.paymentOrderId = newPoId
       }
 
       // Atualizar work order
-      await tx
-        .update(workOrder)
+      tx.update(workOrder)
         .set({
           status: woData.status,
           resultId: result.id,
@@ -605,6 +613,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
           updatedAt: woData.updatedAt,
         })
         .where(eq(workOrder.id, id))
+        .run()
     })
   }
 
@@ -615,36 +624,36 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       .where(eq(workOrder.id, id))
 
     if (woRow) {
-      await db.transaction(async (tx) => {
+      db.transaction((tx) => {
         // Deletar relacionamento com itinerários
-        await tx
-          .delete(itineraryWorkOrder)
+        tx.delete(itineraryWorkOrder)
           .where(eq(itineraryWorkOrder.workOrderId, id))
+          .run()
 
         // Deletar items da work order
-        await tx.delete(workOrderItem).where(eq(workOrderItem.workOrderId, id))
+        tx.delete(workOrderItem).where(eq(workOrderItem.workOrderId, id)).run()
 
         // Deletar result items se existir result
         if (woRow.resultId) {
-          await tx
-            .delete(workOrderResultItem)
+          tx.delete(workOrderResultItem)
             .where(eq(workOrderResultItem.resultId, woRow.resultId))
+            .run()
 
           // Deletar result
-          await tx
-            .delete(workOrderResult)
+          tx.delete(workOrderResult)
             .where(eq(workOrderResult.id, woRow.resultId))
+            .run()
         }
 
         // Deletar payment order se existir
         if (woRow.paymentOrderId) {
-          await tx
-            .delete(paymentOrder)
+          tx.delete(paymentOrder)
             .where(eq(paymentOrder.id, woRow.paymentOrderId))
+            .run()
         }
 
         // Finalmente, deletar work order
-        await tx.delete(workOrder).where(eq(workOrder.id, id))
+        tx.delete(workOrder).where(eq(workOrder.id, id)).run()
       })
     }
   }
@@ -770,13 +779,12 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
 
     // Criar payment order se fornecido
     let createdId: UUID | null = null
-    await db.transaction(async (tx) => {
+    db.transaction((tx) => {
       let paymentOrderId: UUID | null = null
       if (newPaymentOrder) {
         paymentOrderId = String(uuid.v4()) as UUID
         try {
-          await tx
-            .insert(paymentOrder)
+          tx.insert(paymentOrder)
             .values({
               id: paymentOrderId,
               method: newPaymentOrder.method,
@@ -786,6 +794,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
               paidInstallments: 0,
             })
             .onConflictDoNothing()
+            .run()
         } catch {
           throw new Error('Falha ao criar a ordem de pagamento.')
         }
@@ -799,24 +808,25 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       newWoData.paymentOrderId = paymentOrderId
 
       try {
-        await tx.insert(workOrder).values(newWoData).onConflictDoNothing()
+        tx.insert(workOrder).values(newWoData).onConflictDoNothing().run()
         createdId = newWo.id
       } catch {
         throw new Error('Falha ao criar a nova ordem de serviço.')
       }
 
-      if (!newWo.products) return
-
-      // inserir items
-      for (const item of newWo.products) {
+      // inserir items (antes um `return` aqui pulava a marcação COPIED
+      // da OS original quando não havia produtos)
+      for (const item of newWo.products ?? []) {
         try {
-          await tx.insert(workOrderItem).values({
-            id: String(uuid.v4()),
-            workOrderId: newWo.id,
-            productId: item.productId,
-            quantity: item.quantity,
-            priceSnapshot: item.priceSnapshot,
-          })
+          tx.insert(workOrderItem)
+            .values({
+              id: String(uuid.v4()),
+              workOrderId: newWo.id,
+              productId: item.productId,
+              quantity: item.quantity,
+              priceSnapshot: item.priceSnapshot,
+            })
+            .run()
         } catch {
           throw new Error('Falha ao criar os itens da nova ordem de serviço.')
         }
@@ -824,10 +834,10 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
 
       // Marcar a ordem original como COPIED
       if (shouldMarkAsCopied) {
-        await tx
-          .update(workOrder)
+        tx.update(workOrder)
           .set({ status: WorkOrderStatus.COPIED })
           .where(eq(workOrder.id, originalId))
+          .run()
       }
     })
 
@@ -894,7 +904,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
     })
   }
 
-  private async insertResultItems(
+  private insertResultItems(
     tx: AppTransaction,
     resultId: string,
     result: ResultInput
@@ -924,22 +934,22 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
         observation: i.observation ?? null,
       }
     })
-    if (rows.length > 0) await tx.insert(workOrderResultItem).values(rows)
+    if (rows.length > 0) tx.insert(workOrderResultItem).values(rows).run()
   }
 
   /** Atualiza o total de um pagamento ainda não quitado. Pago não se mexe. */
-  private async syncUnpaidPayment(
+  private syncUnpaidPayment(
     tx: AppTransaction,
     paymentOrderId: string | null,
     total: number
   ) {
     if (!paymentOrderId) return
-    await tx
-      .update(paymentOrder)
+    tx.update(paymentOrder)
       .set({ totalValue: total })
       .where(
         and(eq(paymentOrder.id, paymentOrderId), eq(paymentOrder.isPaid, false))
       )
+      .run()
   }
 
   /**
@@ -958,7 +968,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
     const id = String(uuid.v4()) as UUID
     const now = new Date().toISOString()
 
-    await db.transaction(async (tx) => {
+    db.transaction((tx) => {
       let status: WorkOrderStatus = WorkOrderStatus.PENDING
       let resultId: string | null = null
       let visitDate: string | null = null
@@ -969,10 +979,10 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
         total = computeResultTotal(input.result.exchanged, input.result.added)
         status = this.computeResultStatus(input.items.length, input.result)
         visitDate = now
-        await tx
-          .insert(workOrderResult)
+        tx.insert(workOrderResult)
           .values({ id: resultId, totalValue: total })
-        await this.insertResultItems(tx, resultId, input.result)
+          .run()
+        this.insertResultItems(tx, resultId, input.result)
       }
 
       let paymentOrderId: string | null = null
@@ -985,40 +995,46 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
           isPaid: input.payment.isPaid,
         })
         paymentOrderId = String(uuid.v4())
-        await tx.insert(paymentOrder).values({
-          id: paymentOrderId,
-          method: input.payment.method || 'Dinheiro',
-          totalValue: roundMoney(input.payment.totalValue),
-          installments: state.installments,
-          isPaid: state.isPaid,
-          paidInstallments: state.paidInstallments,
-          paymentDate: input.payment.paymentDate ?? null,
-        })
+        tx.insert(paymentOrder)
+          .values({
+            id: paymentOrderId,
+            method: input.payment.method || 'Dinheiro',
+            totalValue: roundMoney(input.payment.totalValue),
+            installments: state.installments,
+            isPaid: state.isPaid,
+            paidInstallments: state.paidInstallments,
+            paymentDate: input.payment.paymentDate ?? null,
+          })
+          .run()
       }
 
-      await tx.insert(workOrder).values({
-        id,
-        customerId: input.customerId,
-        createdAt: now,
-        updatedAt: now,
-        scheduledDate: input.scheduledDate.toISOString(),
-        visitDate,
-        paymentOrderId,
-        status,
-        resultId,
-        notes: input.notes?.trim() ? input.notes : null,
-      })
+      tx.insert(workOrder)
+        .values({
+          id,
+          customerId: input.customerId,
+          createdAt: now,
+          updatedAt: now,
+          scheduledDate: input.scheduledDate.toISOString(),
+          visitDate,
+          paymentOrderId,
+          status,
+          resultId,
+          notes: input.notes?.trim() ? input.notes : null,
+        })
+        .run()
 
       if (input.items.length > 0) {
-        await tx.insert(workOrderItem).values(
-          input.items.map((i) => ({
-            id: String(uuid.v4()),
-            workOrderId: id,
-            productId: i.productId,
-            quantity: i.quantity,
-            priceSnapshot: roundMoney(i.priceSnapshot),
-          }))
-        )
+        tx.insert(workOrderItem)
+          .values(
+            input.items.map((i) => ({
+              id: String(uuid.v4()),
+              workOrderId: id,
+              productId: i.productId,
+              quantity: i.quantity,
+              priceSnapshot: roundMoney(i.priceSnapshot),
+            }))
+          )
+          .run()
       }
     })
 
@@ -1057,20 +1073,20 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
     const status = this.computeResultStatus(scheduled.length, result)
     const now = new Date().toISOString()
 
-    await db.transaction(async (tx) => {
-      await tx
-        .insert(workOrderResult)
+    db.transaction((tx) => {
+      tx.insert(workOrderResult)
         .values({ id: resultId, totalValue: total })
-      await this.insertResultItems(tx, resultId, result)
-      await tx
-        .update(workOrder)
+        .run()
+      this.insertResultItems(tx, resultId, result)
+      tx.update(workOrder)
         .set({ resultId, status, visitDate: now, updatedAt: now })
         .where(eq(workOrder.id, workOrderId))
-      await tx
-        .update(itineraryWorkOrder)
+        .run()
+      tx.update(itineraryWorkOrder)
         .set({ isLate: false })
         .where(eq(itineraryWorkOrder.workOrderId, workOrderId))
-      await this.syncUnpaidPayment(tx, wo.paymentOrderId, total)
+        .run()
+      this.syncUnpaidPayment(tx, wo.paymentOrderId, total)
     })
 
     return resultId
@@ -1115,20 +1131,20 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
     const total = computeResultTotal(result.exchanged, result.added)
     const status = this.computeResultStatus(scheduled.length, result)
 
-    await db.transaction(async (tx) => {
-      await tx
-        .delete(workOrderResultItem)
+    db.transaction((tx) => {
+      tx.delete(workOrderResultItem)
         .where(eq(workOrderResultItem.resultId, resultId))
-      await this.insertResultItems(tx, resultId, result)
-      await tx
-        .update(workOrderResult)
+        .run()
+      this.insertResultItems(tx, resultId, result)
+      tx.update(workOrderResult)
         .set({ totalValue: total })
         .where(eq(workOrderResult.id, resultId))
-      await tx
-        .update(workOrder)
+        .run()
+      tx.update(workOrder)
         .set({ status, updatedAt: new Date().toISOString() })
         .where(eq(workOrder.id, row.workOrder.id))
-      await this.syncUnpaidPayment(tx, row.workOrder.paymentOrderId, total)
+        .run()
+      this.syncUnpaidPayment(tx, row.workOrder.paymentOrderId, total)
     })
   }
 }

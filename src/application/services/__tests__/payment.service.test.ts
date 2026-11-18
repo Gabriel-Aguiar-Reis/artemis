@@ -8,6 +8,7 @@ import { beforeEach, describe, expect, it, vitest } from 'vitest'
  * consome o próximo resultado da fila, na ordem em que o serviço consulta.
  */
 function createMockTx(queue: any[]) {
+  // API síncrona do driver expo-sqlite: .all() / .run() executam na hora
   const next = () => (queue.length ? queue.shift() : [])
   const updates: any[] = []
   const tx: any = {
@@ -19,13 +20,11 @@ function createMockTx(queue: any[]) {
       updates.push(values)
       return tx
     }),
-    where: vitest.fn(() => {
-      const thenable: any = {
-        limit: vitest.fn(() => Promise.resolve(next())),
-        then: (res: any, rej: any) => Promise.resolve(next()).then(res, rej),
-      }
-      return thenable
-    }),
+    where: vitest.fn(() => ({
+      limit: vitest.fn(() => ({ all: vitest.fn(() => next()) })),
+      all: vitest.fn(() => next()),
+      run: vitest.fn(() => ({ changes: 1 })),
+    })),
   }
   return tx
 }
@@ -44,14 +43,14 @@ describe('PaymentService.finalizePayment', () => {
 
   it('erro quando a OS vinculada não existe', async () => {
     const tx = createMockTx([[]])
-    await expect(PaymentService.finalizePayment(tx, 'p-1')).rejects.toThrow(
+    expect(() => PaymentService.finalizePayment(tx, 'p-1')).toThrow(
       'Ordem de serviço vinculada à ordem de pagamento não encontrada.'
     )
   })
 
   it('erro quando o pagamento não existe', async () => {
     const tx = createMockTx([[wo()], []])
-    await expect(PaymentService.finalizePayment(tx, 'p-1')).rejects.toThrow(
+    expect(() => PaymentService.finalizePayment(tx, 'p-1')).toThrow(
       'Ordem de pagamento não encontrada para a ordem de serviço.'
     )
   })
@@ -61,7 +60,7 @@ describe('PaymentService.finalizePayment', () => {
       [wo({ status: WorkOrderStatus.PARTIAL })],
       [{ id: 'p-1', isPaid: true }],
     ])
-    await expect(PaymentService.finalizePayment(tx, 'p-1')).resolves.toBe(
+    expect(PaymentService.finalizePayment(tx, 'p-1')).toBe(
       WorkOrderStatus.PARTIAL
     )
     expect(tx.updates).toHaveLength(0)
@@ -72,7 +71,7 @@ describe('PaymentService.finalizePayment', () => {
       [wo({ status: WorkOrderStatus.COPIED })],
       [{ id: 'p-1', isPaid: true }],
     ])
-    await expect(PaymentService.finalizePayment(tx, 'p-1')).resolves.toBe(
+    expect(PaymentService.finalizePayment(tx, 'p-1')).toBe(
       WorkOrderStatus.COPIED
     )
     expect(tx.updates).toHaveLength(0)
@@ -83,7 +82,7 @@ describe('PaymentService.finalizePayment', () => {
       [wo({ resultId: null })],
       [{ id: 'p-1', isPaid: true }],
     ])
-    await expect(PaymentService.finalizePayment(tx, 'p-1')).resolves.toBe(
+    expect(PaymentService.finalizePayment(tx, 'p-1')).toBe(
       WorkOrderStatus.PENDING
     )
     expect(tx.updates).toHaveLength(0)
@@ -91,7 +90,7 @@ describe('PaymentService.finalizePayment', () => {
 
   it('pagamento não quitado não altera a OS', async () => {
     const tx = createMockTx([[wo()], [{ id: 'p-1', isPaid: false }]])
-    await expect(PaymentService.finalizePayment(tx, 'p-1')).resolves.toBe(
+    expect(PaymentService.finalizePayment(tx, 'p-1')).toBe(
       WorkOrderStatus.PENDING
     )
     expect(tx.updates).toHaveLength(0)
@@ -107,7 +106,7 @@ describe('PaymentService.finalizePayment', () => {
       ],
       [{ id: 'i-1' }],
     ])
-    await expect(PaymentService.finalizePayment(tx, 'p-1')).resolves.toBe(
+    expect(PaymentService.finalizePayment(tx, 'p-1')).toBe(
       WorkOrderStatus.PARTIAL
     )
     expect(tx.updates[0].status).toBe(WorkOrderStatus.PARTIAL)
@@ -120,7 +119,7 @@ describe('PaymentService.finalizePayment', () => {
       [{ type: WorkOrderResultItemType.EXCHANGED }],
       [{ id: 'i-1' }],
     ])
-    await expect(PaymentService.finalizePayment(tx, 'p-1')).resolves.toBe(
+    expect(PaymentService.finalizePayment(tx, 'p-1')).toBe(
       WorkOrderStatus.COMPLETED
     )
   })

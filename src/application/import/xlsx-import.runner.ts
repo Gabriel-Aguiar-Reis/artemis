@@ -170,27 +170,28 @@ export function planInsertCount(plan: ImportPlan): number {
 }
 
 /**
- * Insere um bloco numa transação. Se o bloco falhar, tenta linha a linha para
+ * Insere um bloco numa transação (síncrona: no driver expo-sqlite o callback
+ * de db.transaction precisa ser síncrono para o BEGIN/COMMIT valer). Se o bloco falhar, tenta linha a linha para
  * isolar a(s) linha(s) problemática(s) e devolvê-las como rejeitadas.
  */
 async function insertChunk<T extends { line: number }>(
   sheet: ImportSheet,
   chunk: T[],
   toValues: (item: T) => any,
-  insert: (tx: any, values: any[]) => Promise<unknown>,
+  insert: (tx: any, values: any[]) => unknown,
   rejected: RowIssue[]
 ): Promise<number> {
   try {
-    await db.transaction(async (tx) => {
-      await insert(tx, chunk.map(toValues))
+    db.transaction((tx) => {
+      insert(tx, chunk.map(toValues))
     })
     return chunk.length
   } catch {
     let ok = 0
     for (const item of chunk) {
       try {
-        await db.transaction(async (tx) => {
-          await insert(tx, [toValues(item)])
+        db.transaction((tx) => {
+          insert(tx, [toValues(item)])
         })
         ok++
       } catch (e) {
@@ -231,7 +232,7 @@ export async function executeImport(
     sheet: ImportSheet,
     items: T[],
     toValues: (item: T) => any,
-    insert: (tx: any, values: any[]) => Promise<unknown>
+    insert: (tx: any, values: any[]) => unknown
   ) {
     report(sheet, 0, items.length)
     for (let i = 0; i < items.length; i += IMPORT_CHUNK_SIZE) {
@@ -257,7 +258,7 @@ export async function executeImport(
       name: c.name,
       isActive: c.isActive,
     }),
-    (tx, values) => tx.insert(category).values(values)
+    (tx, values) => tx.insert(category).values(values).run()
   )
 
   // Produtos só entram se a categoria nova foi de fato gravada
@@ -292,7 +293,7 @@ export async function executeImport(
       isActive: p.isActive,
       expiration: p.expiration,
     }),
-    (tx, values) => tx.insert(product).values(values)
+    (tx, values) => tx.insert(product).values(values).run()
   )
 
   await run(
@@ -313,7 +314,7 @@ export async function executeImport(
       addressState: c.addressState,
       addressZipCode: c.addressZipCode,
     }),
-    (tx, values) => tx.insert(customer).values(values)
+    (tx, values) => tx.insert(customer).values(values).run()
   )
 
   rejected.sort(
