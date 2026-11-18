@@ -7,7 +7,13 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import { Search, X } from 'lucide-react-native'
 import * as React from 'react'
 import { useState } from 'react'
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native'
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  View,
+} from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function CategoriesSearchScreen() {
@@ -144,10 +150,10 @@ export default function CategoriesSearchScreen() {
               <Button variant="ghost" size="sm" onPress={clearFilters}>
                 <Icon as={X} size={16} className="text-foreground mr-2" />
                 <Text>Limpar filtros</Text>
-              <        </ScrollView>
-     )}
+              </Button>
+            )}
           </View>
-        </View>
+        </ScrollView>
         <View className="gap-2 px-4 pb-4 bg-background">
           <Button onPress={applyFilters}>
             <Text className="text-primary-foreground font-medium">
