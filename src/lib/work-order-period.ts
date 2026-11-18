@@ -52,11 +52,11 @@ export function endOfDay(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999)
 }
 
-function startOfMonth(year: number, month: number): Date {
+export function startOfMonth(year: number, month: number): Date {
   return new Date(year, month, 1, 0, 0, 0, 0)
 }
 
-function endOfMonth(year: number, month: number): Date {
+export function endOfMonth(year: number, month: number): Date {
   return new Date(year, month + 1, 0, 23, 59, 59, 999)
 }
 
@@ -116,7 +116,7 @@ export function resolveScheduledRange(
   return undefined
 }
 
-function formatDay(d: Date): string {
+export function formatDay(d: Date): string {
   return d.toLocaleDateString('pt-BR', {
     day: '2-digit',
     month: '2-digit',

@@ -43,9 +43,11 @@ import { workOrderResult } from '@/src/infra/db/drizzle/schema/drizzle.work-orde
 import { workOrder } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
 import { containsFolded } from '@/src/infra/db/drizzle/sql-search'
 import { hydrateWorkOrders } from '@/src/infra/repositories/drizzle/work-order-hydration'
+import { isNextVisitView } from '@/src/lib/next-visit-period'
 import { UUID } from '@/src/lib/utils'
 import {
   and,
+  asc,
   count,
   desc,
   eq,
@@ -70,6 +72,11 @@ export interface WorkOrderFilters {
   /** Inclusive scheduled-date range (ISO instants, already resolved) */
   scheduledFrom?: string
   scheduledTo?: string
+  /** Inclusive next-visit reminder range (ISO instants, already resolved) */
+  nextVisitFrom?: string
+  nextVisitTo?: string
+  /** 'true' = only with a reminder, 'false' = only without */
+  hasNextVisit?: string
   visitDate?: string
   minTotalValue?: string
   maxTotalValue?: string
@@ -211,6 +218,21 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       conditions.push(lte(workOrder.scheduledDate, filters.scheduledTo))
     }
 
+    // Next visit reminder (range and/or presence)
+    if (filters?.nextVisitFrom) {
+      conditions.push(gte(workOrder.nextVisitDate, filters.nextVisitFrom))
+    }
+    if (filters?.nextVisitTo) {
+      conditions.push(lte(workOrder.nextVisitDate, filters.nextVisitTo))
+    }
+    if (filters?.hasNextVisit && filters.hasNextVisit !== 'all') {
+      conditions.push(
+        filters.hasNextVisit === 'true'
+          ? isNotNull(workOrder.nextVisitDate)
+          : isNull(workOrder.nextVisitDate)
+      )
+    }
+
     // Visit date filter
     if (filters?.visitDate) {
       const filterDate = new Date(filters.visitDate)
@@ -294,7 +316,11 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
     // Dates are stored as UTC ISO strings: shift to local time before taking
     // the month, otherwise late-evening orders fall into the next month.
     const offset = `${-new Date().getTimezoneOffset()} minutes`
-    const month = sql<string>`strftime('%Y-%m', ${workOrder.scheduledDate}, ${offset})`
+    // Browsing by next visit groups by that month instead
+    const dateColumn = isNextVisitView(filters)
+      ? workOrder.nextVisitDate
+      : workOrder.scheduledDate
+    const month = sql<string>`strftime('%Y-%m', ${dateColumn}, ${offset})`
     const rows = await db
       .select({ month, count: count() })
       .from(workOrder)
@@ -328,7 +354,11 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
         .leftJoin(workOrderResult, eq(workOrder.resultId, workOrderResult.id))
         .where(whereClause)
         // Stable order: without ORDER BY the OFFSET may repeat/skip work orders between pages
-        .orderBy(desc(workOrder.scheduledDate), desc(workOrder.id))
+        .orderBy(
+          ...(isNextVisitView(filters)
+            ? [asc(workOrder.nextVisitDate), asc(workOrder.id)]
+            : [desc(workOrder.scheduledDate), desc(workOrder.id)])
+        )
         .limit(pageSize)
         .offset(offset),
       // The same joins as the main query: the value/paid filters use
