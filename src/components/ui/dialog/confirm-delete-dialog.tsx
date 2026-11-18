@@ -1,6 +1,5 @@
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -9,13 +8,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/src/components/ui/alert-dialog'
+import { Button } from '@/src/components/ui/button'
 import { Text } from '@/src/components/ui/text'
 import { ReactNode } from 'react'
+import { ActivityIndicator } from 'react-native'
 
 type ConfirmDeleteDialogProps = {
   children?: ReactNode
   title: string
-  handleDelete: () => void
+  /** Pode ser async: o botão fica desabilitado enquanto isPending. */
+  handleDelete: () => void | Promise<unknown>
+  isPending?: boolean
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }
@@ -24,11 +27,19 @@ export const ConfirmDeleteDialog = ({
   children,
   title,
   handleDelete,
+  isPending = false,
   open,
   onOpenChange,
 }: ConfirmDeleteDialogProps) => {
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog
+      open={open}
+      onOpenChange={(next) => {
+        // Não permite fechar enquanto a exclusão está em andamento
+        if (isPending && !next) return
+        onOpenChange?.(next)
+      }}
+    >
       {children && <AlertDialogTrigger>{children}</AlertDialogTrigger>}
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -38,12 +49,24 @@ export const ConfirmDeleteDialog = ({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>
+          <AlertDialogCancel disabled={isPending}>
             <Text>Cancelar</Text>
           </AlertDialogCancel>
-          <AlertDialogAction onPress={handleDelete}>
+          {/* Button comum (não o Action do primitive) para o dialog só fechar
+              quando o chamador decidir, após o resultado da exclusão. */}
+          <Button
+            variant="destructive"
+            onPress={() => {
+              void handleDelete()
+            }}
+            disabled={isPending}
+            accessibilityLabel="Confirmar exclusão"
+          >
+            {isPending ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : null}
             <Text>Excluir</Text>
-          </AlertDialogAction>
+          </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

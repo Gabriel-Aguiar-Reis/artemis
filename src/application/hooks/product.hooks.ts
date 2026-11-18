@@ -18,6 +18,6 @@ export const useProductsWithCategoryFiltered = (filters?: ProductFilters) => {
   return useQuery({
     queryKey: ['products', 'with-category', filters],
     queryFn: () => productRepo.getProductsWithCategory(filters),
-    staleTime: 1000 * 30, // 30 segundos
+    staleTime: 1000 * 60 * 5, // 5 minutos (dado cadastral; mutações invalidam)
   })
 }

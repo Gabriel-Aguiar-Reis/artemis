@@ -44,6 +44,6 @@ export const useCustomersInfinite = (filters?: CustomerFilters) => {
       return undefined
     },
     initialPageParam: 1,
-    staleTime: 1000 * 30, // 30 segundos
+    staleTime: 1000 * 60 * 5, // 5 minutos (cadastro; mutações invalidam)
   })
 }

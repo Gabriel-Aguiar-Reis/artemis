@@ -2,22 +2,23 @@ import {
   productHooks,
   useProductsWithCategoryFiltered,
 } from '@/src/application/hooks/product.hooks'
+import { usePullToRefresh } from '@/src/application/hooks/use-pull-to-refresh'
 import { ActiveFiltersBanner } from '@/src/components/ui/active-filters-banner'
-import { BackToTopButton } from '@/src/components/ui/back-to-top-button'
+import {
+  BackToTopButton,
+  useBackToTop,
+} from '@/src/components/ui/back-to-top-button'
 import { ButtonFilter } from '@/src/components/ui/button-filter'
 import { ButtonNew } from '@/src/components/ui/button-new'
 import { ConfirmDeleteDialog } from '@/src/components/ui/dialog/confirm-delete-dialog'
 import { Icon } from '@/src/components/ui/icon'
+import { ErrorState, LoadingState } from '@/src/components/ui/list-states'
 import { ObjectCard } from '@/src/components/ui/object-card'
 import { Text } from '@/src/components/ui/text'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/src/components/ui/tooltip'
 import { ProductWithCategoryDTO } from '@/src/domain/repositories/product/dtos/product-with-category.dto'
+import { formatBRL } from '@/src/lib/format'
 import { cn, UUID } from '@/src/lib/utils'
-import { FlashList } from '@shopify/flash-list'
+import { FlashList, FlashListRef } from '@shopify/flash-list'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
 import {
   Banknote,
@@ -27,15 +28,73 @@ import {
   TrashIcon,
 } from 'lucide-react-native'
 import * as React from 'react'
-import { useMemo, useRef, useState } from 'react'
-import {
-  NativeScrollEvent,
-  NativeSyntheticEvent,
-  ScrollView,
-  View,
-} from 'react-native'
+import { useCallback, useMemo, useState } from 'react'
+import { View } from 'react-native'
 import { SheetManager } from 'react-native-actions-sheet'
 import { SafeAreaView } from 'react-native-safe-area-context'
+
+type ProductCardProps = {
+  product: ProductWithCategoryDTO
+  onOptions: (product: ProductWithCategoryDTO) => void
+}
+
+const ProductCard = React.memo(
+  function ProductCard({ product, onOptions }: ProductCardProps) {
+    return (
+      <ObjectCard.Root className="mb-4 dark:bg-input/30">
+        <ObjectCard.Header>
+          <ObjectCard.Title>{product.name}</ObjectCard.Title>
+          <ObjectCard.Description>
+            <View className="flex-row items-center gap-2">
+              <Icon as={FolderTree} size={16} className="text-ring" />
+              <Text className="text-ring">{product.categoryName}</Text>
+            </View>
+          </ObjectCard.Description>
+          <ObjectCard.Actions onPress={() => onOptions(product)} />
+        </ObjectCard.Header>
+        <ObjectCard.Content>
+          <View className="flex-row items-center justify-between gap-2">
+            <View>
+              <View className="flex-row gap-2 items-center">
+                <Icon as={Banknote} size={20} className="text-green-600" />
+                <Text>{formatBRL(product.salePrice)}</Text>
+              </View>
+              <View className="flex-row gap-2 items-center">
+                <Icon
+                  as={CalendarClock}
+                  size={20}
+                  className="text-orange-600"
+                />
+                <Text>{product.expiration}</Text>
+              </View>
+            </View>
+            <View className="flex-row items-center gap-2">
+              <View
+                className={cn(
+                  'h-2 w-2 rounded-full',
+                  product.isActive ? 'bg-green-500' : 'bg-gray-400'
+                )}
+              />
+              <Text className="text-sm text-muted-foreground">
+                {product.isActive ? 'Ativo' : 'Inativo'}
+              </Text>
+            </View>
+          </View>
+        </ObjectCard.Content>
+      </ObjectCard.Root>
+    )
+  },
+  (prev, next) =>
+    prev.onOptions === next.onOptions &&
+    prev.product.id === next.product.id &&
+    prev.product.name === next.product.name &&
+    prev.product.categoryName === next.product.categoryName &&
+    prev.product.salePrice === next.product.salePrice &&
+    prev.product.isActive === next.product.isActive &&
+    prev.product.expiration === next.product.expiration
+)
+
+const keyExtractor = (item: ProductWithCategoryDTO) => item.id
 
 export default function ProductsScreen() {
   const params = useLocalSearchParams<{
@@ -56,8 +115,15 @@ export default function ProductsScreen() {
     expiration: params.expiration,
   }
 
-  const { data: products, isLoading } = useProductsWithCategoryFiltered(filters)
-  const { mutate: deleteProduct } = productHooks.deleteProduct()
+  const {
+    data: products,
+    isLoading,
+    isError,
+    refetch,
+  } = useProductsWithCategoryFiltered(filters)
+  const { mutateAsync: deleteProduct, isPending: isDeleting } =
+    productHooks.deleteProduct()
+  const { refreshing, onRefresh } = usePullToRefresh(refetch)
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<{
@@ -84,13 +150,13 @@ export default function ProductsScreen() {
     if (params.salePriceMin) {
       filters.push({
         label: 'Preço Mínimo',
-        value: `R$ ${Number(params.salePriceMin).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+        value: formatBRL(Number(params.salePriceMin)),
       })
     }
     if (params.salePriceMax) {
       filters.push({
         label: 'Preço Máximo',
-        value: `R$ ${Number(params.salePriceMax).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+        value: formatBRL(Number(params.salePriceMax)),
       })
     }
     if (params.categoryName) {
@@ -115,122 +181,78 @@ export default function ProductsScreen() {
     params.expiration,
   ])
 
-  // Adicionado useRef e useState para ScrollView e botão de voltar ao topo
-  const scrollRef = useRef<ScrollView>(null)
-  const [showScrollBtn, setShowScrollBtn] = useState(false)
+  const {
+    listRef,
+    isVisible: showScrollBtn,
+    onScroll,
+  } = useBackToTop<FlashListRef<ProductWithCategoryDTO>>()
 
-  const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const offsetY = e.nativeEvent.contentOffset.y
-    setShowScrollBtn(offsetY > 0)
-  }
-
-  const handleProductOptions = async (productId: UUID, productName: string) => {
-    await SheetManager.show('options-sheet', {
-      payload: {
-        title: productName,
-        options: [
-          {
-            label: 'Editar',
-            icon: EditIcon,
-            onPress: () => {
-              router.push(`/products/${productId}/edit`)
+  const handleProductOptions = useCallback(
+    async (product: ProductWithCategoryDTO) => {
+      await SheetManager.show('options-sheet', {
+        payload: {
+          title: product.name,
+          options: [
+            {
+              label: 'Editar',
+              icon: EditIcon,
+              onPress: () => {
+                router.push(`/products/${product.id}/edit`)
+              },
             },
-          },
-          {
-            label: 'Excluir',
-            icon: TrashIcon,
-            destructive: true,
-            onPress: () => {
-              setSelectedProduct({ id: productId, name: productName })
-              setDeleteDialogOpen(true)
+            {
+              label: 'Excluir',
+              icon: TrashIcon,
+              destructive: true,
+              onPress: () => {
+                setSelectedProduct({ id: product.id, name: product.name })
+                setDeleteDialogOpen(true)
+              },
             },
-          },
-        ],
-      },
-    })
+          ],
+        },
+      })
+    },
+    []
+  )
+
+  const handleDeleteProduct = async (productId: UUID) => {
+    try {
+      await deleteProduct(productId)
+    } catch {
+      // toast de erro (com mensagem amigável para FK) vem do hook
+    } finally {
+      setDeleteDialogOpen(false)
+    }
   }
 
-  const handleDeleteProduct = (productId: UUID) => {
-    deleteProduct(productId)
-    setDeleteDialogOpen(false)
-  }
-
-  const renderItem = (product: ProductWithCategoryDTO) => {
-    return (
-      <ObjectCard.Root key={product.id} className="mb-4 dark:bg-input/30">
-        <ObjectCard.Header>
-          <ObjectCard.Title>{product.name}</ObjectCard.Title>
-          <ObjectCard.Description>
-            <View className="flex-row items-center gap-2">
-              <Icon as={FolderTree} size={16} className="text-ring" />
-              <Text className="text-ring">{product.categoryName}</Text>
-            </View>
-          </ObjectCard.Description>
-          <ObjectCard.Actions
-            onPress={() => handleProductOptions(product.id, product.name)}
-          />
-        </ObjectCard.Header>
-        <ObjectCard.Content>
-          <View className="flex-row items-center justify-between gap-2">
-            <View>
-              <Tooltip>
-                <TooltipTrigger>
-                  <View className="flex-row gap-2 items-center">
-                    <Icon as={Banknote} size={20} className="text-green-600" />
-                    <Text>
-                      R${' '}
-                      {product.salePrice.toLocaleString('pt-BR', {
-                        minimumFractionDigits: 2,
-                      })}
-                    </Text>
-                  </View>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <Text>Preço de venda do produto</Text>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger>
-                  <View className="flex-row gap-2 items-center">
-                    <Icon
-                      as={CalendarClock}
-                      size={20}
-                      className="text-orange-600"
-                    />
-                    <Text>
-                      <Text>{product.expiration}</Text>
-                    </Text>
-                  </View>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <Text>Data de validade do produto</Text>
-                </TooltipContent>
-              </Tooltip>
-            </View>
-            <View className="flex-row items-center gap-2">
-              <View
-                className={cn(
-                  'h-2 w-2 rounded-full',
-                  product.isActive ? 'bg-green-500' : 'bg-gray-400'
-                )}
-              />
-              <Text className="text-sm text-muted-foreground">
-                {product.isActive ? 'Ativo' : 'Inativo'}
-              </Text>
-            </View>
-          </View>
-        </ObjectCard.Content>
-      </ObjectCard.Root>
-    )
-  }
+  const renderItem = useCallback(
+    ({ item }: { item: ProductWithCategoryDTO }) => (
+      <ProductCard product={item} onOptions={handleProductOptions} />
+    ),
+    [handleProductOptions]
+  )
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
-        <Text>Carregando Produtos...</Text>
+      <SafeAreaView className="flex-1">
+        <LoadingState label="Carregando produtos..." />
       </SafeAreaView>
     )
   }
+
+  if (isError) {
+    return (
+      <SafeAreaView className="flex-1">
+        <ErrorState
+          message="Não foi possível carregar os produtos."
+          onRetry={() => refetch()}
+        />
+      </SafeAreaView>
+    )
+  }
+
+  const hasNoProducts = displayedProducts.length === 0 && !hasActiveFilters
 
   return (
     <SafeAreaView className="flex-1">
@@ -258,7 +280,7 @@ export default function ProductsScreen() {
           ),
         }}
       />
-      {!products || products.length === 0 ? (
+      {hasNoProducts ? (
         <View className="flex-1 items-center justify-center px-4">
           <Text className="text-center text-muted-foreground">
             Nenhum produto cadastrado.{' \n'}
@@ -266,47 +288,45 @@ export default function ProductsScreen() {
           </Text>
         </View>
       ) : (
-        <>
-          <ActiveFiltersBanner
-            filters={activeFilters}
-            clearFiltersHref="/products"
-          />
-          <ScrollView
-            className="flex-1"
-            ref={scrollRef}
-            onScroll={handleScroll}
+        <View className="flex-1">
+          <FlashList
+            ref={listRef}
+            data={displayedProducts}
+            renderItem={renderItem}
+            keyExtractor={keyExtractor}
+            onScroll={onScroll}
             scrollEventThrottle={16}
-          >
-            <View className="gap-3 p-4">
-              {displayedProducts.length === 0 ? (
-                <View className="items-center py-12">
-                  <Text className="text-center text-muted-foreground">
-                    Nenhum produto encontrado com os filtros aplicados.
-                  </Text>
-                </View>
-              ) : (
-                <FlashList
-                  data={displayedProducts}
-                  renderItem={({ item }) => renderItem(item)}
-                  ListFooterComponent={<View className="h-16" />}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 64 }}
+            ListHeaderComponent={
+              <View className="-mx-4">
+                <ActiveFiltersBanner
+                  filters={activeFilters}
+                  clearFiltersHref="/products"
                 />
-              )}
-            </View>
-          </ScrollView>
+              </View>
+            }
+            ListEmptyComponent={
+              <View className="items-center py-12">
+                <Text className="text-center text-muted-foreground">
+                  Nenhum produto encontrado com os filtros aplicados.
+                </Text>
+              </View>
+            }
+          />
 
-          {/* Botão de voltar ao topo */}
-          <BackToTopButton isVisible={showScrollBtn} scrollRef={scrollRef} />
+          <BackToTopButton isVisible={showScrollBtn} scrollRef={listRef} />
           {selectedProduct && (
             <ConfirmDeleteDialog
               open={deleteDialogOpen}
               onOpenChange={setDeleteDialogOpen}
               title={`Excluir produto "${selectedProduct.name}"?`}
-              handleDelete={() => {
-                handleDeleteProduct(selectedProduct.id)
-              }}
+              isPending={isDeleting}
+              handleDelete={() => handleDeleteProduct(selectedProduct.id)}
             />
           )}
-        </>
+        </View>
       )}
     </SafeAreaView>
   )
