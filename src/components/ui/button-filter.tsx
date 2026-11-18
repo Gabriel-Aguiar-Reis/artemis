@@ -12,6 +12,9 @@ export const ButtonFilter = ({ href, isActive }: ButtonFilterProps) => {
     <NavigationButton
       href={href}
       icon={isActive ? SearchCheck : Search}
+      accessibilityLabel={
+        isActive ? 'Filtros ativos, editar filtros' : 'Filtrar'
+      }
       color={isActive ? '#16a34a' : undefined}
     />
   )

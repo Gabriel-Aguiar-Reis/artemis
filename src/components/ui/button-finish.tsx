@@ -7,5 +7,11 @@ type ButtonFinishProps = {
 }
 
 export const ButtonFinish = ({ href }: ButtonFinishProps) => {
-  return <NavigationButton href={href} icon={BookOpenCheck} />
+  return (
+    <NavigationButton
+      href={href}
+      icon={BookOpenCheck}
+      accessibilityLabel="Finalizar itinerário"
+    />
+  )
 }

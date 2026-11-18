@@ -15,7 +15,12 @@ export const ButtonSettings = ({ color, icon }: ButtonSettingsProps) => {
   }
   const { colorScheme } = useColorScheme()
   return (
-    <Button onPress={handlePress} size="icon" variant="outline">
+    <Button
+      onPress={handlePress}
+      size="icon"
+      variant="outline"
+      accessibilityLabel="Configurações"
+    >
       <Icon
         as={icon}
         size={24}

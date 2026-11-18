@@ -84,7 +84,33 @@ const formatToastText = (
   }
 }
 
+/** Dados cadastrais mudam pouco e toda mutação os invalida: cache mais longo. */
+const REFERENCE_DATA_KEYS: QueryKey[] = ['customers', 'products', 'categories']
+const DEFAULT_STALE_TIME = 1000 * 30
+const REFERENCE_STALE_TIME = 1000 * 60 * 5
+
+const DELETE_IN_USE_MESSAGES: Partial<Record<QueryKey, string>> = {
+  customers: 'Este cliente possui ordens de serviço e não pode ser excluído.',
+  products: 'Este produto está em ordens de serviço e não pode ser excluído.',
+  categories: 'Esta categoria possui produtos e não pode ser excluída.',
+}
+
+/**
+ * Converte erros técnicos do SQLite em mensagens amigáveis
+ * (ex.: FK restrict ao excluir registro que ainda é referenciado).
+ */
+const friendlyErrorMessage = (error: Error, key: QueryKey): string => {
+  if (/FOREIGN KEY constraint failed/i.test(error?.message ?? '')) {
+    return (
+      DELETE_IN_USE_MESSAGES[key] ??
+      'Este registro está em uso e não pode ser excluído.'
+    )
+  }
+  return error?.message
+}
+
 export const __test__ = {
+  friendlyErrorMessage,
   formatToastText,
   actionWords,
 }
@@ -126,7 +152,9 @@ export function createRepositoryHooks<TRepo extends Record<string, any>>(
         useQuery({
           queryKey: [key, name, ...args],
           queryFn: () => fn.apply(repo, args),
-          staleTime: 1000 * 30, // 30 segundos
+          staleTime: REFERENCE_DATA_KEYS.includes(key)
+            ? REFERENCE_STALE_TIME
+            : DEFAULT_STALE_TIME,
         })
       continue
     }
@@ -151,11 +179,12 @@ export function createRepositoryHooks<TRepo extends Record<string, any>>(
             // Invalida a query principal e todas suas dependências
             const keysToInvalidate = getQueryKeysToInvalidate(key)
 
-            // Invalida e força refetch imediato de todas as queries
+            // Refetch imediato só das queries montadas (ativas); as demais
+            // ficam marcadas como stale e recarregam ao serem montadas.
             keysToInvalidate.forEach((queryKey) => {
               queryClient.invalidateQueries({
                 queryKey: [queryKey],
-                refetchType: 'all', // Força refetch de todas as queries (ativas e inativas)
+                refetchType: 'active',
               })
             })
 
@@ -186,7 +215,7 @@ export function createRepositoryHooks<TRepo extends Record<string, any>>(
                 'error',
                 gender
               ),
-              text2: error.message,
+              text2: friendlyErrorMessage(error, key),
             })
           },
         })

@@ -11,12 +11,24 @@ export type PaginatedCustomers = {
   totalCount: number
 }
 
+export type CustomerLight = {
+  id: UUID
+  storeName: string
+  contactName: string
+  city: string
+  phone: string | null
+}
+
 export abstract class CustomerRepository {
   abstract getCustomers: () => Promise<Customer[]>
   abstract getCustomersPaginated: (
     page: number,
     pageSize: number
   ) => Promise<PaginatedCustomers>
+  abstract searchCustomersLight: (
+    term: string,
+    limit?: number
+  ) => Promise<CustomerLight[]>
   abstract addCustomer: (dto: CustomerInsertDTO) => Promise<void>
   abstract updateCustomer: (dto: CustomerUpdateDTO) => Promise<void>
   abstract deleteCustomer: (id: UUID) => Promise<void>

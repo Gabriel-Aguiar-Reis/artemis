@@ -1,5 +1,6 @@
 import { WorkOrderResultItemInput } from '@/src/app/work-orders/form'
 import { productHooks } from '@/src/application/hooks/product.hooks'
+import { useNormalizedSearch } from '@/src/application/hooks/use-normalized-search'
 import { Button } from '@/src/components/ui/button'
 import {
   Dialog,
@@ -14,6 +15,7 @@ import { Icon } from '@/src/components/ui/icon'
 import { Input } from '@/src/components/ui/input'
 import { Text } from '@/src/components/ui/text'
 import { ProductWithCategoryDTO } from '@/src/domain/repositories/product/dtos/product-with-category.dto'
+import { formatBRL } from '@/src/lib/format'
 import { cn } from '@/src/lib/utils'
 import { FlashList } from '@shopify/flash-list'
 import {
@@ -52,12 +54,11 @@ export function AddedProductsCombobox({
   const [open, setOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
-  const filteredProducts = useMemo(() => {
-    if (!searchQuery) return products
-    return products.filter((p) =>
-      p.name.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  }, [products, searchQuery])
+  const filteredProducts = useNormalizedSearch(
+    products,
+    (p) => p.name,
+    searchQuery
+  )
 
   const isProductAdded = (productId: string) => {
     return selectedAddedProducts.some((p) => p.productId === productId)
@@ -150,12 +151,7 @@ export function AddedProductsCombobox({
               <View className="flex-row items-center gap-4">
                 <View className="flex-row items-center gap-1">
                   <Icon as={Banknote} size={16} className="text-green-600" />
-                  <Text className="text-sm">
-                    R${' '}
-                    {item.salePrice.toLocaleString('pt-BR', {
-                      minimumFractionDigits: 2,
-                    })}
-                  </Text>
+                  <Text className="text-sm">{formatBRL(item.salePrice)}</Text>
                 </View>
 
                 <View className="flex-row items-center gap-1">
@@ -358,6 +354,8 @@ export function AddedProductsCombobox({
               <View className="flex-1">
                 <FlashList
                   data={filteredProducts}
+                  keyExtractor={(item) => item.id}
+                  keyboardShouldPersistTaps="handled"
                   renderItem={renderProductItem}
                 />
               </View>

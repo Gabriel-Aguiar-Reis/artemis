@@ -2,28 +2,66 @@ import {
   categoryHooks,
   useCategoriesFiltered,
 } from '@/src/application/hooks/category.hooks'
+import { usePullToRefresh } from '@/src/application/hooks/use-pull-to-refresh'
 import { ActiveFiltersBanner } from '@/src/components/ui/active-filters-banner'
-import { BackToTopButton } from '@/src/components/ui/back-to-top-button'
+import {
+  BackToTopButton,
+  useBackToTop,
+} from '@/src/components/ui/back-to-top-button'
 import { ButtonFilter } from '@/src/components/ui/button-filter'
 import { ButtonNew } from '@/src/components/ui/button-new'
 import { ConfirmDeleteDialog } from '@/src/components/ui/dialog/confirm-delete-dialog'
+import { ErrorState, LoadingState } from '@/src/components/ui/list-states'
 import { ObjectCard } from '@/src/components/ui/object-card'
 import { Text } from '@/src/components/ui/text'
 import { Category } from '@/src/domain/entities/category/category.entity'
 import { cn, UUID } from '@/src/lib/utils'
-import { FlashList } from '@shopify/flash-list'
+import { FlashList, FlashListRef } from '@shopify/flash-list'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
 import { EditIcon, TrashIcon } from 'lucide-react-native'
 import * as React from 'react'
-import { useMemo, useRef, useState } from 'react'
-import {
-  NativeScrollEvent,
-  NativeSyntheticEvent,
-  ScrollView,
-  View,
-} from 'react-native'
+import { useCallback, useMemo, useState } from 'react'
+import { View } from 'react-native'
 import { SheetManager } from 'react-native-actions-sheet'
 import { SafeAreaView } from 'react-native-safe-area-context'
+
+type CategoryCardProps = {
+  category: Category
+  onOptions: (category: Category) => void
+}
+
+const CategoryCard = React.memo(
+  function CategoryCard({ category, onOptions }: CategoryCardProps) {
+    return (
+      <ObjectCard.Root className="mb-4 dark:bg-input/30">
+        <ObjectCard.Header>
+          <ObjectCard.Title>{category.name}</ObjectCard.Title>
+          <ObjectCard.Actions onPress={() => onOptions(category)} />
+        </ObjectCard.Header>
+        <ObjectCard.Content>
+          <View className="flex-row items-center gap-2">
+            <View
+              className={cn(
+                'h-2 w-2 rounded-full',
+                category.isActive ? 'bg-green-500' : 'bg-gray-400'
+              )}
+            />
+            <Text className="text-sm text-muted-foreground">
+              {category.isActive ? 'Ativo' : 'Inativo'}
+            </Text>
+          </View>
+        </ObjectCard.Content>
+      </ObjectCard.Root>
+    )
+  },
+  (prev, next) =>
+    prev.onOptions === next.onOptions &&
+    prev.category.id === next.category.id &&
+    prev.category.name === next.category.name &&
+    prev.category.isActive === next.category.isActive
+)
+
+const keyExtractor = (item: Category) => item.id
 
 export default function CategoriesScreen() {
   const params = useLocalSearchParams<{
@@ -36,8 +74,15 @@ export default function CategoriesScreen() {
     status: params.status || 'all',
   }
 
-  const { data: allCategories, isLoading } = useCategoriesFiltered(filters)
-  const { mutate: deleteCategory } = categoryHooks.deleteCategory()
+  const {
+    data: allCategories,
+    isLoading,
+    isError,
+    refetch,
+  } = useCategoriesFiltered(filters)
+  const { mutateAsync: deleteCategory, isPending: isDeleting } =
+    categoryHooks.deleteCategory()
+  const { refreshing, onRefresh } = usePullToRefresh(refetch)
 
   const displayedCategories = allCategories || []
 
@@ -64,19 +109,22 @@ export default function CategoriesScreen() {
     name: string
   } | null>(null)
 
-  const handleCategoryOptions = async (
-    categoryId: UUID,
-    categoryName: string
-  ) => {
+  const {
+    listRef,
+    isVisible: showScrollBtn,
+    onScroll,
+  } = useBackToTop<FlashListRef<Category>>()
+
+  const handleCategoryOptions = useCallback(async (category: Category) => {
     await SheetManager.show('options-sheet', {
       payload: {
-        title: categoryName,
+        title: category.name,
         options: [
           {
             label: 'Editar',
             icon: EditIcon,
             onPress: () => {
-              router.push(`/categories/${categoryId}/edit`)
+              router.push(`/categories/${category.id}/edit`)
             },
           },
           {
@@ -84,62 +132,52 @@ export default function CategoriesScreen() {
             icon: TrashIcon,
             destructive: true,
             onPress: () => {
-              setSelectedCategory({ id: categoryId, name: categoryName })
+              setSelectedCategory({ id: category.id, name: category.name })
               setDeleteDialogOpen(true)
             },
           },
         ],
       },
     })
+  }, [])
+
+  const handleDeleteCategory = async (categoryId: UUID) => {
+    try {
+      await deleteCategory(categoryId)
+    } catch {
+      // toast de erro (com mensagem amigável para FK) vem do hook
+    } finally {
+      setDeleteDialogOpen(false)
+    }
   }
 
-  const handleDeleteCategory = (categoryId: UUID) => {
-    deleteCategory(categoryId)
-    setDeleteDialogOpen(false)
-  }
-
-  const renderItem = (category: Category) => {
-    return (
-      <ObjectCard.Root key={category.id} className="mb-4 dark:bg-input/30">
-        <ObjectCard.Header>
-          <ObjectCard.Title>{category.name}</ObjectCard.Title>
-          <ObjectCard.Actions
-            onPress={() => handleCategoryOptions(category.id, category.name)}
-          />
-        </ObjectCard.Header>
-        <ObjectCard.Content>
-          <View className="flex-row items-center gap-2">
-            <View
-              className={cn(
-                'h-2 w-2 rounded-full',
-                category.isActive ? 'bg-green-500' : 'bg-gray-400'
-              )}
-            />
-            <Text className="text-sm text-muted-foreground">
-              {category.isActive ? 'Ativo' : 'Inativo'}
-            </Text>
-          </View>
-        </ObjectCard.Content>
-      </ObjectCard.Root>
-    )
-  }
-
-  // Adicionado useRef e useState para ScrollView e botão de voltar ao topo
-  const scrollRef = useRef<ScrollView>(null)
-  const [showScrollBtn, setShowScrollBtn] = useState(false)
-
-  const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const offsetY = e.nativeEvent.contentOffset.y
-    setShowScrollBtn(offsetY > 0)
-  }
+  const renderItem = useCallback(
+    ({ item }: { item: Category }) => (
+      <CategoryCard category={item} onOptions={handleCategoryOptions} />
+    ),
+    [handleCategoryOptions]
+  )
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
-        <Text>Carregando categorias...</Text>
+      <SafeAreaView className="flex-1">
+        <LoadingState label="Carregando categorias..." />
       </SafeAreaView>
     )
   }
+
+  if (isError) {
+    return (
+      <SafeAreaView className="flex-1">
+        <ErrorState
+          message="Não foi possível carregar as categorias."
+          onRetry={() => refetch()}
+        />
+      </SafeAreaView>
+    )
+  }
+
+  const hasNoCategories = displayedCategories.length === 0 && !hasActiveFilters
 
   return (
     <SafeAreaView className="flex-1">
@@ -163,7 +201,7 @@ export default function CategoriesScreen() {
           ),
         }}
       />
-      {!allCategories || allCategories.length === 0 ? (
+      {hasNoCategories ? (
         <View className="flex-1 items-center justify-center px-4">
           <Text className="text-center text-muted-foreground">
             Nenhuma categoria cadastrada.{' \n'}
@@ -171,47 +209,45 @@ export default function CategoriesScreen() {
           </Text>
         </View>
       ) : (
-        <>
-          <ActiveFiltersBanner
-            filters={activeFilters}
-            clearFiltersHref="/categories"
-          />
-          <ScrollView
-            className="flex-1"
-            ref={scrollRef}
-            onScroll={handleScroll}
+        <View className="flex-1">
+          <FlashList
+            ref={listRef}
+            data={displayedCategories}
+            renderItem={renderItem}
+            keyExtractor={keyExtractor}
+            onScroll={onScroll}
             scrollEventThrottle={16}
-          >
-            <View className="gap-3 p-4">
-              {displayedCategories.length === 0 ? (
-                <View className="items-center py-12">
-                  <Text className="text-center text-muted-foreground">
-                    Nenhuma categoria encontrada com os filtros aplicados.
-                  </Text>
-                </View>
-              ) : (
-                <FlashList
-                  data={displayedCategories}
-                  renderItem={({ item }) => renderItem(item)}
-                  ListFooterComponent={<View className="h-16" />}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 64 }}
+            ListHeaderComponent={
+              <View className="-mx-4">
+                <ActiveFiltersBanner
+                  filters={activeFilters}
+                  clearFiltersHref="/categories"
                 />
-              )}
-            </View>
-          </ScrollView>
+              </View>
+            }
+            ListEmptyComponent={
+              <View className="items-center py-12">
+                <Text className="text-center text-muted-foreground">
+                  Nenhuma categoria encontrada com os filtros aplicados.
+                </Text>
+              </View>
+            }
+          />
 
-          {/* Botão de voltar ao topo */}
-          <BackToTopButton isVisible={showScrollBtn} scrollRef={scrollRef} />
+          <BackToTopButton isVisible={showScrollBtn} scrollRef={listRef} />
           {selectedCategory && (
             <ConfirmDeleteDialog
               open={deleteDialogOpen}
               onOpenChange={setDeleteDialogOpen}
               title={`Excluir categoria "${selectedCategory.name}"?`}
-              handleDelete={() => {
-                handleDeleteCategory(selectedCategory.id)
-              }}
+              isPending={isDeleting}
+              handleDelete={() => handleDeleteCategory(selectedCategory.id)}
             />
           )}
-        </>
+        </View>
       )}
     </SafeAreaView>
   )

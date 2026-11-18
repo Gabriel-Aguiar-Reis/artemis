@@ -16,6 +16,6 @@ export const useCategoriesFiltered = (filters?: CategoryFilters) => {
   return useQuery({
     queryKey: ['categories', 'filtered', filters],
     queryFn: () => categoryRepo.getCategories(filters),
-    staleTime: 1000 * 30,
+    staleTime: 1000 * 60 * 5, // dado cadastral; mutações invalidam
   })
 }

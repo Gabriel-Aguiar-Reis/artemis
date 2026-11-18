@@ -60,7 +60,7 @@ export function useInvalidateQueriesExact() {
     keysArray.forEach((queryKey) => {
       queryClient.invalidateQueries({
         queryKey: [queryKey],
-        refetchType: 'all', // Força refetch de todas as queries
+        refetchType: 'active',
       })
     })
   }

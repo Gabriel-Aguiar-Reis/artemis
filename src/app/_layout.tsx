@@ -28,6 +28,7 @@ import Constants from 'expo-constants'
 import { useDrizzleStudio } from 'expo-drizzle-studio-plugin'
 import * as NavigationBar from 'expo-navigation-bar'
 import { ErrorBoundaryProps, Stack } from 'expo-router'
+import * as SplashScreen from 'expo-splash-screen'
 import { StatusBar } from 'expo-status-bar'
 import { useColorScheme } from 'nativewind'
 import { ReactNode, useEffect, useState } from 'react'
@@ -55,15 +56,27 @@ export function ErrorBoundary(props: ErrorBoundaryProps) {
   return <ExpoErrorBoundary {...props} />
 }
 
+// Segura a splash nativa até migrations, FK, licença e tema estarem prontos
+SplashScreen.preventAutoHideAsync().catch(() => {})
+
+const hideSplash = () => {
+  SplashScreen.hideAsync().catch(() => {})
+}
+
+/** Abre o Drizzle Studio apenas em desenvolvimento. */
+function DevDrizzleStudio() {
+  useDrizzleStudio(getExpoDb())
+  return null
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 30, // 30 segundos - permite refetch após invalidação
+      staleTime: 1000 * 30, // 30 segundos - dados cadastrais sobrescrevem para 5min nos hooks
       gcTime: 1000 * 60 * 10, // 10 minutos - tempo no cache
       retry: 1, // Tentar apenas 1 vez em caso de erro
       refetchOnWindowFocus: false, // Não refetch ao focar na janela
       refetchOnMount: true, // IMPORTANTE: refetch ao montar se dados estiverem stale (invalidados)
-      structuralSharing: false, // Desabilita structural sharing para garantir novos objetos
     },
   },
 })
@@ -84,7 +97,13 @@ queryClient.setDefaultOptions({
 
 const THEME_STORAGE_KEY = 'user-theme-preference'
 
-function LicenseCheck({ children }: { children: ReactNode }) {
+function LicenseCheck({
+  children,
+  themeReady,
+}: {
+  children: ReactNode
+  themeReady: boolean
+}) {
   const { data: license, isLoading } = useLicense()
   const createLicenseMutation = useCreateInitialLicense()
 
@@ -99,13 +118,14 @@ function LicenseCheck({ children }: { children: ReactNode }) {
   const shouldShowActivation =
     license && license.isExpired() && !license.isAdmin
 
-  if (isLoading || createLicenseMutation.isPending) {
-    return (
-      <View className="flex-1 items-center justify-center">
-        <Text>Carregando...</Text>
-      </View>
-    )
-  }
+  const licenseReady = !isLoading && !createLicenseMutation.isPending
+
+  // Esconde a splash quando licença e tema estão prontos
+  useEffect(() => {
+    if (licenseReady && themeReady) hideSplash()
+  }, [licenseReady, themeReady])
+
+  if (!licenseReady) return null
 
   return (
     <>
@@ -123,6 +143,7 @@ export default function RootLayout() {
   const { success, error } = useMigrations(db, migrations)
   const [migrationsComplete, setMigrationsComplete] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
+  const [themeReady, setThemeReady] = useState(false)
 
   const handleResetDatabase = async () => {
     setIsResetting(true)
@@ -139,7 +160,7 @@ export default function RootLayout() {
       // Deletar o banco
       const { deleteDatabaseSync } = require('expo-sqlite')
       await deleteDatabaseSync('artemis.db')
-      console.log('Database deleted, reloading app...')
+      if (__DEV__) console.log('Database deleted, reloading app...')
 
       // Recarregar o app completamente
       const { reloadAsync } = require('expo-updates')
@@ -158,26 +179,22 @@ export default function RootLayout() {
     }
   }
 
-  // Log de debug para migrations
+  // Log de debug para migrations (apenas em desenvolvimento)
   useEffect(() => {
+    if (!__DEV__) return
     if (error) {
       console.error('Migration error:', error)
-      console.error('Error message:', error.message)
-      console.error('Error stack:', error.stack)
-      console.error('Error details:', JSON.stringify(error, null, 2))
-
-      // Verificar se migrations foram carregadas
-      console.log('Migrations object:', migrations)
-      console.log('Migrations journal:', migrations?.journal)
-      console.log(
+      console.error(
         'Migrations count:',
         Object.keys(migrations?.migrations || {}).length
       )
     }
-    if (success) {
-      console.log('Migrations completed successfully')
-    }
-  }, [success, error])
+  }, [error])
+
+  // Erro de migração: mostra a tela de erro, então libera a splash
+  useEffect(() => {
+    if (error) hideSplash()
+  }, [error])
 
   // Habilitar foreign keys APÓS migrations serem concluídas
   useEffect(() => {
@@ -185,7 +202,6 @@ export default function RootLayout() {
       try {
         enableForeignKeys()
         setMigrationsComplete(true)
-        console.log('Foreign keys enabled successfully')
 
         // Limpar logs antigos (>7 dias) após migrations
         const {
@@ -196,21 +212,23 @@ export default function RootLayout() {
         })
       } catch (err) {
         console.error('Error enabling foreign keys:', err)
+        hideSplash()
       }
     }
   }, [success, migrationsComplete])
 
-  useDrizzleStudio(getExpoDb())
-
   // Carregar preferência de tema salva
   useEffect(() => {
-    AsyncStorage.getItem(THEME_STORAGE_KEY).then((value: string | null) => {
-      if (value === 'system') {
-        setColorScheme(undefined as any)
-      } else if (value === 'light' || value === 'dark') {
-        setColorScheme(value)
-      }
-    })
+    AsyncStorage.getItem(THEME_STORAGE_KEY)
+      .then((value: string | null) => {
+        if (value === 'system') {
+          setColorScheme(undefined as any)
+        } else if (value === 'light' || value === 'dark') {
+          setColorScheme(value)
+        }
+      })
+      .catch(() => {})
+      .finally(() => setThemeReady(true))
   }, [setColorScheme])
 
   useEffect(() => {
@@ -222,7 +240,6 @@ export default function RootLayout() {
   }, [colorScheme])
 
   if (error) {
-    console.error('Rendering migration error screen')
     return (
       <View className="flex-1 items-center justify-center p-4 bg-background">
         <Text className="text-red-600 font-bold text-lg mb-2 text-center">
@@ -264,22 +281,15 @@ export default function RootLayout() {
       </View>
     )
   }
-  if (!success || !migrationsComplete) {
-    return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <Text className="text-lg mb-2">Configurando banco de dados...</Text>
-        <Text className="text-sm text-muted-foreground">
-          Aguarde enquanto inicializamos o sistema
-        </Text>
-      </View>
-    )
-  }
+  // Splash nativa continua visível enquanto o banco inicializa
+  if (!success || !migrationsComplete) return null
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
-          <LicenseCheck>
+          {__DEV__ && <DevDrizzleStudio />}
+          <LicenseCheck themeReady={themeReady}>
             <ThemeProvider value={NAV_THEME[colorScheme ?? 'light']}>
               <SheetProvider context="global">
                 <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />

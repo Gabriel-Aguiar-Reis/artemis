@@ -1,4 +1,5 @@
 import { WorkOrderResultItemInput } from '@/src/app/work-orders/form'
+import { useNormalizedSearch } from '@/src/application/hooks/use-normalized-search'
 import { Button } from '@/src/components/ui/button'
 import {
   Dialog,
@@ -12,6 +13,7 @@ import {
 import { Icon } from '@/src/components/ui/icon'
 import { Input } from '@/src/components/ui/input'
 import { Text } from '@/src/components/ui/text'
+import { formatBRL } from '@/src/lib/format'
 import { cn } from '@/src/lib/utils'
 import { FlashList } from '@shopify/flash-list'
 import {
@@ -107,12 +109,11 @@ export function RemovedProductsCombobox({
     availableProducts,
   ])
 
-  const filteredProducts = useMemo(() => {
-    if (!searchQuery) return removableProducts
-    return removableProducts.filter((p) =>
-      p.productName.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  }, [removableProducts, searchQuery])
+  const filteredProducts = useNormalizedSearch(
+    removableProducts,
+    (p) => p.productName,
+    searchQuery
+  )
 
   const isProductRemoved = (productId: string) => {
     return selectedRemovedProducts.some((p) => p.productId === productId)
@@ -232,10 +233,7 @@ export function RemovedProductsCombobox({
                 <View className="flex-row items-center gap-1">
                   <Icon as={Banknote} size={16} className="text-green-600" />
                   <Text className="text-sm">
-                    R${' '}
-                    {item.priceSnapshot.toLocaleString('pt-BR', {
-                      minimumFractionDigits: 2,
-                    })}
+                    {formatBRL(item.priceSnapshot)}
                   </Text>
                 </View>
 
@@ -437,6 +435,8 @@ export function RemovedProductsCombobox({
               <View className="flex-1">
                 <FlashList
                   data={filteredProducts}
+                  keyExtractor={(item) => item.productId}
+                  keyboardShouldPersistTaps="handled"
                   renderItem={renderProductItem}
                 />
               </View>

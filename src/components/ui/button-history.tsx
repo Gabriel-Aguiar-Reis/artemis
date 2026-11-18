@@ -7,5 +7,11 @@ type ButtonHistoryProps = {
 }
 
 export const ButtonHistory = ({ href }: ButtonHistoryProps) => {
-  return <NavigationButton href={href} icon={History} />
+  return (
+    <NavigationButton
+      href={href}
+      icon={History}
+      accessibilityLabel="Histórico de itinerários"
+    />
+  )
 }

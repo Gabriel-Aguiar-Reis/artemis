@@ -2,17 +2,13 @@ import { Icon } from '@/src/components/ui/icon'
 import { ObjectCard } from '@/src/components/ui/object-card'
 import { Separator } from '@/src/components/ui/separator'
 import { Text } from '@/src/components/ui/text'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/src/components/ui/tooltip'
 import { WhatsAppIcon } from '@/src/components/ui/whatsapp-icon'
 import { Customer } from '@/src/domain/entities/customer/customer.entity'
 import {
   WorkOrder,
   WorkOrderStatus,
 } from '@/src/domain/entities/work-order/work-order.entity'
+import { formatBRL, formatDateShort } from '@/src/lib/format'
 import { cn, formatPhoneBrazil } from '@/src/lib/utils'
 import {
   Banknote,
@@ -53,10 +49,13 @@ const renderContactNumber = (customer: Customer) => {
 function WorkOrderCardComponent({
   wo,
   onPress,
+  onOptions,
   isLate = false,
 }: {
   wo: WorkOrder
   onPress?: () => void
+  /** Preferir este: callback estável recebe a OS (permite memoização) */
+  onOptions?: (wo: WorkOrder) => void
   isLate?: boolean
 }) {
   // Verificar condições
@@ -105,7 +104,6 @@ function WorkOrderCardComponent({
 
   return (
     <ObjectCard.Root
-      key={wo.id}
       className={cn('mb-4 dark:bg-input/30', priorityStatus?.borderClass)}
     >
       <ObjectCard.Header>
@@ -170,155 +168,112 @@ function WorkOrderCardComponent({
             </View>
           </View>
         </ObjectCard.Description>
-        {onPress && <ObjectCard.Actions onPress={onPress} />}
+        {(onOptions || onPress) && (
+          <ObjectCard.Actions
+            onPress={onOptions ? () => onOptions(wo) : onPress!}
+          />
+        )}
       </ObjectCard.Header>
       <ObjectCard.Content>
         <Separator className="mb-2" orientation="horizontal" />
         <View className="flex-row items-center gap-2">
-          <Tooltip>
-            <TooltipTrigger>
-              <View className="flex-row items-center gap-2">
-                <Icon
-                  as={CalendarSync}
-                  size={16}
-                  className="text-muted-foreground"
-                />
-                <Text className="mt-1 text-sm text-muted-foreground">
-                  {wo.scheduledDate.toLocaleString('pt-BR', {
-                    weekday: 'short',
-                    day: '2-digit',
-                    month: 'numeric',
-                    year: '2-digit',
-                  })}
-                </Text>
-              </View>
-            </TooltipTrigger>
-            <TooltipContent>
-              <Text>Data agendada para visita</Text>
-            </TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger>
-              {wo.visitDate ? (
-                <View className="flex-row items-center gap-2">
-                  <Icon
-                    as={CalendarCheck}
-                    size={16}
-                    className="text-green-500 dark:text-green-300"
-                  />
+          <View className="flex-row items-center gap-2">
+            <Icon
+              as={CalendarSync}
+              size={16}
+              className="text-muted-foreground"
+            />
+            <Text className="mt-1 text-sm text-muted-foreground">
+              {formatDateShort(wo.scheduledDate)}
+            </Text>
+          </View>
 
-                  <Text className="mt-1 text-sm text-green-500 dark:text-green-300">
-                    {wo.visitDate?.toLocaleString('pt-BR', {
-                      weekday: 'short',
-                      day: '2-digit',
-                      month: 'numeric',
-                      year: '2-digit',
-                    })}
-                  </Text>
-                </View>
-              ) : (
-                <View className="flex-row items-center gap-2">
-                  <Icon
-                    as={CalendarCheck}
-                    size={16}
-                    className="text-orange-500 dark:text-orange-400"
-                  />
-                  <Text className="mt-1 text-sm text-orange-500 dark:text-orange-400">
-                    Não visitado
-                  </Text>
-                </View>
-              )}
-            </TooltipTrigger>
-            <TooltipContent>
-              <Text>Data da visita realizada</Text>
-            </TooltipContent>
-          </Tooltip>
+          {wo.visitDate ? (
+            <View className="flex-row items-center gap-2">
+              <Icon
+                as={CalendarCheck}
+                size={16}
+                className="text-green-500 dark:text-green-300"
+              />
+
+              <Text className="mt-1 text-sm text-green-500 dark:text-green-300">
+                {formatDateShort(wo.visitDate)}
+              </Text>
+            </View>
+          ) : (
+            <View className="flex-row items-center gap-2">
+              <Icon
+                as={CalendarCheck}
+                size={16}
+                className="text-orange-500 dark:text-orange-400"
+              />
+              <Text className="mt-1 text-sm text-orange-500 dark:text-orange-400">
+                Não visitado
+              </Text>
+            </View>
+          )}
         </View>
 
         <View className="flex-row items-center gap-2 flex-wrap">
-          <Tooltip>
-            <TooltipTrigger>
-              <View className="flex-row items-center mb-1 gap-2">
-                <Icon
-                  as={ReceiptText}
-                  size={16}
-                  className={cn(
-                    'text-sm text-yellow-500 dark:text-yellow-200',
-                    wo.result &&
-                      'text-sm font-semibold text-cyan-500 dark:text-cyan-200'
-                  )}
-                />
-                <Text
-                  className={cn(
-                    'text-sm text-yellow-500 dark:text-yellow-200',
-                    wo.result &&
-                      'text-sm font-semibold text-cyan-500 dark:text-cyan-200'
-                  )}
-                >
-                  {wo.result ? 'Relatório registrado' : 'Não registrado'}
-                </Text>
-              </View>
-            </TooltipTrigger>
-            <TooltipContent>
-              <Text>Relatório registrado na ordem de serviço</Text>
-            </TooltipContent>
-          </Tooltip>
+          <View className="flex-row items-center mb-1 gap-2">
+            <Icon
+              as={ReceiptText}
+              size={16}
+              className={cn(
+                'text-sm text-yellow-500 dark:text-yellow-200',
+                wo.result &&
+                  'text-sm font-semibold text-cyan-500 dark:text-cyan-200'
+              )}
+            />
+            <Text
+              className={cn(
+                'text-sm text-yellow-500 dark:text-yellow-200',
+                wo.result &&
+                  'text-sm font-semibold text-cyan-500 dark:text-cyan-200'
+              )}
+            >
+              {wo.result ? 'Relatório registrado' : 'Não registrado'}
+            </Text>
+          </View>
 
-          <Tooltip>
-            <TooltipTrigger>
-              <View className="flex-row items-center mb-1 gap-2 flex-wrap">
-                <Icon
-                  as={Receipt}
-                  size={16}
-                  className={cn(
-                    'text-sm text-red-500 dark:text-red-200',
-                    wo.paymentOrder?.isPaid &&
-                      'text-sm font-semibold text-cyan-500 dark:text-cyan-200'
-                  )}
-                />
-                <Text
-                  className={cn(
-                    'text-sm text-red-500 dark:text-red-200',
-                    wo.paymentOrder?.isPaid &&
-                      'text-sm font-semibold text-cyan-500 dark:text-cyan-200'
-                  )}
-                >
-                  {wo.paymentOrder ? (
-                    <>
-                      {wo.paymentOrder.method} -
-                      {wo.paymentOrder.isPaid
-                        ? ' Pago'
-                        : ` ${wo.paymentOrder.paidInstallments}/${wo.paymentOrder.installments} parcelas`}
-                    </>
-                  ) : (
-                    'Não registrado'
-                  )}
-                </Text>
-              </View>
-            </TooltipTrigger>
-            <TooltipContent>
-              <Text>Pagamento registrado na ordem de serviço</Text>
-            </TooltipContent>
-          </Tooltip>
+          <View className="flex-row items-center mb-1 gap-2 flex-wrap">
+            <Icon
+              as={Receipt}
+              size={16}
+              className={cn(
+                'text-sm text-red-500 dark:text-red-200',
+                wo.paymentOrder?.isPaid &&
+                  'text-sm font-semibold text-cyan-500 dark:text-cyan-200'
+              )}
+            />
+            <Text
+              className={cn(
+                'text-sm text-red-500 dark:text-red-200',
+                wo.paymentOrder?.isPaid &&
+                  'text-sm font-semibold text-cyan-500 dark:text-cyan-200'
+              )}
+            >
+              {wo.paymentOrder ? (
+                <>
+                  {wo.paymentOrder.method} -
+                  {wo.paymentOrder.isPaid
+                    ? ' Pago'
+                    : ` ${wo.paymentOrder.paidInstallments}/${wo.paymentOrder.installments} parcelas`}
+                </>
+              ) : (
+                'Não registrado'
+              )}
+            </Text>
+          </View>
         </View>
 
         {wo.paymentOrder && (
-          <Tooltip>
-            <TooltipTrigger>
-              <View className="flex-row items-center mb-1">
-                <Icon as={Banknote} size={16} className="text-green-600" />
-                <Text className="text-sm ml-1 ">
-                  R${' '}
-                  {wo.paymentOrder?.totalValue.toLocaleString('pt-BR', {
-                    minimumFractionDigits: 2,
-                  })}
-                </Text>
-              </View>
-            </TooltipTrigger>
-            <TooltipContent>
-              <Text>Total do valor dos produtos na ordem de serviço</Text>
-            </TooltipContent>
-          </Tooltip>
+          <View className="flex-row items-center mb-1">
+            <Icon as={Banknote} size={16} className="text-green-600" />
+            <Text className="text-sm ml-1 ">
+              {formatBRL(wo.paymentOrder?.totalValue)}
+            </Text>
+          </View>
         )}
       </ObjectCard.Content>
     </ObjectCard.Root>
@@ -363,13 +318,29 @@ export const WorkOrderCard = React.memo(
       return false
     }
 
+    // Comparação de endereço/telefones do cliente
+    if (
+      prevProps.wo.customer.phoneNumber?.value !==
+        nextProps.wo.customer.phoneNumber?.value ||
+      prevProps.wo.customer.landlineNumber?.value !==
+        nextProps.wo.customer.landlineNumber?.value ||
+      prevProps.wo.customer.isActiveWhatsApp() !==
+        nextProps.wo.customer.isActiveWhatsApp() ||
+      prevProps.wo.customer.storeAddress.getFullAddress() !==
+        nextProps.wo.customer.storeAddress.getFullAddress()
+    ) {
+      return false
+    }
+
     // Comparação de payment order
     const prevPayment = prevProps.wo.paymentOrder
     const nextPayment = nextProps.wo.paymentOrder
     if (
       prevPayment?.isPaid !== nextPayment?.isPaid ||
       prevPayment?.method !== nextPayment?.method ||
-      prevPayment?.totalValue !== nextPayment?.totalValue
+      prevPayment?.totalValue !== nextPayment?.totalValue ||
+      prevPayment?.paidInstallments !== nextPayment?.paidInstallments ||
+      prevPayment?.installments !== nextPayment?.installments
     ) {
       return false
     }
@@ -379,8 +350,11 @@ export const WorkOrderCard = React.memo(
       return false
     }
 
-    // Comparação de onPress (referência)
-    if (prevProps.onPress !== nextProps.onPress) {
+    // Comparação de callbacks (referência)
+    if (
+      prevProps.onPress !== nextProps.onPress ||
+      prevProps.onOptions !== nextProps.onOptions
+    ) {
       return false
     }
 

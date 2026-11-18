@@ -8,16 +8,22 @@ type NavigationButtonProps = {
   href: LinkProps['href']
   icon: LucideIcon
   color?: string
+  accessibilityLabel?: string
 }
 export const NavigationButton = ({
   href,
   icon,
   color,
+  accessibilityLabel,
 }: NavigationButtonProps) => {
   const { colorScheme } = useColorScheme()
   return (
     <Link href={href} asChild>
-      <Button size="icon" variant="outline">
+      <Button
+        size="icon"
+        variant="outline"
+        accessibilityLabel={accessibilityLabel}
+      >
         <Icon
           as={icon}
           size={24}

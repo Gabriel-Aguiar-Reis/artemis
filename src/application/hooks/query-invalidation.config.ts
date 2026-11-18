@@ -20,14 +20,17 @@ export type QueryKey =
   | 'errorLogs'
 
 /**
- * Mapa de dependências: quando uma query key é modificada,
- * quais outras queries devem ser invalidadas
+ * Mapa de dependências DIRETAS: quando uma query key é modificada, quais
+ * outras queries precisam ser invalidadas. NÃO é transitivo: cada lista já
+ * contém tudo o que realmente embute os dados alterados (ver
+ * docs/QUERY_INVALIDATION.md). Itinerários e ordens carregam nome do cliente,
+ * itens e nomes de produto no próprio join, por isso aparecem nas listas.
  */
 export const QUERY_DEPENDENCIES: Record<QueryKey, QueryKey[]> = {
-  // Quando customer muda, invalida work orders e itinerários
+  // OS e itinerário exibem nome/endereço/telefone do cliente
   customers: ['workOrders', 'itineraries', 'itineraryWorkOrders'],
 
-  // Quando work order muda, invalida itinerários e items relacionados
+  // Escrita de OS toca itinerários, itens e resultados
   workOrders: [
     'itineraries',
     'itineraryWorkOrders',
@@ -36,57 +39,41 @@ export const QUERY_DEPENDENCIES: Record<QueryKey, QueryKey[]> = {
     'workOrderResultItems',
   ],
 
-  // Quando work order item muda, invalida work orders
-  workOrderItems: ['workOrders'],
+  workOrderItems: ['workOrders', 'itineraries'],
 
-  // Quando itinerário muda, invalida itineraryWorkOrders
   itineraries: ['itineraryWorkOrders'],
 
-  // Quando itineraryWorkOrder muda, invalida itinerários e work orders
   itineraryWorkOrders: ['itineraries', 'workOrders'],
 
-  // Quando produto muda, invalida work order items e result items
-  products: ['workOrderItems', 'workOrderResultItems', 'workOrders'],
-
-  // Quando categoria muda, invalida produtos (que podem invalidar outras)
+  // Itens de OS/resultado exibem nome do produto
+  products: [
+    'workOrders',
+    'itineraries',
+    'workOrderItems',
+    'workOrderResultItems',
+  ],
 
   // Error logs não dependem de nenhuma outra entidade
   errorLogs: [],
+
+  // Só a lista de produtos mostra o nome da categoria
   categories: ['products'],
 
-  // Quando payment order muda, invalida work orders
-  paymentOrders: ['workOrders'],
+  paymentOrders: ['workOrders', 'itineraries'],
 
-  // Quando work order result muda, invalida work orders e result items
-  workOrderResults: ['workOrders', 'workOrderResultItems'],
+  workOrderResults: ['workOrders', 'itineraries', 'workOrderResultItems'],
 
-  // Quando work order result item muda, invalida work orders e results
-  workOrderResultItems: ['workOrders', 'workOrderResults'],
+  workOrderResultItems: ['workOrders', 'itineraries', 'workOrderResults'],
 
-  // License não tem dependências
   license: [],
 }
 
 /**
- * Retorna todas as query keys que devem ser invalidadas quando uma key específica é modificada
- * Inclui a própria key e todas suas dependências (recursivamente)
+ * Retorna a própria key mais suas dependências diretas (sem fecho transitivo,
+ * sem duplicatas).
  */
 export function getQueryKeysToInvalidate(key: QueryKey): QueryKey[] {
-  const keysToInvalidate = new Set<QueryKey>([key])
-  const visited = new Set<QueryKey>()
-
-  function addDependencies(currentKey: QueryKey) {
-    if (visited.has(currentKey)) return
-    visited.add(currentKey)
-
-    const dependencies = QUERY_DEPENDENCIES[currentKey] || []
-    dependencies.forEach((depKey) => {
-      keysToInvalidate.add(depKey)
-      addDependencies(depKey)
-    })
-  }
-
-  addDependencies(key)
-
-  return Array.from(keysToInvalidate)
+  return Array.from(
+    new Set<QueryKey>([key, ...(QUERY_DEPENDENCIES[key] || [])])
+  )
 }
