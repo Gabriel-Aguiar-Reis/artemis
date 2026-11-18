@@ -96,6 +96,7 @@ export default function WorkOrdersScreen() {
     id: UUID
     customerName: string
     date: Date
+    warning?: string
   } | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [notesDialogOpen, setNotesDialogOpen] = useState(false)
@@ -256,10 +257,18 @@ export default function WorkOrdersScreen() {
       icon: Trash2,
       destructive: true,
       onPress: () => {
+        // A exclusão apaga junto relatório e pagamento: avisa quando há
+        // dinheiro recebido ou visita registrada.
+        const warning = workOrder.paymentOrder?.isPaid
+          ? 'Esta OS já foi paga: o pagamento recebido também será apagado.'
+          : workOrder.result
+            ? 'Esta OS já tem relatório de visita, que também será apagado.'
+            : undefined
         setSelectedWorkOrder({
           id: workOrder.id,
           customerName,
           date: date!,
+          warning,
         })
         setDeleteDialogOpen(true)
       },
@@ -535,6 +544,7 @@ export default function WorkOrdersScreen() {
               open={deleteDialogOpen}
               onOpenChange={setDeleteDialogOpen}
               title={`Excluir ordem de serviço do cliente "${selectedWorkOrder.customerName}"?`}
+              warning={selectedWorkOrder.warning}
               isPending={isDeleting}
               handleDelete={() => handleDeleteWorkOrder(selectedWorkOrder.id)}
             />

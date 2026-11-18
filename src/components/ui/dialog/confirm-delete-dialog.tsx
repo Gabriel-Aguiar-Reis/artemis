@@ -16,6 +16,8 @@ import { ActivityIndicator } from 'react-native'
 type ConfirmDeleteDialogProps = {
   children?: ReactNode
   title: string
+  /** Texto extra de alerta (ex.: OS já paga). */
+  warning?: string
   /** Pode ser async: o botão fica desabilitado enquanto isPending. */
   handleDelete: () => void | Promise<unknown>
   isPending?: boolean
@@ -26,6 +28,7 @@ type ConfirmDeleteDialogProps = {
 export const ConfirmDeleteDialog = ({
   children,
   title,
+  warning,
   handleDelete,
   isPending = false,
   open,
@@ -45,7 +48,8 @@ export const ConfirmDeleteDialog = ({
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>
-            Tem certeza que deseja excluir? Esta ação não pode ser desfeita.
+            {warning ? `${warning} ` : ''}Tem certeza que deseja excluir? Esta
+            ação não pode ser desfeita.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

@@ -8,7 +8,7 @@ import {
 } from '@/src/components/ui/card'
 import { Icon } from '@/src/components/ui/icon'
 import { Text } from '@/src/components/ui/text'
-import { Itinerary } from '@/src/domain/entities/itinerary/itinerary.entity'
+import type { ItinerarySummary } from '@/src/infra/repositories/drizzle/drizzle.itinerary.repository'
 import { FlashList } from '@shopify/flash-list'
 import { Stack, useRouter } from 'expo-router'
 import {
@@ -25,20 +25,16 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function ItineraryHistoryScreen() {
   const router = useRouter()
-  const { data: allItineraries, isLoading } = itineraryHooks.getItineraries()
+  const { data: allItineraries, isLoading } =
+    itineraryHooks.getFinishedItinerarySummaries()
 
   // Filtrar apenas itinerários finalizados e ordenar por data (mais recente primeiro)
   const finishedItineraries = useMemo(() => {
-    if (!allItineraries) return []
-    return allItineraries
-      .filter((it) => it.isFinished)
-      .sort(
-        (a, b) =>
-          b.finalItineraryDate.getTime() - a.finalItineraryDate.getTime()
-      )
+    // Já vem só com finalizados, ordenado do mais recente (SQL)
+    return allItineraries ?? []
   }, [allItineraries])
 
-  const handleItineraryPress = (itinerary: Itinerary) => {
+  const handleItineraryPress = (itinerary: ItinerarySummary) => {
     router.push(`/itinerary/${itinerary.id}/details`)
   }
 
@@ -87,25 +83,14 @@ export default function ItineraryHistoryScreen() {
 }
 
 type ItineraryCardProps = {
-  itinerary: Itinerary
+  itinerary: ItinerarySummary
   onPress: () => void
 }
 
 function ItineraryCard({ itinerary, onPress }: ItineraryCardProps) {
   const stats = useMemo(() => {
-    const totalWorkOrders = itinerary.workOrders.length
-    const lateWorkOrders = itinerary.lateOrders.length
-
-    const totalRevenue = itinerary.workOrders.reduce((acc, iwo) => {
-      if (iwo.workOrder.paymentOrder) {
-        return acc + iwo.workOrder.paymentOrder.totalValue
-      }
-      return acc
-    }, 0)
-
-    const ordersWithResult = itinerary.workOrders.filter(
-      (iwo) => iwo.workOrder.result
-    ).length
+    const { totalWorkOrders, lateWorkOrders, totalRevenue, ordersWithResult } =
+      itinerary
 
     const diffTime = Math.abs(
       itinerary.finalItineraryDate.getTime() -

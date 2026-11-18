@@ -16,8 +16,18 @@ import { workOrderResult } from '@/src/infra/db/drizzle/schema/drizzle.work-orde
 import { workOrder } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
 import { hydrateWorkOrders } from '@/src/infra/repositories/drizzle/work-order-hydration'
 import { UUID } from '@/src/lib/utils'
-import { and, asc, eq, gte, inArray, isNull, lte } from 'drizzle-orm'
+import { and, asc, desc, eq, gte, inArray, isNull, lte, sql } from 'drizzle-orm'
 import uuid from 'react-native-uuid'
+
+export type ItinerarySummary = {
+  id: UUID
+  initialItineraryDate: Date
+  finalItineraryDate: Date
+  totalWorkOrders: number
+  lateWorkOrders: number
+  ordersWithResult: number
+  totalRevenue: number
+}
 
 // Só OS em aberto entram num itinerário novo.
 const OPEN_STATUSES = [
@@ -284,5 +294,43 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
           .where(eq(itineraryWorkOrder.id, item.id))
       }
     })
+  }
+
+  /**
+   * Resumo dos itinerários finalizados para o histórico, agregado no SQL.
+   * Antes o histórico hidratava todos os itinerários com todas as OS (itens,
+   * relatórios, pagamentos) só para exibir contagens e soma.
+   */
+  async getFinishedItinerarySummaries(): Promise<ItinerarySummary[]> {
+    const rows = await db
+      .select({
+        id: itinerary.id,
+        initialItineraryDate: itinerary.initialItineraryDate,
+        finalItineraryDate: itinerary.finalItineraryDate,
+        totalWorkOrders: sql<number>`count(${itineraryWorkOrder.id})`,
+        lateWorkOrders: sql<number>`coalesce(sum(case when ${itineraryWorkOrder.isLate} then 1 else 0 end), 0)`,
+        ordersWithResult: sql<number>`coalesce(sum(case when ${workOrder.resultId} is not null then 1 else 0 end), 0)`,
+        totalRevenue: sql<number>`coalesce(sum(${paymentOrder.totalValue}), 0)`,
+      })
+      .from(itinerary)
+      .leftJoin(
+        itineraryWorkOrder,
+        eq(itineraryWorkOrder.itineraryId, itinerary.id)
+      )
+      .leftJoin(workOrder, eq(itineraryWorkOrder.workOrderId, workOrder.id))
+      .leftJoin(paymentOrder, eq(workOrder.paymentOrderId, paymentOrder.id))
+      .where(eq(itinerary.isFinished, true))
+      .groupBy(itinerary.id)
+      .orderBy(desc(itinerary.finalItineraryDate))
+
+    return rows.map((r) => ({
+      id: r.id as UUID,
+      initialItineraryDate: new Date(r.initialItineraryDate),
+      finalItineraryDate: new Date(r.finalItineraryDate),
+      totalWorkOrders: Number(r.totalWorkOrders),
+      lateWorkOrders: Number(r.lateWorkOrders),
+      ordersWithResult: Number(r.ordersWithResult),
+      totalRevenue: Math.round(Number(r.totalRevenue) * 100) / 100,
+    }))
   }
 }
