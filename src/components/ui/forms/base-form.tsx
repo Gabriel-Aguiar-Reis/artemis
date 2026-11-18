@@ -8,7 +8,13 @@ import { Stack } from 'expo-router'
 import { LucideIcon } from 'lucide-react-native'
 import React, { BaseSyntheticEvent, ReactNode } from 'react'
 import { Control, Controller, FieldValues, Path } from 'react-hook-form'
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native'
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  View,
+} from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 export type FormFieldProps<T extends FieldValues> = {
@@ -275,17 +281,27 @@ function CheckboxField<T extends FieldValues>({
   name,
   label,
 }: CheckboxProps<T>) {
+  // The whole row (box + label) toggles the value: a bare checkbox is a tiny
+  // touch target on phones, and tapping the label used to do nothing.
   return (
-    <View className="flex-row items-center gap-2">
-      <Controller
-        control={control}
-        name={name}
-        render={({ field: { onChange, value } }) => (
+    <Controller
+      control={control}
+      name={name}
+      render={({ field: { onChange, value } }) => (
+        <Pressable
+          className="flex-row items-center gap-2 py-2"
+          onPress={() => onChange(!value)}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: !!value }}
+          accessibilityLabel={label}
+        >
           <Checkbox checked={!!value} onCheckedChange={onChange} />
-        )}
-      />
-      <Label className="ml-2">{label}</Label>
-    </View>
+          <Label className="ml-2" onPress={() => onChange(!value)}>
+            {label}
+          </Label>
+        </Pressable>
+      )}
+    />
   )
 }
 
