@@ -73,9 +73,9 @@ describe('work order scheduled period', () => {
       isExpired: 'true',
     })
     expect(result.totalCount).toBe(2)
-    expect(result.data.every((wo) => wo.status === WorkOrderStatus.EXPIRED)).toBe(
-      true
-    )
+    expect(
+      result.data.every((wo) => wo.status === WorkOrderStatus.EXPIRED)
+    ).toBe(true)
   })
 
   it('counts per local month with the same filters', async () => {
@@ -103,7 +103,10 @@ describe('next visit reminder', () => {
   }
 
   it('is saved on a closed work order without leaving its period', async () => {
-    const id = await order(new Date(2026, 10, 18, 12), WorkOrderStatus.COMPLETED)
+    const id = await order(
+      new Date(2026, 10, 18, 12),
+      WorkOrderStatus.COMPLETED
+    )
 
     await repo.updateWorkOrder({
       id,
@@ -121,7 +124,10 @@ describe('next visit reminder', () => {
   })
 
   it('does not unlock changing the scheduled date of a closed work order', async () => {
-    const id = await order(new Date(2026, 10, 18, 12), WorkOrderStatus.COMPLETED)
+    const id = await order(
+      new Date(2026, 10, 18, 12),
+      WorkOrderStatus.COMPLETED
+    )
 
     await expect(
       repo.updateWorkOrder({
@@ -143,5 +149,85 @@ describe('next visit reminder', () => {
 
     await repo.updateWorkOrder({ id, nextVisitDate: null } as any)
     expect((await repo.getWorkOrder(id))?.nextVisitDate).toBeUndefined()
+  })
+})
+
+describe('next visit filters', () => {
+  async function withReminder(scheduled: Date, next?: Date) {
+    const id = await order(scheduled, WorkOrderStatus.COMPLETED)
+    if (next) {
+      await repo.updateWorkOrder({
+        id,
+        scheduledDate: scheduled,
+        nextVisitDate: next,
+      } as any)
+    }
+    return id
+  }
+
+  beforeEach(async () => {
+    resetTestDb()
+    seedBase()
+    await withReminder(new Date(2026, 10, 3, 9), new Date(2027, 8, 20, 12)) // Sep 2027 (late)
+    await withReminder(new Date(2026, 10, 5, 9), new Date(2027, 8, 2, 12)) // Sep 2027 (early)
+    await withReminder(new Date(2026, 10, 7, 9), new Date(2027, 2, 10, 12)) // Mar 2027
+    await withReminder(new Date(2026, 10, 9, 9)) // no reminder
+  })
+
+  it('filters by presence of a reminder', async () => {
+    const withIt = await repo.getWorkOrdersPaginated(1, 50, {
+      hasNextVisit: 'true',
+    })
+    const without = await repo.getWorkOrdersPaginated(1, 50, {
+      hasNextVisit: 'false',
+    })
+    expect(withIt.totalCount).toBe(3)
+    expect(without.totalCount).toBe(1)
+    expect(without.data[0].nextVisitDate).toBeUndefined()
+  })
+
+  it('filters by an inclusive range of whole days', async () => {
+    const result = await repo.getWorkOrdersPaginated(1, 50, {
+      nextVisitFrom: iso(new Date(2027, 8, 1)),
+      nextVisitTo: iso(new Date(2027, 8, 30, 23, 59, 59, 999)),
+    })
+    expect(result.totalCount).toBe(2)
+  })
+
+  it('orders by the reminder, soonest first, instead of the scheduled date', async () => {
+    const result = await repo.getWorkOrdersPaginated(1, 50, {
+      hasNextVisit: 'true',
+    })
+    expect(result.data.map((wo) => wo.nextVisitDate?.getTime())).toEqual([
+      new Date(2027, 2, 10, 12).getTime(),
+      new Date(2027, 8, 2, 12).getTime(),
+      new Date(2027, 8, 20, 12).getTime(),
+    ])
+  })
+
+  it('keeps the scheduled-date order when not browsing by reminder', async () => {
+    const result = await repo.getWorkOrdersPaginated(1, 50, {
+      hasNextVisit: 'false',
+    })
+    const all = await repo.getWorkOrdersPaginated(1, 50, {})
+    expect(all.data[0].scheduledDate.getDate()).toBe(9) // newest first
+    expect(result.data).toHaveLength(1)
+  })
+
+  it('counts per month of the reminder when browsing by it', async () => {
+    expect(
+      await repo.getWorkOrderMonthCounts({ hasNextVisit: 'true' })
+    ).toEqual({ '2027-03': 1, '2027-09': 2 })
+    // without the reminder filter the months are still the scheduled ones
+    expect(await repo.getWorkOrderMonthCounts({})).toEqual({ '2026-11': 4 })
+  })
+
+  it('combines with the scheduled period: moving the reminder does not leave November', async () => {
+    const result = await repo.getWorkOrdersPaginated(1, 50, {
+      scheduledFrom: iso(new Date(2026, 10, 1)),
+      scheduledTo: iso(new Date(2026, 10, 30, 23, 59, 59, 999)),
+      hasNextVisit: 'true',
+    })
+    expect(result.totalCount).toBe(3)
   })
 })

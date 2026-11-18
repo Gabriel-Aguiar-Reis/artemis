@@ -24,6 +24,11 @@ import { Text } from '@/src/components/ui/text'
 import { WorkOrderCard } from '@/src/components/ui/work-order-card'
 import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
 import { formatDate } from '@/src/lib/format'
+import {
+  describeNextVisitPeriod,
+  isNextVisitView,
+  resolveNextVisitRange,
+} from '@/src/lib/next-visit-period'
 import { UUID } from '@/src/lib/utils'
 import {
   describeScheduledPeriod,
@@ -72,6 +77,10 @@ export default function WorkOrdersScreen() {
     scheduledPeriod?: string
     scheduledFrom?: string
     scheduledTo?: string
+    nextVisitPeriod?: string
+    nextVisitFrom?: string
+    nextVisitTo?: string
+    hasNextVisit?: string
     visitDate?: string
     minTotalValue?: string
     maxTotalValue?: string
@@ -86,6 +95,7 @@ export default function WorkOrdersScreen() {
 
   // Presets are relative ("this-month"): resolved on every render
   const scheduledRange = resolveScheduledRange(params)
+  const nextVisitRange = resolveNextVisitRange(params)
   const filters = {
     search: params.search,
     phoneNumber: params.phoneNumber,
@@ -93,6 +103,9 @@ export default function WorkOrdersScreen() {
     isWhatsApp: params.isWhatsApp,
     scheduledFrom: scheduledRange?.from?.toISOString(),
     scheduledTo: scheduledRange?.to?.toISOString(),
+    nextVisitFrom: nextVisitRange?.from?.toISOString(),
+    nextVisitTo: nextVisitRange?.to?.toISOString(),
+    hasNextVisit: params.hasNextVisit,
     visitDate: params.visitDate,
     minTotalValue: params.minTotalValue,
     maxTotalValue: params.maxTotalValue,
@@ -112,6 +125,8 @@ export default function WorkOrdersScreen() {
     !!params.landlineNumber ||
     !!params.isWhatsApp ||
     !!scheduledRange ||
+    !!nextVisitRange ||
+    !!params.hasNextVisit ||
     !!params.visitDate ||
     !!params.minTotalValue ||
     !!params.maxTotalValue ||
@@ -392,12 +407,16 @@ export default function WorkOrdersScreen() {
   }
 
   // Grouped by scheduled month (the list is ordered by date desc, so each
-  // month is contiguous); lets the user browse month by month
+  // month is contiguous); lets the user browse month by month. Browsing by
+  // next visit is an agenda: soonest reminder first, grouped by its month.
+  const byNextVisit = isNextVisitView(filters)
   const rows = useMemo(() => {
     const out: Row[] = []
     let current: string | undefined
     for (const wo of allWorkOrders) {
-      const key = monthKey(wo.scheduledDate)
+      const key = monthKey(
+        byNextVisit ? (wo.nextVisitDate ?? wo.scheduledDate) : wo.scheduledDate
+      )
       if (key !== current) {
         out.push({ type: 'month', key })
         current = key
@@ -405,7 +424,7 @@ export default function WorkOrdersScreen() {
       out.push({ type: 'order', wo })
     }
     return out
-  }, [allWorkOrders])
+  }, [allWorkOrders, byNextVisit])
 
   const activeFilters = useMemo(() => {
     const filters = []
@@ -427,6 +446,16 @@ export default function WorkOrdersScreen() {
     const period = describeScheduledPeriod(params)
     if (period) {
       filters.push({ label: 'Período', value: period })
+    }
+    const nextVisit = describeNextVisitPeriod(params)
+    if (nextVisit) {
+      filters.push({ label: 'Próxima visita', value: nextVisit })
+    }
+    if (params.hasNextVisit) {
+      filters.push({
+        label: 'Tem próxima visita',
+        value: params.hasNextVisit === 'true' ? 'Sim' : 'Não',
+      })
     }
     if (params.visitDate) {
       filters.push({
@@ -480,6 +509,10 @@ export default function WorkOrdersScreen() {
     params.scheduledPeriod,
     params.scheduledFrom,
     params.scheduledTo,
+    params.nextVisitPeriod,
+    params.nextVisitFrom,
+    params.nextVisitTo,
+    params.hasNextVisit,
     params.visitDate,
     params.minTotalValue,
     params.maxTotalValue,
@@ -516,6 +549,11 @@ export default function WorkOrdersScreen() {
   // "today"/"this month"
   const showPeriod = useCallback((scheduledPeriod: string) => {
     router.setParams({ scheduledPeriod })
+  }, [])
+
+  // Agenda of reminders: soonest first
+  const showNextVisits = useCallback(() => {
+    router.setParams({ hasNextVisit: 'true' })
   }, [])
 
   const showExpired = useCallback(() => {
@@ -590,6 +628,9 @@ export default function WorkOrdersScreen() {
               onPress={() => showPeriod('this-month')}
             >
               <Text>Este mês</Text>
+            </Button>
+            <Button size="sm" variant="secondary" onPress={showNextVisits}>
+              <Text>Próximas visitas</Text>
             </Button>
             <Button size="sm" variant="secondary" onPress={showExpired}>
               <Text>Expiradas</Text>
