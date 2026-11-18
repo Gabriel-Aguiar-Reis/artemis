@@ -10,6 +10,7 @@ import {
 import { db } from '@/src/infra/db/drizzle/drizzle-client'
 import { category } from '@/src/infra/db/drizzle/schema/drizzle.category.schema'
 import { product } from '@/src/infra/db/drizzle/schema/drizzle.product.schema'
+import { containsFolded } from '@/src/infra/db/drizzle/sql-search'
 import { UUID } from '@/src/lib/utils'
 import { and, eq, gte, like, lte } from 'drizzle-orm'
 import uuid from 'react-native-uuid'
@@ -40,12 +41,12 @@ export default class DrizzleProductRepository implements ProductRepository {
 
     // Filtro de busca por nome
     if (filters?.search) {
-      conditions.push(like(product.name, `%${filters.search}%`))
+      conditions.push(containsFolded(product.name, filters.search))
     }
 
     // Filtro por nome da categoria
     if (filters?.categoryName) {
-      conditions.push(like(category.name, `%${filters.categoryName}%`))
+      conditions.push(containsFolded(category.name, filters.categoryName))
     }
 
     // Filtro por validade

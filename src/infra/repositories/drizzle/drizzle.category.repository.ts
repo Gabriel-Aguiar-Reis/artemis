@@ -7,8 +7,9 @@ import {
 } from '@/src/domain/validations/category.schema'
 import { db } from '@/src/infra/db/drizzle/drizzle-client'
 import { category } from '@/src/infra/db/drizzle/schema/drizzle.category.schema'
+import { containsFolded } from '@/src/infra/db/drizzle/sql-search'
 import { UUID } from '@/src/lib/utils'
-import { and, eq, like } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import uuid from 'react-native-uuid'
 
 export interface CategoryFilters {
@@ -23,7 +24,7 @@ export default class DrizzleCategoryRepository implements CategoryRepository {
 
     // Filtro de busca por nome
     if (filters?.search) {
-      conditions.push(like(category.name, `%${filters.search}%`))
+      conditions.push(containsFolded(category.name, filters.search))
     }
 
     // Filtro por status

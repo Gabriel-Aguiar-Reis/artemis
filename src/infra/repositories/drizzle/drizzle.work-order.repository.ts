@@ -40,6 +40,7 @@ import { workOrderItem } from '@/src/infra/db/drizzle/schema/drizzle.work-order-
 import { workOrderResultItem } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result-item.schema'
 import { workOrderResult } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result.schema'
 import { workOrder } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
+import { containsFolded } from '@/src/infra/db/drizzle/sql-search'
 import { hydrateWorkOrders } from '@/src/infra/repositories/drizzle/work-order-hydration'
 import { UUID } from '@/src/lib/utils'
 import {
@@ -149,7 +150,12 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
 
     // Filtro de busca por nome do cliente
     if (filters?.search) {
-      conditions.push(like(customer.storeName, `%${filters.search}%`))
+      conditions.push(
+        or(
+          containsFolded(customer.storeName, filters.search),
+          containsFolded(customer.contactName, filters.search)
+        )
+      )
     }
 
     // Filtro por telefone (já vem normalizado sem formatação)

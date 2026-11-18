@@ -14,7 +14,8 @@ import {
 } from '@/src/domain/validations/customer.schema'
 import { db } from '@/src/infra/db/drizzle/drizzle-client'
 import { customer } from '@/src/infra/db/drizzle/schema/drizzle.customer.schema'
-import { normalizePhoneBrazil, normalizeString, UUID } from '@/src/lib/utils'
+import { containsFolded } from '@/src/infra/db/drizzle/sql-search'
+import { normalizePhoneBrazil, UUID } from '@/src/lib/utils'
 import { and, asc, count, eq, like, or } from 'drizzle-orm'
 import uuid from 'react-native-uuid'
 
@@ -36,16 +37,13 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
   }
 
   /**
-   * Busca leve para comboboxes: só colunas necessárias, limitada e ordenada.
-   * LIKE do SQLite não ignora acento, então o termo normalizado vira padrão
-   * com `_` no lugar das letras acentuáveis (superset no SQL) e o resultado é
-   * refinado em JS com normalização (acento/caixa-insensível).
+   * Lightweight search for comboboxes: only the columns needed, ordered and
+   * limited. Accent- and case-insensitive (see sql-search.ts).
    */
   async searchCustomersLight(
     term: string,
     limit = 50
   ): Promise<CustomerLight[]> {
-    const normalized = normalizeString(term.trim())
     const cols = {
       id: customer.id,
       storeName: customer.storeName,
@@ -53,37 +51,17 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
       city: customer.addressCity,
       phone: customer.phoneNumber,
     }
+    const match = or(
+      containsFolded(customer.storeName, term),
+      containsFolded(customer.contactName, term)
+    )
 
-    if (!normalized) {
-      return (await db
-        .select(cols)
-        .from(customer)
-        .orderBy(asc(customer.storeName), asc(customer.id))
-        .limit(limit)) as CustomerLight[]
-    }
-
-    const pattern = `%${normalized
-      .replace(/[%_\\]/g, '')
-      .replace(/[aeioucn]/g, '_')}%`
-    const rows = (await db
+    return (await db
       .select(cols)
       .from(customer)
-      .where(
-        or(
-          like(customer.storeName, pattern),
-          like(customer.contactName, pattern)
-        )
-      )
+      .where(match)
       .orderBy(asc(customer.storeName), asc(customer.id))
-      .limit(Math.max(limit * 4, 200))) as CustomerLight[]
-
-    return rows
-      .filter(
-        (r) =>
-          normalizeString(r.storeName ?? '').includes(normalized) ||
-          normalizeString(r.contactName ?? '').includes(normalized)
-      )
-      .slice(0, limit)
+      .limit(limit)) as CustomerLight[]
   }
 
   async getCustomersPaginated(
@@ -99,14 +77,14 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
     if (filters?.search) {
       conditions.push(
         or(
-          like(customer.storeName, `%${filters.search}%`),
-          like(customer.contactName, `%${filters.search}%`)
+          containsFolded(customer.storeName, filters.search),
+          containsFolded(customer.contactName, filters.search)
         )
       )
     }
 
     if (filters?.contactName) {
-      conditions.push(like(customer.contactName, `%${filters.contactName}%`))
+      conditions.push(containsFolded(customer.contactName, filters.contactName))
     }
 
     if (filters?.phoneNumber) {
