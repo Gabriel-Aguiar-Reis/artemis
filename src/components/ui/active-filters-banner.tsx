@@ -41,7 +41,11 @@ export const ActiveFiltersBanner = ({
           </View>
         </View>
         <Link href={clearFiltersHref} asChild>
-          <Button size="icon" variant="ghost">
+          <Button
+            size="icon"
+            variant="ghost"
+            accessibilityLabel="Limpar filtros"
+          >
             <Icon as={FilterX} className="text-muted-foreground" />
           </Button>
         </Link>

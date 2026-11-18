@@ -5,6 +5,7 @@ appId: br.com.artemis
 tags: [visual]
 ---
 - runFlow: ../subflows/open-app.yaml
+- runFlow: ../subflows/reset-filters.yaml
 - openLink: artemis://itinerary/history
 - extendedWaitUntil:
     visible: ".* ordens"

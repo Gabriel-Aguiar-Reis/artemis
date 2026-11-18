@@ -5,11 +5,13 @@ appId: br.com.artemis
 tags: [qa, perf]
 ---
 - runFlow: subflows/open-app.yaml
+- runFlow: subflows/reset-filters.yaml
 - tapOn: OS
 - extendedWaitUntil:
     visible: Encontre uma ordem de serviço
     timeout: 30000
 - tapOn: Pesquisar por cliente ou contato...
+- eraseText: 40
 - inputText: a
 - pressKey: Enter
 - extendedWaitUntil:

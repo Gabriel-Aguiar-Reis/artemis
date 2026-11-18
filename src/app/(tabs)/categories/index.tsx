@@ -2,6 +2,7 @@ import {
   categoryHooks,
   useCategoriesFiltered,
 } from '@/src/application/hooks/category.hooks'
+import { usePersistedTabFilters } from '@/src/application/hooks/use-persisted-tab-filters'
 import { usePullToRefresh } from '@/src/application/hooks/use-pull-to-refresh'
 import { ActiveFiltersBanner } from '@/src/components/ui/active-filters-banner'
 import {
@@ -68,6 +69,8 @@ export default function CategoriesScreen() {
     search?: string
     status?: 'all' | 'active' | 'inactive'
   }>()
+  // Filters survive closing the app
+  usePersistedTabFilters('categories', params)
 
   const filters = {
     search: params.search,

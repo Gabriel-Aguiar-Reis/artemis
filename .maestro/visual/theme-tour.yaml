@@ -5,6 +5,7 @@ appId: br.com.artemis
 tags: [visual]
 ---
 - runFlow: ../subflows/open-app.yaml
+- runFlow: ../subflows/reset-filters.yaml
 - takeScreenshot: theme-01-home
 - tapOn: OS
 - extendedWaitUntil:
@@ -12,6 +13,7 @@ tags: [visual]
     timeout: 30000
 - takeScreenshot: theme-02a-work-orders-empty
 - tapOn: Pesquisar por cliente ou contato...
+- eraseText: 40
 - inputText: mercado
 - pressKey: Enter
 - extendedWaitUntil:

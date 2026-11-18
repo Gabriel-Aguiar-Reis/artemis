@@ -1,5 +1,6 @@
 import { itineraryWorkOrderHooks } from '@/src/application/hooks/itinerary-work-order.hooks'
 import { itineraryHooks } from '@/src/application/hooks/itinerary.hooks'
+import { usePersistedTabFilters } from '@/src/application/hooks/use-persisted-tab-filters'
 import { usePullToRefresh } from '@/src/application/hooks/use-pull-to-refresh'
 import { WhatsAppService } from '@/src/application/services/whatsapp.service'
 import { ActiveFiltersBanner } from '@/src/components/ui/active-filters-banner'
@@ -232,6 +233,8 @@ export default function ItineraryScreen() {
     hasPayment?: string
     hasResult?: string
   }>()
+  // Filters survive closing the app
+  usePersistedTabFilters('itinerary', params)
 
   // Helper to compare if two dates are the same day (ignoring time)
   const isSameDay = (date1: Date, date2: Date): boolean => {

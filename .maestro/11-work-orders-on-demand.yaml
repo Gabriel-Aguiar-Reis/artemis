@@ -5,6 +5,7 @@ appId: br.com.artemis
 tags: [qa]
 ---
 - runFlow: subflows/open-app.yaml
+- runFlow: subflows/reset-filters.yaml
 - tapOn: OS
 - extendedWaitUntil:
     visible: Encontre uma ordem de serviço
@@ -12,6 +13,7 @@ tags: [qa]
 - assertNotVisible: ".* - SP.*"
 - takeScreenshot: 11-empty
 - tapOn: Pesquisar por cliente ou contato...
+- eraseText: 40
 - inputText: sao judas
 - pressKey: Enter
 - extendedWaitUntil:

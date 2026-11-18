@@ -1,0 +1,83 @@
+# Filters of every tab survive killing the app; clearing them also persists.
+# Ends with no filters on the itinerary tab so the other flows aren't affected.
+appId: br.com.artemis
+tags: [qa]
+---
+- runFlow: subflows/open-app.yaml
+
+# Start clean (filters left by a previous run are restored too)
+- tapOn: OS
+- runFlow:
+    when:
+      visible: "Filtros ativos:"
+    commands:
+      - tapOn: Limpar filtros
+- tapOn: Clientes
+- runFlow:
+    when:
+      visible: "Filtros ativos:"
+    commands:
+      - tapOn: Limpar filtros
+- extendedWaitUntil:
+    visible: ".* - SP.*"
+    timeout: 30000
+
+# Customers: filter through the search screen
+- tapOn:
+    point: 79%,8%
+- tapOn: Pesquisar por loja ou contato...
+- eraseText: 40
+- inputText: padaria
+- hideKeyboard
+- tapOn: Aplicar Filtros
+- extendedWaitUntil:
+    visible: "Pesquisa: padaria"
+    timeout: 15000
+
+# Work orders: inline search (last tab before closing)
+- tapOn: OS
+- extendedWaitUntil:
+    visible: Encontre uma ordem de serviço|Filtros ativos:.*
+    timeout: 30000
+- tapOn: Pesquisar por cliente ou contato...
+- eraseText: 40
+- inputText: sao judas
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: "Busca: sao judas"
+    timeout: 15000
+
+# Cold start: back on the OS tab with the same search
+- runFlow: subflows/open-app.yaml
+- extendedWaitUntil:
+    visible: "Busca: sao judas"
+    timeout: 15000
+- assertVisible: Mercado São Judas.*
+- takeScreenshot: 14-os-restored
+# ...and the customers tab kept its filter too
+- tapOn: Clientes
+- extendedWaitUntil:
+    visible: "Pesquisa: padaria"
+    timeout: 15000
+- takeScreenshot: 14-customers-restored
+
+# Clear both and cold start again: they stay cleared
+- tapOn: Limpar filtros
+- extendedWaitUntil:
+    notVisible: "Pesquisa: padaria"
+    timeout: 10000
+- tapOn: OS
+- tapOn: Limpar filtros
+- extendedWaitUntil:
+    visible: Encontre uma ordem de serviço
+    timeout: 10000
+- runFlow: subflows/open-app.yaml
+- extendedWaitUntil:
+    visible: Encontre uma ordem de serviço
+    timeout: 15000
+- tapOn: Clientes
+- extendedWaitUntil:
+    visible: ".* - SP.*"
+    timeout: 30000
+- assertNotVisible: "Filtros ativos:"
+- tapOn: Itinerário

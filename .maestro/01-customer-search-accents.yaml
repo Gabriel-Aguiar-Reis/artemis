@@ -3,6 +3,7 @@ appId: br.com.artemis
 tags: [qa]
 ---
 - runFlow: subflows/open-app.yaml
+- runFlow: subflows/reset-filters.yaml
 - tapOn: Clientes
 - extendedWaitUntil:
     visible: ".* - SP.*"
@@ -10,6 +11,7 @@ tags: [qa]
 - tapOn:
     point: 79%,8%
 - tapOn: Pesquisar por loja ou contato...
+- eraseText: 40
 - inputText: sao judas
 - hideKeyboard
 - tapOn: Aplicar Filtros

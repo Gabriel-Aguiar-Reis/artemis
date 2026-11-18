@@ -2,6 +2,7 @@ import {
   productHooks,
   useProductsWithCategoryFiltered,
 } from '@/src/application/hooks/product.hooks'
+import { usePersistedTabFilters } from '@/src/application/hooks/use-persisted-tab-filters'
 import { usePullToRefresh } from '@/src/application/hooks/use-pull-to-refresh'
 import { ActiveFiltersBanner } from '@/src/components/ui/active-filters-banner'
 import {
@@ -107,6 +108,8 @@ export default function ProductsScreen() {
     categoryName?: string
     expiration?: string
   }>()
+  // Filters survive closing the app
+  usePersistedTabFilters('products', params)
 
   const filters = {
     search: params.search,

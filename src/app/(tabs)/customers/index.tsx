@@ -1,5 +1,6 @@
 import { customerHooks } from '@/src/application/hooks/customer.hooks'
 import { useCustomersInfinite } from '@/src/application/hooks/use-customers-infinite'
+import { usePersistedTabFilters } from '@/src/application/hooks/use-persisted-tab-filters'
 import { usePullToRefresh } from '@/src/application/hooks/use-pull-to-refresh'
 import { ActiveFiltersBanner } from '@/src/components/ui/active-filters-banner'
 import {
@@ -121,6 +122,8 @@ export default function CustomersScreen() {
     landlineNumber?: string
     isActiveWhatsApp?: string
   }>()
+  // Filters survive closing the app
+  usePersistedTabFilters('customers', params)
 
   const filters = {
     search: params.search,

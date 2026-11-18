@@ -1,3 +1,4 @@
+import { usePersistedTabFilters } from '@/src/application/hooks/use-persisted-tab-filters'
 import { usePullToRefresh } from '@/src/application/hooks/use-pull-to-refresh'
 import { useWorkOrdersInfinite } from '@/src/application/hooks/use-work-orders-infinite'
 import { workOrderHooks } from '@/src/application/hooks/work-order.hooks'
@@ -63,6 +64,8 @@ export default function WorkOrdersScreen() {
     isExpired?: string
     isCopied?: string
   }>()
+  // Filters survive closing the app
+  usePersistedTabFilters('work-orders', params)
 
   const filters = {
     search: params.search,
