@@ -1,0 +1,33 @@
+# Once the payment is settled the visit report is read-only (the repository
+# also rejects edits, so status and totals can't drift from what was paid).
+# Requires the paid work order created by 02-create-work-order-full.
+appId: br.com.artemis
+tags: [qa]
+---
+- runFlow: subflows/open-app.yaml
+- tapOn: Ordens de Serviço
+- extendedWaitUntil:
+    visible: ".* - SP.*"
+    timeout: 30000
+- tapOn:
+    point: 79%,8%
+- tapOn: Pesquisar por cliente...
+- inputText: acai bay
+- hideKeyboard
+- scrollUntilVisible:
+    element: Pago
+    direction: DOWN
+- tapOn: Pago
+- tapOn: Aplicar Filtros
+- extendedWaitUntil:
+    visible: "Pago: Sim"
+    timeout: 15000
+- tapOn:
+    point: 86%,30%
+- tapOn: Acessar Relatório
+- extendedWaitUntil:
+    visible: Relatório do Serviço
+    timeout: 10000
+- assertVisible: .*Não pode ser editado.*
+- assertVisible: R\$ 100,00
+- takeScreenshot: 10-paid-report-read-only

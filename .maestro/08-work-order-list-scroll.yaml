@@ -1,0 +1,27 @@
+# Long scroll through ~15k work orders: pages load on demand (infinite query),
+# the list stays virtualized and "back to top" returns to the first card.
+appId: br.com.artemis
+tags: [qa, perf]
+---
+- runFlow: subflows/open-app.yaml
+- tapOn: Ordens de Serviço
+- extendedWaitUntil:
+    visible: ".* - SP.*"
+    timeout: 30000
+- copyTextFrom:
+    text: ".* - SP.*"
+    index: 0
+- evalScript: ${output.firstAddress = maestro.copiedText}
+- repeat:
+    times: 25
+    commands:
+      - swipe:
+          direction: UP
+          duration: 150
+- assertVisible: ".* - SP.*"
+- takeScreenshot: 08-deep-scroll
+- tapOn: Voltar ao topo
+- extendedWaitUntil:
+    visible: ${output.firstAddress}
+    timeout: 5000
+- takeScreenshot: 08-back-to-top

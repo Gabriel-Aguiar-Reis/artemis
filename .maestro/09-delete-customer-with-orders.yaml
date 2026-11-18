@@ -1,0 +1,28 @@
+# Deleting a customer that has work orders hits the FK RESTRICT. The user must
+# see a friendly message (not the raw SQLite error) and the customer stays.
+appId: br.com.artemis
+tags: [qa]
+---
+- runFlow: subflows/open-app.yaml
+- tapOn: Clientes
+- extendedWaitUntil:
+    visible: ".* - SP.*"
+    timeout: 30000
+- tapOn:
+    point: 79%,8%
+- tapOn: Pesquisar por loja ou contato...
+- inputText: acai bay
+- hideKeyboard
+- tapOn: Aplicar Filtros
+- extendedWaitUntil:
+    visible: Açai Bay
+    timeout: 15000
+- tapOn:
+    point: 86%,30%
+- tapOn: Excluir
+- tapOn: Excluir
+- extendedWaitUntil:
+    visible: Este cliente possui ordens de serviço e não pode ser excluído.
+    timeout: 10000
+- takeScreenshot: 09-delete-customer-blocked
+- assertVisible: Açai Bay

@@ -1,0 +1,23 @@
+# Opens the dev build through the Expo dev client (Metro on the host at 8081)
+# and lands on the home screen. Dismisses the dev-client onboarding/menu, which
+# shows up on the first launch after clearing app data.
+appId: br.com.artemis
+---
+- stopApp
+- openLink: artemis://expo-development-client/?url=http%3A%2F%2F10.0.2.2%3A8081
+- extendedWaitUntil:
+    visible: "Bem-vindo ao.*|Continue|Connected to:"
+    timeout: 60000
+- runFlow:
+    when:
+      visible: Continue
+    commands:
+      - tapOn: Continue
+- runFlow:
+    when:
+      visible: "Connected to:"
+    commands:
+      - back
+- extendedWaitUntil:
+    visible: Bem-vindo ao.*
+    timeout: 60000
