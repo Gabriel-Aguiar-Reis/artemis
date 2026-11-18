@@ -15,6 +15,7 @@ type WorkOrderModelShape = Pick<WorkOrder, 'id' | 'status' | 'notes'> & {
   updatedAt: string
   scheduledDate: string
   visitDate: string | null
+  nextVisitDate: string | null
   paymentOrderId: string
   resultId: string | null
 }
@@ -32,6 +33,8 @@ export const workOrder = sqliteTable(
     updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
     scheduledDate: text('scheduled_date').notNull(),
     visitDate: text('visit_date'),
+    // Reminder for the next sale/visit; does not affect the period filters
+    nextVisitDate: text('next_visit_date'),
     paymentOrderId: text('payment_order_id').references(() => paymentOrder.id, {
       onDelete: 'set null',
     }),

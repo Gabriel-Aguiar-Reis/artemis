@@ -16,6 +16,7 @@ import { cn, formatPhoneBrazil } from '@/src/lib/utils'
 import {
   Banknote,
   CalendarCheck,
+  CalendarClock,
   CalendarSync,
   Contact,
   MapPinned,
@@ -166,6 +167,15 @@ function WorkOrderCardComponent({
           )}
         </View>
 
+        {wo.nextVisitDate ? (
+          <View className="flex-row items-center gap-2">
+            <Icon as={CalendarClock} size={16} className="text-primary" />
+            <Text className="mt-1 text-sm text-primary">
+              Próxima visita: {formatDateShort(wo.nextVisitDate)}
+            </Text>
+          </View>
+        ) : null}
+
         <View className="flex-row items-center gap-2 flex-wrap">
           <View className="flex-row items-center mb-1 gap-2">
             <Icon
@@ -232,6 +242,13 @@ export const WorkOrderCard = React.memo(
     if (
       prevProps.wo.scheduledDate.getTime() !==
       nextProps.wo.scheduledDate.getTime()
+    ) {
+      return false
+    }
+
+    if (
+      prevProps.wo.nextVisitDate?.getTime() !==
+      nextProps.wo.nextVisitDate?.getTime()
     ) {
       return false
     }

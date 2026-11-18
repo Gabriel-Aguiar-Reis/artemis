@@ -86,6 +86,7 @@ exports[`drizzle schema definitions > exposes workOrder columns 1`] = `
   "updatedAt",
   "scheduledDate",
   "visitDate",
+  "nextVisitDate",
   "paymentOrderId",
   "status",
   "resultId",
