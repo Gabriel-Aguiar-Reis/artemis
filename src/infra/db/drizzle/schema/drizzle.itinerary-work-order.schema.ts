@@ -1,22 +1,33 @@
 import { itinerary } from '@/src/infra/db/drizzle/schema/drizzle.itinerary.schema'
 import { workOrder } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
 import { InferInsertModel, InferSelectModel } from 'drizzle-orm'
-import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import uuid from 'react-native-uuid'
 
-export const itineraryWorkOrder = sqliteTable('itinerary_work_order', {
-  id: text('id', { length: 36 })
-    .primaryKey()
-    .$defaultFn(() => String(uuid.v4())),
-  itineraryId: text('itinerary_id')
-    .references(() => itinerary.id, { onDelete: 'cascade' })
-    .notNull(),
-  workOrderId: text('work_order_id')
-    .references(() => workOrder.id, { onDelete: 'cascade' })
-    .notNull(),
-  position: integer('position').notNull(),
-  isLate: integer('is_late', { mode: 'boolean' }).notNull().default(false),
-})
+export const itineraryWorkOrder = sqliteTable(
+  'itinerary_work_order',
+  {
+    id: text('id', { length: 36 })
+      .primaryKey()
+      .$defaultFn(() => String(uuid.v4())),
+    itineraryId: text('itinerary_id')
+      .references(() => itinerary.id, { onDelete: 'cascade' })
+      .notNull(),
+    workOrderId: text('work_order_id')
+      .references(() => workOrder.id, { onDelete: 'cascade' })
+      .notNull(),
+    position: integer('position').notNull(),
+    isLate: integer('is_late', { mode: 'boolean' }).notNull().default(false),
+  },
+  (table) => ({
+    itineraryPositionIdx: index(
+      'idx_itinerary_work_order_itinerary_position'
+    ).on(table.itineraryId, table.position),
+    workOrderIdIdx: index('idx_itinerary_work_order_work_order_id').on(
+      table.workOrderId
+    ),
+  })
+)
 
 export type ItineraryWorkOrderTable = InferSelectModel<
   typeof itineraryWorkOrder

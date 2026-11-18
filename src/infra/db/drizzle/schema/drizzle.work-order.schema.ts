@@ -48,6 +48,10 @@ export const workOrder = sqliteTable(
     visitDateIdx: index('idx_work_order_visit_date').on(table.visitDate),
     statusIdx: index('idx_work_order_status').on(table.status),
     customerIdIdx: index('idx_work_order_customer_id').on(table.customerId),
+    resultIdIdx: index('idx_work_order_result_id').on(table.resultId),
+    paymentOrderIdIdx: index('idx_work_order_payment_order_id').on(
+      table.paymentOrderId
+    ),
   })
 ) satisfies Record<keyof WorkOrderModelShape, any>
 

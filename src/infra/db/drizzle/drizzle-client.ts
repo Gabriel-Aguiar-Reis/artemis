@@ -8,8 +8,14 @@ let drizzleInstance: ReturnType<typeof drizzle> | null = null
 export function getExpoDb() {
   if (!expoDb) {
     try {
-      expoDb = openDatabaseSync('artemis.db', { enableChangeListener: true })
-      console.log('Database opened successfully')
+      // enableChangeListener desligado: ninguém usa useLiveQuery e o listener
+      // custa um callback por linha alterada (pesado em importações em lote).
+      expoDb = openDatabaseSync('artemis.db')
+      // WAL: leituras não bloqueiam escritas e cada commit faz menos fsync.
+      // synchronous=NORMAL é seguro com WAL (pode perder só o último commit
+      // numa queda de energia, nunca corrompe o banco).
+      expoDb.execSync('PRAGMA journal_mode = WAL; PRAGMA synchronous = NORMAL;')
+      if (__DEV__) console.log('Database opened successfully')
       // NÃO habilitar foreign keys aqui - será feito APÓS migrations
     } catch (error) {
       console.error('Error opening database:', error)
