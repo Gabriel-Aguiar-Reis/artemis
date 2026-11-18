@@ -297,8 +297,8 @@ export default function WorkOrdersScreen() {
   }
 
   // Função para enviar mensagem do WhatsApp
-  const handleSendWhatsApp = () => {
-    if (!createdWorkOrderId || !allWorkOrders) {
+  const handleSendWhatsApp = async () => {
+    if (!createdWorkOrderId) {
       setShowWhatsAppDialog(false)
       router.setParams({ createdWorkOrderId: undefined })
       router.navigate('/work-orders', { dangerouslySingular: true })
@@ -306,8 +306,11 @@ export default function WorkOrdersScreen() {
     }
 
     try {
-      // Buscar a work order criada
-      const workOrder = allWorkOrders.find((wo) => wo.id === createdWorkOrderId)
+      // Buscar a OS criada: primeiro na lista carregada; se não estiver na
+      // página atual (ou a lista ainda não recarregou), direto no banco.
+      const workOrder =
+        allWorkOrders?.find((wo) => wo.id === createdWorkOrderId) ??
+        (await workOrderHooks.getWorkOrderById(createdWorkOrderId as UUID))
 
       if (!workOrder) {
         throw new Error('Ordem de serviço não encontrada')

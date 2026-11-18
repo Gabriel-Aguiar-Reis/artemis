@@ -153,6 +153,9 @@ export const workOrderHooks = {
     })
   },
 
+  /** Leitura avulsa (fora de hook), para ações pontuais como o WhatsApp. */
+  getWorkOrderById: (id: UUID) => workOrderRepo.getWorkOrder(id),
+
   /**
    * Cria a OS completa (itens + relatório + pagamento) numa transação só e,
    * se ainda estiver em aberto, tenta incluí-la no itinerário ativo.

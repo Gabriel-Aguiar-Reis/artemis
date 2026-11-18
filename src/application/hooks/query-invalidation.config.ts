@@ -32,6 +32,7 @@ export const QUERY_DEPENDENCIES: Record<QueryKey, QueryKey[]> = {
 
   // Escrita de OS toca itinerários, itens e resultados
   workOrders: [
+    'paymentOrders',
     'itineraries',
     'itineraryWorkOrders',
     'workOrderItems',
@@ -50,6 +51,7 @@ export const QUERY_DEPENDENCIES: Record<QueryKey, QueryKey[]> = {
     'workOrders',
     'itineraries',
     'workOrderItems',
+    'workOrderResults',
     'workOrderResultItems',
   ],
 

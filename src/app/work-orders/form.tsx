@@ -22,6 +22,7 @@ import { CircleQuestionMark, CreditCard, Info } from 'lucide-react-native'
 import * as React from 'react'
 import { useForm } from 'react-hook-form'
 import { View } from 'react-native'
+import Toast from 'react-native-toast-message'
 import { z } from 'zod'
 
 // Tipo intermediário para os comboboxes (inclui productName)
@@ -176,29 +177,41 @@ export default function WorkOrderFormScreen() {
   const onSubmitFinal = async (data: WorkOrderFormData) => {
     // Evita duplo toque criando duas OS
     if (isWorkOrderPending) return
-    try {
-      const priceOf = (productId: string) => {
-        const info = allProducts?.find((prod) => prod.id === productId)
-        if (!info) throw new Error('Produto não encontrado. Atualize a lista.')
-        return info.salePrice
-      }
 
-      const toItem = (i: {
-        productId: string
-        quantity: number
-        priceSnapshot: number
-      }) => ({
-        productId: i.productId,
-        quantity: i.quantity,
-        priceSnapshot: i.priceSnapshot,
+    // Preparação: o preço agendado vem do cadastro atual do produto
+    const missing = (data.products || []).filter(
+      (p) => !allProducts?.some((prod) => prod.id === p.productId)
+    )
+    if (missing.length > 0) {
+      Toast.show({
+        type: 'error',
+        text1: 'Não foi possível criar a ordem de serviço',
+        text2: allProducts
+          ? 'Algum produto selecionado não existe mais. Revise a lista.'
+          : 'A lista de produtos ainda está carregando. Tente de novo.',
       })
+      return
+    }
+    const priceOf = (productId: string) =>
+      allProducts!.find((prod) => prod.id === productId)!.salePrice
 
-      // O pagamento vale o total do relatório (trocados + adicionados)
-      const paymentTotal = computeResultTotal(
-        data.exchangedProducts || [],
-        data.addedProducts || []
-      )
+    const toItem = (i: {
+      productId: string
+      quantity: number
+      priceSnapshot: number
+    }) => ({
+      productId: i.productId,
+      quantity: i.quantity,
+      priceSnapshot: i.priceSnapshot,
+    })
 
+    // O pagamento vale o total do relatório (trocados + adicionados)
+    const paymentTotal = computeResultTotal(
+      data.exchangedProducts || [],
+      data.addedProducts || []
+    )
+
+    try {
       // Tudo numa transação só (OS + itens + relatório + pagamento): se algo
       // falhar nada é gravado, e um novo envio não duplica a OS.
       const res = await createWorkOrder({
@@ -238,7 +251,7 @@ export default function WorkOrderFormScreen() {
         params: { createdWorkOrderId: res.workOrder.id },
       })
     } catch (error) {
-      // O toast de erro já é exibido pelo hook
+      // o toast de erro da gravação é exibido pelo hook
       if (__DEV__) console.error('Error creating work order:', error)
     }
   }

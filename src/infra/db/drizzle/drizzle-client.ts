@@ -60,6 +60,28 @@ export function resetDrizzleClient() {
   console.log('Drizzle client reset')
 }
 
+/**
+ * Com WAL, o SQLite mantém `artemis.db-wal` e `artemis.db-shm` ao lado do
+ * banco. O deleteDatabaseSync do expo-sqlite apaga só o arquivo principal; um
+ * -wal que sobrar (ex.: reset após crash) poderia ser reaplicado no banco
+ * novo. Remove os dois, ignorando se não existirem.
+ */
+export async function removeWalFiles(name = 'artemis.db') {
+  try {
+    const { defaultDatabaseDirectory } = require('expo-sqlite')
+    const FS = require('expo-file-system/legacy')
+    if (!defaultDatabaseDirectory) return
+    const dir = String(defaultDatabaseDirectory).startsWith('file://')
+      ? String(defaultDatabaseDirectory)
+      : `file://${defaultDatabaseDirectory}`
+    for (const suffix of ['-wal', '-shm']) {
+      await FS.deleteAsync(`${dir}/${name}${suffix}`, { idempotent: true })
+    }
+  } catch (error) {
+    if (__DEV__) console.warn('Não foi possível remover arquivos WAL:', error)
+  }
+}
+
 export function deleteDatabaseAndReset() {
   try {
     // Resetar e fechar conexões
@@ -72,8 +94,8 @@ export function deleteDatabaseAndReset() {
           // Deletar o arquivo do banco
           const { deleteDatabaseSync } = require('expo-sqlite')
           deleteDatabaseSync('artemis.db')
-          console.log('Database deleted successfully')
-          resolve(true)
+          if (__DEV__) console.log('Database deleted successfully')
+          removeWalFiles().finally(() => resolve(true))
         } catch (error) {
           console.error('Error deleting database:', error)
           resolve(false)

@@ -16,6 +16,7 @@ import {
   enableForeignKeys,
   getExpoDb,
   initDrizzleClient,
+  removeWalFiles,
 } from '@/src/infra/db/drizzle/drizzle-client'
 import migrations from '@/src/infra/db/drizzle/migrations'
 import { NAV_THEME } from '@/src/lib/theme'
@@ -118,7 +119,15 @@ function LicenseCheck({
   const shouldShowActivation =
     license && license.isExpired() && !license.isAdmin
 
-  const licenseReady = !isLoading && !createLicenseMutation.isPending
+  // No primeiro uso não há licença: no primeiro commit isPending ainda é false
+  // (o mutate roda no efeito), então espera a licença existir ou a criação
+  // terminar (sucesso ou erro) para não piscar uma tela em branco.
+  const licenseReady =
+    !isLoading &&
+    !createLicenseMutation.isPending &&
+    (!!license ||
+      createLicenseMutation.isSuccess ||
+      createLicenseMutation.isError)
 
   // Esconde a splash quando licença e tema estão prontos
   useEffect(() => {
@@ -160,6 +169,7 @@ export default function RootLayout() {
       // Deletar o banco
       const { deleteDatabaseSync } = require('expo-sqlite')
       await deleteDatabaseSync('artemis.db')
+      await removeWalFiles()
       if (__DEV__) console.log('Database deleted, reloading app...')
 
       // Recarregar o app completamente
