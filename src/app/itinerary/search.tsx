@@ -66,14 +66,14 @@ export default function ItinerarySearchScreen() {
     'all' | 'true' | 'false'
   >((params.hasResult as any) || 'all')
 
-  // Aplicar debounce nos inputs de texto (300ms)
+  // Debounce the text inputs (300ms)
   const debouncedSearch = useDebouncedValue(searchQuery, 300)
   const debouncedPhoneNumber = useDebouncedValue(phoneNumberFilter, 300)
   const debouncedLandlineNumber = useDebouncedValue(landlineNumberFilter, 300)
   const debouncedMinTotalValue = useDebouncedValue(minTotalValueFilter, 300)
   const debouncedMaxTotalValue = useDebouncedValue(maxTotalValueFilter, 300)
 
-  // Auto-aplicar filtros quando valores debounced mudarem
+  // Auto-apply filters when debounced values change
   React.useEffect(() => {
     const filters = {
       search: debouncedSearch || undefined,
@@ -156,7 +156,7 @@ export default function ItinerarySearchScreen() {
     hasResultFilter !== 'all'
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView edges={['left', 'right', 'bottom']} className="flex-1">
       <Stack.Screen options={{ title: 'Filtrar Itinerário' }} />
 
       <KeyboardAvoidingView
@@ -164,7 +164,7 @@ export default function ItinerarySearchScreen() {
         style={{ flex: 1 }}
         keyboardVerticalOffset={80}
       >
-        <ScrollView>
+        <ScrollView keyboardShouldPersistTaps="handled">
           <View style={{ flex: 1 }}>
             <View className="gap-4 p-4 flex-1">
               <View className="relative">

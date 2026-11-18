@@ -8,8 +8,11 @@ const PAGE_SIZE = 50
 
 export { WorkOrderFilters }
 
-export const useWorkOrdersInfinite = (filters?: WorkOrderFilters) => {
-  // Normalizar filtros antes de passar para o repository
+export const useWorkOrdersInfinite = (
+  filters?: WorkOrderFilters,
+  options: { enabled?: boolean } = {}
+) => {
+  // Normalize filters before passing them to the repository
   const normalizedFilters: WorkOrderFilters | undefined = filters
     ? {
         search: filters.search,
@@ -52,6 +55,8 @@ export const useWorkOrdersInfinite = (filters?: WorkOrderFilters) => {
       return undefined
     },
     initialPageParam: 1,
-    staleTime: 1000 * 30, // 30 segundos
+    // Work orders are fetched on demand (search/filters); see the list screen
+    enabled: options.enabled ?? true,
+    staleTime: 1000 * 30, // 30 seconds
   })
 }

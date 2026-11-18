@@ -101,6 +101,7 @@ describe('useAutoAddWorkOrderToItinerary', () => {
 
     const workOrderBase = {
       id: 'wo-1',
+      status: 'PENDING',
       scheduledDate: new Date('2024-01-02T00:00:00Z'),
     } as any
 

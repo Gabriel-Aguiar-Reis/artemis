@@ -1,5 +1,15 @@
 const { hairlineWidth } = require('nativewind/theme')
 
+/** Theme color backed by a CSS variable from global.css */
+const c = (name) => `hsl(var(--${name}) / <alpha-value>)`
+
+/** Semantic status color: text/icon tone, text on solid fill, tinted bg */
+const status = (name) => ({
+  DEFAULT: c(name),
+  foreground: c(`${name}-foreground`),
+  subtle: c(`${name}-subtle`),
+})
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: 'class',
@@ -8,43 +18,25 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        border: 'hsl(var(--border))',
-        input: 'hsl(var(--input))',
-        ring: 'hsl(var(--ring))',
-        background: 'hsl(var(--background))',
-        foreground: 'hsl(var(--foreground))',
-        primary: {
-          DEFAULT: 'hsl(var(--primary))',
-          foreground: 'hsl(var(--primary-foreground))',
-        },
+        // hsl(var(--x) / <alpha-value>) keeps opacity modifiers (bg-primary/10)
+        border: c('border'),
+        input: c('input'),
+        ring: c('ring'),
+        background: c('background'),
+        foreground: c('foreground'),
+        primary: { DEFAULT: c('primary'), foreground: c('primary-foreground') },
         secondary: {
-          DEFAULT: 'hsl(var(--secondary))',
-          foreground: 'hsl(var(--secondary-foreground))',
+          DEFAULT: c('secondary'),
+          foreground: c('secondary-foreground'),
         },
-        destructive: {
-          DEFAULT: 'hsl(var(--destructive))',
-          foreground: 'hsl(var(--destructive-foreground))',
-        },
-        warning: {
-          DEFAULT: 'hsl(var(--warning))',
-          foreground: 'hsl(var(--warning-foreground))',
-        },
-        muted: {
-          DEFAULT: 'hsl(var(--muted))',
-          foreground: 'hsl(var(--muted-foreground))',
-        },
-        accent: {
-          DEFAULT: 'hsl(var(--accent))',
-          foreground: 'hsl(var(--accent-foreground))',
-        },
-        popover: {
-          DEFAULT: 'hsl(var(--popover))',
-          foreground: 'hsl(var(--popover-foreground))',
-        },
-        card: {
-          DEFAULT: 'hsl(var(--card))',
-          foreground: 'hsl(var(--card-foreground))',
-        },
+        muted: { DEFAULT: c('muted'), foreground: c('muted-foreground') },
+        accent: { DEFAULT: c('accent'), foreground: c('accent-foreground') },
+        popover: { DEFAULT: c('popover'), foreground: c('popover-foreground') },
+        card: { DEFAULT: c('card'), foreground: c('card-foreground') },
+        destructive: status('destructive'),
+        success: status('success'),
+        warning: status('warning'),
+        info: status('info'),
       },
       borderRadius: {
         lg: 'var(--radius)',

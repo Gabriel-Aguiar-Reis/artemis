@@ -23,7 +23,7 @@ const WhatsAppIconBase = forwardRef<SVGElement, Props>(
   }
 )
 
-// Permitir usar className e size do NativeWind igual aos Lucide Icons
+// Allow using NativeWind className and size just like Lucide Icons
 cssInterop(WhatsAppIconBase, {
   className: {
     target: 'style',

@@ -1,0 +1,30 @@
+# Visual check of form spacing and top padding. Screenshots only.
+appId: br.com.artemis
+tags: [visual]
+---
+- runFlow: ../subflows/open-app.yaml
+- openLink: artemis://customers/form
+- extendedWaitUntil:
+    visible: ".*Cliente.*"
+    timeout: 15000
+- takeScreenshot: form-01-customer
+- openLink: artemis://products/form
+- extendedWaitUntil:
+    visible: ".*Produto.*"
+    timeout: 15000
+- takeScreenshot: form-02-product
+- openLink: artemis://categories/form
+- extendedWaitUntil:
+    visible: Nova Categoria
+    timeout: 15000
+- takeScreenshot: form-03-category
+- openLink: artemis://work-orders/form
+- extendedWaitUntil:
+    visible: Etapa 1 de 6
+    timeout: 15000
+- takeScreenshot: form-04-work-order
+- openLink: artemis://work-orders/search
+- extendedWaitUntil:
+    visible: Aplicar Filtros
+    timeout: 15000
+- takeScreenshot: form-06-wo-search

@@ -33,7 +33,7 @@ export class GeocodingService {
 
     return Address.fromDTO({
       streetName: data.street,
-      streetNumber: 0,
+      streetNumber: '',
       neighborhood: data.neighborhood,
       city: data.city,
       state: data.state,

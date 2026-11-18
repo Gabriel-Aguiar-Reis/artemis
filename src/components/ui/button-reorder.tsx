@@ -7,5 +7,11 @@ type ButtonReorderProps = {
 }
 
 export const ButtonReorder = ({ href }: ButtonReorderProps) => {
-  return <NavigationButton href={href} icon={ArrowDownUp} />
+  return (
+    <NavigationButton
+      href={href}
+      icon={ArrowDownUp}
+      accessibilityLabel="Reordenar itinerário"
+    />
+  )
 }

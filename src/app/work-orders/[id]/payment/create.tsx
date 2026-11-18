@@ -1,4 +1,3 @@
-import { paymentOrderHooks } from '@/src/application/hooks/payment-order.hooks'
 import { workOrderHooks } from '@/src/application/hooks/work-order.hooks'
 import { Alert, AlertDescription, AlertTitle } from '@/src/components/ui/alert'
 import { Button } from '@/src/components/ui/button'
@@ -18,18 +17,13 @@ import { useEffect } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { ScrollView, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import uuid from 'react-native-uuid'
 
 export default function WorkOrderPaymentCreateScreen() {
   const params = useLocalSearchParams<{ id: UUID }>()
   const { data: workOrder, isLoading: isLoadingWorkOrder } =
     workOrderHooks.getWorkOrder(params.id)
-  const { mutateAsync: addPaymentOrder, isPending: isAddingPayment } =
-    paymentOrderHooks.addPaymentOrder()
-  const {
-    mutateAsync: updateWorkOrderWithPayment,
-    isPending: isUpdatingWorkOrder,
-  } = workOrderHooks.updateWorkOrderWithPayment()
+  const { mutateAsync: addPayment, isPending: isSaving } =
+    workOrderHooks.useAddPaymentToWorkOrder()
 
   const form = useForm<PaymentOrderInsertDTO>({
     resolver: zodResolver(paymentOrderInsertSchema),
@@ -48,7 +42,7 @@ export default function WorkOrderPaymentCreateScreen() {
   const isPaid = form.watch('isPaid')
   const paymentDate = form.watch('paymentDate')
 
-  // Calcular total baseado nos produtos do resultado (se existir)
+  // Compute total based on the result products (if any)
   useEffect(() => {
     if (!workOrder?.result) return
 
@@ -67,19 +61,19 @@ export default function WorkOrderPaymentCreateScreen() {
     }
   }, [workOrder])
 
-  // Se marcar como pago, força parcelas = 1, paidInstallments = 1 e data para hoje se não houver
+  // When marked as paid, force installments = 1, paidInstallments = 1 and date to today if missing
   useEffect(() => {
     if (isPaid) {
       form.setValue('installments', '1')
       form.setValue('paidInstallments', '1')
-      // Se não houver data de pagamento, define como hoje
+      // If there is no payment date, set it to today
       if (!paymentDate) {
         form.setValue('paymentDate', new Date() as any)
       }
     }
   }, [isPaid])
 
-  // Se mudar parcelas para > 1, desmarca isPaid
+  // If installments change to > 1, uncheck isPaid
   useEffect(() => {
     if ((installments || 1) > 1 && isPaid) {
       form.setValue('isPaid', false)
@@ -87,7 +81,7 @@ export default function WorkOrderPaymentCreateScreen() {
     }
   }, [installments, isPaid, form])
 
-  // Se a data de pagamento for futura, desmarca isPaid
+  // If the payment date is in the future, uncheck isPaid
   useEffect(() => {
     if (paymentDate && isPaid) {
       const selectedDate =
@@ -103,7 +97,7 @@ export default function WorkOrderPaymentCreateScreen() {
     }
   }, [paymentDate])
 
-  // Verificar se a data de pagamento é futura
+  // Check whether the payment date is in the future
   const isPaymentDateFuture = () => {
     if (!paymentDate) return false
     const selectedDate =
@@ -115,40 +109,40 @@ export default function WorkOrderPaymentCreateScreen() {
   }
 
   const onSubmit = form.handleSubmit(async (data) => {
+    // Avoid a double tap creating two payments
+    if (isSaving) return
     try {
-      // O BaseForm envia com coma decimal, converter para ponto
+      // BaseForm sends a decimal comma, convert to dot
       const normalized = String(data.totalValue || '0').replace(',', '.')
-      const totalValueNumber = Number(normalized) || 0
-      
-      console.log('Payment create - data.totalValue:', data.totalValue)
-      console.log('Payment create - totalValueNumber:', totalValueNumber)
-      
-      // 1. Criar payment order
-      const paymentOrderId = uuid.v4() as UUID
-      await addPaymentOrder({
-        id: paymentOrderId,
-        method: data.method,
-        totalValue: totalValueNumber,
-        installments: Number(data.installments) || 1,
-        isPaid: data.isPaid ?? false,
-        paidInstallments: Number(data.paidInstallments) || 0,
-        paymentDate: data.paymentDate
-          ? data.paymentDate instanceof Date
-            ? data.paymentDate.toISOString()
-            : data.paymentDate
-          : null,
-      } as any)
-      // 2. Associar payment order à work order
-      await (updateWorkOrderWithPayment as any)([params.id, paymentOrderId])
+      // One transaction: create the payment and link it to the work order
+      await addPayment({
+        workOrderId: params.id,
+        payment: {
+          method: data.method,
+          totalValue: Number(normalized) || 0,
+          installments: Number(data.installments) || 1,
+          isPaid: data.isPaid ?? false,
+          paidInstallments: Number(data.paidInstallments) || 0,
+          paymentDate: data.paymentDate
+            ? data.paymentDate instanceof Date
+              ? data.paymentDate.toISOString()
+              : data.paymentDate
+            : null,
+        },
+      })
       router.back()
     } catch (error) {
-      console.error('Erro ao criar pagamento:', error)
+      // the hook shows the error toast
+      if (__DEV__) console.error('Error creating payment:', error)
     }
   })
 
   if (isLoadingWorkOrder) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Carregando ordem de serviço...</Text>
       </SafeAreaView>
     )
@@ -156,7 +150,10 @@ export default function WorkOrderPaymentCreateScreen() {
 
   if (!workOrder) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Ordem de serviço não encontrada.</Text>
       </SafeAreaView>
     )
@@ -164,7 +161,10 @@ export default function WorkOrderPaymentCreateScreen() {
 
   if (workOrder.paymentOrder) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Esta ordem de serviço já possui um pagamento registrado.</Text>
       </SafeAreaView>
     )
@@ -181,10 +181,10 @@ export default function WorkOrderPaymentCreateScreen() {
     })) || []),
   ]
 
-  const isPending = isAddingPayment || isUpdatingWorkOrder
+  const isPending = isSaving
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView edges={['left', 'right', 'bottom']} className="flex-1">
       <Stack.Screen
         options={{
           title: 'Criar Pagamento',
@@ -192,7 +192,7 @@ export default function WorkOrderPaymentCreateScreen() {
       />
       <ScrollView className="flex-1 p-4">
         <View className="gap-4">
-          {/* Resumo dos produtos (se houver relatório) */}
+          {/* Product summary (if there is a report) */}
           {allProductItems.length > 0 && (
             <View className="bg-accent/30 p-4 rounded-lg mb-2">
               <Text className="text-base font-semibold mb-3">
@@ -227,7 +227,7 @@ export default function WorkOrderPaymentCreateScreen() {
               ))}
               <View className="flex-row justify-between items-center pt-3 mt-2 border-t-2 border-border">
                 <Text className="font-bold text-lg">Total:</Text>
-                <Text className="font-bold text-xl text-primary">
+                <Text className="font-bold text-xl text-foreground">
                   R${' '}
                   {allProductItems
                     .reduce(
@@ -274,7 +274,7 @@ export default function WorkOrderPaymentCreateScreen() {
             error={getErrorMessage(form.formState.errors?.totalValue?.message)}
           />
 
-          {/* Alerta explicativo sobre pagamento */}
+          {/* Payment explanatory alert */}
           <Alert icon={Info}>
             <AlertTitle>Sobre o Pagamento</AlertTitle>
             <AlertDescription>

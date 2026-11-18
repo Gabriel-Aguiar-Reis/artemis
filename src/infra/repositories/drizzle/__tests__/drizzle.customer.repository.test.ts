@@ -259,7 +259,7 @@ describe('DrizzleCustomerRepository', () => {
     const repo = new DrizzleCustomerRepository()
     const address = Address.fromDTO({
       streetName: 'Rua A',
-      streetNumber: 10,
+      streetNumber: '10',
       neighborhood: 'Centro',
       city: 'São Paulo',
       state: 'SP',
@@ -336,7 +336,7 @@ describe('DrizzleCustomerRepository', () => {
     const repo = new DrizzleCustomerRepository()
     const address = Address.fromDTO({
       streetName: 'Rua A',
-      streetNumber: 10,
+      streetNumber: '10',
       neighborhood: 'Centro',
       city: 'São Paulo',
       state: 'SP',
@@ -387,7 +387,7 @@ describe('DrizzleCustomerRepository', () => {
     const repo = new DrizzleCustomerRepository()
     const address = Address.fromDTO({
       streetName: 'Rua A',
-      streetNumber: 10,
+      streetNumber: '10',
       neighborhood: 'Centro',
       city: 'São Paulo',
       state: 'SP',

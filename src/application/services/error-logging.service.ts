@@ -29,7 +29,7 @@ export type ErrorLogDump = {
 }
 
 /**
- * Registra uma mensagem de erro no banco de dados
+ * Logs an error message to the database
  */
 export async function logError(
   message: string,
@@ -52,13 +52,13 @@ export async function logError(
       metadata: metadata ? JSON.stringify(metadata) : null,
     })
   } catch (err) {
-    // Não podemos permitir que falha no log quebre a aplicação
-    console.error('Falha ao salvar log de erro:', err)
+    // We cannot let a logging failure break the application
+    console.error('Failed to save error log:', err)
   }
 }
 
 /**
- * Registra uma mensagem de warning no banco de dados
+ * Logs a warning message to the database
  */
 export async function logWarning(
   message: string,
@@ -76,12 +76,12 @@ export async function logWarning(
       metadata: metadata ? JSON.stringify(metadata) : null,
     })
   } catch (err) {
-    console.error('Falha ao salvar log de warning:', err)
+    console.error('Failed to save warning log:', err)
   }
 }
 
 /**
- * Registra uma mensagem de info no banco de dados
+ * Logs an info message to the database
  */
 export async function logInfo(
   message: string,
@@ -99,12 +99,12 @@ export async function logInfo(
       metadata: metadata ? JSON.stringify(metadata) : null,
     })
   } catch (err) {
-    console.error('Falha ao salvar log de info:', err)
+    console.error('Failed to save info log:', err)
   }
 }
 
 /**
- * Constrói a string JSON com todos os logs
+ * Builds the JSON string with all logs
  */
 export async function buildLogDumpJsonString(): Promise<string> {
   const logs = await errorLogRepo.getAllLogs()
@@ -135,7 +135,7 @@ export async function buildLogDumpJsonString(): Promise<string> {
 }
 
 /**
- * Salva os logs em arquivo temporário e compartilha via sistema nativo
+ * Saves the logs to a temporary file and shares it via the native system
  */
 export async function saveLogDumpAndShare(): Promise<string> {
   const json = await buildLogDumpJsonString()
@@ -165,19 +165,19 @@ export async function saveLogDumpAndShare(): Promise<string> {
 }
 
 /**
- * Remove logs mais antigos que o timestamp especificado
+ * Removes logs older than the specified timestamp
  */
 export async function cleanupOldLogs(daysToKeep: number = 7): Promise<void> {
   try {
     const cutoffTimestamp = Date.now() - daysToKeep * 24 * 60 * 60 * 1000
     await errorLogRepo.deleteOldLogs(cutoffTimestamp)
   } catch (err) {
-    console.error('Falha ao limpar logs antigos:', err)
+    console.error('Failed to clear old logs:', err)
   }
 }
 
 /**
- * Remove todos os logs do banco
+ * Removes all logs from the database
  */
 export async function clearAllLogs(): Promise<void> {
   await errorLogRepo.clearAllLogs()

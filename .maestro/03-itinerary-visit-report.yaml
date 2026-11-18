@@ -1,0 +1,22 @@
+# Registers a visit report for the first (late) work order of the active
+# itinerary. The report used to be saved with a lowercase 'completed' status,
+# which later broke finishing the itinerary.
+appId: br.com.artemis
+tags: [qa]
+---
+- runFlow: subflows/open-app.yaml
+- tapOn: Itinerário
+- extendedWaitUntil:
+    visible: ATRASADO
+    timeout: 30000
+- tapOn:
+    text: Mais opções
+    index: 0
+- tapOn: Criar Relatório
+- tapOn: Selecione dos produtos agendados
+- tapOn: Marcar Todos Como Trocados
+- tapOn: Salvar Relatório
+- extendedWaitUntil:
+    visible: Relatório salvo!
+    timeout: 15000
+- takeScreenshot: 03-visit-report-saved

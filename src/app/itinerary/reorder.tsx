@@ -16,22 +16,22 @@ import ReorderableList, {
 } from 'react-native-reorderable-list'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-// Componente extraído e memoizado para reordenação
-// IMPORTANTE: Deve estar FORA do componente pai para memoização funcionar corretamente
+// Extracted and memoized component for reordering
+// IMPORTANT: Must be OUTSIDE the parent component for memoization to work correctly
 const DraggableCard = React.memo<{ item: ItineraryWorkOrder }>(
   ({ item }) => {
     const drag = useReorderableDrag()
     return (
       <View className="px-4">
         <Pressable onLongPress={drag}>
-          {/* Card otimizado para reordenação - sem Tooltips e estruturas complexas */}
+          {/* Card optimized for reordering - no Tooltips or complex structures */}
           <ReorderWorkOrderCard wo={item.workOrder} isLate={item.isLate} />
         </Pressable>
       </View>
     )
   },
   (prevProps, nextProps) => {
-    // Comparação otimizada: só re-renderiza se o item mudar
+    // Optimized comparison: only re-renders if the item changes
     return prevProps.item.id === nextProps.item.id
   }
 )
@@ -80,13 +80,13 @@ export default function ItineraryReorderScreen() {
       await (updatePositions as any)([updates])
       router.back()
     } catch (err) {
-      console.error('Falha ao salvar nova ordenação:', err)
+      console.error('Failed to save new ordering:', err)
     }
   }, [listData, updatePositions, router])
 
   return (
     <GestureHandlerRootView className="flex-1">
-      <SafeAreaView className="flex-1">
+      <SafeAreaView edges={['left', 'right', 'bottom']} className="flex-1">
         <Stack.Screen
           options={{
             headerTitle: 'Ordenar Itinerário',

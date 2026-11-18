@@ -33,7 +33,7 @@ export default function ProductFormScreen() {
 
   const onSubmit = form.handleSubmit(async (data: ProductInsertDTO) => {
     try {
-      // O BaseForm envia com coma decimal, converter para ponto
+      // BaseForm sends a decimal comma, convert to dot
       const normalizedSalePrice = data.salePrice
         ? String(data.salePrice).replace(',', '.')
         : data.salePrice

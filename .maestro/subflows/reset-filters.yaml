@@ -1,0 +1,16 @@
+# Filters persist across cold starts, so flows that expect a clean list clear
+# the ones left by previous flows (OS and Clientes tabs).
+appId: br.com.artemis
+---
+- tapOn: OS
+- runFlow:
+    when:
+      visible: "Filtros ativos:"
+    commands:
+      - tapOn: Limpar filtros
+- tapOn: Clientes
+- runFlow:
+    when:
+      visible: "Filtros ativos:"
+    commands:
+      - tapOn: Limpar filtros

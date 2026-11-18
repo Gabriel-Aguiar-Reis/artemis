@@ -47,8 +47,17 @@ const expectColorKeys = [
   'accent',
   'accentForeground',
   'destructive',
+  'destructiveForeground',
+  'destructiveSubtle',
+  'success',
+  'successForeground',
+  'successSubtle',
   'warning',
   'warningForeground',
+  'warningSubtle',
+  'info',
+  'infoForeground',
+  'infoSubtle',
   'border',
   'input',
   'ring',
@@ -85,5 +94,42 @@ describe('theme constants', () => {
     expect(NAV_THEME.dark.dark).toBe(true)
     expect(NAV_THEME.light.colors?.notification).toBe(THEME.light.destructive)
     expect(NAV_THEME.dark.colors?.notification).toBe(THEME.dark.destructive)
+  })
+
+  it('matches the CSS variables in global.css (single palette)', async () => {
+    const { THEME } = await loadTheme()
+    const { readFileSync } = await import('node:fs')
+    const path = await import('node:path')
+    const css = readFileSync(
+      path.resolve(__dirname, '../../../global.css'),
+      'utf8'
+    )
+    const blocks = {
+      light: css.slice(css.indexOf(':root {'), css.indexOf('.dark:root')),
+      dark: css.slice(css.indexOf('.dark:root')),
+    }
+    const toCamel = (k: string) =>
+      k.replace(/-(\w)/g, (_, c: string) => c.toUpperCase())
+    for (const scheme of ['light', 'dark'] as const) {
+      const vars = [...blocks[scheme].matchAll(/--([\w-]+):\s*([^;]+);/g)]
+      expect(vars.length).toBeGreaterThan(20)
+      for (const [, name, value] of vars) {
+        const key = toCamel(name) as keyof (typeof THEME)[typeof scheme]
+        if (name === 'radius') continue
+        expect(THEME[scheme][key], `${scheme} --${name}`).toBe(
+          `hsl(${value.trim()})`
+        )
+      }
+    }
+  })
+
+  it('dark mode surfaces get lighter with elevation (no pure black)', async () => {
+    const { THEME } = await loadTheme()
+    const lightness = (hsl: string) =>
+      Number(/(\d+(?:\.\d+)?)%\)$/.exec(hsl)![1])
+    const d = THEME.dark
+    expect(lightness(d.background)).toBeGreaterThan(4)
+    expect(lightness(d.card)).toBeGreaterThan(lightness(d.background))
+    expect(lightness(d.popover)).toBeGreaterThan(lightness(d.card))
   })
 })

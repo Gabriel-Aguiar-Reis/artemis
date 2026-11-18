@@ -50,7 +50,10 @@ export default function CategoriesEditScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Carregando categoria...</Text>
       </SafeAreaView>
     )
@@ -58,7 +61,10 @@ export default function CategoriesEditScreen() {
 
   if (!category) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Categoria não encontrada.</Text>
       </SafeAreaView>
     )

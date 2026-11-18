@@ -1,0 +1,29 @@
+# Creates an itinerary for the 18th-21st. The preview count must match what is
+# saved (orders on the last day included) and the period must count 4 days.
+# Requires no active itinerary (run 04-finish-itinerary first).
+appId: br.com.artemis
+tags: [qa]
+---
+- runFlow: subflows/open-app.yaml
+- tapOn: Itinerário
+- extendedWaitUntil:
+    visible: Nenhum Itinerário sendo utilizado.*
+    timeout: 30000
+- tapOn:
+    point: 91%,8%
+- tapOn: Selecione o período
+- tapOn: "18"
+- tapOn: "21"
+- tapOn: Confirmar
+- extendedWaitUntil:
+    visible: Resumo do Período
+    timeout: 15000
+- assertVisible:
+    text: "4"
+    below: Dias no Período
+- takeScreenshot: 05-itinerary-preview
+- tapOn: Criar Itinerário
+- extendedWaitUntil:
+    visible: "18/11/2026 - 21/11/2026"
+    timeout: 30000
+- takeScreenshot: 05-itinerary-created

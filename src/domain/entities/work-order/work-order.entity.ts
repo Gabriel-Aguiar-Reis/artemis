@@ -16,6 +16,10 @@ import {
   WorkOrderResult,
   WorkOrderResultSerializableDTO,
 } from '@/src/domain/entities/work-order-result/work-order-result.entity'
+import {
+  isFinalStatus,
+  resolveResultStatus,
+} from '@/src/domain/entities/work-order/work-order-rules'
 import { UUID } from '@/src/lib/utils'
 import uuid from 'react-native-uuid'
 
@@ -113,17 +117,28 @@ export class WorkOrder {
   }
 
   setStatus(newStatus: WorkOrderStatus): WorkOrderStatus {
-    // Permitir transições idempotentes (mesmo status) sem erro
+    // Allow idempotent transitions (same status) without error
     if (newStatus === this.status) return this.status
 
     const validTransitions: Record<WorkOrderStatus, WorkOrderStatus[]> = {
+      // In practice the visit is recorded straight from PENDING (there is no
+      // "start visit" screen), so the report can close the work order from it.
       [WorkOrderStatus.PENDING]: [
         WorkOrderStatus.COMMITTED,
+        WorkOrderStatus.IN_PROGRESS,
         WorkOrderStatus.CANCELLED,
+        WorkOrderStatus.COMPLETED,
+        WorkOrderStatus.PARTIAL,
+        WorkOrderStatus.FAILED,
+        WorkOrderStatus.EXPIRED,
       ],
       [WorkOrderStatus.COMMITTED]: [
         WorkOrderStatus.IN_PROGRESS,
         WorkOrderStatus.CANCELLED,
+        WorkOrderStatus.COMPLETED,
+        WorkOrderStatus.PARTIAL,
+        WorkOrderStatus.FAILED,
+        WorkOrderStatus.EXPIRED,
       ],
       [WorkOrderStatus.IN_PROGRESS]: [
         WorkOrderStatus.COMPLETED,
@@ -151,7 +166,7 @@ export class WorkOrder {
     }
 
     if (!validTransitions[this.status]) {
-      // Status atual desconhecido ou inválido (ex: dado corrompido) — recupera silenciosamente
+      // Current status unknown or invalid (e.g. corrupted data) — recover silently
       this.status = newStatus
       this.updatedAt = new Date()
       return this.status
@@ -168,16 +183,14 @@ export class WorkOrder {
   }
 
   private resolveStatusFromResult(result: WorkOrderResult): WorkOrderStatus {
-    const exchanged = result.exchangedProducts?.length ?? 0
-    const removed = result.removedProducts?.length ?? 0
-    const added = result.addedProducts?.length ?? 0
-
-    if (exchanged === 0 && added === 0)
-      return this.setStatus(WorkOrderStatus.FAILED)
-
-    if (removed > 0 || exchanged < (this.products?.length ?? 0))
-      return this.setStatus(WorkOrderStatus.PARTIAL)
-    return this.setStatus(WorkOrderStatus.COMPLETED)
+    return this.setStatus(
+      resolveResultStatus({
+        scheduled: this.products?.length ?? 0,
+        exchanged: result.exchangedProducts?.length ?? 0,
+        added: result.addedProducts?.length ?? 0,
+        removed: result.removedProducts?.length ?? 0,
+      })
+    )
   }
 
   applyResult(result: WorkOrderResult): WorkOrderStatus {
@@ -227,8 +240,8 @@ export class WorkOrder {
         })
       : undefined
 
-    // Para ordens EXPIRED (sem resultado), usa produtos agendados
-    // Para ordens COMPLETED/PARTIAL, usa produtos do resultado (trocados + adicionados)
+    // For EXPIRED orders (without result), use scheduled products
+    // For COMPLETED/PARTIAL orders, use the result products (exchanged + added)
     const items =
       this.status === WorkOrderStatus.EXPIRED
         ? (this.products?.map((p) => p.toDTO()) ?? [])
@@ -249,13 +262,21 @@ export class WorkOrder {
     })
   }
 
+  /**
+   * A settled payment does not decide the work order status: the report does.
+   * It used to force COMPLETED in every case (PARTIAL/FAILED became
+   * COMPLETED and an already cloned work order could be cloned again).
+   * - final status: keep
+   * - open with report: apply the report's status
+   * - open without report: keep (advance payment)
+   */
   finalizeAfterPayment(): WorkOrderStatus {
     if (!this.paymentOrder || !this.paymentOrder.isPaid)
       throw new Error(
         'Não é possível finalizar a ordem de serviço sem o pagamento concluído.'
       )
-    this.status = WorkOrderStatus.COMPLETED
-    this.updatedAt = new Date()
+    if (isFinalStatus(this.status)) return this.status
+    if (this.result) return this.applyResult(this.result)
     return this.status
   }
 

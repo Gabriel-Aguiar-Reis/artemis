@@ -9,7 +9,13 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import { Search, X } from 'lucide-react-native'
 import * as React from 'react'
 import { useState } from 'react'
-import { KeyboardAvoidingView, Platform, Pressable, View } from 'react-native'
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  View,
+} from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function CustomerSearchScreen() {
@@ -33,7 +39,7 @@ export default function CustomerSearchScreen() {
     (params.landlineNumber as string) || ''
   )
 
-  // Aplicar debounce nos inputs de texto (300ms)
+  // Debounce the text inputs (300ms)
   const debouncedSearch = useDebouncedValue(searchQuery, 300)
   const debouncedContactName = useDebouncedValue(contactNameFilter, 300)
   const debouncedPhoneNumber = useDebouncedValue(phoneNumberFilter, 300)
@@ -43,7 +49,7 @@ export default function CustomerSearchScreen() {
     'all' | 'true' | 'false'
   >((params.isActiveWhatsApp as any) || 'all')
 
-  // Auto-aplicar filtros quando valores debounced mudarem
+  // Auto-apply filters when debounced values change
   React.useEffect(() => {
     const filters = {
       search: debouncedSearch || undefined,
@@ -54,7 +60,7 @@ export default function CustomerSearchScreen() {
         isActiveWhatsAppFilter !== 'all' ? isActiveWhatsAppFilter : undefined,
     }
 
-    // Só aplica se houver mudança real nos filtros
+    // Only apply if the filters actually changed
     const hasChanges =
       filters.search !== params.search ||
       filters.contactName !== params.contactName ||
@@ -104,7 +110,7 @@ export default function CustomerSearchScreen() {
     isActiveWhatsAppFilter !== 'all'
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView edges={['left', 'right', 'bottom']} className="flex-1">
       <Stack.Screen options={{ title: 'Filtrar Clientes' }} />
 
       <KeyboardAvoidingView
@@ -112,7 +118,7 @@ export default function CustomerSearchScreen() {
         style={{ flex: 1 }}
         keyboardVerticalOffset={80}
       >
-        <View style={{ flex: 1 }}>
+        <ScrollView style={{ flex: 1 }} keyboardShouldPersistTaps="handled">
           <View className="gap-4 p-4 flex-1">
             <View className="relative">
               <Icon
@@ -231,7 +237,7 @@ export default function CustomerSearchScreen() {
               </Button>
             )}
           </View>
-        </View>
+        </ScrollView>
         <View className="gap-2 px-4 pb-4 bg-background">
           <Button onPress={applyFilters}>
             <Text className="text-primary-foreground font-medium">

@@ -1,7 +1,13 @@
+import {
+  FIELD_LABEL_FLOAT_TOP,
+  FIELD_MESSAGE_CLASS,
+  FIELD_TOP_RESERVE,
+} from '@/src/components/ui/field-metrics'
 import { Icon } from '@/src/components/ui/icon'
 import { Input } from '@/src/components/ui/input'
 import { Text } from '@/src/components/ui/text'
 import { Toggle } from '@/src/components/ui/toggle'
+import { THEME } from '@/src/lib/theme'
 import { cn } from '@/src/lib/utils'
 import { LucideIcon } from 'lucide-react-native'
 import { useColorScheme } from 'nativewind'
@@ -153,6 +159,8 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
 
   const animated = useRef(new Animated.Value(shouldFloat ? 1 : 0)).current
   const { colorScheme } = useColorScheme()
+  // Native props (cursor, wheel picker, icons) can't take classNames
+  const palette = THEME[colorScheme === 'dark' ? 'dark' : 'light']
 
   const activeIcon = useMemo(() => {
     if (!rightIcon) return null
@@ -197,7 +205,7 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
     zIndex: 10,
     top: animated.interpolate({
       inputRange: [0, 1],
-      outputRange: [26, 10],
+      outputRange: [FIELD_TOP_RESERVE + 8, FIELD_LABEL_FLOAT_TOP],
     }),
     fontSize: animated.interpolate({
       inputRange: [0, 1],
@@ -209,7 +217,7 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
     setIsFocused(false)
     onBlur?.(e)
   }
-  // Quando for select, localizar opção selecionada para exibir o nome
+  // When it is a select, find the selected option to display its name
   const selectedOption = isSelect
     ? (selectOptions || []).find((s) => s.id === value)
     : undefined
@@ -218,16 +226,19 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
     : ((value as any) ?? '')
 
   return (
-    <View className={cn('relative', className)} style={{ paddingTop: 18 }}>
+    <View
+      className={cn('relative', className)}
+      style={{ paddingTop: FIELD_TOP_RESERVE }}
+    >
       <Animated.Text
         style={labelStyle}
         numberOfLines={1}
         className={cn(
           'bg-background',
           error
-            ? 'text-red-500'
+            ? 'text-destructive'
             : disabled
-              ? 'text-ring'
+              ? 'text-muted-foreground'
               : 'text-muted-foreground'
         )}
       >
@@ -244,9 +255,7 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
             showObfuscatedValue={showObfuscatedValue}
             value={displayValue}
             placeholder={placeholder}
-            cursorColor={
-              error ? '#ef4444' : colorScheme === 'dark' ? '#d4d4d4' : '#27272a'
-            }
+            cursorColor={error ? palette.destructive : palette.foreground}
             onChangeText={(
               masked: string,
               unmasked?: string,
@@ -270,8 +279,8 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
             className={cn(
               'flex-1 border-border text-sm',
               activeIcon ? 'rounded-l-md rounded-r-none' : 'rounded-md',
-              (isDialog || isSelect) && 'w-1/2 text-primary bg-secondary',
-              error && 'border-red-500'
+              (isDialog || isSelect) && 'w-1/2 text-foreground bg-secondary',
+              error && 'border-destructive'
             )}
             {...(rest as any)}
           />
@@ -279,9 +288,7 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
           <Input
             value={displayValue}
             placeholder={placeholder}
-            cursorColor={
-              error ? '#ef4444' : colorScheme === 'dark' ? '#d4d4d4' : '#27272a'
-            }
+            cursorColor={error ? palette.destructive : palette.foreground}
             onChangeText={onChangeText}
             onFocus={() => setIsFocused(true)}
             onBlur={handleBlur}
@@ -290,8 +297,8 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
             className={cn(
               'flex-1 border-border text-sm',
               activeIcon ? 'rounded-l-md rounded-r-none' : 'rounded-md',
-              (isDialog || isSelect) && 'w-1/2 text-primary bg-secondary',
-              error && 'border-red-500'
+              (isDialog || isSelect) && 'w-1/2 text-foreground bg-secondary',
+              error && 'border-destructive'
             )}
             {...rest}
           />
@@ -324,11 +331,10 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
                     }}
                     style={{ flex: 1 }}
                     itemTextStyle={{
-                      color: colorScheme === 'dark' ? '#fafafa' : '#18181b',
+                      color: palette.foreground,
                     }}
                     overlayItemStyle={{
-                      backgroundColor:
-                        colorScheme === 'dark' ? '#fafafa' : '#18181b',
+                      backgroundColor: palette.foreground,
                     }}
                     enableScrollByTapOnItem
                   />
@@ -347,11 +353,10 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
                     }}
                     style={{ flex: 1 }}
                     itemTextStyle={{
-                      color: colorScheme === 'dark' ? '#fafafa' : '#18181b',
+                      color: palette.foreground,
                     }}
                     overlayItemStyle={{
-                      backgroundColor:
-                        colorScheme === 'dark' ? '#fafafa' : '#18181b',
+                      backgroundColor: palette.foreground,
                     }}
                     enableScrollByTapOnItem
                   />
@@ -413,7 +418,7 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
                     as={activeIcon}
                     height={20}
                     width={20}
-                    color={colorScheme === 'dark' ? '#737373' : '#a1a1a1'}
+                    color={palette.mutedForeground}
                   />
                 </Toggle>
               </HoverCardTrigger>
@@ -438,7 +443,7 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
                 as={activeIcon}
                 height={20}
                 width={20}
-                color={colorScheme === 'dark' ? '#737373' : '#a1a1a1'}
+                color={palette.mutedForeground}
               />
             </Toggle>
           ) : (
@@ -458,16 +463,16 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
                   as={activeIcon}
                   height={20}
                   width={20}
-                  color={colorScheme === 'dark' ? '#737373' : '#a1a1a1'}
+                  color={palette.mutedForeground}
                 />
               )}
             </Toggle>
           ))}
       </View>
 
-      <View className="min-h-4 justify-center">
+      <View className={FIELD_MESSAGE_CLASS}>
         {error ? (
-          <Text className="ml-2 text-xs text-red-500">{error}</Text>
+          <Text className="ml-2 text-xs text-destructive">{error}</Text>
         ) : helperText ? (
           <Text className="ml-2 text-xs text-muted-foreground">
             {helperText}

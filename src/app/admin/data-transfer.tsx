@@ -1,18 +1,29 @@
-import { categoryHooks } from '@/src/application/hooks/category.hooks'
-import { customerHooks } from '@/src/application/hooks/customer.hooks'
-import { productHooks } from '@/src/application/hooks/product.hooks'
+import { useInvalidateQueries } from '@/src/application/hooks/use-invalidate-queries'
+import {
+  ImportPlan,
+  ImportReport,
+  SheetRows,
+  executeImport,
+  planInsertCount,
+  prepareImport,
+} from '@/src/application/import/xlsx-import.runner'
 import {
   copyAssetToCacheAsync,
   shareFileAsync,
 } from '@/src/application/services/excel.service'
 import { Alert, AlertDescription, AlertTitle } from '@/src/components/ui/alert'
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/src/components/ui/alert-dialog'
 import { Button } from '@/src/components/ui/button'
 import { Icon } from '@/src/components/ui/icon'
 import { Text } from '@/src/components/ui/text'
-import { db } from '@/src/infra/db/drizzle/drizzle-client'
-import { category } from '@/src/infra/db/drizzle/schema/drizzle.category.schema'
-import { UUID } from '@/src/lib/utils'
-import { eq } from 'drizzle-orm'
 import * as DocumentPicker from 'expo-document-picker'
 import { File } from 'expo-file-system'
 import { Stack } from 'expo-router'
@@ -23,32 +34,48 @@ import {
   ListChecks,
   Upload,
 } from 'lucide-react-native'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { ActivityIndicator, ScrollView, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
-import uuid from 'react-native-uuid'
 import * as XLSX from 'xlsx'
+
+const SHEET_LABELS = {
+  categorias: 'Categorias',
+  produtos: 'Produtos',
+  clientes: 'Clientes',
+} as const
+
+const MAX_LISTED_ISSUES = 100
 
 export default function DataTransferScreen() {
   const [isExporting, setIsExporting] = useState(false)
-  const [isImporting, setIsImporting] = useState(false)
+  // 'idle' | 'analyzing' | 'confirming' | 'importing'
+  const [phase, setPhase] = useState<
+    'idle' | 'analyzing' | 'confirming' | 'importing'
+  >('idle')
+  const [progress, setProgress] = useState<{
+    label: string
+    done: number
+    total: number
+  } | null>(null)
+  const [report, setReport] = useState<ImportReport | null>(null)
+  const planRef = useRef<ImportPlan | null>(null)
+  const [planSummary, setPlanSummary] = useState<ImportPlan | null>(null)
+  const invalidate = useInvalidateQueries()
+  const isImporting = phase !== 'idle'
 
-  const { mutateAsync: addCategory } = categoryHooks.addCategory()
-  const { mutateAsync: addProduct } = productHooks.addProduct()
-  const { mutateAsync: addCustomer } = customerHooks.addCustomer()
-
-  // Função para copiar asset para cache e compartilhar
+  // Function to copy the asset to cache and share it
 
   const handleExport = async () => {
     setIsExporting(true)
     try {
       const asset = require('../../assets/template-app-preenchimento.xlsx')
 
-      // 1) Copia o asset para um caminho acessível (cache do app)
+      // 1) Copy the asset to an accessible path (app cache)
       const localPath = await copyAssetToCacheAsync(asset)
 
-      // 2) Compartilhar para que o usuário escolha onde salvar/abrir
+      // 2) Share so the user can choose where to save/open
       await shareFileAsync(localPath)
 
       Toast.show({
@@ -67,213 +94,58 @@ export default function DataTransferScreen() {
     }
   }
 
+  // 1) Pick the file, read the spreadsheet, validate and deduplicate (without writing)
   const handleImport = async () => {
-    setIsImporting(true)
+    setPhase('analyzing')
     try {
-      // Selecionar arquivo
       const result = await DocumentPicker.getDocumentAsync({
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         copyToCacheDirectory: true,
       })
 
       if (result.canceled) {
-        setIsImporting(false)
+        setPhase('idle')
         return
       }
 
-      const pickedFile = result.assets[0]
-
-      // Ler arquivo com a nova API
-      const file = new File(pickedFile.uri)
+      const file = new File(result.assets[0].uri)
       const arrayBuffer = await file.arrayBuffer()
-
-      // Ler workbook usando XLSX
       const workbook = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array' })
 
-      let categoriesImported = 0
-      let productsImported = 0
-      let customersImported = 0
-
-      // Mapa para armazenar categorias (nome -> id)
-      const categoryMap = new Map<string, string>()
-
-      // === Importar Categorias ===
-      const categorySheetName = workbook.SheetNames.find(
-        (name) => name === 'categorias'
-      )
-      if (categorySheetName) {
-        const categorySheet = workbook.Sheets[categorySheetName]
-        const categoryRows = XLSX.utils.sheet_to_json<any>(categorySheet, {
-          header: 1,
-        })
-
-        // Preparar todas as categorias para importação em lote
-        const categoriesToImport: Array<{
-          id: string
-          name: string
-          isActive: boolean
-        }> = []
-
-        // Pular primeira linha (cabeçalho)
-        for (let i = 1; i < categoryRows.length; i++) {
-          const row = categoryRows[i]
-          const name = String(row[0] || '').trim()
-          const isActive = Number(row[1]) === 1
-
-          if (!name) {
-            continue
-          }
-
-          const id = String(uuid.v4())
-          categoriesToImport.push({ id, name, isActive })
-          categoryMap.set(name, id)
-        }
-
-        // Importar todas as categorias sequencialmente para garantir que sejam inseridas
-        for (const cat of categoriesToImport) {
-          try {
-            await addCategory(cat)
-            categoriesImported++
-
-            // Verificar se a categoria realmente foi inserida no banco
-            const categoryInDb = db
-              .select()
-              .from(category)
-              .where(eq(category.id, cat.id))
-              .limit(1)
-              .get()
-
-            if (!categoryInDb) {
-              categoryMap.delete(cat.name)
-            }
-          } catch {
-            // Remove do mapa se falhar
-            categoryMap.delete(cat.name)
-          }
+      const rows: SheetRows = {}
+      for (const name of workbook.SheetNames) {
+        const key = name.trim().toLowerCase()
+        if (key === 'categorias' || key === 'produtos' || key === 'clientes') {
+          rows[key] = XLSX.utils.sheet_to_json<unknown[]>(
+            workbook.Sheets[name],
+            { header: 1, raw: true, defval: '' }
+          )
         }
       }
 
-      // === Importar Produtos ===
-      const productSheetName = workbook.SheetNames.find(
-        (name) => name === 'produtos'
-      )
-      if (productSheetName) {
-        const productSheet = workbook.Sheets[productSheetName]
-        const productRows = XLSX.utils.sheet_to_json<any>(productSheet, {
-          header: 1,
-        })
-
-        // Pular primeira linha (cabeçalho)
-        for (let i = 1; i < productRows.length; i++) {
-          const row = productRows[i]
-          const name = String(row[0] || '').trim()
-          const categoryName = String(row[1] || '').trim()
-          const salePrice = Number(row[2])
-          const isActive = Number(row[3]) === 1
-          const expirationValue = String(row[4] || '').trim()
-
-          if (!name) {
-            continue
-          }
-
-          if (!categoryName) {
-            continue
-          }
-
-          const categoryId = categoryMap.get(categoryName)
-          if (!categoryId) {
-            continue
-          }
-
-          // Verificar se a categoria existe no banco antes de inserir o produto
-          const categoryInDb = db
-            .select()
-            .from(category)
-            .where(eq(category.id, categoryId as UUID))
-            .limit(1)
-            .get()
-
-          if (!categoryInDb) {
-            continue
-          }
-
-          try {
-            const id = uuid.v4()
-            const productData = {
-              id,
-              name,
-              categoryId,
-              salePrice: String(salePrice),
-              isActive,
-              expiration: expirationValue,
-            }
-            await addProduct(productData)
-            productsImported++
-          } catch {}
-        }
+      if (!rows.categorias && !rows.produtos && !rows.clientes) {
+        throw new Error(
+          'Nenhuma aba encontrada. O arquivo deve ter: categorias, produtos e/ou clientes.'
+        )
       }
 
-      // === Importar Clientes ===
-      const customerSheetName = workbook.SheetNames.find(
-        (name) => name === 'clientes'
-      )
-      if (customerSheetName) {
-        const customerSheet = workbook.Sheets[customerSheetName]
-        const customerRows = XLSX.utils.sheet_to_json<any>(customerSheet, {
-          header: 1,
+      const plan = await prepareImport(rows)
+      planRef.current = plan
+      setPlanSummary(plan)
+
+      if (planInsertCount(plan) === 0) {
+        // Nothing to insert: show the report directly
+        setReport({
+          inserted: { categorias: 0, produtos: 0, clientes: 0 },
+          duplicates: plan.duplicates,
+          rejected: plan.rejected,
         })
-
-        // Pular primeira linha (cabeçalho)
-        for (let i = 1; i < customerRows.length; i++) {
-          const row = customerRows[i]
-          const storeName = String(row[0] || '').trim()
-          const contactName = String(row[1] || '').trim()
-          const phoneNumberValue = String(row[2] || '').trim()
-          const phoneWhatsApp = Number(row[3]) === 1
-          const landlineNumberValue = String(row[4] || '').trim()
-          const landlineWhatsApp = Number(row[5]) === 1
-          const streetName = String(row[6] || '').trim()
-          const streetNumber = String(row[7] || '').trim()
-          const neighborhood = String(row[8] || '').trim()
-          const city = String(row[9] || '').trim()
-          const zipCode = String(row[10] || '').trim()
-
-          if (!storeName) {
-            continue
-          }
-
-          if (!contactName) {
-            continue
-          }
-
-          try {
-            const id = uuid.v4()
-            await addCustomer({
-              id,
-              storeName,
-              contactName,
-              addressStreetName: streetName,
-              addressStreetNumber: streetNumber,
-              addressNeighborhood: neighborhood,
-              addressCity: city,
-              addressState: 'SP',
-              addressZipCode: zipCode,
-              phoneNumber: phoneNumberValue || undefined,
-              phoneIsWhatsApp: phoneWhatsApp,
-              landlineNumber: landlineNumberValue || undefined,
-              landlineIsWhatsApp: landlineWhatsApp,
-            })
-            customersImported++
-          } catch {}
-        }
+        setPhase('idle')
+        return
       }
-
-      Toast.show({
-        type: 'success',
-        text1: 'Importação concluída',
-        text2: `${categoriesImported} categorias, ${productsImported} produtos, ${customersImported} clientes`,
-      })
+      setPhase('confirming')
     } catch (error) {
+      setPhase('idle')
       Toast.show({
         type: 'error',
         text1: 'Erro na importação',
@@ -282,13 +154,57 @@ export default function DataTransferScreen() {
             ? error.message
             : 'Não foi possível processar o arquivo Excel',
       })
-    } finally {
-      setIsImporting(false)
     }
   }
 
+  // 2) User confirmed: write in batches with progress
+  const handleConfirmImport = async () => {
+    const plan = planRef.current
+    if (!plan) return
+    setPhase('importing')
+    setProgress({
+      label: 'Preparando...',
+      done: 0,
+      total: planInsertCount(plan),
+    })
+    try {
+      const finalReport = await executeImport(plan, (p) => {
+        setProgress({
+          label: SHEET_LABELS[p.sheet],
+          done: p.overallDone,
+          total: p.overallTotal,
+        })
+      })
+      // A single invalidation at the end
+      invalidate(['categories', 'products', 'customers'])
+      setReport(finalReport)
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Erro na importação',
+        text2:
+          error instanceof Error ? error.message : 'Falha ao gravar os dados',
+      })
+      invalidate(['categories', 'products', 'customers'])
+    } finally {
+      planRef.current = null
+      setPlanSummary(null)
+      setProgress(null)
+      setPhase('idle')
+    }
+  }
+
+  const handleCancelImport = () => {
+    planRef.current = null
+    setPlanSummary(null)
+    setPhase('idle')
+  }
+
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView
+      edges={['left', 'right', 'bottom']}
+      className="flex-1 bg-background"
+    >
       <Stack.Screen
         options={{
           title: 'Importar/Exportar Dados',
@@ -308,7 +224,7 @@ export default function DataTransferScreen() {
             </AlertDescription>
           </Alert>
 
-          {/* Exportar Dados */}
+          {/* Export data */}
           <View className="gap-3">
             <Text variant="h4">Baixar Template</Text>
             <Text className="text-muted-foreground">
@@ -316,17 +232,17 @@ export default function DataTransferScreen() {
               categorias, produtos e clientes.
             </Text>
 
-            <View className="bg-red-50 dark:bg-red-950 rounded-xl">
+            <View className="bg-destructive-subtle rounded-xl">
               <Alert
                 icon={AlertCircle}
-                iconClassName="text-red-400"
+                iconClassName="text-destructive"
                 variant="destructive"
-                className="border-red-200 dark:border-red-800 bg-transparent"
+                className="border-destructive/30 bg-transparent"
               >
-                <AlertTitle className="font-medium text-red-800 dark:text-red-200">
+                <AlertTitle className="font-medium text-destructive">
                   Aviso!
                 </AlertTitle>
-                <AlertDescription className="text-xs text-red-700 dark:text-red-300">
+                <AlertDescription className="text-xs text-destructive">
                   Todas as tabelas possuem a primeira linha preenchida como
                   exemplo de uso. Remova essa linha antes de importar seus
                   dados.
@@ -334,27 +250,27 @@ export default function DataTransferScreen() {
               </Alert>
             </View>
 
-            <View className="gap-2 p-3 bg-blue-50 dark:bg-blue-950 rounded-md border border-blue-200 dark:border-blue-800">
+            <View className="gap-2 p-3 bg-info-subtle rounded-md border border-info/30">
               <View className="flex-row gap-2 items-center">
-                <Icon as={ListChecks} size={20} className="text-blue-600" />
-                <Text className="font-medium text-blue-800 dark:text-blue-200">
+                <Icon as={ListChecks} size={20} className="text-info" />
+                <Text className="font-medium text-info">
                   Formato da Validade (Produtos)
                 </Text>
               </View>
               <View className="gap-1">
-                <Text className="text-xs text-blue-700 dark:text-blue-300">
+                <Text className="text-xs text-info">
                   O campo "validade" aceita os seguintes formatos:
                 </Text>
-                <Text className="text-xs text-blue-700 dark:text-blue-300">
+                <Text className="text-xs text-info">
                   • Com espaço: "30 dias", "1 mês", "2 semanas", "1 ano"
                 </Text>
-                <Text className="text-xs text-blue-700 dark:text-blue-300">
+                <Text className="text-xs text-info">
                   • Sem espaço: "30dias", "1mês", "2semanas"
                 </Text>
-                <Text className="text-xs text-blue-700 dark:text-blue-300">
+                <Text className="text-xs text-info">
                   • Abreviado: "30 d", "2 s", "1 m", "1 a"
                 </Text>
-                <Text className="text-xs text-blue-700 dark:text-blue-300">
+                <Text className="text-xs text-info">
                   • Aceita maiúsculas/minúsculas e com/sem acento
                 </Text>
               </View>
@@ -380,7 +296,7 @@ export default function DataTransferScreen() {
             </Button>
           </View>
 
-          {/* Importar Dados */}
+          {/* Import data */}
           <View className="gap-3">
             <Text variant="h4">Importar Dados</Text>
             <Text className="text-muted-foreground">
@@ -417,29 +333,35 @@ export default function DataTransferScreen() {
               ) : (
                 <Icon as={Upload} size={20} className="text-foreground" />
               )}
-              <Text>{isImporting ? 'Importando...' : 'Importar do Excel'}</Text>
+              <Text>
+                {phase === 'importing' && progress
+                  ? `Importando ${progress.done}/${progress.total}...`
+                  : isImporting
+                    ? 'Analisando...'
+                    : 'Importar do Excel'}
+              </Text>
             </Button>
           </View>
 
-          {/* Informações Adicionais */}
-          <View className="gap-2 p-3 bg-blue-50 dark:bg-blue-950 rounded-md border border-blue-200 dark:border-blue-800">
+          {/* Additional information */}
+          <View className="gap-2 p-3 bg-info-subtle rounded-md border border-info/30">
             <View className="flex-row gap-2 items-center">
-              <Icon as={FileSpreadsheet} size={20} className="text-blue-600" />
-              <Text className="font-medium text-blue-800 dark:text-blue-200">
+              <Icon as={FileSpreadsheet} size={20} className="text-info" />
+              <Text className="font-medium text-info">
                 Dicas para importação
               </Text>
             </View>
             <View className="gap-1">
-              <Text className="text-xs text-blue-700 dark:text-blue-300">
+              <Text className="text-xs text-info">
                 • Use 1 para ativo/whatsapp e 0 para inativo/sem whatsapp
               </Text>
-              <Text className="text-xs text-blue-700 dark:text-blue-300">
+              <Text className="text-xs text-info">
                 • Formato de validade: "30 dias", "2 meses", etc.
               </Text>
-              <Text className="text-xs text-blue-700 dark:text-blue-300">
+              <Text className="text-xs text-info">
                 • CEP deve estar no formato: 01234-567
               </Text>
-              <Text className="text-xs text-blue-700 dark:text-blue-300">
+              <Text className="text-xs text-info">
                 • A categoria em Produtos deve corresponder a uma categoria
                 existente
               </Text>
@@ -447,6 +369,103 @@ export default function DataTransferScreen() {
           </View>
         </View>
       </ScrollView>
+      {/* Confirmation before saving */}
+      <AlertDialog
+        open={phase === 'confirming'}
+        onOpenChange={(open) => {
+          if (!open) handleCancelImport()
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar importação?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {planSummary
+                ? `Serão adicionados ${planSummary.categories.length} categorias, ${planSummary.products.length} produtos e ${planSummary.customers.length} clientes. ` +
+                  `${planSummary.duplicates.length} linhas duplicadas serão ignoradas e ${planSummary.rejected.length} linhas inválidas serão rejeitadas.`
+                : ''}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              <Text>Cancelar</Text>
+            </AlertDialogCancel>
+            <Button onPress={handleConfirmImport}>
+              <Text>Importar</Text>
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Progress (blocks the screen while saving) */}
+      <AlertDialog open={phase === 'importing'}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Importando dados...</AlertDialogTitle>
+            <AlertDialogDescription>
+              {progress
+                ? `${progress.label}: ${progress.done}/${progress.total}`
+                : 'Preparando...'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <View className="items-center py-2">
+            <ActivityIndicator size="large" />
+          </View>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Final report */}
+      <AlertDialog
+        open={report !== null}
+        onOpenChange={(open) => {
+          if (!open) setReport(null)
+        }}
+      >
+        <AlertDialogContent className="max-h-[80%]">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Importação concluída</AlertDialogTitle>
+            <AlertDialogDescription>
+              {report
+                ? `Inseridas: ${report.inserted.categorias} categorias, ${report.inserted.produtos} produtos, ${report.inserted.clientes} clientes. Duplicadas: ${report.duplicates.length}. Rejeitadas: ${report.rejected.length}.`
+                : ''}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {report &&
+            (report.rejected.length > 0 || report.duplicates.length > 0) && (
+              <ScrollView className="max-h-72">
+                <View className="gap-1">
+                  {[
+                    ...report.rejected.map((r) => ({
+                      ...r,
+                      kind: 'Rejeitada',
+                    })),
+                    ...report.duplicates.map((r) => ({
+                      ...r,
+                      kind: 'Duplicada',
+                    })),
+                  ]
+                    .slice(0, MAX_LISTED_ISSUES)
+                    .map((r, i) => (
+                      <Text key={i} className="text-xs text-muted-foreground">
+                        {`${r.kind} · ${SHEET_LABELS[r.sheet]} linha ${r.line}: ${r.reason}`}
+                      </Text>
+                    ))}
+                  {report.rejected.length + report.duplicates.length >
+                    MAX_LISTED_ISSUES && (
+                    <Text className="text-xs font-medium">
+                      {`... e mais ${report.rejected.length + report.duplicates.length - MAX_LISTED_ISSUES} linhas.`}
+                    </Text>
+                  )}
+                </View>
+              </ScrollView>
+            )}
+          <AlertDialogFooter>
+            <Button onPress={() => setReport(null)}>
+              <Text>Fechar</Text>
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </SafeAreaView>
   )
 }

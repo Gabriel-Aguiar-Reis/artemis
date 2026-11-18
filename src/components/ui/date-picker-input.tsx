@@ -1,3 +1,8 @@
+import {
+  FIELD_LABEL_FLOAT_TOP,
+  FIELD_MESSAGE_CLASS,
+  FIELD_TOP_RESERVE,
+} from '@/src/components/ui/field-metrics'
 import { Icon } from '@/src/components/ui/icon'
 import { Text } from '@/src/components/ui/text'
 import { cn } from '@/src/lib/utils'
@@ -46,7 +51,7 @@ export function DatePickerInput({
     zIndex: 10,
     top: animated.interpolate({
       inputRange: [0, 1],
-      outputRange: [-8, -8],
+      outputRange: [FIELD_LABEL_FLOAT_TOP, FIELD_LABEL_FLOAT_TOP],
     }),
     fontSize: animated.interpolate({
       inputRange: [0, 1],
@@ -77,7 +82,7 @@ export function DatePickerInput({
     : placeholder
 
   return (
-    <View className="relative">
+    <View className="relative" style={{ paddingTop: FIELD_TOP_RESERVE }}>
       {label && (
         <Animated.Text
           style={labelStyle}
@@ -108,7 +113,11 @@ export function DatePickerInput({
         </View>
       </Pressable>
 
-      {error && <Text className="text-sm text-destructive mt-1">{error}</Text>}
+      <View className={FIELD_MESSAGE_CLASS}>
+        {error && (
+          <Text className="ml-2 text-xs text-destructive">{error}</Text>
+        )}
+      </View>
     </View>
   )
 }

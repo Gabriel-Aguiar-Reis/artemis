@@ -1,10 +1,10 @@
-import { Icon } from '@/src/components/ui/icon';
-import { TextClassContext } from '@/src/components/ui/text';
-import { cn } from '@/src/lib/utils';
-import * as TogglePrimitive from '@rn-primitives/toggle';
-import { cva, type VariantProps } from 'class-variance-authority';
-import * as React from 'react';
-import { Platform } from 'react-native';
+import { Icon } from '@/src/components/ui/icon'
+import { TextClassContext } from '@/src/components/ui/text'
+import { cn } from '@/src/lib/utils'
+import * as TogglePrimitive from '@rn-primitives/toggle'
+import { cva, type VariantProps } from 'class-variance-authority'
+import * as React from 'react'
+import { Platform } from 'react-native'
 
 const toggleVariants = cva(
   cn(
@@ -35,7 +35,7 @@ const toggleVariants = cva(
       size: 'default',
     },
   }
-);
+)
 
 function Toggle({
   className,
@@ -53,7 +53,8 @@ function Toggle({
           ? 'text-accent-foreground'
           : Platform.select({ web: 'group-hover:text-muted-foreground' }),
         className
-      )}>
+      )}
+    >
       <TogglePrimitive.Root
         className={cn(
           toggleVariants({ variant, size }),
@@ -64,12 +65,17 @@ function Toggle({
         {...props}
       />
     </TextClassContext.Provider>
-  );
+  )
 }
 
-function ToggleIcon({ className, ...props }: React.ComponentProps<typeof Icon>) {
-  const textClass = React.useContext(TextClassContext);
-  return <Icon className={cn('size-4 shrink-0', textClass, className)} {...props} />;
+function ToggleIcon({
+  className,
+  ...props
+}: React.ComponentProps<typeof Icon>) {
+  const textClass = React.useContext(TextClassContext)
+  return (
+    <Icon className={cn('size-4 shrink-0', textClass, className)} {...props} />
+  )
 }
 
-export { Toggle, ToggleIcon, toggleVariants };
+export { Toggle, ToggleIcon, toggleVariants }

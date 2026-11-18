@@ -15,7 +15,7 @@ export class CustomerMapper {
       storeName: table.storeName,
       storeAddress: {
         streetName: table.addressStreetName ?? '',
-        streetNumber: Number(table.addressStreetNumber) ?? 0,
+        streetNumber: String(table.addressStreetNumber ?? '').trim(),
         neighborhood: table.addressNeighborhood ?? '',
         city: table.addressCity ?? '',
         state: table.addressState ?? '',
@@ -49,7 +49,7 @@ export class CustomerMapper {
       landlineNumber: entity.landlineNumber?.value ?? null,
       landlineIsWhatsApp: entity.landlineNumber?.isWhatsApp ?? null,
       addressStreetName: entity.storeAddress.streetName,
-      addressStreetNumber: entity.storeAddress.streetNumber.toString(),
+      addressStreetNumber: String(entity.storeAddress.streetNumber ?? ''),
       addressNeighborhood: entity.storeAddress.neighborhood,
       addressCity: entity.storeAddress.city,
       addressState: entity.storeAddress.state,

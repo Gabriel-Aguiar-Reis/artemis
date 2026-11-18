@@ -96,24 +96,26 @@ describe('drizzle-client', () => {
     const module = await import('@/src/infra/db/drizzle/drizzle-client')
     module.getExpoDb()
 
-    module.enableForeignKeys()
+    expect(module.enableForeignKeys()).toBe(true)
 
     expect(execSyncMock).toHaveBeenCalledWith('PRAGMA foreign_keys = ON;')
   })
 
   it('enableForeignKeys logs errors without throwing', async () => {
     const error = new Error('foreign key')
-    execSyncMock.mockImplementationOnce(() => {
-      throw error
-    })
 
     const consoleErrorSpy = vi
       .spyOn(console, 'error')
       .mockImplementation(() => undefined)
 
     const module = await import('@/src/infra/db/drizzle/drizzle-client')
+    // Opens before preparing the error: opening also runs PRAGMAs (WAL)
     module.getExpoDb()
-    module.enableForeignKeys()
+    execSyncMock.mockImplementationOnce(() => {
+      throw error
+    })
+    // reports the failure so the app can stop instead of running without FKs
+    expect(module.enableForeignKeys()).toBe(false)
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       'Error enabling foreign keys:',
@@ -207,7 +209,7 @@ describe('drizzle-client', () => {
 
     const result = await module.deleteDatabaseAndReset()
 
-    // O require dinâmico pode falhar, verificamos que loga erro
+    // The dynamic require may fail, we check that an error is logged
     expect(consoleErrorSpy).toHaveBeenCalled()
     expect(result).toBe(false)
   })

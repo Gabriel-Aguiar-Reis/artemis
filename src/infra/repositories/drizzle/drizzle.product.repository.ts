@@ -10,6 +10,7 @@ import {
 import { db } from '@/src/infra/db/drizzle/drizzle-client'
 import { category } from '@/src/infra/db/drizzle/schema/drizzle.category.schema'
 import { product } from '@/src/infra/db/drizzle/schema/drizzle.product.schema'
+import { containsFolded } from '@/src/infra/db/drizzle/sql-search'
 import { UUID } from '@/src/lib/utils'
 import { and, eq, gte, like, lte } from 'drizzle-orm'
 import uuid from 'react-native-uuid'
@@ -35,41 +36,41 @@ export default class DrizzleProductRepository implements ProductRepository {
   async getProductsWithCategory(
     filters?: ProductFilters
   ): Promise<ProductWithCategoryDTO[]> {
-    // Construir condições de filtro dinamicamente
+    // Build filter conditions dynamically
     const conditions = []
 
-    // Filtro de busca por nome
+    // Name search filter
     if (filters?.search) {
-      conditions.push(like(product.name, `%${filters.search}%`))
+      conditions.push(containsFolded(product.name, filters.search))
     }
 
-    // Filtro por nome da categoria
+    // Category name filter
     if (filters?.categoryName) {
-      conditions.push(like(category.name, `%${filters.categoryName}%`))
+      conditions.push(containsFolded(category.name, filters.categoryName))
     }
 
-    // Filtro por validade
+    // Expiration filter
     if (filters?.expiration) {
       conditions.push(like(product.expiration, `%${filters.expiration}%`))
     }
 
-    // Filtro por preço mínimo
+    // Minimum price filter
     if (filters?.salePriceMin) {
       conditions.push(gte(product.salePrice, Number(filters.salePriceMin)))
     }
 
-    // Filtro por preço máximo
+    // Maximum price filter
     if (filters?.salePriceMax) {
       conditions.push(lte(product.salePrice, Number(filters.salePriceMax)))
     }
 
-    // Filtro por status
+    // Status filter
     if (filters?.status && filters.status !== 'all') {
       const isActive = filters.status === 'active'
       conditions.push(eq(product.isActive, isActive))
     }
 
-    // Aplicar WHERE com todas as condições
+    // Apply WHERE with all conditions
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined
 
     const rows = await db

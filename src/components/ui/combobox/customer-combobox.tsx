@@ -1,4 +1,4 @@
-import { customerHooks } from '@/src/application/hooks/customer.hooks'
+import { useDebouncedValue } from '@/src/application/hooks/use-debounced-value'
 import { Button } from '@/src/components/ui/button'
 import {
   Dialog,
@@ -9,13 +9,19 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/src/components/ui/dialog'
+import {
+  FIELD_LABEL_FLOAT_TOP,
+  FIELD_MESSAGE_CLASS,
+  FIELD_TOP_RESERVE,
+} from '@/src/components/ui/field-metrics'
 import { Icon } from '@/src/components/ui/icon'
 import { Input } from '@/src/components/ui/input'
 import { Text } from '@/src/components/ui/text'
-import { WhatsAppIcon } from '@/src/components/ui/whatsapp-icon'
-import { Customer } from '@/src/domain/entities/customer/customer.entity'
+import { CustomerLight } from '@/src/domain/repositories/customer/customer.repository'
+import DrizzleCustomerRepository from '@/src/infra/repositories/drizzle/drizzle.customer.repository'
 import { cn, formatPhoneBrazil } from '@/src/lib/utils'
 import { FlashList } from '@shopify/flash-list'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import {
   Check,
   ChevronDown,
@@ -24,12 +30,81 @@ import {
   Search,
   Store,
   UserSquare2,
-  UtilityPole,
   X,
 } from 'lucide-react-native'
 import * as React from 'react'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Animated, Easing, Pressable, View } from 'react-native'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  ActivityIndicator,
+  Animated,
+  Easing,
+  Pressable,
+  View,
+} from 'react-native'
+
+const customerRepo = new DrizzleCustomerRepository()
+const SEARCH_LIMIT = 50
+const keyExtractor = (item: CustomerLight) => item.id
+
+type CustomerItemProps = {
+  item: CustomerLight
+  selected: boolean
+  onSelect: (customer: CustomerLight) => void
+}
+
+const CustomerItem = React.memo(function CustomerItem({
+  item,
+  selected,
+  onSelect,
+}: CustomerItemProps) {
+  return (
+    <Pressable
+      onPress={() => onSelect(item)}
+      className={cn(
+        'p-4 border-b border-border w-full',
+        selected && 'bg-accent/50'
+      )}
+    >
+      <View className="flex-row justify-between items-start w-full">
+        <View className="flex-1 gap-1">
+          <View className="flex-row gap-2 items-center">
+            <Icon as={Store} size={18} className="text-muted-foreground" />
+            <Text className="font-semibold text-base flex-1">
+              {item.storeName}
+            </Text>
+          </View>
+          <View className="flex-row gap-2 items-center">
+            <Icon as={UserSquare2} size={14} className="text-foreground" />
+            <Text className="text-sm font-medium">{item.contactName}</Text>
+          </View>
+          {!!item.city && (
+            <View className="flex-row gap-2 items-center">
+              <Icon
+                as={MapPinHouse}
+                size={14}
+                className="text-muted-foreground"
+              />
+              <Text className="text-sm text-muted-foreground">{item.city}</Text>
+            </View>
+          )}
+          {!!item.phone && (
+            <View className="flex-row items-center gap-2">
+              <Icon as={Phone} size={12} className="text-muted-foreground" />
+              <Text className="text-xs text-muted-foreground">
+                {formatPhoneBrazil(item.phone)}
+              </Text>
+            </View>
+          )}
+        </View>
+        {selected && (
+          <View className="bg-primary rounded-full p-1">
+            <Icon as={Check} size={16} className="text-primary-foreground" />
+          </View>
+        )}
+      </View>
+    </Pressable>
+  )
+})
 
 type CustomerComboboxProps = {
   selectedCustomerId: string
@@ -46,121 +121,50 @@ export function CustomerCombobox({
   placeholder = 'Selecione um cliente',
   error,
 }: CustomerComboboxProps) {
-  const { data: customers = [], isLoading } = customerHooks.getCustomers()
   const [open, setOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const debouncedQuery = useDebouncedValue(searchQuery.trim(), 250)
 
-  const filteredCustomers = useMemo(() => {
-    if (!searchQuery) return customers
-    return customers.filter(
-      (c) =>
-        c.storeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        c.contactName.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  }, [customers, searchQuery])
+  // Lightweight SQL search (50 results, accent-insensitive) only while the dialog is open
+  const { data: results = [], isLoading } = useQuery({
+    queryKey: ['customers', 'search-light', debouncedQuery],
+    queryFn: () =>
+      customerRepo.searchCustomersLight(debouncedQuery, SEARCH_LIMIT),
+    enabled: open,
+    staleTime: 1000 * 60 * 5,
+    placeholderData: keepPreviousData,
+  })
 
-  const isCustomerSelected = (customerId: string) => {
-    return selectedCustomerId === customerId
-  }
+  // Already selected customer (e.g. editing) even outside the 50 results
+  const { data: selectedCustomer } = useQuery({
+    queryKey: ['customers', 'byId', selectedCustomerId],
+    queryFn: () => customerRepo.getCustomer(selectedCustomerId as any),
+    enabled: !!selectedCustomerId,
+    staleTime: 1000 * 60 * 5,
+  })
 
-  const toggleCustomer = (customer: Customer) => {
-    onCustomerChange(customer.id)
-    setOpen(false)
-  }
+  const selectedCustomerText = selectedCustomerId
+    ? selectedCustomer?.storeName || placeholder
+    : placeholder
 
-  const selectedCustomerText = useMemo(() => {
-    if (!selectedCustomerId) return placeholder
-    const customer = customers.find((c) => c.id === selectedCustomerId)
-    return customer?.storeName || placeholder
-  }, [selectedCustomerId, customers, placeholder])
+  const handleSelect = useCallback(
+    (customer: CustomerLight) => {
+      onCustomerChange(customer.id)
+      setOpen(false)
+    },
+    [onCustomerChange]
+  )
 
-  const renderCustomerItem = ({ item }: { item: Customer }) => {
-    const selected = isCustomerSelected(item.id)
-    const address = `${item.storeAddress.streetName}, ${item.storeAddress.streetNumber}, ${item.storeAddress.city} - ${item.storeAddress.state}`
-
-    return (
-      <View className="min-h-[120px] w-full">
-        <Pressable
-          onPress={() => toggleCustomer(item)}
-          className={cn(
-            'p-4 border-b border-border w-full',
-            selected && 'bg-accent/50'
-          )}
-        >
-          <View className="flex-row justify-between items-start w-full">
-            <View className="flex-1">
-              {/* Nome da Loja */}
-              <View className="flex-row gap-2 items-center mb-2">
-                <Icon as={Store} size={18} className="text-primary" />
-                <Text className="font-semibold text-base">
-                  {item.storeName}
-                </Text>
-              </View>
-
-              {/* Endereço */}
-              <View className="flex-row gap-2 items-start mb-2">
-                <Icon
-                  as={MapPinHouse}
-                  size={14}
-                  className="text-muted-foreground mt-0.5"
-                />
-                <Text className="text-sm text-muted-foreground flex-1">
-                  {address}
-                </Text>
-              </View>
-
-              {/* Nome do Contato */}
-              <View className="flex-row gap-2 items-center mb-1">
-                <Icon as={UserSquare2} size={14} className="text-foreground" />
-                <Text className="text-sm font-medium">{item.contactName}</Text>
-                {item.isActiveWhatsApp() && (
-                  <WhatsAppIcon size={14} className="text-green-600" />
-                )}
-              </View>
-
-              {/* Telefones */}
-              <View className="ml-5 gap-1">
-                {item.phoneNumber && (
-                  <View className="flex-row items-center gap-2">
-                    <Icon
-                      as={Phone}
-                      size={12}
-                      className="text-muted-foreground"
-                    />
-                    <Text className="text-xs text-muted-foreground">
-                      {formatPhoneBrazil(item.phoneNumber.value)}
-                    </Text>
-                  </View>
-                )}
-                {item.landlineNumber && (
-                  <View className="flex-row items-center gap-2">
-                    <Icon
-                      as={UtilityPole}
-                      size={12}
-                      className="text-muted-foreground"
-                    />
-                    <Text className="text-xs text-muted-foreground">
-                      {formatPhoneBrazil(item.landlineNumber.value)}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </View>
-
-            {selected && (
-              <View className="bg-primary rounded-full p-1">
-                <Icon
-                  as={Check}
-                  size={16}
-                  className="text-primary-foreground"
-                />
-              </View>
-            )}
-          </View>
-        </Pressable>
-      </View>
-    )
-  }
+  const renderCustomerItem = useCallback(
+    ({ item }: { item: CustomerLight }) => (
+      <CustomerItem
+        item={item}
+        selected={item.id === selectedCustomerId}
+        onSelect={handleSelect}
+      />
+    ),
+    [selectedCustomerId, handleSelect]
+  )
 
   const hasValue = !!selectedCustomerId
   const shouldFloat = hasValue || open
@@ -182,7 +186,7 @@ export function CustomerCombobox({
     zIndex: 10,
     top: animated.interpolate({
       inputRange: [0, 1],
-      outputRange: [-8, -8],
+      outputRange: [FIELD_LABEL_FLOAT_TOP, FIELD_LABEL_FLOAT_TOP],
     }),
     fontSize: animated.interpolate({
       inputRange: [0, 1],
@@ -191,14 +195,14 @@ export function CustomerCombobox({
   }
 
   return (
-    <View className="relative">
+    <View className="relative" style={{ paddingTop: FIELD_TOP_RESERVE }}>
       {label && (
         <Animated.Text
           style={labelStyle}
           numberOfLines={1}
           className={cn(
             'bg-background',
-            error ? 'text-red-500' : 'text-muted-foreground'
+            error ? 'text-destructive' : 'text-muted-foreground'
           )}
         >
           {label}
@@ -212,20 +216,23 @@ export function CustomerCombobox({
               'flex-row items-center justify-between h-12 px-4 rounded-md',
               'border bg-background',
               'active:bg-accent',
-              error ? 'border-red-500' : 'border-input'
+              error ? 'border-destructive' : 'border-input'
             )}
           >
             <View className="flex-row items-center gap-2 flex-1">
               <Icon
                 as={Store}
                 size={20}
-                className={cn('text-muted-foreground', error && 'text-red-500')}
+                className={cn(
+                  'text-muted-foreground',
+                  error && 'text-destructive'
+                )}
               />
               <Text
                 className={cn(
                   'flex-1',
                   !selectedCustomerId && 'text-muted-foreground',
-                  error && 'text-red-500'
+                  error && 'text-destructive'
                 )}
                 numberOfLines={1}
               >
@@ -235,7 +242,10 @@ export function CustomerCombobox({
             <Icon
               as={ChevronDown}
               size={20}
-              className={cn('text-muted-foreground', error && 'text-red-500')}
+              className={cn(
+                'text-muted-foreground',
+                error && 'text-destructive'
+              )}
             />
           </Pressable>
         </DialogTrigger>
@@ -261,6 +271,7 @@ export function CustomerCombobox({
               {searchQuery !== '' && (
                 <Pressable
                   onPress={() => setSearchQuery('')}
+                  accessibilityLabel="Limpar busca"
                   className="absolute right-3 top-2.5"
                 >
                   <Icon as={X} className="text-muted-foreground" size={20} />
@@ -269,15 +280,16 @@ export function CustomerCombobox({
             </View>
 
             {isLoading ? (
-              <View className="flex-1 items-center justify-center">
+              <View className="flex-1 items-center justify-center gap-2">
+                <ActivityIndicator />
                 <Text className="text-muted-foreground">
                   Carregando clientes...
                 </Text>
               </View>
-            ) : filteredCustomers.length === 0 ? (
+            ) : results.length === 0 ? (
               <View className="flex-1 items-center justify-center">
                 <Text className="text-muted-foreground text-center">
-                  {searchQuery
+                  {debouncedQuery
                     ? 'Nenhum cliente encontrado com esse nome'
                     : 'Nenhum cliente cadastrado'}
                 </Text>
@@ -285,8 +297,11 @@ export function CustomerCombobox({
             ) : (
               <View className="flex-1 w-full">
                 <FlashList
-                  data={filteredCustomers}
+                  data={results}
                   renderItem={renderCustomerItem}
+                  keyExtractor={keyExtractor}
+                  extraData={selectedCustomerId}
+                  keyboardShouldPersistTaps="handled"
                 />
               </View>
             )}
@@ -298,17 +313,14 @@ export function CustomerCombobox({
                 <Text>Cancelar</Text>
               </Button>
             </DialogClose>
-            <DialogClose asChild className="flex-1">
-              <Button>
-                <Text>Confirmar</Text>
-              </Button>
-            </DialogClose>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <View className="min-h-4 justify-center">
-        {error && <Text className="ml-2 text-xs text-red-500">{error}</Text>}
+      <View className={FIELD_MESSAGE_CLASS}>
+        {error && (
+          <Text className="ml-2 text-xs text-destructive">{error}</Text>
+        )}
       </View>
     </View>
   )

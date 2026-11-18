@@ -1,6 +1,7 @@
 import { createRepositoryHooks } from '@/src/application/hooks/create-repository-hooks'
 import { useInvalidateQueries } from '@/src/application/hooks/use-invalidate-queries'
 import { ItineraryWorkOrder } from '@/src/domain/entities/itinerary-work-order/itinerary-work-order.entity'
+import { isOpenStatus } from '@/src/domain/entities/work-order/work-order-rules'
 import {
   WorkOrder,
   WorkOrderStatus,
@@ -22,55 +23,61 @@ export const itineraryWorkOrderHooks = createRepositoryHooks(
 )
 
 /**
- * Hook para adicionar automaticamente uma work order ao itinerário ativo
- * se a data agendada estiver dentro do período do itinerário
+ * Hook to automatically add a work order to the active itinerary
+ * if the scheduled date falls within the itinerary period
  */
 export function useAutoAddWorkOrderToItinerary() {
   const invalidateQueries = useInvalidateQueries()
 
   return useMutation({
     mutationFn: async (workOrder: WorkOrder) => {
-      // IMPORTANTE: Verificar se a work order já tem resultado (finalizada)
-      // Work orders finalizadas NÃO devem ser adicionadas ao itinerário
+      // IMPORTANT: Check whether the work order already has a result (finished)
+      // Finished work orders must NOT be added to the itinerary
       if (workOrder.result) {
         return { added: false, reason: 'has-result' }
       }
 
-      // Buscar itinerário ativo
+      // Fetch the active itinerary
       const itinerary = await itineraryRepo.getActiveItinerary()
 
       if (!itinerary) {
-        // Não há itinerário ativo, não faz nada
+        // No active itinerary, do nothing
         return { added: false, reason: 'no-active-itinerary' }
       }
 
-      // Verificar se a data agendada está dentro do período do itinerário
+      // Check whether the scheduled date is within the itinerary period
+      // Compare by day in the device timezone: the itinerary end is stored
+      // as 00:00 of the last day, and work orders of that day used to be left out.
       const scheduledDate = workOrder.scheduledDate
+      const periodStart = new Date(itinerary.initialItineraryDate)
+      periodStart.setHours(0, 0, 0, 0)
+      const periodEnd = new Date(itinerary.finalItineraryDate)
+      periodEnd.setHours(23, 59, 59, 999)
       const isInPeriod =
-        scheduledDate >= itinerary.initialItineraryDate &&
-        scheduledDate <= itinerary.finalItineraryDate
+        scheduledDate >= periodStart && scheduledDate <= periodEnd
 
       if (!isInPeriod) {
-        // Data fora do período, não adiciona
+        // Date outside the period, do not add
         return { added: false, reason: 'date-out-of-range' }
       }
 
-      // Verificar se a ordem está expirada
+      // Only open work orders enter the itinerary
       if (workOrder.status === WorkOrderStatus.EXPIRED) {
         return { added: false, reason: 'expired' }
       }
-
-      // Verificar se a ordem foi clonada
       if (workOrder.status === WorkOrderStatus.COPIED) {
         return { added: false, reason: 'copied' }
       }
+      if (!isOpenStatus(workOrder.status)) {
+        return { added: false, reason: 'closed' }
+      }
 
-      // Verificar se já possui ordem de pagamento
+      // Check whether it already has a payment order
       if (workOrder.paymentOrder) {
         return { added: false, reason: 'has-payment-order' }
       }
 
-      // Verificar se já não está no itinerário
+      // Check whether it is not already in the itinerary
       const existingWorkOrders =
         await itineraryWorkOrderRepo.getItineraryWorkOrdersByItineraryId(
           itinerary.id
@@ -83,7 +90,7 @@ export function useAutoAddWorkOrderToItinerary() {
         return { added: false, reason: 'already-exists' }
       }
 
-      // Adicionar ao itinerário na última posição
+      // Add to the itinerary at the last position
       const newPosition = existingWorkOrders.length + 1
       const itineraryWorkOrder = new ItineraryWorkOrder(
         uuid.v4() as UUID,
@@ -99,7 +106,7 @@ export function useAutoAddWorkOrderToItinerary() {
     },
     onSuccess: (result) => {
       if (result.added) {
-        // Invalidar queries relacionadas
+        // Invalidate related queries
         invalidateQueries('itineraryWorkOrders')
         invalidateQueries('itineraries')
       }

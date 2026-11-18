@@ -9,7 +9,7 @@ const PAGE_SIZE = 50
 export { CustomerFilters }
 
 export const useCustomersInfinite = (filters?: CustomerFilters) => {
-  // Normalizar filtros antes de passar para o repository
+  // Normalize filters before passing them to the repository
   const normalizedFilters: CustomerFilters | undefined = filters
     ? {
         search: filters.search,
@@ -44,6 +44,6 @@ export const useCustomersInfinite = (filters?: CustomerFilters) => {
       return undefined
     },
     initialPageParam: 1,
-    staleTime: 1000 * 30, // 30 segundos
+    staleTime: 1000 * 60 * 5, // 5 minutes (master data; mutations invalidate)
   })
 }

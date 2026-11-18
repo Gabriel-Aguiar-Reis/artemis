@@ -1,4 +1,5 @@
 import { WorkOrderResultItemInput } from '@/src/app/work-orders/form'
+import { useNormalizedSearch } from '@/src/application/hooks/use-normalized-search'
 import { Button } from '@/src/components/ui/button'
 import {
   Dialog,
@@ -9,9 +10,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/src/components/ui/dialog'
+import {
+  FIELD_LABEL_FLOAT_TOP,
+  FIELD_MESSAGE_CLASS,
+  FIELD_TOP_RESERVE,
+} from '@/src/components/ui/field-metrics'
 import { Icon } from '@/src/components/ui/icon'
 import { Input } from '@/src/components/ui/input'
 import { Text } from '@/src/components/ui/text'
+import { formatBRL } from '@/src/lib/format'
 import { cn } from '@/src/lib/utils'
 import { FlashList } from '@shopify/flash-list'
 import {
@@ -37,7 +44,7 @@ type ExchangedProductsComboboxProps = {
   label?: string
   placeholder?: string
   error?: string
-  // Para buscar informações completas dos produtos
+  // To fetch full product information
   availableProducts?: Array<{
     id: string
     name: string
@@ -58,32 +65,32 @@ export function ExchangedProductsCombobox({
   const [open, setOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
-  // Mapear produtos agendados com quantidade disponível (agendado - removido)
+  // Map scheduled products with available quantity (scheduled - removed)
   const scheduledProductsWithInfo = useMemo(() => {
     return scheduledProducts
       .map((sp) => {
         const productInfo = availableProducts.find((p) => p.id === sp.productId)
         if (!productInfo) return null
 
-        // Quantidade já removida
+        // Quantity already removed
         const removedQty =
           removedProducts.find((p) => p.productId === sp.productId)?.quantity ||
           0
 
-        // Quantidade já trocada
+        // Quantity already exchanged
         const exchangedQty =
           selectedExchangedProducts.find((p) => p.productId === sp.productId)
             ?.quantity || 0
 
-        // Quantidade disponível para trocar = agendada - removida - já trocada
+        // Quantity available to exchange = scheduled - removed - already exchanged
         const availableQty = sp.quantity - removedQty - exchangedQty
 
-        // Permite que produtos já selecionados continuem aparecendo na lista
+        // Lets already selected products keep appearing in the list
         const isSelected = selectedExchangedProducts.some(
           (p) => p.productId === sp.productId
         )
 
-        // Remove apenas se não tiver disponibilidade E não estiver selecionado
+        // Remove only if there is no availability AND it is not selected
         if (availableQty <= 0 && !isSelected) return null
 
         return {
@@ -108,12 +115,11 @@ export function ExchangedProductsCombobox({
     availableProducts,
   ])
 
-  const filteredProducts = useMemo(() => {
-    if (!searchQuery) return scheduledProductsWithInfo
-    return scheduledProductsWithInfo.filter((p) =>
-      p.productName.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  }, [scheduledProductsWithInfo, searchQuery])
+  const filteredProducts = useNormalizedSearch(
+    scheduledProductsWithInfo,
+    (p) => p.productName,
+    searchQuery
+  )
 
   const isProductExchanged = (productId: string) => {
     return selectedExchangedProducts.some((p) => p.productId === productId)
@@ -132,7 +138,7 @@ export function ExchangedProductsCombobox({
     )
     if (!productInfo) return
 
-    // Calcular o máximo real: quantidade agendada - quantidade removida
+    // Compute the real maximum: scheduled quantity - removed quantity
     const removedQty =
       removedProducts.find((p) => p.productId === productId)?.quantity || 0
     const maxQuantity = productInfo.quantity - removedQty
@@ -142,7 +148,7 @@ export function ExchangedProductsCombobox({
         selectedExchangedProducts.filter((p) => p.productId !== productId)
       )
     } else if (quantity > maxQuantity) {
-      // Não permite exceder a quantidade disponível (agendada - removida)
+      // Do not allow exceeding the available quantity (scheduled - removed)
       return
     } else {
       onExchangedProductsChange(
@@ -180,12 +186,12 @@ export function ExchangedProductsCombobox({
   }
 
   const markAllAsExchanged = () => {
-    // Criar WorkOrderResultItemInput para todos os produtos disponíveis
+    // Create WorkOrderResultItemInput for all available products
     const allExchanged: WorkOrderResultItemInput[] =
       scheduledProductsWithInfo.map((product) => ({
         productId: product.productId,
         productName: product.productName,
-        quantity: product.availableQuantity, // Usa a quantidade disponível (agendada - removida)
+        quantity: product.availableQuantity, // Uses the available quantity (scheduled - removed)
         priceSnapshot: product.priceSnapshot,
       }))
 
@@ -221,7 +227,7 @@ export function ExchangedProductsCombobox({
     const selected = isProductExchanged(item.productId)
     const quantity = getProductQuantity(item.productId)
 
-    // Calcular o máximo real: quantidade agendada - quantidade removida
+    // Compute the real maximum: scheduled quantity - removed quantity
     const removedQty =
       removedProducts.find((p) => p.productId === item.productId)?.quantity || 0
     const maxQuantity = item.quantity - removedQty
@@ -230,7 +236,7 @@ export function ExchangedProductsCombobox({
       <View className="min-h-[120px]">
         <Pressable
           onPress={() => {
-            // Só adiciona o produto se não estiver selecionado
+            // Only add the product if it is not selected
             if (!selected) {
               toggleProduct(item)
             }
@@ -248,17 +254,14 @@ export function ExchangedProductsCombobox({
 
               <View className="flex-row items-center gap-4">
                 <View className="flex-row items-center gap-1">
-                  <Icon as={Banknote} size={16} className="text-green-600" />
+                  <Icon as={Banknote} size={16} className="text-success" />
                   <Text className="text-sm">
-                    R${' '}
-                    {item.priceSnapshot.toLocaleString('pt-BR', {
-                      minimumFractionDigits: 2,
-                    })}
+                    {formatBRL(item.priceSnapshot)}
                   </Text>
                 </View>
 
                 <View className="flex-row items-center gap-1">
-                  <Icon as={Package} size={16} className="text-blue-600" />
+                  <Icon as={Package} size={16} className="text-info" />
                   <Text className="text-sm">
                     Disponível: {item.availableQuantity}x
                   </Text>
@@ -283,7 +286,7 @@ export function ExchangedProductsCombobox({
             )}
           </View>
 
-          {/* Controle de quantidade */}
+          {/* Quantity control */}
           {selected && (
             <View className="flex-row items-center gap-3 mt-3 pt-3 border-t border-border">
               <Text className="text-sm font-medium">Qte:</Text>
@@ -350,7 +353,7 @@ export function ExchangedProductsCombobox({
     zIndex: 10,
     top: animated.interpolate({
       inputRange: [0, 1],
-      outputRange: [-8, -8],
+      outputRange: [FIELD_LABEL_FLOAT_TOP, FIELD_LABEL_FLOAT_TOP],
     }),
     fontSize: animated.interpolate({
       inputRange: [0, 1],
@@ -359,14 +362,14 @@ export function ExchangedProductsCombobox({
   }
 
   return (
-    <View className="relative">
+    <View className="relative" style={{ paddingTop: FIELD_TOP_RESERVE }}>
       {label && (
         <Animated.Text
           style={labelStyle}
           numberOfLines={1}
           className={cn(
             'bg-background',
-            error ? 'text-red-500' : 'text-muted-foreground'
+            error ? 'text-destructive' : 'text-muted-foreground'
           )}
         >
           {label}
@@ -380,21 +383,24 @@ export function ExchangedProductsCombobox({
               'flex-row items-center justify-between h-12 px-4 rounded-md',
               'border bg-background',
               'active:bg-accent',
-              error ? 'border-red-500' : 'border-input'
+              error ? 'border-destructive' : 'border-input'
             )}
           >
             <View className="flex-row items-center gap-2 flex-1">
               <Icon
                 as={Package}
                 size={20}
-                className={cn('text-muted-foreground', error && 'text-red-500')}
+                className={cn(
+                  'text-muted-foreground',
+                  error && 'text-destructive'
+                )}
               />
               <Text
                 className={cn(
                   'flex-1',
                   selectedExchangedProducts.length === 0 &&
                     'text-muted-foreground',
-                  error && 'text-red-500'
+                  error && 'text-destructive'
                 )}
                 numberOfLines={1}
               >
@@ -404,7 +410,10 @@ export function ExchangedProductsCombobox({
             <Icon
               as={ChevronDown}
               size={20}
-              className={cn('text-muted-foreground', error && 'text-red-500')}
+              className={cn(
+                'text-muted-foreground',
+                error && 'text-destructive'
+              )}
             />
           </Pressable>
         </DialogTrigger>
@@ -415,7 +424,7 @@ export function ExchangedProductsCombobox({
           </DialogHeader>
 
           <View className="flex-1">
-            {/* Botão para marcar todos como trocados */}
+            {/* Button to mark all as exchanged */}
             {scheduledProductsWithInfo.length > 0 && (
               <Button
                 variant="outline"
@@ -470,6 +479,8 @@ export function ExchangedProductsCombobox({
               <View className="flex-1">
                 <FlashList
                   data={filteredProducts}
+                  keyExtractor={(item) => item.productId}
+                  keyboardShouldPersistTaps="handled"
                   renderItem={renderProductItem}
                 />
               </View>
@@ -517,8 +528,10 @@ export function ExchangedProductsCombobox({
         </View>
       )}
 
-      <View className="min-h-4 justify-center">
-        {error && <Text className="ml-2 text-xs text-red-500">{error}</Text>}
+      <View className={FIELD_MESSAGE_CLASS}>
+        {error && (
+          <Text className="ml-2 text-xs text-destructive">{error}</Text>
+        )}
       </View>
     </View>
   )

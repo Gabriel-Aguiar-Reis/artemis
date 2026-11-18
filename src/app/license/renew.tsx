@@ -70,7 +70,10 @@ export default function RenewLicenseScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 bg-background items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 bg-background items-center justify-center"
+      >
         <ActivityIndicator />
       </SafeAreaView>
     )
@@ -78,14 +81,20 @@ export default function RenewLicenseScreen() {
 
   if (!license) {
     return (
-      <SafeAreaView className="flex-1 bg-background items-center justify-center p-4">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 bg-background items-center justify-center p-4"
+      >
         <Text>Licença não encontrada</Text>
       </SafeAreaView>
     )
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView
+      edges={['left', 'right', 'bottom']}
+      className="flex-1 bg-background"
+    >
       <Stack.Screen
         options={{
           title: 'Renovar Licença',
@@ -101,7 +110,11 @@ export default function RenewLicenseScreen() {
           {/* Header */}
           <View className="gap-2">
             <View className="flex-row items-center gap-2">
-              <Icon as={RefreshCw} size={28} className="text-primary" />
+              <Icon
+                as={RefreshCw}
+                size={28}
+                className="text-muted-foreground"
+              />
               <Text className="font-bold text-2xl">Renovação Antecipada</Text>
             </View>
             <Text className="text-muted-foreground">
@@ -109,25 +122,25 @@ export default function RenewLicenseScreen() {
             </Text>
           </View>
 
-          {/* Status atual */}
-          <View className="p-4 bg-blue-50 dark:bg-blue-950 border border-blue-600 rounded-lg gap-3">
+          {/* Current status */}
+          <View className="p-4 bg-info-subtle border border-info rounded-lg gap-3">
             <View className="flex-row items-center gap-2">
-              <Icon as={CalendarClock} size={20} className="text-blue-600" />
-              <Text className="font-semibold text-blue-800 dark:text-blue-200">
+              <Icon as={CalendarClock} size={20} className="text-info" />
+              <Text className="font-semibold text-info">
                 Status Atual da Licença
               </Text>
             </View>
             <View className="gap-1">
-              <Text className="text-blue-700 dark:text-blue-300">
+              <Text className="text-info">
                 Expira em {license.getDaysRemaining()} dias
               </Text>
-              <Text className="text-sm text-blue-600 dark:text-blue-400">
+              <Text className="text-sm text-info">
                 Válida até {formatDate(license.expirationDate)}
               </Text>
             </View>
           </View>
 
-          {/* Código de ativação */}
+          {/* Activation code */}
           <View className="gap-3">
             <View className="gap-2">
               <Text className="font-semibold text-lg">
@@ -156,7 +169,7 @@ export default function RenewLicenseScreen() {
             </Text>
           </View>
 
-          {/* Campo de entrada */}
+          {/* Input field */}
           <View className="gap-3">
             <View className="gap-2">
               <Text className="font-semibold text-lg">
@@ -180,7 +193,7 @@ export default function RenewLicenseScreen() {
             {error && <Text className="text-sm text-destructive">{error}</Text>}
           </View>
 
-          {/* Botões de ação */}
+          {/* Action buttons */}
           <View className="gap-3">
             <Button
               onPress={handleActivate}
@@ -216,7 +229,7 @@ export default function RenewLicenseScreen() {
             </View>
           </View>
 
-          {/* Informações */}
+          {/* Information */}
           <View className="gap-3 p-4 bg-muted rounded-lg">
             <Text className="font-semibold">Como funciona:</Text>
             <View className="gap-2">

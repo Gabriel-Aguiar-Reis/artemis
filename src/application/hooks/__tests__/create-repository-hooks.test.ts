@@ -121,11 +121,11 @@ describe('createRepositoryHooks', () => {
     expect(getQueryKeysToInvalidate).toHaveBeenCalledWith('workOrders')
     expect(invalidateQueries).toHaveBeenNthCalledWith(1, {
       queryKey: ['workOrders'],
-      refetchType: 'all',
+      refetchType: 'active',
     })
     expect(invalidateQueries).toHaveBeenNthCalledWith(2, {
       queryKey: ['itineraries'],
-      refetchType: 'all',
+      refetchType: 'active',
     })
     expect(Toast.show).toHaveBeenCalledWith({
       type: 'success',
@@ -205,7 +205,7 @@ describe('createRepositoryHooks', () => {
     addOptions.onSuccess?.()
     expect(invalidateQueries).toHaveBeenCalledWith({
       queryKey: ['customers'],
-      refetchType: 'all',
+      refetchType: 'active',
     })
     expect(Toast.show).toHaveBeenCalledWith({
       type: 'success',
@@ -266,5 +266,22 @@ describe('createRepositoryHooks', () => {
     )
 
     expect(defaultGenderMessage).toBe('Cliente vip atualizado com sucesso!')
+  })
+
+  it('maps FK restrict errors to friendly messages and uses longer staleTime for reference data', async () => {
+    vi.resetModules()
+    vi.clearAllMocks()
+    setupReactQueryMocks()
+    const { __test__ } = await import('../create-repository-hooks')
+
+    expect(
+      __test__.friendlyErrorMessage(
+        new Error('FOREIGN KEY constraint failed'),
+        'customers'
+      )
+    ).toBe('Este cliente possui ordens de serviço e não pode ser excluído.')
+    expect(__test__.friendlyErrorMessage(new Error('boom'), 'customers')).toBe(
+      'boom'
+    )
   })
 })

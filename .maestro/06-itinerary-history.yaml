@@ -1,0 +1,18 @@
+# Itinerary history is now a single aggregated SQL query (it used to hydrate
+# every itinerary with every work order). With ~80 finished weeks it must
+# render quickly and show the per-itinerary counters.
+appId: br.com.artemis
+tags: [qa]
+---
+- runFlow: subflows/open-app.yaml
+- openLink: artemis://itinerary/history
+- extendedWaitUntil:
+    visible: Histórico de Itinerários
+    timeout: 15000
+- extendedWaitUntil:
+    visible: ".* ordens"
+    timeout: 15000
+- takeScreenshot: 06-history
+- scroll
+- scroll
+- takeScreenshot: 06-history-scrolled

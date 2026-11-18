@@ -1,8 +1,8 @@
 /**
- * Configuração centralizada de invalidação de queries do TanStack Query
+ * Centralized TanStack Query invalidation configuration
  *
- * Este arquivo mapeia as dependências entre entidades para garantir que
- * quando uma entidade é modificada, todas as queries relacionadas sejam invalidadas.
+ * This file maps dependencies between entities to ensure that
+ * when an entity is modified, all related queries are invalidated.
  */
 
 export type QueryKey =
@@ -20,15 +20,19 @@ export type QueryKey =
   | 'errorLogs'
 
 /**
- * Mapa de dependências: quando uma query key é modificada,
- * quais outras queries devem ser invalidadas
+ * Map of DIRECT dependencies: when a query key is modified, which
+ * other queries must be invalidated. NOT transitive: each list already
+ * contains everything that actually embeds the changed data (see
+ * docs/QUERY_INVALIDATION.md). Itineraries and orders carry the customer name,
+ * items and product names in their own join, which is why they appear in the lists.
  */
 export const QUERY_DEPENDENCIES: Record<QueryKey, QueryKey[]> = {
-  // Quando customer muda, invalida work orders e itinerários
+  // Work orders and itineraries show the customer's name/address/phone
   customers: ['workOrders', 'itineraries', 'itineraryWorkOrders'],
 
-  // Quando work order muda, invalida itinerários e items relacionados
+  // Writing a work order touches itineraries, items and results
   workOrders: [
+    'paymentOrders',
     'itineraries',
     'itineraryWorkOrders',
     'workOrderItems',
@@ -36,57 +40,42 @@ export const QUERY_DEPENDENCIES: Record<QueryKey, QueryKey[]> = {
     'workOrderResultItems',
   ],
 
-  // Quando work order item muda, invalida work orders
-  workOrderItems: ['workOrders'],
+  workOrderItems: ['workOrders', 'itineraries'],
 
-  // Quando itinerário muda, invalida itineraryWorkOrders
   itineraries: ['itineraryWorkOrders'],
 
-  // Quando itineraryWorkOrder muda, invalida itinerários e work orders
   itineraryWorkOrders: ['itineraries', 'workOrders'],
 
-  // Quando produto muda, invalida work order items e result items
-  products: ['workOrderItems', 'workOrderResultItems', 'workOrders'],
+  // Work order/result items show the product name
+  products: [
+    'workOrders',
+    'itineraries',
+    'workOrderItems',
+    'workOrderResults',
+    'workOrderResultItems',
+  ],
 
-  // Quando categoria muda, invalida produtos (que podem invalidar outras)
-
-  // Error logs não dependem de nenhuma outra entidade
+  // Error logs do not depend on any other entity
   errorLogs: [],
+
+  // Only the product list shows the category name
   categories: ['products'],
 
-  // Quando payment order muda, invalida work orders
-  paymentOrders: ['workOrders'],
+  paymentOrders: ['workOrders', 'itineraries'],
 
-  // Quando work order result muda, invalida work orders e result items
-  workOrderResults: ['workOrders', 'workOrderResultItems'],
+  workOrderResults: ['workOrders', 'itineraries', 'workOrderResultItems'],
 
-  // Quando work order result item muda, invalida work orders e results
-  workOrderResultItems: ['workOrders', 'workOrderResults'],
+  workOrderResultItems: ['workOrders', 'itineraries', 'workOrderResults'],
 
-  // License não tem dependências
   license: [],
 }
 
 /**
- * Retorna todas as query keys que devem ser invalidadas quando uma key específica é modificada
- * Inclui a própria key e todas suas dependências (recursivamente)
+ * Returns the key itself plus its direct dependencies (no transitive closure,
+ * no duplicates).
  */
 export function getQueryKeysToInvalidate(key: QueryKey): QueryKey[] {
-  const keysToInvalidate = new Set<QueryKey>([key])
-  const visited = new Set<QueryKey>()
-
-  function addDependencies(currentKey: QueryKey) {
-    if (visited.has(currentKey)) return
-    visited.add(currentKey)
-
-    const dependencies = QUERY_DEPENDENCIES[currentKey] || []
-    dependencies.forEach((depKey) => {
-      keysToInvalidate.add(depKey)
-      addDependencies(depKey)
-    })
-  }
-
-  addDependencies(key)
-
-  return Array.from(keysToInvalidate)
+  return Array.from(
+    new Set<QueryKey>([key, ...(QUERY_DEPENDENCIES[key] || [])])
+  )
 }

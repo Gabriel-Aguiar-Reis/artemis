@@ -50,9 +50,8 @@ export function OptionsSheet(props: SheetProps<'options-sheet'>) {
                   onPress={() => handleOptionPress(option)}
                   className={cn(
                     'flex-row items-center gap-3 rounded-lg border border-border bg-card p-4 active:bg-accent mb-2',
-                    option.isWhatsApp &&
-                      'bg-green-100 dark:bg-green-950 border-green-600',
-                    option.destructive && 'border-destructive bg-destructive/10'
+                    option.isWhatsApp && 'border-success/50',
+                    option.destructive && 'border-destructive/50'
                   )}
                 >
                   {option.icon ? (
@@ -66,7 +65,7 @@ export function OptionsSheet(props: SheetProps<'options-sheet'>) {
                       }
                     />
                   ) : option.isWhatsApp ? (
-                    <WhatsAppIcon size={20} className="text-green-600" />
+                    <WhatsAppIcon size={20} className="text-success" />
                   ) : null}
 
                   <Text
@@ -75,7 +74,7 @@ export function OptionsSheet(props: SheetProps<'options-sheet'>) {
                       option.destructive
                         ? 'text-destructive'
                         : 'text-foreground',
-                      option.isWhatsApp && 'text-green-600'
+                      option.isWhatsApp && 'text-success'
                     )}
                   >
                     {option.label}

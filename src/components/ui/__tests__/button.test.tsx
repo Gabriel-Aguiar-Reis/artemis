@@ -4,7 +4,7 @@ import React from 'react'
 import { Text } from 'react-native'
 import { describe, expect, it, vitest } from 'vitest'
 
-// Mock do Text component
+// Text component mock
 vitest.mock('@/src/components/ui/text', () => ({
   Text: ({ children, ...props }: any) => {
     const RNText = require('react-native').Text

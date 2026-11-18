@@ -13,6 +13,7 @@ vi.mock('libphonenumber-js', async () => {
 
 import {
   cn,
+  countCalendarDays,
   formatPhoneBrazil,
   getErrorMessage,
   normalizePhoneBrazil,
@@ -192,12 +193,12 @@ describe('utils', () => {
     })
 
     it('should not remove 55 if result would be invalid length', () => {
-      // 5512345 tem 7 dígitos, se remover 55 fica com 5 (inválido)
+      // 5512345 has 7 digits, if 55 is removed it is left with 5 (invalid)
       expect(normalizePhoneBrazil('5512345')).toBe('5512345')
     })
 
     it('should handle 12-digit numbers starting with 55 as country code + landline', () => {
-      // 555678901234 = 12 dígitos → 55 (país) + 5678901234 (10 dígitos de fixo)
+      // 555678901234 = 12 digits → 55 (country) + 5678901234 (10 landline digits)
       expect(normalizePhoneBrazil('555678901234')).toBe('5678901234')
     })
   })
@@ -237,6 +238,26 @@ describe('utils', () => {
       expect(anos?.range).toHaveLength(20)
       expect(anos?.range[0]).toBe(1)
       expect(anos?.range[19]).toBe(20)
+    })
+  })
+
+  describe('countCalendarDays', () => {
+    it('counts calendar days inclusively, ignoring the time of day', () => {
+      expect(
+        countCalendarDays(
+          new Date(2026, 10, 18, 0, 0),
+          new Date(2026, 10, 21, 23, 59)
+        )
+      ).toBe(4)
+      expect(
+        countCalendarDays(new Date(2026, 10, 18, 15), new Date(2026, 10, 18, 9))
+      ).toBe(1)
+    })
+
+    it('does not depend on argument order', () => {
+      expect(
+        countCalendarDays(new Date(2026, 10, 21), new Date(2026, 10, 15))
+      ).toBe(7)
     })
   })
 })

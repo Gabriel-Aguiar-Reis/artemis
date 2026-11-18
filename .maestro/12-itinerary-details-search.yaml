@@ -1,0 +1,27 @@
+# Itinerary details: the search button opens a search bar that filters the
+# itinerary's work orders (accent-insensitive). The summary scrolls with the
+# list.
+appId: br.com.artemis
+tags: [qa]
+---
+- runFlow: subflows/open-app.yaml
+- openLink: artemis://itinerary/history
+- extendedWaitUntil:
+    visible: ".* ordens"
+    timeout: 15000
+- tapOn:
+    text: ".* ordens"
+    index: 1
+- extendedWaitUntil:
+    visible: ".* - SP.*"
+    timeout: 20000
+- tapOn: Pesquisar ordens de serviço
+- inputText: padaria
+- hideKeyboard
+- extendedWaitUntil:
+    visible: "Ordens de Serviço \\(\\d+ de \\d+\\)"
+    timeout: 10000
+- assertVisible: ".*Padaria.*"
+- takeScreenshot: 12-details-search
+- tapOn: Fechar pesquisa
+- assertNotVisible: "Ordens de Serviço \\(\\d+ de \\d+\\)"

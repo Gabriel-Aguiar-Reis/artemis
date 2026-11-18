@@ -1,28 +1,32 @@
-import { NativeOnlyAnimatedView } from '@/src/components/ui/native-only-animated-view';
-import { TextClassContext } from '@/src/components/ui/text';
-import { cn } from '@/src/lib/utils';
-import * as HoverCardPrimitive from '@rn-primitives/hover-card';
-import * as React from 'react';
-import { Platform, StyleSheet } from 'react-native';
-import { FadeIn, FadeOut } from 'react-native-reanimated';
-import { FullWindowOverlay as RNFullWindowOverlay } from 'react-native-screens';
+import { NativeOnlyAnimatedView } from '@/src/components/ui/native-only-animated-view'
+import { TextClassContext } from '@/src/components/ui/text'
+import { cn } from '@/src/lib/utils'
+import * as HoverCardPrimitive from '@rn-primitives/hover-card'
+import * as React from 'react'
+import { Platform, StyleSheet } from 'react-native'
+import { FadeIn, FadeOut } from 'react-native-reanimated'
+import { FullWindowOverlay as RNFullWindowOverlay } from 'react-native-screens'
 
-const HoverCard = HoverCardPrimitive.Root;
+const HoverCard = HoverCardPrimitive.Root
 
-const HoverCardTrigger = HoverCardPrimitive.Trigger;
+const HoverCardTrigger = HoverCardPrimitive.Trigger
 
-const FullWindowOverlay = Platform.OS === 'ios' ? RNFullWindowOverlay : React.Fragment;
+const FullWindowOverlay =
+  Platform.OS === 'ios' ? RNFullWindowOverlay : React.Fragment
 
 function HoverCardContent({
   className,
   align = 'center',
   sideOffset = 4,
   ...props
-}: HoverCardPrimitive.ContentProps & React.RefAttributes<HoverCardPrimitive.ContentRef>) {
+}: HoverCardPrimitive.ContentProps &
+  React.RefAttributes<HoverCardPrimitive.ContentRef>) {
   return (
     <HoverCardPrimitive.Portal>
       <FullWindowOverlay>
-        <HoverCardPrimitive.Overlay style={Platform.select({ native: StyleSheet.absoluteFill })}>
+        <HoverCardPrimitive.Overlay
+          style={Platform.select({ native: StyleSheet.absoluteFill })}
+        >
           <NativeOnlyAnimatedView entering={FadeIn} exiting={FadeOut}>
             <TextClassContext.Provider value="text-popover-foreground">
               <HoverCardPrimitive.Content
@@ -46,7 +50,7 @@ function HoverCardContent({
         </HoverCardPrimitive.Overlay>
       </FullWindowOverlay>
     </HoverCardPrimitive.Portal>
-  );
+  )
 }
 
-export { HoverCard, HoverCardContent, HoverCardTrigger };
+export { HoverCard, HoverCardContent, HoverCardTrigger }
