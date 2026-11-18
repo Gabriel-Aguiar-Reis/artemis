@@ -1,0 +1,92 @@
+/**
+ * Scheduled-period filter and per-month counts against a real SQLite DB.
+ */
+import { WorkOrderStatus } from '@/src/domain/entities/work-order/work-order.entity'
+import DrizzleWorkOrderRepository from '@/src/infra/repositories/drizzle/drizzle.work-order.repository'
+import { getTestDb, resetTestDb } from '@/src/test/sqlite-test-db'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+vi.mock('@/src/infra/db/drizzle/drizzle-client', async () =>
+  (await import('@/src/test/sqlite-test-db')).drizzleClientMock()
+)
+
+const CAT = '00000000-0000-4000-8000-000000000001'
+const P1 = '00000000-0000-4000-8000-0000000000a1'
+const CUST = '00000000-0000-4000-8000-0000000000c1'
+
+const repo = new DrizzleWorkOrderRepository()
+
+function seedBase() {
+  const { raw } = getTestDb()
+  raw.exec(
+    `INSERT INTO category (id, name, is_active) VALUES ('${CAT}', 'Extintores', 1)`
+  )
+  raw.exec(
+    `INSERT INTO product (id, name, category_id, sale_price, is_active, expiration)
+     VALUES ('${P1}', 'Recarga', '${CAT}', 10, 1, '6m')`
+  )
+  raw.exec(
+    `INSERT INTO customer (id, store_name, contact_name, address_street_name, address_street_number,
+       address_neighborhood, address_city, address_state, address_zip_code)
+     VALUES ('${CUST}', 'Mercado', 'Ana', 'Rua A', '1', 'Centro', 'Taubaté', 'SP', '12000000')`
+  )
+}
+
+async function order(date: Date, status?: WorkOrderStatus) {
+  const id = await repo.addWorkOrderWithDetails({
+    customerId: CUST,
+    scheduledDate: date,
+    items: [{ productId: P1, quantity: 1, priceSnapshot: 10 }],
+  })
+  if (status) {
+    getTestDb()
+      .raw.prepare('UPDATE work_order SET status = ? WHERE id = ?')
+      .run(status, id)
+  }
+  return id
+}
+
+const iso = (d: Date) => d.toISOString()
+
+describe('work order scheduled period', () => {
+  beforeEach(async () => {
+    resetTestDb()
+    seedBase()
+    await order(new Date(2026, 8, 10, 9), WorkOrderStatus.EXPIRED) // Sep
+    await order(new Date(2026, 9, 1, 0, 30), WorkOrderStatus.EXPIRED) // Oct, just after midnight
+    await order(new Date(2026, 9, 31, 23, 30)) // Oct, late evening (Nov in UTC)
+    await order(new Date(2026, 10, 18, 12)) // Nov
+  })
+
+  it('filters by an inclusive range of whole days', async () => {
+    const result = await repo.getWorkOrdersPaginated(1, 50, {
+      scheduledFrom: iso(new Date(2026, 9, 1)),
+      scheduledTo: iso(new Date(2026, 9, 31, 23, 59, 59, 999)),
+    })
+    expect(result.totalCount).toBe(2)
+  })
+
+  it('combines the period with the expired filter', async () => {
+    const result = await repo.getWorkOrdersPaginated(1, 50, {
+      scheduledFrom: iso(new Date(2026, 8, 1)),
+      scheduledTo: iso(new Date(2026, 10, 30, 23, 59, 59, 999)),
+      isExpired: 'true',
+    })
+    expect(result.totalCount).toBe(2)
+    expect(result.data.every((wo) => wo.status === WorkOrderStatus.EXPIRED)).toBe(
+      true
+    )
+  })
+
+  it('counts per local month with the same filters', async () => {
+    expect(await repo.getWorkOrderMonthCounts({})).toEqual({
+      '2026-09': 1,
+      '2026-10': 2,
+      '2026-11': 1,
+    })
+    expect(await repo.getWorkOrderMonthCounts({ isExpired: 'true' })).toEqual({
+      '2026-09': 1,
+      '2026-10': 1,
+    })
+  })
+})

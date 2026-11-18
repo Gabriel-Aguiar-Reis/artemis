@@ -6,6 +6,12 @@ import { Icon } from '@/src/components/ui/icon'
 import { Input } from '@/src/components/ui/input'
 import { Masks } from '@/src/components/ui/masks'
 import { Text } from '@/src/components/ui/text'
+import {
+  isPeriodPreset,
+  parseDay,
+  PERIOD_PRESETS,
+  toDayString,
+} from '@/src/lib/work-order-period'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import { Search, X } from 'lucide-react-native'
 import * as React from 'react'
@@ -21,7 +27,10 @@ export default function WorkOrdersSearch() {
     phoneNumber?: string
     landlineNumber?: string
     isWhatsApp?: string
-    scheduledDate?: string
+    scheduledDate?: string // legacy single day
+    scheduledPeriod?: string
+    scheduledFrom?: string
+    scheduledTo?: string
     visitDate?: string
     minTotalValue?: string
     maxTotalValue?: string
@@ -42,16 +51,48 @@ export default function WorkOrdersSearch() {
   const [isWhatsAppFilter, setIsWhatsAppFilter] = useState<
     'all' | 'true' | 'false'
   >((params.isWhatsApp as any) || 'all')
-  const [scheduledDateFilter, setScheduledDateFilter] = useState<
-    Date | undefined
-  >(
-    params.scheduledDate
-      ? // "today" comes from the list's "Agendadas hoje" shortcut
-        params.scheduledDate === 'today'
-        ? new Date()
-        : new Date(params.scheduledDate)
+  // Scheduled period: a relative preset ("this-month") or a custom range.
+  // The legacy single-day filter becomes the equivalent preset/range.
+  const legacyDay =
+    params.scheduledDate && params.scheduledDate !== 'today'
+      ? parseDay(params.scheduledDate)
       : undefined
+  const [periodPreset, setPeriodPreset] = useState<string | undefined>(
+    isPeriodPreset(params.scheduledPeriod)
+      ? params.scheduledPeriod
+      : params.scheduledDate === 'today'
+        ? 'today'
+        : undefined
   )
+  const [periodFrom, setPeriodFrom] = useState<Date | undefined>(
+    parseDay(params.scheduledFrom) ?? legacyDay
+  )
+  const [periodTo, setPeriodTo] = useState<Date | undefined>(
+    parseDay(params.scheduledTo) ?? legacyDay
+  )
+
+  const selectPreset = (value: string) => {
+    // Tapping the active preset clears it
+    setPeriodPreset((current) => (current === value ? undefined : value))
+    setPeriodFrom(undefined)
+    setPeriodTo(undefined)
+  }
+  const selectFrom = (date: Date) => {
+    setPeriodPreset(undefined)
+    setPeriodFrom(date)
+    if (periodTo && date > periodTo) setPeriodTo(date)
+  }
+  const selectTo = (date: Date) => {
+    setPeriodPreset(undefined)
+    setPeriodTo(date)
+    if (periodFrom && date < periodFrom) setPeriodFrom(date)
+  }
+  const periodParams = {
+    scheduledDate: undefined, // replaced by the period params
+    scheduledPeriod: periodPreset,
+    scheduledFrom: periodFrom ? toDayString(periodFrom) : undefined,
+    scheduledTo: periodTo ? toDayString(periodTo) : undefined,
+  }
   const [visitDateFilter, setVisitDateFilter] = useState<Date | undefined>(
     params.visitDate ? new Date(params.visitDate) : undefined
   )
@@ -91,9 +132,7 @@ export default function WorkOrdersSearch() {
       phoneNumber: debouncedPhoneNumber || undefined,
       landlineNumber: debouncedLandlineNumber || undefined,
       isWhatsApp: isWhatsAppFilter !== 'all' ? isWhatsAppFilter : undefined,
-      scheduledDate: scheduledDateFilter
-        ? scheduledDateFilter.toISOString()
-        : undefined,
+      ...periodParams,
       visitDate: visitDateFilter ? visitDateFilter.toISOString() : undefined,
       minTotalValue: debouncedMinTotalValue || undefined,
       maxTotalValue: debouncedMaxTotalValue || undefined,
@@ -110,7 +149,9 @@ export default function WorkOrdersSearch() {
     debouncedPhoneNumber,
     debouncedLandlineNumber,
     isWhatsAppFilter,
-    scheduledDateFilter,
+    periodPreset,
+    periodFrom,
+    periodTo,
     visitDateFilter,
     debouncedMinTotalValue,
     debouncedMaxTotalValue,
@@ -130,9 +171,7 @@ export default function WorkOrdersSearch() {
         phoneNumber: phoneNumberFilter || undefined,
         landlineNumber: landlineNumberFilter || undefined,
         isWhatsApp: isWhatsAppFilter !== 'all' ? isWhatsAppFilter : undefined,
-        scheduledDate: scheduledDateFilter
-          ? scheduledDateFilter.toISOString()
-          : undefined,
+        ...periodParams,
         visitDate: visitDateFilter ? visitDateFilter.toISOString() : undefined,
         minTotalValue: minTotalValueFilter || undefined,
         maxTotalValue: maxTotalValueFilter || undefined,
@@ -150,7 +189,9 @@ export default function WorkOrdersSearch() {
     setPhoneNumberFilter('')
     setLandlineNumberFilter('')
     setIsWhatsAppFilter('all')
-    setScheduledDateFilter(undefined)
+    setPeriodPreset(undefined)
+    setPeriodFrom(undefined)
+    setPeriodTo(undefined)
     setVisitDateFilter(undefined)
     setMinTotalValueFilter('')
     setMaxTotalValueFilter('')
@@ -166,7 +207,9 @@ export default function WorkOrdersSearch() {
     phoneNumberFilter !== '' ||
     landlineNumberFilter !== '' ||
     isWhatsAppFilter !== 'all' ||
-    scheduledDateFilter !== undefined ||
+    periodPreset !== undefined ||
+    periodFrom !== undefined ||
+    periodTo !== undefined ||
     visitDateFilter !== undefined ||
     minTotalValueFilter !== '' ||
     maxTotalValueFilter !== '' ||
@@ -288,12 +331,50 @@ export default function WorkOrdersSearch() {
                 </View>
               </View>
 
-              <DatePickerInput
-                label="Data Agendada"
-                placeholder="Selecione a data"
-                value={scheduledDateFilter}
-                onDateChange={setScheduledDateFilter}
-              />
+              <View className="gap-2">
+                <Text className="text-sm font-medium">Período agendado</Text>
+                <View className="flex-row flex-wrap gap-2">
+                  {PERIOD_PRESETS.map((preset) => {
+                    const active = periodPreset === preset.value
+                    return (
+                      <Button
+                        key={preset.value}
+                        variant={active ? 'default' : 'outline'}
+                        size="sm"
+                        onPress={() => selectPreset(preset.value)}
+                      >
+                        <Text
+                          className={
+                            active
+                              ? 'text-primary-foreground'
+                              : 'text-foreground'
+                          }
+                        >
+                          {preset.label}
+                        </Text>
+                      </Button>
+                    )
+                  })}
+                </View>
+                <View className="flex-row gap-2">
+                  <View className="flex-1">
+                    <DatePickerInput
+                      label="De"
+                      placeholder="Início"
+                      value={periodFrom}
+                      onDateChange={selectFrom}
+                    />
+                  </View>
+                  <View className="flex-1">
+                    <DatePickerInput
+                      label="Até"
+                      placeholder="Fim"
+                      value={periodTo}
+                      onDateChange={selectTo}
+                    />
+                  </View>
+                </View>
+              </View>
 
               <DatePickerInput
                 label="Data de Visita"

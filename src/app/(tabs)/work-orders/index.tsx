@@ -1,6 +1,9 @@
 import { usePersistedTabFilters } from '@/src/application/hooks/use-persisted-tab-filters'
 import { usePullToRefresh } from '@/src/application/hooks/use-pull-to-refresh'
-import { useWorkOrdersInfinite } from '@/src/application/hooks/use-work-orders-infinite'
+import {
+  useWorkOrderMonthCounts,
+  useWorkOrdersInfinite,
+} from '@/src/application/hooks/use-work-orders-infinite'
 import { workOrderHooks } from '@/src/application/hooks/work-order.hooks'
 import { WhatsAppService } from '@/src/application/services/whatsapp.service'
 import { ActiveFiltersBanner } from '@/src/components/ui/active-filters-banner'
@@ -22,6 +25,12 @@ import { WorkOrderCard } from '@/src/components/ui/work-order-card'
 import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
 import { formatDate } from '@/src/lib/format'
 import { UUID } from '@/src/lib/utils'
+import {
+  describeScheduledPeriod,
+  monthKey,
+  monthLabel,
+  resolveScheduledRange,
+} from '@/src/lib/work-order-period'
 import { FlashList, FlashListRef } from '@shopify/flash-list'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
 import {
@@ -42,17 +51,12 @@ import { SheetManager } from 'react-native-actions-sheet'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 
-const keyExtractor = (item: WorkOrder) => item.id
+/** List rows: month headers ("2026-10") interleaved with work orders */
+type Row = { type: 'month'; key: string } | { type: 'order'; wo: WorkOrder }
 
-/** Route value for the "Agendadas hoje" shortcut (resolved on every render) */
-const TODAY = 'today'
-
-function resolveRelativeDate(value?: string): string | undefined {
-  if (value !== TODAY) return value
-  const today = new Date()
-  today.setHours(12, 0, 0, 0)
-  return today.toISOString()
-}
+const keyExtractor = (row: Row) =>
+  row.type === 'month' ? `month-${row.key}` : row.wo.id
+const getItemType = (row: Row) => row.type
 
 export default function WorkOrdersScreen() {
   const { createdWorkOrderId } = useLocalSearchParams<{
@@ -64,7 +68,10 @@ export default function WorkOrdersScreen() {
     phoneNumber?: string
     landlineNumber?: string
     isWhatsApp?: string
-    scheduledDate?: string
+    scheduledDate?: string // legacy single day (persisted by 1.2.0)
+    scheduledPeriod?: string
+    scheduledFrom?: string
+    scheduledTo?: string
     visitDate?: string
     minTotalValue?: string
     maxTotalValue?: string
@@ -77,12 +84,15 @@ export default function WorkOrdersScreen() {
   // Filters survive closing the app
   usePersistedTabFilters('work-orders', params)
 
+  // Presets are relative ("this-month"): resolved on every render
+  const scheduledRange = resolveScheduledRange(params)
   const filters = {
     search: params.search,
     phoneNumber: params.phoneNumber,
     landlineNumber: params.landlineNumber,
     isWhatsApp: params.isWhatsApp,
-    scheduledDate: resolveRelativeDate(params.scheduledDate),
+    scheduledFrom: scheduledRange?.from?.toISOString(),
+    scheduledTo: scheduledRange?.to?.toISOString(),
     visitDate: params.visitDate,
     minTotalValue: params.minTotalValue,
     maxTotalValue: params.maxTotalValue,
@@ -101,7 +111,7 @@ export default function WorkOrdersScreen() {
     !!params.phoneNumber ||
     !!params.landlineNumber ||
     !!params.isWhatsApp ||
-    !!params.scheduledDate ||
+    !!scheduledRange ||
     !!params.visitDate ||
     !!params.minTotalValue ||
     !!params.maxTotalValue ||
@@ -120,6 +130,9 @@ export default function WorkOrdersScreen() {
     hasNextPage,
     fetchNextPage,
   } = useWorkOrdersInfinite(filters, { enabled: hasActiveFilters })
+  const { data: monthCounts } = useWorkOrderMonthCounts(filters, {
+    enabled: hasActiveFilters,
+  })
   const { mutateAsync: deleteWorkOrder, isPending: isDeleting } =
     workOrderHooks.deleteWorkOrder()
   const { refreshing, onRefresh } = usePullToRefresh(refetch)
@@ -127,7 +140,7 @@ export default function WorkOrdersScreen() {
     listRef,
     isVisible: showScrollBtn,
     onScroll,
-  } = useBackToTop<FlashListRef<WorkOrder>>()
+  } = useBackToTop<FlashListRef<Row>>()
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<{
     id: UUID
     customerName: string
@@ -378,8 +391,21 @@ export default function WorkOrdersScreen() {
     router.navigate('/work-orders', { dangerouslySingular: true })
   }
 
-  // Data already comes filtered from the server via repository
-  const displayedWorkOrders = allWorkOrders
+  // Grouped by scheduled month (the list is ordered by date desc, so each
+  // month is contiguous); lets the user browse month by month
+  const rows = useMemo(() => {
+    const out: Row[] = []
+    let current: string | undefined
+    for (const wo of allWorkOrders) {
+      const key = monthKey(wo.scheduledDate)
+      if (key !== current) {
+        out.push({ type: 'month', key })
+        current = key
+      }
+      out.push({ type: 'order', wo })
+    }
+    return out
+  }, [allWorkOrders])
 
   const activeFilters = useMemo(() => {
     const filters = []
@@ -398,14 +424,9 @@ export default function WorkOrdersScreen() {
         value: params.isWhatsApp === 'true' ? 'Sim' : 'Não',
       })
     }
-    if (params.scheduledDate) {
-      filters.push({
-        label: 'Data Agendada',
-        value:
-          params.scheduledDate === TODAY
-            ? 'Hoje'
-            : formatDate(new Date(params.scheduledDate)),
-      })
+    const period = describeScheduledPeriod(params)
+    if (period) {
+      filters.push({ label: 'Período', value: period })
     }
     if (params.visitDate) {
       filters.push({
@@ -456,6 +477,9 @@ export default function WorkOrdersScreen() {
     params.landlineNumber,
     params.isWhatsApp,
     params.scheduledDate,
+    params.scheduledPeriod,
+    params.scheduledFrom,
+    params.scheduledTo,
     params.visitDate,
     params.minTotalValue,
     params.maxTotalValue,
@@ -488,16 +512,36 @@ export default function WorkOrdersScreen() {
     router.setParams({ search: term || undefined })
   }, [])
 
-  const showToday = useCallback(() => {
-    // Relative value: a filter restored on another day still means "today"
-    router.setParams({ scheduledDate: TODAY })
+  // Relative presets: a filter restored on another day still means
+  // "today"/"this month"
+  const showPeriod = useCallback((scheduledPeriod: string) => {
+    router.setParams({ scheduledPeriod })
+  }, [])
+
+  const showExpired = useCallback(() => {
+    router.setParams({ isExpired: 'true' })
   }, [])
 
   const renderItem = useCallback(
-    ({ item }: { item: WorkOrder }) => (
-      <WorkOrderCard wo={item} onOptions={handleWorkOrderOptions} />
-    ),
-    [handleWorkOrderOptions]
+    ({ item }: { item: Row }) => {
+      if (item.type === 'month') {
+        const total = monthCounts?.[item.key]
+        return (
+          <View className="flex-row items-baseline justify-between pt-2 pb-3">
+            <Text className="text-base font-semibold">
+              {monthLabel(item.key)}
+            </Text>
+            {total !== undefined && (
+              <Text className="text-sm text-muted-foreground">
+                {total === 1 ? '1 ordem' : `${total} ordens`}
+              </Text>
+            )}
+          </View>
+        )
+      }
+      return <WorkOrderCard wo={item.wo} onOptions={handleWorkOrderOptions} />
+    },
+    [handleWorkOrderOptions, monthCounts]
   )
 
   // Loading/error only replace the list area: the search bar stays mounted,
@@ -532,9 +576,23 @@ export default function WorkOrdersScreen() {
           placeholder="Pesquisar por cliente ou contato..."
         />
         {!hasActiveFilters && (
-          <View className="flex-row gap-2">
-            <Button size="sm" variant="secondary" onPress={showToday}>
+          <View className="flex-row flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant="secondary"
+              onPress={() => showPeriod('today')}
+            >
               <Text>Agendadas hoje</Text>
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              onPress={() => showPeriod('this-month')}
+            >
+              <Text>Este mês</Text>
+            </Button>
+            <Button size="sm" variant="secondary" onPress={showExpired}>
+              <Text>Expiradas</Text>
             </Button>
             <Button
               size="sm"
@@ -578,7 +636,7 @@ export default function WorkOrdersScreen() {
               message="Não foi possível carregar as ordens de serviço."
               onRetry={() => refetch()}
             />
-          ) : displayedWorkOrders.length === 0 ? (
+          ) : rows.length === 0 ? (
             <View className="flex-1 items-center justify-center px-4">
               <Text className="text-center text-muted-foreground">
                 Nenhuma ordem encontrada com os filtros aplicados.
@@ -588,9 +646,10 @@ export default function WorkOrdersScreen() {
             <View className="flex-1">
               <FlashList
                 ref={listRef}
-                data={displayedWorkOrders}
+                data={rows}
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
+                getItemType={getItemType}
                 onScroll={onScroll}
                 scrollEventThrottle={16}
                 refreshing={refreshing}
