@@ -1,17 +1,23 @@
+import { usePullToRefresh } from '@/src/application/hooks/use-pull-to-refresh'
 import { useWorkOrdersInfinite } from '@/src/application/hooks/use-work-orders-infinite'
 import { workOrderHooks } from '@/src/application/hooks/work-order.hooks'
 import { WhatsAppService } from '@/src/application/services/whatsapp.service'
 import { ActiveFiltersBanner } from '@/src/components/ui/active-filters-banner'
+import {
+  BackToTopButton,
+  useBackToTop,
+} from '@/src/components/ui/back-to-top-button'
 import { ButtonFilter } from '@/src/components/ui/button-filter'
 import { ButtonNew } from '@/src/components/ui/button-new'
 import { ConfirmDeleteDialog } from '@/src/components/ui/dialog/confirm-delete-dialog'
 import { NotesDialog } from '@/src/components/ui/dialog/notes-dialog'
 import { WhatsAppSummaryDialog } from '@/src/components/ui/dialog/whatsapp-summary-dialog'
+import { ErrorState, LoadingState } from '@/src/components/ui/list-states'
 import { Text } from '@/src/components/ui/text'
 import { WorkOrderCard } from '@/src/components/ui/work-order-card'
 import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
 import { UUID } from '@/src/lib/utils'
-import { FlashList } from '@shopify/flash-list'
+import { FlashList, FlashListRef } from '@shopify/flash-list'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
 import {
   Copy,
@@ -24,11 +30,13 @@ import {
   Trash2,
 } from 'lucide-react-native'
 import * as React from 'react'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { ActivityIndicator, View } from 'react-native'
 import { SheetManager } from 'react-native-actions-sheet'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
+
+const keyExtractor = (item: WorkOrder) => item.id
 
 export default function WorkOrdersScreen() {
   const { createdWorkOrderId } = useLocalSearchParams<{
@@ -67,9 +75,23 @@ export default function WorkOrdersScreen() {
     isCopied: params.isCopied,
   }
 
-  const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
-    useWorkOrdersInfinite(filters)
-  const { mutate: deleteWorkOrder } = workOrderHooks.deleteWorkOrder()
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useWorkOrdersInfinite(filters)
+  const { mutateAsync: deleteWorkOrder, isPending: isDeleting } =
+    workOrderHooks.deleteWorkOrder()
+  const { refreshing, onRefresh } = usePullToRefresh(refetch)
+  const {
+    listRef,
+    isVisible: showScrollBtn,
+    onScroll,
+  } = useBackToTop<FlashListRef<WorkOrder>>()
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<{
     id: UUID
     customerName: string
@@ -90,13 +112,14 @@ export default function WorkOrdersScreen() {
   }, [data])
 
   // Detectar quando uma work order foi criada e mostrar o dialog do WhatsApp
+  // Depende só do id criado: refetchs da lista não reabrem o dialog.
   React.useEffect(() => {
-    if (createdWorkOrderId && allWorkOrders) {
+    if (createdWorkOrderId) {
       setShowWhatsAppDialog(true)
     }
-  }, [createdWorkOrderId, allWorkOrders])
+  }, [createdWorkOrderId])
 
-  const handleWorkOrderOptions = async (workOrder: WorkOrder) => {
+  const handleWorkOrderOptions = useCallback(async (workOrder: WorkOrder) => {
     const customerName = workOrder.customer.storeName
     const date = workOrder.scheduledDate || workOrder.visitDate
 
@@ -252,11 +275,16 @@ export default function WorkOrdersScreen() {
         options,
       },
     })
-  }
+  }, [])
 
-  const handleDeleteWorkOrder = (workOrderId: UUID) => {
-    deleteWorkOrder(workOrderId)
-    setDeleteDialogOpen(false)
+  const handleDeleteWorkOrder = async (workOrderId: UUID) => {
+    try {
+      await deleteWorkOrder(workOrderId)
+    } catch {
+      // toast de erro vem do hook
+    } finally {
+      setDeleteDialogOpen(false)
+    }
   }
 
   // Função para enviar mensagem do WhatsApp
@@ -414,11 +442,28 @@ export default function WorkOrdersScreen() {
     )
   }
 
+  const renderItem = useCallback(
+    ({ item }: { item: WorkOrder }) => (
+      <WorkOrderCard wo={item} onOptions={handleWorkOrderOptions} />
+    ),
+    [handleWorkOrderOptions]
+  )
+
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
-        <ActivityIndicator size="large" />
-        <Text className="mt-4">Carregando ordens de serviço...</Text>
+      <SafeAreaView className="flex-1">
+        <LoadingState label="Carregando ordens de serviço..." />
+      </SafeAreaView>
+    )
+  }
+
+  if (isError && !data) {
+    return (
+      <SafeAreaView className="flex-1">
+        <ErrorState
+          message="Não foi possível carregar as ordens de serviço."
+          onRetry={() => refetch()}
+        />
       </SafeAreaView>
     )
   }
@@ -446,7 +491,7 @@ export default function WorkOrdersScreen() {
           ),
         }}
       />
-      {totalWorkOrders === 0 ? (
+      {totalWorkOrders === 0 && !hasActiveFilters ? (
         <View className="flex-1 items-center justify-center px-4">
           <Text className="text-center text-muted-foreground">
             Nenhuma ordem de serviço cadastrada.{' \n'}
@@ -466,19 +511,22 @@ export default function WorkOrdersScreen() {
               </Text>
             </View>
           ) : (
-            <View className="flex-1 px-4">
+            <View className="flex-1">
               <FlashList
+                ref={listRef}
                 data={displayedWorkOrders}
-                renderItem={({ item }) => (
-                  <WorkOrderCard
-                    wo={item as WorkOrder}
-                    onPress={() => handleWorkOrderOptions(item as WorkOrder)}
-                  />
-                )}
+                renderItem={renderItem}
+                keyExtractor={keyExtractor}
+                onScroll={onScroll}
+                scrollEventThrottle={16}
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                contentContainerStyle={{ paddingHorizontal: 16 }}
                 onEndReached={handleLoadMore}
                 onEndReachedThreshold={0.5}
                 ListFooterComponent={renderFooter}
               />
+              <BackToTopButton isVisible={showScrollBtn} scrollRef={listRef} />
             </View>
           )}
 
@@ -487,9 +535,8 @@ export default function WorkOrdersScreen() {
               open={deleteDialogOpen}
               onOpenChange={setDeleteDialogOpen}
               title={`Excluir ordem de serviço do cliente "${selectedWorkOrder.customerName}"?`}
-              handleDelete={() => {
-                handleDeleteWorkOrder(selectedWorkOrder.id)
-              }}
+              isPending={isDeleting}
+              handleDelete={() => handleDeleteWorkOrder(selectedWorkOrder.id)}
             />
           )}
 
@@ -504,7 +551,12 @@ export default function WorkOrdersScreen() {
 
           <WhatsAppSummaryDialog
             open={showWhatsAppDialog}
-            onOpenChange={setShowWhatsAppDialog}
+            onOpenChange={(open) => {
+              setShowWhatsAppDialog(open)
+              if (!open && createdWorkOrderId) {
+                router.setParams({ createdWorkOrderId: undefined })
+              }
+            }}
             title="Enviar resumo ao cliente?"
             description="Deseja enviar via WhatsApp o resumo desta ordem de serviço?"
             onConfirm={handleSendWhatsApp}

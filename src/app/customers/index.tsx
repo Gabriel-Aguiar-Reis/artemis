@@ -1,21 +1,22 @@
 import { customerHooks } from '@/src/application/hooks/customer.hooks'
 import { useCustomersInfinite } from '@/src/application/hooks/use-customers-infinite'
+import { usePullToRefresh } from '@/src/application/hooks/use-pull-to-refresh'
 import { ActiveFiltersBanner } from '@/src/components/ui/active-filters-banner'
+import {
+  BackToTopButton,
+  useBackToTop,
+} from '@/src/components/ui/back-to-top-button'
 import { ButtonFilter } from '@/src/components/ui/button-filter'
 import { ButtonNew } from '@/src/components/ui/button-new'
 import { ConfirmDeleteDialog } from '@/src/components/ui/dialog/confirm-delete-dialog'
 import { Icon } from '@/src/components/ui/icon'
+import { ErrorState, LoadingState } from '@/src/components/ui/list-states'
 import { ObjectCard } from '@/src/components/ui/object-card'
 import { Text } from '@/src/components/ui/text'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/src/components/ui/tooltip'
 import { WhatsAppIcon } from '@/src/components/ui/whatsapp-icon'
 import { Customer } from '@/src/domain/entities/customer/customer.entity'
 import { formatPhoneBrazil, UUID } from '@/src/lib/utils'
-import { FlashList } from '@shopify/flash-list'
+import { FlashList, FlashListRef } from '@shopify/flash-list'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
 import {
   EditIcon,
@@ -27,10 +28,82 @@ import {
   UtilityPole,
 } from 'lucide-react-native'
 import * as React from 'react'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { ActivityIndicator, View } from 'react-native'
 import { SheetManager } from 'react-native-actions-sheet'
 import { SafeAreaView } from 'react-native-safe-area-context'
+
+type CustomerCardProps = {
+  customer: Customer
+  onOptions: (customer: Customer) => void
+}
+
+const CustomerCard = React.memo(
+  function CustomerCard({ customer, onOptions }: CustomerCardProps) {
+    const address = `${customer.storeAddress.streetName}, ${customer.storeAddress.streetNumber}, ${customer.storeAddress.zipCode}, ${customer.storeAddress.city} - ${customer.storeAddress.state}`
+    return (
+      <ObjectCard.Root className="mb-4 dark:bg-input/30">
+        <ObjectCard.Header>
+          <ObjectCard.Title>
+            <View className="flex-row gap-2 items-center">
+              <Icon as={Store} size={20} className="text-primary" />
+              <Text className="font-bold">{customer.storeName}</Text>
+            </View>
+          </ObjectCard.Title>
+          <ObjectCard.Description>
+            <View className="flex-row gap-2 items-center">
+              <Icon as={MapPinHouse} size={20} className="text-ring" />
+              <Text className="text-sm text-ring text-wrap mr-4">
+                {address}
+              </Text>
+            </View>
+          </ObjectCard.Description>
+          <ObjectCard.Actions onPress={() => onOptions(customer)} />
+        </ObjectCard.Header>
+        <ObjectCard.Content>
+          <View className="flex-row gap-2 items-center">
+            <Icon as={UserSquare2} size={16} />
+            <Text className="font-bold">{customer.contactName}</Text>
+            {customer.isActiveWhatsApp() && (
+              <WhatsAppIcon size={16} className="text-green-600" />
+            )}
+          </View>
+          <View className="ml-6">
+            {customer.phoneNumber && (
+              <View className="flex-row items-center gap-2">
+                <Icon as={Phone} size={16} className="text-ring" />
+                <Text className="text-sm text-ring">
+                  {formatPhoneBrazil(customer.phoneNumber.value)}
+                </Text>
+              </View>
+            )}
+            {customer.landlineNumber && (
+              <View className="flex-row items-center gap-2">
+                <Icon as={UtilityPole} size={16} className="text-ring" />
+                <Text className="text-sm text-ring">
+                  {formatPhoneBrazil(customer.landlineNumber.value)}
+                </Text>
+              </View>
+            )}
+          </View>
+        </ObjectCard.Content>
+      </ObjectCard.Root>
+    )
+  },
+  (prev, next) =>
+    prev.onOptions === next.onOptions &&
+    prev.customer.id === next.customer.id &&
+    prev.customer.storeName === next.customer.storeName &&
+    prev.customer.contactName === next.customer.contactName &&
+    prev.customer.phoneNumber?.value === next.customer.phoneNumber?.value &&
+    prev.customer.landlineNumber?.value ===
+      next.customer.landlineNumber?.value &&
+    prev.customer.isActiveWhatsApp() === next.customer.isActiveWhatsApp() &&
+    prev.customer.storeAddress.getFullAddress() ===
+      next.customer.storeAddress.getFullAddress()
+)
+
+const keyExtractor = (item: Customer) => item.id
 
 export default function CustomersScreen() {
   const params = useLocalSearchParams<{
@@ -49,9 +122,23 @@ export default function CustomersScreen() {
     isActiveWhatsApp: params.isActiveWhatsApp,
   }
 
-  const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
-    useCustomersInfinite(filters)
-  const { mutate: deleteCustomer } = customerHooks.deleteCustomer()
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useCustomersInfinite(filters)
+  const { mutateAsync: deleteCustomer, isPending: isDeleting } =
+    customerHooks.deleteCustomer()
+  const { refreshing, onRefresh } = usePullToRefresh(refetch)
+  const {
+    listRef,
+    isVisible: showScrollBtn,
+    onScroll,
+  } = useBackToTop<FlashListRef<Customer>>()
 
   // Combina todas as páginas de clientes em um único array
   const allCustomers = useMemo(() => {
@@ -108,19 +195,16 @@ export default function CustomersScreen() {
     name: string
   } | null>(null)
 
-  const handleCustomerOptions = async (
-    customerId: UUID,
-    customerName: string
-  ) => {
+  const handleCustomerOptions = useCallback(async (customer: Customer) => {
     await SheetManager.show('options-sheet', {
       payload: {
-        title: customerName,
+        title: customer.storeName,
         options: [
           {
             label: 'Editar',
             icon: EditIcon,
             onPress: () => {
-              router.push(`/customers/${customerId}/edit`)
+              router.push(`/customers/${customer.id}/edit`)
             },
           },
           {
@@ -128,97 +212,34 @@ export default function CustomersScreen() {
             icon: TrashIcon,
             destructive: true,
             onPress: () => {
-              setSelectedCustomer({ id: customerId, name: customerName })
+              setSelectedCustomer({
+                id: customer.id,
+                name: customer.storeName,
+              })
               setDeleteDialogOpen(true)
             },
           },
         ],
       },
     })
+  }, [])
+
+  const handleDeleteCustomer = async (customerId: UUID) => {
+    try {
+      await deleteCustomer(customerId)
+    } catch {
+      // toast de erro (com mensagem amigável para FK) vem do hook
+    } finally {
+      setDeleteDialogOpen(false)
+    }
   }
 
-  const handleDeleteCustomer = (customerId: UUID) => {
-    deleteCustomer(customerId)
-    setDeleteDialogOpen(false)
-  }
-
-  const renderItem = (customer: Customer) => {
-    const address = `${customer.storeAddress.streetName}, ${customer.storeAddress.streetNumber}, ${customer.storeAddress.zipCode}, ${customer.storeAddress.city} - ${customer.storeAddress.state}`
-    return (
-      <ObjectCard.Root key={customer.id} className="mb-4 dark:bg-input/30">
-        <ObjectCard.Header>
-          <ObjectCard.Title>
-            <View className="flex-row gap-2 items-center">
-              <Icon as={Store} size={20} className="text-primary" />
-              <Text className="font-bold">{customer.storeName}</Text>
-            </View>
-          </ObjectCard.Title>
-          <ObjectCard.Description>
-            <View className="flex-row gap-2 items-center">
-              <Icon as={MapPinHouse} size={20} className="text-ring" />
-              <Text className="text-sm text-ring text-wrap mr-4">
-                {address}
-              </Text>
-            </View>
-          </ObjectCard.Description>
-          <ObjectCard.Actions
-            onPress={() =>
-              handleCustomerOptions(customer.id, customer.storeName)
-            }
-          />
-        </ObjectCard.Header>
-        <ObjectCard.Content>
-          <View className="flex-row gap-2 items-center">
-            <Icon as={UserSquare2} size={16} />
-            <Text className="font-bold">{customer.contactName}</Text>
-            {customer.isActiveWhatsApp() && (
-              <WhatsAppIcon size={16} className="text-green-600" />
-            )}
-          </View>
-          <View className="ml-6">
-            <Tooltip>
-              <TooltipTrigger>
-                {customer.phoneNumber && (
-                  <View className="flex-row items-center gap-2">
-                    <Icon as={Phone} size={16} className="text-ring" />
-                    <View className="items-start text-primary">
-                      <View className="flex-row items-center">
-                        <Text className="text-sm text-ring">
-                          {formatPhoneBrazil(customer.phoneNumber.value)}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                )}
-              </TooltipTrigger>
-              <TooltipContent>
-                <Text>Número de telefone do cliente</Text>
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger>
-                {customer.landlineNumber && (
-                  <View className="flex-row items-center gap-2">
-                    <Icon as={UtilityPole} size={16} className="text-ring" />
-                    <View className="items-start text-primary">
-                      <View className="flex-row items-center">
-                        <Text className="text-sm text-ring">
-                          {formatPhoneBrazil(customer.landlineNumber.value)}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                )}
-              </TooltipTrigger>
-              <TooltipContent>
-                <Text>Número de telefone fixo do cliente</Text>
-              </TooltipContent>
-            </Tooltip>
-          </View>
-        </ObjectCard.Content>
-      </ObjectCard.Root>
-    )
-  }
+  const renderItem = useCallback(
+    ({ item }: { item: Customer }) => (
+      <CustomerCard customer={item} onOptions={handleCustomerOptions} />
+    ),
+    [handleCustomerOptions]
+  )
 
   const handleLoadMore = () => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -240,9 +261,19 @@ export default function CustomersScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
-        <ActivityIndicator size="large" />
-        <Text className="mt-4">Carregando clientes...</Text>
+      <SafeAreaView className="flex-1">
+        <LoadingState label="Carregando clientes..." />
+      </SafeAreaView>
+    )
+  }
+
+  if (isError && !data) {
+    return (
+      <SafeAreaView className="flex-1">
+        <ErrorState
+          message="Não foi possível carregar os clientes."
+          onRetry={() => refetch()}
+        />
       </SafeAreaView>
     )
   }
@@ -270,7 +301,7 @@ export default function CustomersScreen() {
           ),
         }}
       />
-      {totalCustomers === 0 ? (
+      {totalCustomers === 0 && !hasActiveFilters ? (
         <View className="flex-1 items-center justify-center px-4">
           <Text className="text-center text-muted-foreground">
             Nenhum cliente cadastrado.{' \n'}
@@ -290,14 +321,22 @@ export default function CustomersScreen() {
               </Text>
             </View>
           ) : (
-            <View className="flex-1 px-4">
+            <View className="flex-1">
               <FlashList
+                ref={listRef}
                 data={displayedCustomers}
-                renderItem={({ item }) => renderItem(item as Customer)}
+                renderItem={renderItem}
+                keyExtractor={keyExtractor}
+                onScroll={onScroll}
+                scrollEventThrottle={16}
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                contentContainerStyle={{ paddingHorizontal: 16 }}
                 onEndReached={handleLoadMore}
                 onEndReachedThreshold={0.5}
                 ListFooterComponent={renderFooter}
               />
+              <BackToTopButton isVisible={showScrollBtn} scrollRef={listRef} />
             </View>
           )}
           {selectedCustomer && (
@@ -305,9 +344,8 @@ export default function CustomersScreen() {
               open={deleteDialogOpen}
               onOpenChange={setDeleteDialogOpen}
               title={`Excluir cliente "${selectedCustomer.name}"?`}
-              handleDelete={() => {
-                handleDeleteCustomer(selectedCustomer.id)
-              }}
+              isPending={isDeleting}
+              handleDelete={() => handleDeleteCustomer(selectedCustomer.id)}
             />
           )}
         </View>
