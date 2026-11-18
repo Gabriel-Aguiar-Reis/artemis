@@ -13,9 +13,7 @@ import { UUID } from '@/src/lib/utils'
 import { eq } from 'drizzle-orm'
 import uuid from 'react-native-uuid'
 
-export default class DrizzleWorkOrderItemRepository
-  implements WorkOrderItemRepository
-{
+export default class DrizzleWorkOrderItemRepository implements WorkOrderItemRepository {
   async getWorkOrderItem(id: UUID): Promise<WorkOrderItem | null> {
     const row = db
       .select()

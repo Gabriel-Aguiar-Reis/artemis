@@ -103,16 +103,17 @@ describe('drizzle-client', () => {
 
   it('enableForeignKeys logs errors without throwing', async () => {
     const error = new Error('foreign key')
-    execSyncMock.mockImplementationOnce(() => {
-      throw error
-    })
 
     const consoleErrorSpy = vi
       .spyOn(console, 'error')
       .mockImplementation(() => undefined)
 
     const module = await import('@/src/infra/db/drizzle/drizzle-client')
+    // Abre antes de preparar o erro: a abertura também executa PRAGMAs (WAL)
     module.getExpoDb()
+    execSyncMock.mockImplementationOnce(() => {
+      throw error
+    })
     module.enableForeignKeys()
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(

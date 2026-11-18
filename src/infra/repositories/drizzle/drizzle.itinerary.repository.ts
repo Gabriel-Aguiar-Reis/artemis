@@ -1,17 +1,6 @@
-import { CustomerMapper } from '@/src/domain/entities/customer/mapper/customer.mapper'
 import { ItineraryWorkOrder } from '@/src/domain/entities/itinerary-work-order/itinerary-work-order.entity'
 import { Itinerary } from '@/src/domain/entities/itinerary/itinerary.entity'
 import { ItineraryMapper } from '@/src/domain/entities/itinerary/mapper/itinerary.mapper'
-import { PaymentOrderMapper } from '@/src/domain/entities/payment-order/mapper/payment-order.mapper'
-import { ProductMapper } from '@/src/domain/entities/product/mapper/product.mapper'
-import { ProductSnapshot } from '@/src/domain/entities/work-order-item/value-objects/product-snapshot.vo'
-import { WorkOrderItem } from '@/src/domain/entities/work-order-item/work-order-item.entity'
-import {
-  WorkOrderResultItem,
-  WorkOrderResultItemType,
-} from '@/src/domain/entities/work-order-result-item/work-order-result-item.entity'
-import { WorkOrderResultMapper } from '@/src/domain/entities/work-order-result/mapper/work-order-result.mapper'
-import { WorkOrderMapper } from '@/src/domain/entities/work-order/mapper/work-order.mapper'
 import { WorkOrderStatus } from '@/src/domain/entities/work-order/work-order.entity'
 import { ItineraryRepository } from '@/src/domain/repositories/itinerary/itinerary.repository'
 import {
@@ -23,157 +12,72 @@ import { customer } from '@/src/infra/db/drizzle/schema/drizzle.customer.schema'
 import { itineraryWorkOrder } from '@/src/infra/db/drizzle/schema/drizzle.itinerary-work-order.schema'
 import { itinerary } from '@/src/infra/db/drizzle/schema/drizzle.itinerary.schema'
 import { paymentOrder } from '@/src/infra/db/drizzle/schema/drizzle.payment-order.schema'
-import { product } from '@/src/infra/db/drizzle/schema/drizzle.product.schema'
-import { workOrderItem } from '@/src/infra/db/drizzle/schema/drizzle.work-order-item.schema'
-import { workOrderResultItem } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result-item.schema'
 import { workOrderResult } from '@/src/infra/db/drizzle/schema/drizzle.work-order-result.schema'
 import { workOrder } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
+import { hydrateWorkOrders } from '@/src/infra/repositories/drizzle/work-order-hydration'
 import { UUID } from '@/src/lib/utils'
-import { and, asc, eq, gte, isNull, lte, ne } from 'drizzle-orm'
+import { and, asc, eq, gte, inArray, isNull, lte } from 'drizzle-orm'
 import uuid from 'react-native-uuid'
 
+// Só OS em aberto entram num itinerário novo.
+const OPEN_STATUSES = [
+  WorkOrderStatus.PENDING,
+  WorkOrderStatus.COMMITTED,
+  WorkOrderStatus.IN_PROGRESS,
+]
+
 export default class DrizzleItineraryRepository implements ItineraryRepository {
-  private async loadWorkOrderItems(
-    workOrderId: UUID
-  ): Promise<WorkOrderItem[]> {
-    const items = await db
-      .select({
-        item: workOrderItem,
-        product: product,
-      })
-      .from(workOrderItem)
-      .leftJoin(product, eq(workOrderItem.productId, product.id))
-      .where(eq(workOrderItem.workOrderId, workOrderId))
+  /**
+   * Carrega os vínculos itinerário↔OS de um ou mais itinerários com as OS já
+   * hidratadas em lote (sem consultas por OS).
+   */
+  private async loadItineraryWorkOrdersFor(
+    itineraryIds: string[]
+  ): Promise<Map<string, ItineraryWorkOrder[]>> {
+    const map = new Map<string, ItineraryWorkOrder[]>()
+    if (itineraryIds.length === 0) return map
 
-    return items
-      .filter((row) => row.product)
-      .map((row) => {
-        const prod = ProductMapper.toDomain(row.product!)
-        const snapshot = new ProductSnapshot(prod.id, prod.name, prod.salePrice)
-
-        return WorkOrderItem.fromProductSnapshot(
-          snapshot,
-          row.item.quantity,
-          row.item.priceSnapshot
-        )
-      })
-  }
-
-  private async loadWorkOrderResultItems(resultId: UUID): Promise<{
-    exchangedProducts: WorkOrderResultItem[]
-    addedProducts?: WorkOrderResultItem[]
-    removedProducts?: WorkOrderResultItem[]
-  }> {
-    const items = await db
-      .select({
-        item: workOrderResultItem,
-        product: product,
-      })
-      .from(workOrderResultItem)
-      .leftJoin(product, eq(workOrderResultItem.productId, product.id))
-      .where(eq(workOrderResultItem.resultId, resultId))
-
-    const exchangedProducts: WorkOrderResultItem[] = []
-    const addedProducts: WorkOrderResultItem[] = []
-    const removedProducts: WorkOrderResultItem[] = []
-
-    items
-      .filter((row) => row.product)
-      .forEach((row) => {
-        const prod = ProductMapper.toDomain(row.product!)
-        const snapshot = new ProductSnapshot(prod.id, prod.name, prod.salePrice)
-        const resultItem = WorkOrderResultItem.fromProductSnapshot(
-          row.item.id as UUID,
-          snapshot,
-          row.item.resultId as UUID,
-          row.item.quantity,
-          row.item.type,
-          row.item.priceSnapshot,
-          row.item.observation ?? undefined
-        )
-
-        switch (row.item.type) {
-          case WorkOrderResultItemType.EXCHANGED:
-            exchangedProducts.push(resultItem)
-            break
-          case WorkOrderResultItemType.ADDED:
-            addedProducts.push(resultItem)
-            break
-          case WorkOrderResultItemType.REMOVED:
-            removedProducts.push(resultItem)
-            break
-        }
-      })
-
-    return {
-      exchangedProducts,
-      addedProducts: addedProducts.length > 0 ? addedProducts : undefined,
-      removedProducts: removedProducts.length > 0 ? removedProducts : undefined,
-    }
-  }
-
-  private async loadItineraryWorkOrders(
-    itineraryId: UUID
-  ): Promise<ItineraryWorkOrder[]> {
     const rows = await db
       .select({
         itineraryWorkOrder: itineraryWorkOrder,
         workOrder: workOrder,
         customer: customer,
         paymentOrder: paymentOrder,
-        workOrderResult: workOrderResult,
+        result: workOrderResult,
       })
       .from(itineraryWorkOrder)
-      .leftJoin(workOrder, eq(itineraryWorkOrder.workOrderId, workOrder.id))
+      .innerJoin(workOrder, eq(itineraryWorkOrder.workOrderId, workOrder.id))
       .leftJoin(customer, eq(workOrder.customerId, customer.id))
       .leftJoin(paymentOrder, eq(workOrder.paymentOrderId, paymentOrder.id))
       .leftJoin(workOrderResult, eq(workOrder.resultId, workOrderResult.id))
-      .where(eq(itineraryWorkOrder.itineraryId, itineraryId))
-      .orderBy(itineraryWorkOrder.position)
+      .where(inArray(itineraryWorkOrder.itineraryId, itineraryIds))
+      .orderBy(itineraryWorkOrder.itineraryId, asc(itineraryWorkOrder.position))
 
-    const workOrderMapItems = await Promise.all(
-      rows
-        .filter((row) => row.workOrder && row.customer)
-        .map(async (row) => {
-          const cust = CustomerMapper.toDomain(row.customer!)
-          const po = row.paymentOrder
-            ? PaymentOrderMapper.toDomain(row.paymentOrder!)
-            : undefined
+    const workOrders = await hydrateWorkOrders(rows)
+    const byId = new Map(workOrders.map((wo) => [wo.id as string, wo]))
 
-          let result = undefined
-          if (row.workOrderResult) {
-            const resultItems = await this.loadWorkOrderResultItems(
-              row.workOrderResult.id as UUID
-            )
-            result = WorkOrderResultMapper.toDomain(
-              row.workOrderResult,
-              resultItems.exchangedProducts,
-              resultItems.addedProducts,
-              resultItems.removedProducts
-            )
-          }
+    for (const row of rows) {
+      const wo = byId.get(row.workOrder.id)
+      if (!wo) continue
+      const iwo = new ItineraryWorkOrder(
+        row.itineraryWorkOrder.id as UUID,
+        row.itineraryWorkOrder.itineraryId as UUID,
+        row.itineraryWorkOrder.position,
+        wo,
+        row.itineraryWorkOrder.isLate
+      )
+      const list = map.get(row.itineraryWorkOrder.itineraryId)
+      if (list) list.push(iwo)
+      else map.set(row.itineraryWorkOrder.itineraryId, [iwo])
+    }
+    return map
+  }
 
-          const items = await this.loadWorkOrderItems(row.workOrder!.id as UUID)
-
-          const wo = WorkOrderMapper.toDomain(
-            row.workOrder!,
-            cust,
-            items,
-            po,
-            result
-          )
-
-          return new ItineraryWorkOrder(
-            row.itineraryWorkOrder.id as UUID,
-            row.itineraryWorkOrder.itineraryId as UUID,
-            row.itineraryWorkOrder.position,
-            wo,
-            row.itineraryWorkOrder.isLate
-          )
-        })
-    )
-
-    return workOrderMapItems
+  private async loadItineraryWorkOrders(
+    itineraryId: UUID
+  ): Promise<ItineraryWorkOrder[]> {
+    const map = await this.loadItineraryWorkOrdersFor([itineraryId])
+    return map.get(itineraryId) ?? []
   }
 
   async getItineraries(): Promise<Itinerary[]> {
@@ -182,14 +86,10 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
       return []
     }
 
-    const itineraries = await Promise.all(
-      rows.map(async (row) => {
-        const workOrdersMap = await this.loadItineraryWorkOrders(row.id as UUID)
-        return ItineraryMapper.toDomain(row, workOrdersMap)
-      })
+    const iwoMap = await this.loadItineraryWorkOrdersFor(rows.map((r) => r.id))
+    return rows.map((row) =>
+      ItineraryMapper.toDomain(row, iwoMap.get(row.id) ?? [])
     )
-
-    return itineraries
   }
 
   async addItinerary(dto: ItineraryInsertDTO): Promise<void> {
@@ -210,8 +110,13 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
     }
 
     // Buscar work orders no período
+    // Mesma janela da prévia (getWorkOrdersByDateRange): do início do primeiro
+    // dia ao fim do último dia, no fuso do aparelho. Antes o fim ficava em
+    // 00:00 do último dia e as OS daquele dia não entravam no itinerário.
     const startDate = new Date(dto.initialItineraryDate)
+    startDate.setHours(0, 0, 0, 0)
     const endDate = new Date(dto.finalItineraryDate)
+    endDate.setHours(23, 59, 59, 999)
 
     const workOrdersInPeriod = await db
       .select()
@@ -221,13 +126,31 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
           isNull(workOrder.visitDate),
           isNull(workOrder.resultId),
           isNull(workOrder.paymentOrderId),
-          ne(workOrder.status, WorkOrderStatus.EXPIRED),
-          ne(workOrder.status, WorkOrderStatus.COPIED),
+          inArray(workOrder.status, OPEN_STATUSES),
           gte(workOrder.scheduledDate, startDate.toISOString()),
           lte(workOrder.scheduledDate, endDate.toISOString())
         )
       )
       .orderBy(asc(workOrder.scheduledDate))
+
+    // OS que já ficaram atrasadas em algum itinerário anterior (1 consulta só;
+    // antes era 1 por OS e pegava um vínculo "anterior" aleatório, ordenado
+    // por UUID).
+    const lateBefore = new Set<string>()
+    const woIds = workOrdersInPeriod.map((wo) => wo.id)
+    for (let i = 0; i < woIds.length; i += 500) {
+      const lateRows = await db
+        .selectDistinct({ workOrderId: itineraryWorkOrder.workOrderId })
+        .from(itineraryWorkOrder)
+        .where(
+          and(
+            inArray(itineraryWorkOrder.workOrderId, woIds.slice(i, i + 500)),
+            eq(itineraryWorkOrder.isLate, true)
+          )
+        )
+      lateRows.forEach((r) => lateBefore.add(r.workOrderId))
+    }
+    const now = new Date()
 
     await db.transaction(async (tx) => {
       // Criar o itinerário
@@ -237,28 +160,14 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
       for (let i = 0; i < workOrdersInPeriod.length; i++) {
         const wo = workOrdersInPeriod[i]
 
-        // Verificar se esta work order já estava em um itinerário anterior como atrasada
-        const previousItineraryWorkOrder = tx
-          .select()
-          .from(itineraryWorkOrder)
-          .where(eq(itineraryWorkOrder.workOrderId, wo.id))
-          .orderBy(itineraryWorkOrder.id)
-          .limit(1)
-          .get()
-
-        // Marcar como atrasada se:
-        // 1. Já estava em um itinerário anterior E foi marcada como atrasada
-        // 2. OU se a work order não tem visitDate e a scheduledDate já passou
-        const wasLateInPrevious = previousItineraryWorkOrder?.isLate || false
-        const isOverdue =
-          !wo.visitDate && new Date(wo.scheduledDate) < new Date()
+        const isOverdue = new Date(wo.scheduledDate) < now
 
         await tx.insert(itineraryWorkOrder).values({
           id: uuid.v4() as string,
           itineraryId: id,
           workOrderId: wo.id,
           position: i + 1,
-          isLate: wasLateInPrevious || isOverdue,
+          isLate: lateBefore.has(wo.id) || isOverdue,
         })
       }
     })
@@ -338,14 +247,10 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
         )
       )
 
-    const itineraries = await Promise.all(
-      rows.map(async (row) => {
-        const workOrdersMap = await this.loadItineraryWorkOrders(row.id as UUID)
-        return ItineraryMapper.toDomain(row, workOrdersMap)
-      })
+    const iwoMap = await this.loadItineraryWorkOrdersFor(rows.map((r) => r.id))
+    return rows.map((row) =>
+      ItineraryMapper.toDomain(row, iwoMap.get(row.id) ?? [])
     )
-
-    return itineraries
   }
 
   async updateFinishItinerary(id: UUID): Promise<void> {
@@ -365,29 +270,18 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
         })
         .where(eq(itinerary.id, id))
 
-      // Atualizar status das work orders
+      // Atualizar status das OS e a marcação de atraso de cada vínculo,
+      // preservando os ids dos vínculos (antes eram apagados e recriados).
+      const updatedAt = new Date().toISOString()
       for (const item of itin.workOrders) {
         await tx
           .update(workOrder)
-          .set({
-            status: item.workOrder.status,
-          })
+          .set({ status: item.workOrder.status, updatedAt })
           .where(eq(workOrder.id, item.workOrder.id))
-      }
-
-      // Atualizar work orders (isLate)
-      await tx
-        .delete(itineraryWorkOrder)
-        .where(eq(itineraryWorkOrder.itineraryId, id))
-
-      for (const item of itin.workOrders) {
-        await tx.insert(itineraryWorkOrder).values({
-          id: uuid.v4() as string,
-          itineraryId: id,
-          workOrderId: item.workOrder.id,
-          position: item.position,
-          isLate: item.isLate,
-        })
+        await tx
+          .update(itineraryWorkOrder)
+          .set({ isLate: item.isLate })
+          .where(eq(itineraryWorkOrder.id, item.id))
       }
     })
   }

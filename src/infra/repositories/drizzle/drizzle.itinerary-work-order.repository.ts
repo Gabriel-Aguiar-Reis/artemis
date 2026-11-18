@@ -1,8 +1,15 @@
 import { ItineraryWorkOrder } from '@/src/domain/entities/itinerary-work-order/itinerary-work-order.entity'
 import { ItineraryWorkOrderRepository } from '@/src/domain/repositories/itinerary-work-order/itinerary-work-order.repository'
 import { db } from '@/src/infra/db/drizzle/drizzle-client'
-import { itineraryWorkOrder, workOrder } from '@/src/infra/db/drizzle/schema'
+import {
+  customer,
+  itineraryWorkOrder,
+  paymentOrder,
+  workOrder,
+  workOrderResult,
+} from '@/src/infra/db/drizzle/schema'
 import DrizzleWorkOrderRepository from '@/src/infra/repositories/drizzle/drizzle.work-order.repository'
+import { hydrateWorkOrders } from '@/src/infra/repositories/drizzle/work-order-hydration'
 import { UUID } from '@/src/lib/utils'
 import { eq } from 'drizzle-orm'
 
@@ -14,37 +21,38 @@ export class DrizzleItineraryWorkOrderRepository implements ItineraryWorkOrderRe
     itineraryId: UUID
   ): Promise<ItineraryWorkOrder[]> {
     const rows = await db
-      .select()
+      .select({
+        itineraryWorkOrder: itineraryWorkOrder,
+        workOrder: workOrder,
+        customer: customer,
+        paymentOrder: paymentOrder,
+        result: workOrderResult,
+      })
       .from(itineraryWorkOrder)
+      .innerJoin(workOrder, eq(itineraryWorkOrder.workOrderId, workOrder.id))
+      .leftJoin(customer, eq(workOrder.customerId, customer.id))
+      .leftJoin(paymentOrder, eq(workOrder.paymentOrderId, paymentOrder.id))
+      .leftJoin(workOrderResult, eq(workOrder.resultId, workOrderResult.id))
       .where(eq(itineraryWorkOrder.itineraryId, itineraryId))
-      .leftJoin(workOrder, eq(itineraryWorkOrder.workOrderId, workOrder.id))
       .orderBy(itineraryWorkOrder.position)
 
-    if (rows.length === 0) {
-      return []
-    }
+    // Hidratação em lote (antes: getWorkOrder por linha, 4 consultas por OS)
+    const workOrders = await hydrateWorkOrders(rows)
+    const byId = new Map(workOrders.map((wo) => [wo.id as string, wo]))
 
-    const itineraryWorkOrders = await Promise.all(
-      rows.map(async (row) => {
-        const wo = await this.workOrderRepository.getWorkOrder(
-          row.itinerary_work_order.workOrderId as UUID
-        )
-
-        if (!wo) {
-          throw new Error(`Ordem de serviço não foi encontrada.`)
-        }
-
-        return ItineraryWorkOrder.fromDTO({
-          id: row.itinerary_work_order.id as UUID,
-          itineraryId: row.itinerary_work_order.itineraryId as UUID,
+    return rows.flatMap((row) => {
+      const wo = byId.get(row.workOrder.id)
+      if (!wo) return []
+      return [
+        ItineraryWorkOrder.fromDTO({
+          id: row.itineraryWorkOrder.id as UUID,
+          itineraryId: row.itineraryWorkOrder.itineraryId as UUID,
           workOrder: wo.toDTO(),
-          position: row.itinerary_work_order.position,
-          isLate: row.itinerary_work_order.isLate,
-        })
-      })
-    )
-
-    return itineraryWorkOrders
+          position: row.itineraryWorkOrder.position,
+          isLate: row.itineraryWorkOrder.isLate,
+        }),
+      ]
+    })
   }
   async getItineraryWorkOrder(id: UUID): Promise<ItineraryWorkOrder> {
     const row = db
@@ -151,11 +159,15 @@ export class DrizzleItineraryWorkOrderRepository implements ItineraryWorkOrderRe
   async updatePositions(
     items: { id: UUID; position: number }[]
   ): Promise<void> {
-    for (const item of items) {
-      await db
-        .update(itineraryWorkOrder)
-        .set({ position: item.position })
-        .where(eq(itineraryWorkOrder.id, item.id))
-    }
+    // Uma transação só: antes cada UPDATE era um commit (fsync) separado,
+    // e uma falha no meio deixava posições duplicadas.
+    await db.transaction(async (tx) => {
+      for (const item of items) {
+        await tx
+          .update(itineraryWorkOrder)
+          .set({ position: item.position })
+          .where(eq(itineraryWorkOrder.id, item.id))
+      }
+    })
   }
 }
