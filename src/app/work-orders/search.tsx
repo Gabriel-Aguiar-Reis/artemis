@@ -7,6 +7,10 @@ import { Input } from '@/src/components/ui/input'
 import { Masks } from '@/src/components/ui/masks'
 import { Text } from '@/src/components/ui/text'
 import {
+  isNextVisitPreset,
+  NEXT_VISIT_PRESETS,
+} from '@/src/lib/next-visit-period'
+import {
   isPeriodPreset,
   parseDay,
   PERIOD_PRESETS,
@@ -31,6 +35,10 @@ export default function WorkOrdersSearch() {
     scheduledPeriod?: string
     scheduledFrom?: string
     scheduledTo?: string
+    nextVisitPeriod?: string
+    nextVisitFrom?: string
+    nextVisitTo?: string
+    hasNextVisit?: string
     visitDate?: string
     minTotalValue?: string
     maxTotalValue?: string
@@ -93,6 +101,42 @@ export default function WorkOrdersSearch() {
     scheduledFrom: periodFrom ? toDayString(periodFrom) : undefined,
     scheduledTo: periodTo ? toDayString(periodTo) : undefined,
   }
+  // Next visit reminder: same shape as the scheduled period
+  const [nextVisitPreset, setNextVisitPreset] = useState<string | undefined>(
+    isNextVisitPreset(params.nextVisitPeriod)
+      ? params.nextVisitPeriod
+      : undefined
+  )
+  const [nextVisitFrom, setNextVisitFrom] = useState<Date | undefined>(
+    parseDay(params.nextVisitFrom)
+  )
+  const [nextVisitTo, setNextVisitTo] = useState<Date | undefined>(
+    parseDay(params.nextVisitTo)
+  )
+  const [hasNextVisitFilter, setHasNextVisitFilter] = useState<
+    'all' | 'true' | 'false'
+  >((params.hasNextVisit as any) || 'all')
+  const selectNextVisitPreset = (value: string) => {
+    setNextVisitPreset((current) => (current === value ? undefined : value))
+    setNextVisitFrom(undefined)
+    setNextVisitTo(undefined)
+  }
+  const selectNextVisitFrom = (date: Date) => {
+    setNextVisitPreset(undefined)
+    setNextVisitFrom(date)
+    if (nextVisitTo && date > nextVisitTo) setNextVisitTo(date)
+  }
+  const selectNextVisitTo = (date: Date) => {
+    setNextVisitPreset(undefined)
+    setNextVisitTo(date)
+    if (nextVisitFrom && date < nextVisitFrom) setNextVisitFrom(date)
+  }
+  const nextVisitParams = {
+    nextVisitPeriod: nextVisitPreset,
+    nextVisitFrom: nextVisitFrom ? toDayString(nextVisitFrom) : undefined,
+    nextVisitTo: nextVisitTo ? toDayString(nextVisitTo) : undefined,
+    hasNextVisit: hasNextVisitFilter !== 'all' ? hasNextVisitFilter : undefined,
+  }
   const [visitDateFilter, setVisitDateFilter] = useState<Date | undefined>(
     params.visitDate ? new Date(params.visitDate) : undefined
   )
@@ -133,6 +177,7 @@ export default function WorkOrdersSearch() {
       landlineNumber: debouncedLandlineNumber || undefined,
       isWhatsApp: isWhatsAppFilter !== 'all' ? isWhatsAppFilter : undefined,
       ...periodParams,
+      ...nextVisitParams,
       visitDate: visitDateFilter ? visitDateFilter.toISOString() : undefined,
       minTotalValue: debouncedMinTotalValue || undefined,
       maxTotalValue: debouncedMaxTotalValue || undefined,
@@ -152,6 +197,10 @@ export default function WorkOrdersSearch() {
     periodPreset,
     periodFrom,
     periodTo,
+    nextVisitPreset,
+    nextVisitFrom,
+    nextVisitTo,
+    hasNextVisitFilter,
     visitDateFilter,
     debouncedMinTotalValue,
     debouncedMaxTotalValue,
@@ -172,6 +221,7 @@ export default function WorkOrdersSearch() {
         landlineNumber: landlineNumberFilter || undefined,
         isWhatsApp: isWhatsAppFilter !== 'all' ? isWhatsAppFilter : undefined,
         ...periodParams,
+        ...nextVisitParams,
         visitDate: visitDateFilter ? visitDateFilter.toISOString() : undefined,
         minTotalValue: minTotalValueFilter || undefined,
         maxTotalValue: maxTotalValueFilter || undefined,
@@ -192,6 +242,10 @@ export default function WorkOrdersSearch() {
     setPeriodPreset(undefined)
     setPeriodFrom(undefined)
     setPeriodTo(undefined)
+    setNextVisitPreset(undefined)
+    setNextVisitFrom(undefined)
+    setNextVisitTo(undefined)
+    setHasNextVisitFilter('all')
     setVisitDateFilter(undefined)
     setMinTotalValueFilter('')
     setMaxTotalValueFilter('')
@@ -210,6 +264,10 @@ export default function WorkOrdersSearch() {
     periodPreset !== undefined ||
     periodFrom !== undefined ||
     periodTo !== undefined ||
+    nextVisitPreset !== undefined ||
+    nextVisitFrom !== undefined ||
+    nextVisitTo !== undefined ||
+    hasNextVisitFilter !== 'all' ||
     visitDateFilter !== undefined ||
     minTotalValueFilter !== '' ||
     maxTotalValueFilter !== '' ||
@@ -373,6 +431,80 @@ export default function WorkOrdersSearch() {
                       onDateChange={selectTo}
                     />
                   </View>
+                </View>
+              </View>
+
+              <View className="gap-2">
+                <Text className="text-sm font-medium">Próxima visita</Text>
+                <View className="flex-row flex-wrap gap-2">
+                  {NEXT_VISIT_PRESETS.map((preset) => {
+                    const active = nextVisitPreset === preset.value
+                    return (
+                      <Button
+                        key={preset.value}
+                        variant={active ? 'default' : 'outline'}
+                        size="sm"
+                        onPress={() => selectNextVisitPreset(preset.value)}
+                      >
+                        <Text
+                          className={
+                            active
+                              ? 'text-primary-foreground'
+                              : 'text-foreground'
+                          }
+                        >
+                          {preset.label}
+                        </Text>
+                      </Button>
+                    )
+                  })}
+                </View>
+                <View className="flex-row gap-2">
+                  <View className="flex-1">
+                    <DatePickerInput
+                      label="De"
+                      placeholder="Início"
+                      value={nextVisitFrom}
+                      onDateChange={selectNextVisitFrom}
+                    />
+                  </View>
+                  <View className="flex-1">
+                    <DatePickerInput
+                      label="Até"
+                      placeholder="Fim"
+                      value={nextVisitTo}
+                      onDateChange={selectNextVisitTo}
+                    />
+                  </View>
+                </View>
+                <View className="flex-row gap-2">
+                  {(
+                    [
+                      ['all', 'Todas'],
+                      ['true', 'Com próx. vis.'],
+                      ['false', 'Sem'],
+                    ] as const
+                  ).map(([value, label]) => (
+                    <Button
+                      key={value}
+                      variant={
+                        hasNextVisitFilter === value ? 'default' : 'outline'
+                      }
+                      size="sm"
+                      onPress={() => setHasNextVisitFilter(value)}
+                      className="flex-1"
+                    >
+                      <Text
+                        className={
+                          hasNextVisitFilter === value
+                            ? 'text-primary-foreground'
+                            : 'text-foreground'
+                        }
+                      >
+                        {label}
+                      </Text>
+                    </Button>
+                  ))}
                 </View>
               </View>
 
