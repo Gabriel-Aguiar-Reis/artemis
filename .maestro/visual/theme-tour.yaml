@@ -6,13 +6,21 @@ tags: [visual]
 ---
 - runFlow: ../subflows/open-app.yaml
 - takeScreenshot: theme-01-home
-- tapOn: Ordens de Serviço
+- tapOn: OS
+- extendedWaitUntil:
+    visible: Encontre uma ordem de serviço
+    timeout: 30000
+- takeScreenshot: theme-02a-work-orders-empty
+- tapOn: Pesquisar por cliente ou contato...
+- inputText: mercado
+- pressKey: Enter
 - extendedWaitUntil:
     visible: ".* - SP.*"
-    timeout: 30000
+    timeout: 15000
 - takeScreenshot: theme-02-work-orders
 - tapOn:
-    point: 86%,21%
+    text: Mais opções
+    index: 0
 - takeScreenshot: theme-03-options-sheet
 - back
 - tapOn:
@@ -20,7 +28,6 @@ tags: [visual]
 - takeScreenshot: theme-04-form
 - tapOn: Próximo
 - takeScreenshot: theme-05-form-validation
-- back
 - back
 - tapOn: Itinerário
 - extendedWaitUntil:
@@ -37,13 +44,13 @@ tags: [visual]
     direction: DOWN
 - takeScreenshot: theme-07-finish
 - back
-- back
 - tapOn: Clientes
 - extendedWaitUntil:
     visible: ".* - SP.*"
     timeout: 30000
 - takeScreenshot: theme-08-customers
 - tapOn:
-    point: 86%,21%
+    text: Mais opções
+    index: 0
 - tapOn: Excluir
 - takeScreenshot: theme-09-delete-dialog

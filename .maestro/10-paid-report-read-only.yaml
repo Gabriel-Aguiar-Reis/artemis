@@ -5,9 +5,9 @@ appId: br.com.artemis
 tags: [qa]
 ---
 - runFlow: subflows/open-app.yaml
-- tapOn: Ordens de Serviço
+- tapOn: OS
 - extendedWaitUntil:
-    visible: ".* - SP.*"
+    visible: Encontre uma ordem de serviço
     timeout: 30000
 - tapOn:
     point: 79%,8%
@@ -23,7 +23,8 @@ tags: [qa]
     visible: "Pago: Sim"
     timeout: 15000
 - tapOn:
-    point: 86%,30%
+    text: Mais opções
+    index: 0
 - tapOn: Acessar Relatório
 - extendedWaitUntil:
     visible: Relatório do Serviço

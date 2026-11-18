@@ -1,0 +1,30 @@
+# The work order tab starts empty (nothing is queried) and invites the user to
+# search. The inline search is accent-insensitive; clearing it goes back to the
+# empty state. "Agendadas hoje" applies a date filter in one tap.
+appId: br.com.artemis
+tags: [qa]
+---
+- runFlow: subflows/open-app.yaml
+- tapOn: OS
+- extendedWaitUntil:
+    visible: Encontre uma ordem de serviço
+    timeout: 30000
+- assertNotVisible: ".* - SP.*"
+- takeScreenshot: 11-empty
+- tapOn: Pesquisar por cliente ou contato...
+- inputText: sao judas
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: Mercado São Judas.*
+    timeout: 15000
+- assertVisible: "Busca: sao judas"
+- takeScreenshot: 11-search
+- tapOn: Limpar busca
+- extendedWaitUntil:
+    visible: Encontre uma ordem de serviço
+    timeout: 10000
+- tapOn: Agendadas hoje
+- extendedWaitUntil:
+    visible: "Data Agendada: .*"
+    timeout: 10000
+- takeScreenshot: 11-today

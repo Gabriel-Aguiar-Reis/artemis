@@ -18,7 +18,8 @@ tags: [qa]
     visible: Açai Bay
     timeout: 15000
 - tapOn:
-    point: 86%,30%
+    text: Mais opções
+    index: 0
 - tapOn: Excluir
 - tapOn: Excluir
 - extendedWaitUntil:

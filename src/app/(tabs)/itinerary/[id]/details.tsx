@@ -1,5 +1,6 @@
 import { itineraryWorkOrderHooks } from '@/src/application/hooks/itinerary-work-order.hooks'
 import { itineraryHooks } from '@/src/application/hooks/itinerary.hooks'
+import { Button } from '@/src/components/ui/button'
 import {
   Card,
   CardContent,
@@ -7,13 +8,16 @@ import {
   CardHeader,
   CardTitle,
 } from '@/src/components/ui/card'
+import { Icon } from '@/src/components/ui/icon'
+import { InlineSearchBar } from '@/src/components/ui/inline-search-bar'
 import { Text } from '@/src/components/ui/text'
 import { WorkOrderCard } from '@/src/components/ui/work-order-card'
 import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
-import { countCalendarDays, UUID } from '@/src/lib/utils'
+import { countCalendarDays, smartSearch, UUID } from '@/src/lib/utils'
 import { FlashList } from '@shopify/flash-list'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
-import { Calendar, Clock, MapPin } from 'lucide-react-native'
+import { Calendar, Clock, MapPin, Search, X } from 'lucide-react-native'
+import { useCallback, useMemo, useState } from 'react'
 import { View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -25,6 +29,30 @@ export default function ItineraryDetailsScreen() {
     itineraryWorkOrderHooks.getItineraryWorkOrdersByItineraryId(
       params.id || ('' as UUID)
     )
+
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [term, setTerm] = useState('')
+
+  // Local, accent-insensitive filter over the itinerary's work orders (they
+  // are already loaded for this screen)
+  const visibleWorkOrders = useMemo(() => {
+    if (!workOrders || !term) return workOrders ?? []
+    return workOrders.filter(({ workOrder: wo }) =>
+      [
+        wo.customer.storeName,
+        wo.customer.contactName,
+        wo.customer.phoneNumber?.value,
+        wo.customer.landlineNumber?.value,
+      ].some((field) => field && smartSearch(field, term))
+    )
+  }, [workOrders, term])
+
+  const toggleSearch = useCallback(() => {
+    setSearchOpen((open) => {
+      if (open) setTerm('')
+      return !open
+    })
+  }, [])
 
   if (isLoading) {
     return (
@@ -65,13 +93,36 @@ export default function ItineraryDetailsScreen() {
       <Stack.Screen
         options={{
           title: 'Detalhes do Itinerário',
+          headerRight: () => (
+            <Button
+              size="icon"
+              variant={searchOpen ? 'secondary' : 'outline'}
+              onPress={toggleSearch}
+              accessibilityLabel={
+                searchOpen ? 'Fechar pesquisa' : 'Pesquisar ordens de serviço'
+              }
+            >
+              <Icon as={searchOpen ? X : Search} size={20} />
+            </Button>
+          ),
         }}
       />
+      {searchOpen && (
+        <View className="px-4 pt-3 pb-1">
+          <InlineSearchBar
+            value={term}
+            onSearch={setTerm}
+            placeholder="Pesquisar por cliente, contato ou telefone..."
+            debounceMs={150}
+            autoFocus
+          />
+        </View>
+      )}
 
       {/* The summary scrolls with the list (it used to be fixed and leave
           only half of the screen for the work orders) */}
       <FlashList
-        data={workOrders ?? []}
+        data={visibleWorkOrders}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ padding: 16 }}
         ListHeaderComponent={
@@ -128,14 +179,20 @@ export default function ItineraryDetailsScreen() {
               </CardContent>
             </Card>
             <Text className="text-lg font-semibold mb-3">
-              Ordens de Serviço ({workOrders?.length || 0})
+              Ordens de Serviço (
+              {term
+                ? `${visibleWorkOrders.length} de ${workOrders?.length || 0}`
+                : workOrders?.length || 0}
+              )
             </Text>
           </>
         }
         ListEmptyComponent={
           <View className="items-center justify-center py-12">
             <Text className="text-muted-foreground">
-              Nenhuma ordem de serviço neste itinerário
+              {term
+                ? 'Nenhuma ordem de serviço encontrada'
+                : 'Nenhuma ordem de serviço neste itinerário'}
             </Text>
           </View>
         }

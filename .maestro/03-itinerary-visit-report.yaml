@@ -10,7 +10,8 @@ tags: [qa]
     visible: ATRASADO
     timeout: 30000
 - tapOn:
-    point: 86%,26%
+    text: Mais opções
+    index: 0
 - tapOn: Criar Relatório
 - tapOn: Selecione dos produtos agendados
 - tapOn: Marcar Todos Como Trocados

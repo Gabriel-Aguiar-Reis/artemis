@@ -1,10 +1,17 @@
-# Long scroll through ~15k work orders: pages load on demand (infinite query),
-# the list stays virtualized and "back to top" returns to the first card.
+# Long scroll through a broad search ("a" matches most of the ~15k work
+# orders): pages load on demand (infinite query), the list stays virtualized
+# and "back to top" returns to the first card.
 appId: br.com.artemis
 tags: [qa, perf]
 ---
 - runFlow: subflows/open-app.yaml
-- tapOn: Ordens de Serviço
+- tapOn: OS
+- extendedWaitUntil:
+    visible: Encontre uma ordem de serviço
+    timeout: 30000
+- tapOn: Pesquisar por cliente ou contato...
+- inputText: a
+- pressKey: Enter
 - extendedWaitUntil:
     visible: ".* - SP.*"
     timeout: 30000

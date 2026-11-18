@@ -452,7 +452,7 @@ export default function ItineraryScreen() {
           </View>
         ) : (
           <>
-            <View className="flex-row items-center justify-center gap-2 pb-2 border-b border-border">
+            <View className="flex-row items-center justify-center gap-2 py-3 bg-card border-b border-border">
               <Icon as={Clock} size={20} className="text-muted-foreground" />
               <Text className="font-bold text-center">
                 {itinerary.initialItineraryDate.toLocaleDateString('pt-BR')} -{' '}

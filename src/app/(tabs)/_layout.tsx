@@ -56,6 +56,10 @@ export default function TabsLayout() {
 
   return (
     <Tabs
+      // Android back from any tab goes to the itinerary (the main screen),
+      // and from there exits the app (default was "first tab" = Clientes)
+      initialRouteName="itinerary"
+      backBehavior="initialRoute"
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: palette.primary,

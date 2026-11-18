@@ -7,15 +7,19 @@ import {
   BackToTopButton,
   useBackToTop,
 } from '@/src/components/ui/back-to-top-button'
+import { Button } from '@/src/components/ui/button'
 import { ButtonFilter } from '@/src/components/ui/button-filter'
 import { ButtonNew } from '@/src/components/ui/button-new'
 import { ConfirmDeleteDialog } from '@/src/components/ui/dialog/confirm-delete-dialog'
 import { NotesDialog } from '@/src/components/ui/dialog/notes-dialog'
 import { WhatsAppSummaryDialog } from '@/src/components/ui/dialog/whatsapp-summary-dialog'
+import { Icon } from '@/src/components/ui/icon'
+import { InlineSearchBar } from '@/src/components/ui/inline-search-bar'
 import { ErrorState, LoadingState } from '@/src/components/ui/list-states'
 import { Text } from '@/src/components/ui/text'
 import { WorkOrderCard } from '@/src/components/ui/work-order-card'
 import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
+import { formatDate } from '@/src/lib/format'
 import { UUID } from '@/src/lib/utils'
 import { FlashList, FlashListRef } from '@shopify/flash-list'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
@@ -27,6 +31,7 @@ import {
   Plus,
   Receipt,
   ReceiptText,
+  Search as SearchIcon,
   Trash2,
 } from 'lucide-react-native'
 import * as React from 'react'
@@ -75,6 +80,24 @@ export default function WorkOrdersScreen() {
     isCopied: params.isCopied,
   }
 
+  // On demand: with ~15k work orders, nothing is loaded until the user
+  // searches or applies a filter (faster, and finds things quicker than
+  // scrolling)
+  const hasActiveFilters =
+    !!params.search ||
+    !!params.phoneNumber ||
+    !!params.landlineNumber ||
+    !!params.isWhatsApp ||
+    !!params.scheduledDate ||
+    !!params.visitDate ||
+    !!params.minTotalValue ||
+    !!params.maxTotalValue ||
+    !!params.isPaid ||
+    !!params.hasPayment ||
+    !!params.hasResult ||
+    !!params.isExpired ||
+    !!params.isCopied
+
   const {
     data,
     isLoading,
@@ -83,7 +106,7 @@ export default function WorkOrdersScreen() {
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
-  } = useWorkOrdersInfinite(filters)
+  } = useWorkOrdersInfinite(filters, { enabled: hasActiveFilters })
   const { mutateAsync: deleteWorkOrder, isPending: isDeleting } =
     workOrderHooks.deleteWorkOrder()
   const { refreshing, onRefresh } = usePullToRefresh(refetch)
@@ -345,21 +368,6 @@ export default function WorkOrdersScreen() {
   // Data already comes filtered from the server via repository
   const displayedWorkOrders = allWorkOrders
 
-  const hasActiveFilters =
-    !!params.search ||
-    !!params.phoneNumber ||
-    !!params.landlineNumber ||
-    !!params.isWhatsApp ||
-    !!params.scheduledDate ||
-    !!params.visitDate ||
-    !!params.minTotalValue ||
-    !!params.maxTotalValue ||
-    !!params.isPaid ||
-    !!params.hasPayment ||
-    !!params.hasResult ||
-    !!params.isExpired ||
-    !!params.isCopied
-
   const activeFilters = useMemo(() => {
     const filters = []
     if (params.search) {
@@ -378,10 +386,16 @@ export default function WorkOrdersScreen() {
       })
     }
     if (params.scheduledDate) {
-      filters.push({ label: 'Data Agendada', value: params.scheduledDate })
+      filters.push({
+        label: 'Data Agendada',
+        value: formatDate(new Date(params.scheduledDate)),
+      })
     }
     if (params.visitDate) {
-      filters.push({ label: 'Data de Visita', value: params.visitDate })
+      filters.push({
+        label: 'Data de Visita',
+        value: formatDate(new Date(params.visitDate)),
+      })
     }
     if (params.minTotalValue) {
       filters.push({ label: 'Valor Total Mínimo', value: params.minTotalValue })
@@ -454,6 +468,16 @@ export default function WorkOrdersScreen() {
     )
   }
 
+  const handleInlineSearch = useCallback((term: string) => {
+    router.setParams({ search: term || undefined })
+  }, [])
+
+  const showToday = useCallback(() => {
+    const today = new Date()
+    today.setHours(12, 0, 0, 0)
+    router.setParams({ scheduledDate: today.toISOString() })
+  }, [])
+
   const renderItem = useCallback(
     ({ item }: { item: WorkOrder }) => (
       <WorkOrderCard wo={item} onOptions={handleWorkOrderOptions} />
@@ -461,25 +485,8 @@ export default function WorkOrdersScreen() {
     [handleWorkOrderOptions]
   )
 
-  if (isLoading) {
-    return (
-      <SafeAreaView edges={['left', 'right']} className="flex-1">
-        <LoadingState label="Carregando ordens de serviço..." />
-      </SafeAreaView>
-    )
-  }
-
-  if (isError && !data) {
-    return (
-      <SafeAreaView edges={['left', 'right']} className="flex-1">
-        <ErrorState
-          message="Não foi possível carregar as ordens de serviço."
-          onRetry={() => refetch()}
-        />
-      </SafeAreaView>
-    )
-  }
-
+  // Loading/error only replace the list area: the search bar stays mounted,
+  // otherwise it loses focus (and the keyboard closes) on every search
   const totalWorkOrders = data?.pages[0]?.totalCount ?? 0
 
   return (
@@ -503,11 +510,37 @@ export default function WorkOrdersScreen() {
           ),
         }}
       />
-      {totalWorkOrders === 0 && !hasActiveFilters ? (
-        <View className="flex-1 items-center justify-center px-4">
+      <View className="px-4 pt-3 pb-2 gap-2">
+        <InlineSearchBar
+          value={params.search ?? ''}
+          onSearch={handleInlineSearch}
+          placeholder="Pesquisar por cliente ou contato..."
+        />
+        {!hasActiveFilters && (
+          <View className="flex-row gap-2">
+            <Button size="sm" variant="secondary" onPress={showToday}>
+              <Text>Agendadas hoje</Text>
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              onPress={() => router.push('/work-orders/search')}
+            >
+              <Text>Mais filtros</Text>
+            </Button>
+          </View>
+        )}
+      </View>
+
+      {!hasActiveFilters ? (
+        <View className="flex-1 items-center justify-center px-8 gap-3">
+          <Icon as={SearchIcon} size={40} className="text-muted-foreground" />
+          <Text className="text-lg font-semibold text-center">
+            Encontre uma ordem de serviço
+          </Text>
           <Text className="text-center text-muted-foreground">
-            Nenhuma ordem de serviço cadastrada.{' \n'}
-            Clique no + para adicionar.
+            Pesquise pelo cliente ou use os filtros. Para criar uma nova, toque
+            no +.
           </Text>
         </View>
       ) : (
@@ -516,7 +549,21 @@ export default function WorkOrdersScreen() {
             filters={activeFilters}
             clearFiltersHref="/work-orders"
           />
-          {displayedWorkOrders.length === 0 ? (
+          {!isLoading && !isError && (
+            <Text className="px-4 pb-2 text-sm text-muted-foreground">
+              {totalWorkOrders === 1
+                ? '1 ordem encontrada'
+                : `${totalWorkOrders} ordens encontradas`}
+            </Text>
+          )}
+          {isLoading ? (
+            <LoadingState label="Buscando ordens de serviço..." />
+          ) : isError && !data ? (
+            <ErrorState
+              message="Não foi possível carregar as ordens de serviço."
+              onRetry={() => refetch()}
+            />
+          ) : displayedWorkOrders.length === 0 ? (
             <View className="flex-1 items-center justify-center px-4">
               <Text className="text-center text-muted-foreground">
                 Nenhuma ordem encontrada com os filtros aplicados.
@@ -541,42 +588,42 @@ export default function WorkOrdersScreen() {
               <BackToTopButton isVisible={showScrollBtn} scrollRef={listRef} />
             </View>
           )}
-
-          {selectedWorkOrder && (
-            <ConfirmDeleteDialog
-              open={deleteDialogOpen}
-              onOpenChange={setDeleteDialogOpen}
-              title={`Excluir ordem de serviço do cliente "${selectedWorkOrder.customerName}"?`}
-              warning={selectedWorkOrder.warning}
-              isPending={isDeleting}
-              handleDelete={() => handleDeleteWorkOrder(selectedWorkOrder.id)}
-            />
-          )}
-
-          {selectedNotes && (
-            <NotesDialog
-              open={notesDialogOpen}
-              onOpenChange={setNotesDialogOpen}
-              title={selectedNotes.title}
-              notes={selectedNotes.notes}
-            />
-          )}
-
-          <WhatsAppSummaryDialog
-            open={showWhatsAppDialog}
-            onOpenChange={(open) => {
-              setShowWhatsAppDialog(open)
-              if (!open && createdWorkOrderId) {
-                router.setParams({ createdWorkOrderId: undefined })
-              }
-            }}
-            title="Enviar resumo ao cliente?"
-            description="Deseja enviar via WhatsApp o resumo desta ordem de serviço?"
-            onConfirm={handleSendWhatsApp}
-            onCancel={handleCancelWhatsApp}
-          />
         </View>
       )}
+
+      {selectedWorkOrder && (
+        <ConfirmDeleteDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          title={`Excluir ordem de serviço do cliente "${selectedWorkOrder.customerName}"?`}
+          warning={selectedWorkOrder.warning}
+          isPending={isDeleting}
+          handleDelete={() => handleDeleteWorkOrder(selectedWorkOrder.id)}
+        />
+      )}
+
+      {selectedNotes && (
+        <NotesDialog
+          open={notesDialogOpen}
+          onOpenChange={setNotesDialogOpen}
+          title={selectedNotes.title}
+          notes={selectedNotes.notes}
+        />
+      )}
+
+      <WhatsAppSummaryDialog
+        open={showWhatsAppDialog}
+        onOpenChange={(open) => {
+          setShowWhatsAppDialog(open)
+          if (!open && createdWorkOrderId) {
+            router.setParams({ createdWorkOrderId: undefined })
+          }
+        }}
+        title="Enviar resumo ao cliente?"
+        description="Deseja enviar via WhatsApp o resumo desta ordem de serviço?"
+        onConfirm={handleSendWhatsApp}
+        onCancel={handleCancelWhatsApp}
+      />
     </SafeAreaView>
   )
 }

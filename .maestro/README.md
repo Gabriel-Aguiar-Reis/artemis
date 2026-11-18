@@ -38,8 +38,13 @@ maestro test .maestro/01-customer-search-accents.yaml \
   .maestro/07-delete-paid-work-order-warning.yaml \
   .maestro/08-work-order-list-scroll.yaml \
   .maestro/09-delete-customer-with-orders.yaml \
-  .maestro/10-paid-report-read-only.yaml
+  .maestro/10-paid-report-read-only.yaml \
+  .maestro/11-work-orders-on-demand.yaml \
+  .maestro/12-itinerary-details-search.yaml \
+  .maestro/13-last-tab-restored.yaml
 ```
+
+Roteiros só de prints (sem asserções) ficam em `.maestro/visual/`: tema claro/escuro, status dos cards e espaçamento dos formulários.
 
 | Fluxo | O que cobre |
 | --- | --- |
@@ -50,6 +55,9 @@ maestro test .maestro/01-customer-search-accents.yaml \
 | 05 | Novo itinerário: prévia = gravado, OS do último dia entram, contagem de dias |
 | 06 | Histórico agregado no SQL |
 | 07 | Busca + filtro "pago" (COUNT com join) e aviso ao excluir OS paga |
-| 08 | Rolagem longa com paginação e "voltar ao topo" |
+| 08 | Rolagem longa de uma busca ampla, com paginação e "voltar ao topo" |
 | 09 | Excluir cliente com OS mostra mensagem amigável |
 | 10 | Relatório de OS paga é somente leitura |
+| 11 | Aba OS começa vazia (nada é consultado); busca no topo sem acento; "Agendadas hoje" |
+| 12 | Detalhes do itinerário: botão de busca filtra as OS do itinerário |
+| 13 | A última aba aberta volta após fechar o app (padrão: Itinerário) |

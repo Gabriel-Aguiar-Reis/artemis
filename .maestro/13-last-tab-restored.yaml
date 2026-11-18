@@ -1,0 +1,23 @@
+# The active tab survives a cold start (not only background): leave the app on
+# "Clientes", kill it, reopen it and it must come back to "Clientes". Then go
+# back to the itinerary so the next flows start from the default tab.
+appId: br.com.artemis
+tags: [qa]
+---
+- runFlow: subflows/open-app.yaml
+- tapOn: Clientes
+- extendedWaitUntil:
+    visible: ".* - SP.*"
+    timeout: 30000
+- runFlow: subflows/open-app.yaml # stopApp + cold start
+- extendedWaitUntil:
+    visible: Pesquisar|Clientes
+    timeout: 15000
+- assertVisible:
+    text: Clientes
+    index: 1 # header title (index 0 is the tab label)
+- takeScreenshot: 13-restored-customers
+- tapOn: Itinerário
+- extendedWaitUntil:
+    visible: ".* - SP.*"
+    timeout: 30000
