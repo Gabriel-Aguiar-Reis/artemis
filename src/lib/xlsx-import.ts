@@ -1,0 +1,247 @@
+import { Expiration } from '@/src/domain/entities/product/value-objects/expiration.vo'
+import { categoryInsertSchema } from '@/src/domain/validations/category.schema'
+import { customerInsertSchema } from '@/src/domain/validations/customer.schema'
+import { productInsertSchema } from '@/src/domain/validations/product.schema'
+import { normalizePhoneBrazil, normalizeString } from '@/src/lib/utils'
+
+/**
+ * Funções puras de normalização, validação e deduplicação da importação .xlsx.
+ * Nada aqui acessa banco: o runner (application/import) cuida da persistência.
+ */
+
+export type ImportSheet = 'categorias' | 'produtos' | 'clientes'
+
+export type RowIssue = {
+  sheet: ImportSheet
+  /** Linha na planilha (1 = cabeçalho, dados começam na 2) */
+  line: number
+  reason: string
+}
+
+export type CategoryRow = { line: number; name: string; isActive: boolean }
+
+export type ProductRow = {
+  line: number
+  name: string
+  categoryName: string
+  salePrice: number
+  isActive: boolean
+  expiration: string
+}
+
+export type CustomerRow = {
+  line: number
+  storeName: string
+  contactName: string
+  phoneNumber: string | null
+  phoneIsWhatsApp: boolean | null
+  landlineNumber: string | null
+  landlineIsWhatsApp: boolean | null
+  addressStreetName: string
+  addressStreetNumber: string
+  addressNeighborhood: string
+  addressCity: string
+  addressState: string
+  addressZipCode: string
+}
+
+export type Validated<T> =
+  | { ok: true; value: T }
+  | { ok: false; reason: string }
+
+// UUID v4 válido só para satisfazer o schema (o id real é gerado na inserção)
+const DUMMY_ID = '00000000-0000-4000-8000-000000000000'
+
+const cell = (row: unknown[], i: number): string => {
+  const v = row[i]
+  if (v === undefined || v === null) return ''
+  return String(v).trim()
+}
+
+/** Chave canônica de nome: sem acento, minúscula, espaços colapsados. */
+export function nameKey(value: string): string {
+  return normalizeString(value).replace(/\s+/g, ' ').trim()
+}
+
+/** "10,50", "R$ 10", "R$ 1.234,56", "10.5" ou número -> number (ou null). */
+export function normalizePrice(value: unknown): number | null {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) && value >= 0
+      ? Math.round(value * 100) / 100
+      : null
+  }
+  let s = String(value ?? '')
+    .replace(/R\$/gi, '')
+    .replace(/\s+/g, '')
+  if (s === '') return null
+  if (s.includes(',')) {
+    // formato BR: ponto = milhar, vírgula = decimal
+    s = s.replace(/\./g, '').replace(',', '.')
+  } else if ((s.match(/\./g) || []).length > 1) {
+    // "1.234.567" -> milhar
+    s = s.replace(/\./g, '')
+  }
+  if (!/^\d+(\.\d+)?$/.test(s)) return null
+  const n = Number(s)
+  return Number.isFinite(n) ? Math.round(n * 100) / 100 : null
+}
+
+/** CEP como string de 8 dígitos preservando zero à esquerda (Excel pode entregar número). */
+export function normalizeZip(value: unknown): string {
+  const digits = String(value ?? '').replace(/\D/g, '')
+  if (digits === '') return ''
+  return digits.length < 8 ? digits.padStart(8, '0') : digits
+}
+
+/** Telefone só com dígitos, sem DDI 55. */
+export function normalizePhoneDigits(value: unknown): string {
+  return normalizePhoneBrazil(String(value ?? ''))
+}
+
+export function parseBool(value: unknown, fallback = false): boolean {
+  if (typeof value === 'boolean') return value
+  const s = nameKey(String(value ?? ''))
+  if (s === '') return fallback
+  if (['1', 'true', 'sim', 's', 'x', 'ativo'].includes(s)) return true
+  if (['0', 'false', 'nao', 'n', 'inativo'].includes(s)) return false
+  return fallback
+}
+
+const firstIssue = (error: {
+  issues: { message: string; path: PropertyKey[] }[]
+}) => {
+  const i = error.issues[0]
+  return i ? i.message : 'Dados inválidos.'
+}
+
+export function validateCategoryRow(
+  row: unknown[],
+  line: number
+): Validated<CategoryRow> {
+  const name = cell(row, 0).replace(/\s+/g, ' ')
+  const isActive = parseBool(row[1], true)
+  const parsed = categoryInsertSchema.safeParse({
+    id: DUMMY_ID,
+    name,
+    isActive,
+  })
+  if (!parsed.success) return { ok: false, reason: firstIssue(parsed.error) }
+  return { ok: true, value: { line, name, isActive } }
+}
+
+export function validateProductRow(
+  row: unknown[],
+  line: number
+): Validated<ProductRow> {
+  const name = cell(row, 0).replace(/\s+/g, ' ')
+  const categoryName = cell(row, 1).replace(/\s+/g, ' ')
+  if (!categoryName) return { ok: false, reason: 'Categoria não informada.' }
+
+  const rawPrice = row[2]
+  const emptyPrice = cell(row, 2) === ''
+  const salePrice = emptyPrice ? 0 : normalizePrice(rawPrice)
+  if (salePrice === null) {
+    return { ok: false, reason: `Preço inválido: "${cell(row, 2)}".` }
+  }
+  const isActive = parseBool(row[3], true)
+
+  let expiration = cell(row, 4)
+  try {
+    // Valida o formato e normaliza singular/plural
+    expiration = new Expiration(expiration).toDTO()
+  } catch (e) {
+    return {
+      ok: false,
+      reason: e instanceof Error ? e.message : 'Validade inválida.',
+    }
+  }
+
+  const parsed = productInsertSchema.safeParse({
+    id: DUMMY_ID,
+    name,
+    salePrice: String(salePrice),
+    isActive,
+    expiration,
+  })
+  if (!parsed.success) return { ok: false, reason: firstIssue(parsed.error) }
+  return {
+    ok: true,
+    value: { line, name, categoryName, salePrice, isActive, expiration },
+  }
+}
+
+export function validateCustomerRow(
+  row: unknown[],
+  line: number,
+  defaultState = 'SP'
+): Validated<CustomerRow> {
+  const phone = normalizePhoneDigits(row[2])
+  const landline = normalizePhoneDigits(row[4])
+  const value: CustomerRow = {
+    line,
+    storeName: cell(row, 0).replace(/\s+/g, ' '),
+    contactName: cell(row, 1).replace(/\s+/g, ' '),
+    phoneNumber: phone || null,
+    phoneIsWhatsApp: phone ? parseBool(row[3]) : null,
+    landlineNumber: landline || null,
+    landlineIsWhatsApp: landline ? parseBool(row[5]) : null,
+    addressStreetName: cell(row, 6),
+    addressStreetNumber: cell(row, 7),
+    addressNeighborhood: cell(row, 8),
+    addressCity: cell(row, 9),
+    addressState: defaultState,
+    addressZipCode: normalizeZip(row[10]),
+  }
+
+  const parsed = customerInsertSchema.safeParse({
+    id: DUMMY_ID,
+    storeName: value.storeName,
+    contactName: value.contactName,
+    phoneNumber: value.phoneNumber ?? undefined,
+    phoneIsWhatsApp: value.phoneIsWhatsApp ?? undefined,
+    landlineNumber: value.landlineNumber ?? undefined,
+    landlineIsWhatsApp: value.landlineIsWhatsApp ?? undefined,
+    addressStreetName: value.addressStreetName,
+    addressStreetNumber: value.addressStreetNumber,
+    addressNeighborhood: value.addressNeighborhood,
+    addressCity: value.addressCity,
+    addressState: value.addressState,
+    addressZipCode: value.addressZipCode,
+  })
+  if (!parsed.success) return { ok: false, reason: firstIssue(parsed.error) }
+  return { ok: true, value }
+}
+
+/**
+ * Chaves de duplicidade de cliente: mesmo estabelecimento (nome normalizado)
+ * com o mesmo telefone, OU com o mesmo CEP + número. Duas chaves possíveis.
+ */
+export function customerDedupeKeys(c: {
+  storeName: string
+  phoneNumber: string | null
+  addressZipCode: string
+  addressStreetNumber: string
+}): string[] {
+  const store = nameKey(c.storeName)
+  const keys: string[] = []
+  if (c.phoneNumber) keys.push(`p|${store}|${c.phoneNumber}`)
+  if (c.addressZipCode && c.addressStreetNumber) {
+    keys.push(
+      `a|${store}|${c.addressZipCode}|${nameKey(c.addressStreetNumber)}`
+    )
+  }
+  return keys
+}
+
+/** Linhas de dados de uma aba (descarta cabeçalho e linhas totalmente vazias). */
+export function dataRows(
+  rows: unknown[][]
+): Array<{ row: unknown[]; line: number }> {
+  const out: Array<{ row: unknown[]; line: number }> = []
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i]
+    if (!row || row.every((c) => String(c ?? '').trim() === '')) continue
+    out.push({ row, line: i + 1 })
+  }
+  return out
+}
