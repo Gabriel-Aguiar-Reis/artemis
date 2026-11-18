@@ -73,9 +73,9 @@ export default function WorkOrderResultEditByIdScreen() {
 
     try {
       setIsPending(true)
-      // Uma transação: substitui os itens, recalcula total e status da OS e
-      // ajusta o pagamento ainda não quitado. Antes apagava item por item e
-      // só depois reinseria: uma falha no meio deixava o relatório incompleto.
+      // One transaction: replaces the items, recalculates the work order total and status, and
+      // adjusts the unpaid payment. It used to delete item by item and
+      // only then reinsert: a failure midway left the report incomplete.
       await updateResult({
         resultId: result.id,
         result: {
@@ -86,7 +86,7 @@ export default function WorkOrderResultEditByIdScreen() {
       })
       router.back()
     } catch (error) {
-      if (__DEV__) console.error('Erro ao atualizar relatório:', error)
+      if (__DEV__) console.error('Error updating report:', error)
     } finally {
       setIsPending(false)
     }

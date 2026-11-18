@@ -63,7 +63,7 @@ export default function ItineraryDetailsScreen() {
       />
 
       <View className="flex-1 p-4">
-        {/* Card com informações do itinerário */}
+        {/* Itinerary info card */}
         <Card className="mb-4">
           <CardHeader>
             <CardTitle>
@@ -115,7 +115,7 @@ export default function ItineraryDetailsScreen() {
           </CardContent>
         </Card>
 
-        {/* Lista de ordens de serviço */}
+        {/* Work order list */}
         <View className="flex-1">
           <Text className="text-lg font-semibold mb-3">
             Ordens de Serviço ({workOrders?.length || 0})

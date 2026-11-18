@@ -29,7 +29,7 @@ export default function WorkOrderProductsEditScreen() {
   const [selectedProducts, setSelectedProducts] = useState<ProductInput[]>([])
   const [isPending, setIsPending] = useState(false)
 
-  // Carregar produtos agendados existentes
+  // Load existing scheduled products
   useEffect(() => {
     if (!workOrder || !workOrder.products) return
 
@@ -47,10 +47,10 @@ export default function WorkOrderProductsEditScreen() {
     try {
       setIsPending(true)
 
-      // 1. Deletar todos os produtos agendados existentes
+      // 1. Delete all existing scheduled products
       await deleteWorkOrderItemsByWorkOrderId(params.id)
 
-      // 2. Se houver produtos selecionados, adicionar os novos
+      // 2. If there are selected products, add the new ones
       if (selectedProducts.length > 0) {
         if (!allProducts) {
           throw new Error('Produtos não encontrados')
@@ -71,7 +71,7 @@ export default function WorkOrderProductsEditScreen() {
           }
         })
 
-        // Adicionar os novos items
+        // Add the new items
         await (addWorkOrderItems as any)([itemsDTO, params.id])
       }
 
@@ -82,7 +82,7 @@ export default function WorkOrderProductsEditScreen() {
 
       router.back()
     } catch (error) {
-      console.error('Erro ao atualizar produtos:', error)
+      console.error('Error updating products:', error)
       Toast.show({
         type: 'error',
         text1: 'Erro ao atualizar produtos',

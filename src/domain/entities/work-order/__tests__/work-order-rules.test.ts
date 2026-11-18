@@ -10,13 +10,13 @@ import { WorkOrderStatus } from '@/src/domain/entities/work-order/work-order.ent
 import { describe, expect, it } from 'vitest'
 
 describe('work-order-rules', () => {
-  it('resolveResultStatus: nada trocado nem adicionado é FAILED', () => {
+  it('resolveResultStatus: nothing exchanged or added is FAILED', () => {
     expect(
       resolveResultStatus({ scheduled: 2, exchanged: 0, added: 0, removed: 1 })
     ).toBe(WorkOrderStatus.FAILED)
   })
 
-  it('resolveResultStatus: recolhido ou troca incompleta é PARTIAL', () => {
+  it('resolveResultStatus: collected or incomplete exchange is PARTIAL', () => {
     expect(
       resolveResultStatus({ scheduled: 2, exchanged: 2, added: 0, removed: 1 })
     ).toBe(WorkOrderStatus.PARTIAL)
@@ -25,7 +25,7 @@ describe('work-order-rules', () => {
     ).toBe(WorkOrderStatus.PARTIAL)
   })
 
-  it('resolveResultStatus: tudo trocado é COMPLETED, e só adicionados também', () => {
+  it('resolveResultStatus: everything exchanged is COMPLETED, and so is only added', () => {
     expect(
       resolveResultStatus({ scheduled: 2, exchanged: 2, added: 1, removed: 0 })
     ).toBe(WorkOrderStatus.COMPLETED)
@@ -34,13 +34,13 @@ describe('work-order-rules', () => {
     ).toBe(WorkOrderStatus.COMPLETED)
   })
 
-  it('roundMoney arredonda para centavos', () => {
+  it('roundMoney rounds to cents', () => {
     expect(roundMoney(0.1 + 0.2)).toBe(0.3)
     expect(roundMoney(1.005)).toBe(1.01)
     expect(roundMoney(NaN)).toBe(0)
   })
 
-  it('computeResultTotal soma trocados e adicionados com centavos exatos', () => {
+  it('computeResultTotal sums exchanged and added with exact cents', () => {
     expect(
       computeResultTotal(
         [{ quantity: 3, priceSnapshot: 0.1 }],
@@ -49,7 +49,7 @@ describe('work-order-rules', () => {
     ).toBe(0.5)
   })
 
-  it('normalizePaymentState mantém pago e parcelas coerentes', () => {
+  it('normalizePaymentState keeps paid and installments consistent', () => {
     expect(
       normalizePaymentState({
         installments: 3,
@@ -80,7 +80,7 @@ describe('work-order-rules', () => {
     ).toEqual({ installments: 1, paidInstallments: 0, isPaid: false })
   })
 
-  it('reconhece status finais e desconhecidos', () => {
+  it('recognizes final and unknown statuses', () => {
     expect(isFinalStatus(WorkOrderStatus.COPIED)).toBe(true)
     expect(isFinalStatus(WorkOrderStatus.PENDING)).toBe(false)
     expect(isKnownStatus('completed')).toBe(false)

@@ -76,15 +76,15 @@ const formatToastText = (
     resourceName.charAt(0).toUpperCase() + resourceName.slice(1).toLowerCase()
 
   if (type === 'success') {
-    // Exemplo: Categoria adicionada com sucesso!
+    // Example: Category added successfully!
     return `${resourceNameCapitalized} ${actionWord} com sucesso!`
   } else {
-    // Exemplo: Erro ao adicionar categoria!
+    // Example: Error adding category!
     return `Erro ao ${actionWord} ${resourceName.toLowerCase()}!`
   }
 }
 
-/** Dados cadastrais mudam pouco e toda mutação os invalida: cache mais longo. */
+/** Master data changes rarely and every mutation invalidates it: longer cache. */
 const REFERENCE_DATA_KEYS: QueryKey[] = ['customers', 'products', 'categories']
 const DEFAULT_STALE_TIME = 1000 * 30
 const REFERENCE_STALE_TIME = 1000 * 60 * 5
@@ -96,8 +96,8 @@ const DELETE_IN_USE_MESSAGES: Partial<Record<QueryKey, string>> = {
 }
 
 /**
- * Converte erros técnicos do SQLite em mensagens amigáveis
- * (ex.: FK restrict ao excluir registro que ainda é referenciado).
+ * Converts technical SQLite errors into friendly messages
+ * (e.g. FK restrict when deleting a record that is still referenced).
  */
 const friendlyErrorMessage = (error: Error, key: QueryKey): string => {
   if (/FOREIGN KEY constraint failed/i.test(error?.message ?? '')) {
@@ -123,17 +123,17 @@ export function createRepositoryHooks<TRepo extends Record<string, any>>(
 ) {
   const hookified: Record<string, any> = {}
 
-  // Pega métodos da instância e do protótipo
+  // Get methods from the instance and the prototype
   const methods = new Set<string>()
 
-  // Métodos do protótipo (classe)
+  // Prototype (class) methods
   Object.getOwnPropertyNames(Object.getPrototypeOf(repo)).forEach((name) => {
     if (name !== 'constructor' && typeof repo[name] === 'function') {
       methods.add(name)
     }
   })
 
-  // Métodos da instância
+  // Instance methods
   Object.keys(repo).forEach((name) => {
     if (typeof repo[name] === 'function') {
       methods.add(name)
@@ -144,7 +144,7 @@ export function createRepositoryHooks<TRepo extends Record<string, any>>(
     const fn = repo[name]
     if (typeof fn !== 'function') continue
 
-    // Métodos de leitura -> useQuery
+    // Read methods -> useQuery
     if (name.startsWith('get')) {
       hookified[name] = (
         ...args: any[]
@@ -159,7 +159,7 @@ export function createRepositoryHooks<TRepo extends Record<string, any>>(
       continue
     }
 
-    // Métodos de escrita -> useMutation
+    // Write methods -> useMutation
     if (
       name.startsWith('add') ||
       name.startsWith('update') ||
@@ -176,11 +176,11 @@ export function createRepositoryHooks<TRepo extends Record<string, any>>(
           mutationFn: (args: any) =>
             fn.apply(repo, Array.isArray(args) ? args : [args]),
           onSuccess: () => {
-            // Invalida a query principal e todas suas dependências
+            // Invalidate the main query and all its dependencies
             const keysToInvalidate = getQueryKeysToInvalidate(key)
 
-            // Refetch imediato só das queries montadas (ativas); as demais
-            // ficam marcadas como stale e recarregam ao serem montadas.
+            // Immediate refetch only for mounted (active) queries; the others
+            // are marked stale and reload when mounted.
             keysToInvalidate.forEach((queryKey) => {
               queryClient.invalidateQueries({
                 queryKey: [queryKey],
@@ -223,7 +223,7 @@ export function createRepositoryHooks<TRepo extends Record<string, any>>(
       continue
     }
 
-    // Outros métodos são retornados normalmente
+    // Other methods are returned as-is
     hookified[name] = fn.bind(repo)
   }
 

@@ -13,11 +13,11 @@ export const productHooks = createRepositoryHooks(
 
 export { ProductFilters }
 
-// Hook customizado para getProductsWithCategory com filtros
+// Custom hook for getProductsWithCategory with filters
 export const useProductsWithCategoryFiltered = (filters?: ProductFilters) => {
   return useQuery({
     queryKey: ['products', 'with-category', filters],
     queryFn: () => productRepo.getProductsWithCategory(filters),
-    staleTime: 1000 * 60 * 5, // 5 minutos (dado cadastral; mutações invalidam)
+    staleTime: 1000 * 60 * 5, // 5 minutes (master data; mutations invalidate)
   })
 }

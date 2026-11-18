@@ -102,7 +102,7 @@ export default function ItineraryScreen() {
           setNotesDialogOpen(true)
         },
       })
-      // Grupo: Ordem de Serviço
+      // Group: Work Order
       options.push({
         label: 'Editar Cabeçalho da Ordem',
         icon: Edit,
@@ -119,7 +119,7 @@ export default function ItineraryScreen() {
         },
       })
 
-      // Grupo: Resultado
+      // Group: Result
       if (workOrder.result) {
         options.push({
           label: 'Acessar Relatório',
@@ -141,7 +141,7 @@ export default function ItineraryScreen() {
         })
       }
 
-      // Grupo: Pagamento
+      // Group: Payment
       if (workOrder.paymentOrder) {
         options.push({
           label: 'Acessar Pagamento',
@@ -172,7 +172,7 @@ export default function ItineraryScreen() {
             try {
               WhatsAppService.sendWorkOrderMessage(workOrder, true)
             } catch (error) {
-              console.error('Erro ao enviar WhatsApp:', error)
+              console.error('Error sending WhatsApp message:', error)
             }
           },
           isWhatsApp: true,
@@ -184,14 +184,14 @@ export default function ItineraryScreen() {
             try {
               WhatsAppService.sendWorkOrderMessage(workOrder, false)
             } catch (error) {
-              console.error('Erro ao enviar WhatsApp:', error)
+              console.error('Error sending WhatsApp message:', error)
             }
           },
           isWhatsApp: true,
         })
       }
 
-      // Clonar (se tiver resultado e pagamento OU se for EXPIRED)
+      // Clone (if it has result and payment OR is EXPIRED)
       if (
         (workOrder.result && workOrder.paymentOrder) ||
         workOrder.status === 'EXPIRED'

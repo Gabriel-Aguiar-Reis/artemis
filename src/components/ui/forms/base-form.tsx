@@ -131,7 +131,7 @@ function Input<T extends FieldValues>({
           onBlur: () => {
             if (isCurrency) {
               let clean = (localCurrency || '').replace(/[^\d,.-]/g, '')
-              // Remove separadores de milhar (pontos) antes de substituir a vírgula decimal
+              // Remove thousand separators (dots) before replacing the decimal comma
               const withoutThousandsSeparator = clean.replace(/\./g, '')
               const normalized = withoutThousandsSeparator.replace(',', '.')
               const num = Number(normalized)
@@ -302,7 +302,7 @@ function SubmitButton({ onPress, loading, children }: SubmitButtonProps) {
   )
 }
 
-// Subcomponentes para Input
+// Subcomponents for Input
 function CurrencyInput<T extends FieldValues>(
   props: Omit<InputProps<T>, 'isCurrency' | 'isNumber'>
 ) {

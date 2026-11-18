@@ -39,7 +39,7 @@ type ExchangedProductsComboboxProps = {
   label?: string
   placeholder?: string
   error?: string
-  // Para buscar informações completas dos produtos
+  // To fetch full product information
   availableProducts?: Array<{
     id: string
     name: string
@@ -60,32 +60,32 @@ export function ExchangedProductsCombobox({
   const [open, setOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
-  // Mapear produtos agendados com quantidade disponível (agendado - removido)
+  // Map scheduled products with available quantity (scheduled - removed)
   const scheduledProductsWithInfo = useMemo(() => {
     return scheduledProducts
       .map((sp) => {
         const productInfo = availableProducts.find((p) => p.id === sp.productId)
         if (!productInfo) return null
 
-        // Quantidade já removida
+        // Quantity already removed
         const removedQty =
           removedProducts.find((p) => p.productId === sp.productId)?.quantity ||
           0
 
-        // Quantidade já trocada
+        // Quantity already exchanged
         const exchangedQty =
           selectedExchangedProducts.find((p) => p.productId === sp.productId)
             ?.quantity || 0
 
-        // Quantidade disponível para trocar = agendada - removida - já trocada
+        // Quantity available to exchange = scheduled - removed - already exchanged
         const availableQty = sp.quantity - removedQty - exchangedQty
 
-        // Permite que produtos já selecionados continuem aparecendo na lista
+        // Lets already selected products keep appearing in the list
         const isSelected = selectedExchangedProducts.some(
           (p) => p.productId === sp.productId
         )
 
-        // Remove apenas se não tiver disponibilidade E não estiver selecionado
+        // Remove only if there is no availability AND it is not selected
         if (availableQty <= 0 && !isSelected) return null
 
         return {
@@ -133,7 +133,7 @@ export function ExchangedProductsCombobox({
     )
     if (!productInfo) return
 
-    // Calcular o máximo real: quantidade agendada - quantidade removida
+    // Compute the real maximum: scheduled quantity - removed quantity
     const removedQty =
       removedProducts.find((p) => p.productId === productId)?.quantity || 0
     const maxQuantity = productInfo.quantity - removedQty
@@ -143,7 +143,7 @@ export function ExchangedProductsCombobox({
         selectedExchangedProducts.filter((p) => p.productId !== productId)
       )
     } else if (quantity > maxQuantity) {
-      // Não permite exceder a quantidade disponível (agendada - removida)
+      // Do not allow exceeding the available quantity (scheduled - removed)
       return
     } else {
       onExchangedProductsChange(
@@ -181,12 +181,12 @@ export function ExchangedProductsCombobox({
   }
 
   const markAllAsExchanged = () => {
-    // Criar WorkOrderResultItemInput para todos os produtos disponíveis
+    // Create WorkOrderResultItemInput for all available products
     const allExchanged: WorkOrderResultItemInput[] =
       scheduledProductsWithInfo.map((product) => ({
         productId: product.productId,
         productName: product.productName,
-        quantity: product.availableQuantity, // Usa a quantidade disponível (agendada - removida)
+        quantity: product.availableQuantity, // Uses the available quantity (scheduled - removed)
         priceSnapshot: product.priceSnapshot,
       }))
 
@@ -222,7 +222,7 @@ export function ExchangedProductsCombobox({
     const selected = isProductExchanged(item.productId)
     const quantity = getProductQuantity(item.productId)
 
-    // Calcular o máximo real: quantidade agendada - quantidade removida
+    // Compute the real maximum: scheduled quantity - removed quantity
     const removedQty =
       removedProducts.find((p) => p.productId === item.productId)?.quantity || 0
     const maxQuantity = item.quantity - removedQty
@@ -231,7 +231,7 @@ export function ExchangedProductsCombobox({
       <View className="min-h-[120px]">
         <Pressable
           onPress={() => {
-            // Só adiciona o produto se não estiver selecionado
+            // Only add the product if it is not selected
             if (!selected) {
               toggleProduct(item)
             }
@@ -281,7 +281,7 @@ export function ExchangedProductsCombobox({
             )}
           </View>
 
-          {/* Controle de quantidade */}
+          {/* Quantity control */}
           {selected && (
             <View className="flex-row items-center gap-3 mt-3 pt-3 border-t border-border">
               <Text className="text-sm font-medium">Qte:</Text>
@@ -413,7 +413,7 @@ export function ExchangedProductsCombobox({
           </DialogHeader>
 
           <View className="flex-1">
-            {/* Botão para marcar todos como trocados */}
+            {/* Button to mark all as exchanged */}
             {scheduledProductsWithInfo.length > 0 && (
               <Button
                 variant="outline"

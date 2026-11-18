@@ -106,14 +106,14 @@ export default function WorkOrdersScreen() {
   } | null>(null)
   const [showWhatsAppDialog, setShowWhatsAppDialog] = useState(false)
 
-  // Combina todas as páginas de work orders em um único array
+  // Combine all work order pages into a single array
   const allWorkOrders = useMemo(() => {
     if (!data?.pages) return []
     return data.pages.flatMap((page) => page.data)
   }, [data])
 
-  // Detectar quando uma work order foi criada e mostrar o dialog do WhatsApp
-  // Depende só do id criado: refetchs da lista não reabrem o dialog.
+  // Detect when a work order was created and show the WhatsApp dialog
+  // Depends only on the created id: list refetches do not reopen the dialog.
   React.useEffect(() => {
     if (createdWorkOrderId) {
       setShowWhatsAppDialog(true)
@@ -147,7 +147,7 @@ export default function WorkOrdersScreen() {
         setNotesDialogOpen(true)
       },
     })
-    // Grupo: Ordem de Serviço
+    // Group: Work Order
     if (workOrder.status !== 'EXPIRED' && workOrder.status !== 'COPIED') {
       options.push({
         label: 'Editar Cabeçalho da Ordem',
@@ -166,7 +166,7 @@ export default function WorkOrdersScreen() {
       },
     })
 
-    // Grupo: Resultado
+    // Group: Result
     if (workOrder.result) {
       options.push({
         label: 'Acessar Relatório',
@@ -188,7 +188,7 @@ export default function WorkOrdersScreen() {
       })
     }
 
-    // Grupo: Pagamento
+    // Group: Payment
     if (workOrder.paymentOrder) {
       options.push({
         label: 'Acessar Pagamento',
@@ -211,7 +211,7 @@ export default function WorkOrdersScreen() {
       })
     }
 
-    // Clonar (se tiver resultado e pagamento OU se for EXPIRED)
+    // Clone (if it has result and payment OR is EXPIRED)
     if (
       (workOrder.result && workOrder.paymentOrder) ||
       workOrder.status === 'EXPIRED'
@@ -233,7 +233,7 @@ export default function WorkOrdersScreen() {
           try {
             WhatsAppService.sendWorkOrderMessage(workOrder, true)
           } catch (error) {
-            console.error('Erro ao enviar WhatsApp:', error)
+            console.error('Error sending WhatsApp message:', error)
           }
         },
         isWhatsApp: true,
@@ -245,7 +245,7 @@ export default function WorkOrdersScreen() {
           try {
             WhatsAppService.sendWorkOrderMessage(workOrder, false)
           } catch (error) {
-            console.error('Erro ao enviar WhatsApp:', error)
+            console.error('Error sending WhatsApp message:', error)
           }
         },
         isWhatsApp: true,
@@ -257,8 +257,8 @@ export default function WorkOrdersScreen() {
       icon: Trash2,
       destructive: true,
       onPress: () => {
-        // A exclusão apaga junto relatório e pagamento: avisa quando há
-        // dinheiro recebido ou visita registrada.
+        // Deleting also removes the report and payment: warn when there is
+        // money received or a recorded visit.
         const warning = workOrder.paymentOrder?.isPaid
           ? 'Esta OS já foi paga: o pagamento recebido também será apagado.'
           : workOrder.result
@@ -290,13 +290,13 @@ export default function WorkOrdersScreen() {
     try {
       await deleteWorkOrder(workOrderId)
     } catch {
-      // toast de erro vem do hook
+      // error toast comes from the hook
     } finally {
       setDeleteDialogOpen(false)
     }
   }
 
-  // Função para enviar mensagem do WhatsApp
+  // Function to send the WhatsApp message
   const handleSendWhatsApp = async () => {
     if (!createdWorkOrderId) {
       setShowWhatsAppDialog(false)
@@ -306,8 +306,8 @@ export default function WorkOrdersScreen() {
     }
 
     try {
-      // Buscar a OS criada: primeiro na lista carregada; se não estiver na
-      // página atual (ou a lista ainda não recarregou), direto no banco.
+      // Fetch the created work order: first from the loaded list; if it is not on
+      // the current page (or the list has not reloaded yet), straight from the database.
       const workOrder =
         allWorkOrders?.find((wo) => wo.id === createdWorkOrderId) ??
         (await workOrderHooks.getWorkOrderById(createdWorkOrderId as UUID))
@@ -316,7 +316,7 @@ export default function WorkOrdersScreen() {
         throw new Error('Ordem de serviço não encontrada')
       }
 
-      // Enviar mensagem via WhatsApp
+      // Send message via WhatsApp
       WhatsAppService.sendWorkOrderMessage(workOrder, false)
 
       setShowWhatsAppDialog(false)
@@ -335,14 +335,14 @@ export default function WorkOrdersScreen() {
     }
   }
 
-  // Função para cancelar o envio do WhatsApp
+  // Function to cancel sending the WhatsApp message
   const handleCancelWhatsApp = () => {
     setShowWhatsAppDialog(false)
     router.setParams({ createdWorkOrderId: undefined })
     router.navigate('/work-orders', { dangerouslySingular: true })
   }
 
-  // Os dados já vêm filtrados do servidor via repository
+  // Data already comes filtered from the server via repository
   const displayedWorkOrders = allWorkOrders
 
   const hasActiveFilters =

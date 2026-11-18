@@ -140,13 +140,13 @@ export default function CustomersScreen() {
     onScroll,
   } = useBackToTop<FlashListRef<Customer>>()
 
-  // Combina todas as páginas de clientes em um único array
+  // Combine all customer pages into a single array
   const allCustomers = useMemo(() => {
     if (!data?.pages) return []
     return data.pages.flatMap((page) => page.data)
   }, [data])
 
-  // Os dados já vêm filtrados do servidor via repository
+  // Data already comes filtered from the server via repository
   const displayedCustomers = allCustomers
 
   const hasActiveFilters =
@@ -228,7 +228,7 @@ export default function CustomersScreen() {
     try {
       await deleteCustomer(customerId)
     } catch {
-      // toast de erro (com mensagem amigável para FK) vem do hook
+      // error toast (with a friendly message for FK) comes from the hook
     } finally {
       setDeleteDialogOpen(false)
     }

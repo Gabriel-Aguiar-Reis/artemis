@@ -42,12 +42,12 @@ export default function ProductsEditScreen() {
       console.log('onSubmit - data:', data)
       console.log('onSubmit - formState:', form.formState)
 
-      // Normalizar salePrice removendo coma decimal para ponto
+      // Normalize salePrice by replacing the decimal comma with a dot
       const normalizedSalePrice = data.salePrice
         ? String(data.salePrice).replace(',', '.')
         : undefined
 
-      // Normalizar categoryId vazio para undefined
+      // Normalize empty categoryId to undefined
       const normalizedData = {
         ...data,
         salePrice: normalizedSalePrice,

@@ -39,10 +39,10 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 
-// ErrorBoundary customizado que captura erros e os salva no banco
+// Custom ErrorBoundary that captures errors and saves them to the database
 export function ErrorBoundary(props: ErrorBoundaryProps) {
   useEffect(() => {
-    // Capturar erro e salvar no banco
+    // Capture the error and save it to the database
     if (props.error) {
       logError('ErrorBoundary caught error', props.error, 'ErrorBoundary', {
         retry: props.retry,
@@ -52,19 +52,19 @@ export function ErrorBoundary(props: ErrorBoundaryProps) {
     }
   }, [props.error])
 
-  // Delegar para o ErrorBoundary padrão do expo-router
+  // Delegate to the default expo-router ErrorBoundary
   const { ErrorBoundary: ExpoErrorBoundary } = require('expo-router')
   return <ExpoErrorBoundary {...props} />
 }
 
-// Segura a splash nativa até migrations, FK, licença e tema estarem prontos
+// Hold the native splash until migrations, FK, license and theme are ready
 SplashScreen.preventAutoHideAsync().catch(() => {})
 
 const hideSplash = () => {
   SplashScreen.hideAsync().catch(() => {})
 }
 
-/** Abre o Drizzle Studio apenas em desenvolvimento. */
+/** Opens Drizzle Studio in development only. */
 function DevDrizzleStudio() {
   useDrizzleStudio(getExpoDb())
   return null
@@ -73,11 +73,11 @@ function DevDrizzleStudio() {
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 30, // 30 segundos - dados cadastrais sobrescrevem para 5min nos hooks
+      staleTime: 1000 * 30, // 30 seconds - master data overrides this to 5min in the hooks
       gcTime: 1000 * 60 * 10, // 10 minutos - tempo no cache
-      retry: 1, // Tentar apenas 1 vez em caso de erro
-      refetchOnWindowFocus: false, // Não refetch ao focar na janela
-      refetchOnMount: true, // IMPORTANTE: refetch ao montar se dados estiverem stale (invalidados)
+      retry: 1, // Retry only once on error
+      refetchOnWindowFocus: false, // Do not refetch on window focus
+      refetchOnMount: true, // IMPORTANT: refetch on mount if data is stale (invalidated)
     },
   },
 })
@@ -88,7 +88,7 @@ queryClient.setDefaultOptions({
   },
   mutations: {
     onError: (error) => {
-      // Capturar erros de mutations
+      // Capture mutation errors
       logError('Mutation error', error, 'TanStack Query').catch((err) => {
         console.error('Failed to log mutation error:', err)
       })
@@ -108,20 +108,20 @@ function LicenseCheck({
   const { data: license, isLoading } = useLicense()
   const createLicenseMutation = useCreateInitialLicense()
 
-  // Criar licença inicial se não existir
+  // Create the initial license if it does not exist
   useEffect(() => {
     if (!isLoading && !license) {
       createLicenseMutation.mutate()
     }
   }, [license, isLoading])
 
-  // Mostrar dialog de ativação se licença expirou
+  // Show the activation dialog if the license expired
   const shouldShowActivation =
     license && license.isExpired() && !license.isAdmin
 
-  // No primeiro uso não há licença: no primeiro commit isPending ainda é false
-  // (o mutate roda no efeito), então espera a licença existir ou a criação
-  // terminar (sucesso ou erro) para não piscar uma tela em branco.
+  // On first use there is no license: on the first commit isPending is still false
+  // (the mutate runs in the effect), so wait for the license to exist or for the creation
+  // to finish (success or error) to avoid flashing a blank screen.
   const licenseReady =
     !isLoading &&
     !createLicenseMutation.isPending &&
@@ -129,7 +129,7 @@ function LicenseCheck({
       createLicenseMutation.isSuccess ||
       createLicenseMutation.isError)
 
-  // Esconde a splash quando licença e tema estão prontos
+  // Hide the splash when license and theme are ready
   useEffect(() => {
     if (licenseReady && themeReady) hideSplash()
   }, [licenseReady, themeReady])
@@ -158,28 +158,28 @@ export default function RootLayout() {
     setIsResetting(true)
 
     try {
-      // Fechar conexão e resetar instâncias
+      // Close the connection and reset instances
       const { resetDrizzleClient } =
         await import('@/src/infra/db/drizzle/drizzle-client')
       resetDrizzleClient()
 
-      // Aguardar para garantir que conexão foi fechada
+      // Wait to make sure the connection was closed
       await new Promise((resolve) => setTimeout(resolve, 200))
 
-      // Deletar o banco
+      // Delete the database
       const { deleteDatabaseSync } = require('expo-sqlite')
       await deleteDatabaseSync('artemis.db')
       await removeWalFiles()
       if (__DEV__) console.log('Database deleted, reloading app...')
 
-      // Recarregar o app completamente
+      // Fully reload the app
       const { reloadAsync } = require('expo-updates')
       await reloadAsync()
     } catch (error) {
       console.error('Error resetting database:', error)
       setIsResetting(false)
 
-      // Se falhar, tentar apenas recarregar o app
+      // If it fails, just try reloading the app
       try {
         const { reloadAsync } = require('expo-updates')
         await reloadAsync()
@@ -189,7 +189,7 @@ export default function RootLayout() {
     }
   }
 
-  // Log de debug para migrations (apenas em desenvolvimento)
+  // Debug log for migrations (development only)
   useEffect(() => {
     if (!__DEV__) return
     if (error) {
@@ -201,19 +201,19 @@ export default function RootLayout() {
     }
   }, [error])
 
-  // Erro de migração: mostra a tela de erro, então libera a splash
+  // Migration error: show the error screen, then release the splash
   useEffect(() => {
     if (error) hideSplash()
   }, [error])
 
-  // Habilitar foreign keys APÓS migrations serem concluídas
+  // Enable foreign keys AFTER migrations complete
   useEffect(() => {
     if (success && !migrationsComplete) {
       try {
         enableForeignKeys()
         setMigrationsComplete(true)
 
-        // Limpar logs antigos (>7 dias) após migrations
+        // Clear old logs (>7 days) after migrations
         const {
           cleanupOldLogs,
         } = require('@/src/application/services/error-logging.service')
@@ -227,7 +227,7 @@ export default function RootLayout() {
     }
   }, [success, migrationsComplete])
 
-  // Carregar preferência de tema salva
+  // Load the saved theme preference
   useEffect(() => {
     AsyncStorage.getItem(THEME_STORAGE_KEY)
       .then((value: string | null) => {
@@ -291,7 +291,7 @@ export default function RootLayout() {
       </View>
     )
   }
-  // Splash nativa continua visível enquanto o banco inicializa
+  // Native splash stays visible while the database initializes
   if (!success || !migrationsComplete) return null
 
   return (

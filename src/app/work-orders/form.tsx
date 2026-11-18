@@ -25,7 +25,7 @@ import { View } from 'react-native'
 import Toast from 'react-native-toast-message'
 import { z } from 'zod'
 
-// Tipo intermediário para os comboboxes (inclui productName)
+// Intermediate type for the comboboxes (includes productName)
 export type WorkOrderResultItemInput = {
   productId: string
   productName: string
@@ -33,20 +33,20 @@ export type WorkOrderResultItemInput = {
   priceSnapshot: number
 }
 
-// Schema de validação Zod para o formulário
+// Zod validation schema for the form
 const workOrderFormSchema = z
   .object({
-    // IDs de controle
+    // Control IDs
     workOrderId: z.uuid().optional(),
     paymentOrderId: z.uuid().optional(),
     workOrderResultId: z.uuid().optional(),
 
-    // Campos da WorkOrder (obrigatórios)
+    // WorkOrder fields (required)
     customerId: z.uuid({ message: 'Selecione um cliente' }),
     scheduledDate: z.date({ message: 'Selecione uma data agendada' }),
     notes: z.string().max(500, 'Máximo de 500 caracteres').optional(),
 
-    // Produtos agendados (opcional, mas se preenchido deve ter ao menos 1)
+    // Scheduled products (optional, but if filled in must have at least 1)
     products: z
       .array(
         z.object({
@@ -56,7 +56,7 @@ const workOrderFormSchema = z
       )
       .optional(),
 
-    // Campos do WorkOrderResult (opcionais)
+    // WorkOrderResult fields (optional)
     exchangedProducts: z
       .array(
         z.object({
@@ -88,7 +88,7 @@ const workOrderFormSchema = z
       )
       .optional(),
 
-    // Campos da PaymentOrder (condicionalmente obrigatórios)
+    // PaymentOrder fields (conditionally required)
     method: z.string().optional(),
     totalValue: z.string().optional(),
     installments: z.string().optional(),
@@ -96,13 +96,13 @@ const workOrderFormSchema = z
     paidInstallments: z.string().optional(),
     paymentDate: z.union([z.date(), z.string()]).optional().nullable(),
 
-    // Flags de controle do fluxo
+    // Flow control flags
     shouldCreateReport: z.boolean().optional(),
     shouldCreatePayment: z.boolean().optional(),
   })
   .refine(
     (data) => {
-      // Se shouldCreatePayment for true, method é obrigatório
+      // If shouldCreatePayment is true, method is required
       if (data.shouldCreatePayment === true) {
         return data.method && data.method.trim().length > 0
       }
@@ -114,19 +114,19 @@ const workOrderFormSchema = z
     }
   )
 
-// Tipo customizado para o fluxo completo do formulário
+// Custom type for the full form flow
 type WorkOrderFormData = z.infer<typeof workOrderFormSchema>
 
 export default function WorkOrderFormScreen() {
   const { mutateAsync: createWorkOrder, isPending: isWorkOrderPending } =
     workOrderHooks.useCreateWorkOrderWithDetails()
 
-  // Buscar produtos para usar nos comboboxes
+  // Fetch products to use in the comboboxes
   const { data: allProducts } = productHooks.getProductsWithCategory()
 
   const isPending = isWorkOrderPending
 
-  // Ref para controlar o fluxo de navegação entre steps
+  // Ref to control the navigation flow between steps
   const formRef = React.useRef<WorkOrderFormCreateRef>(null)
 
   const form = useForm<WorkOrderFormData>({
@@ -148,37 +148,37 @@ export default function WorkOrderFormScreen() {
     reValidateMode: 'onBlur',
   })
 
-  // Lógica para determinar próximo step baseado nas decisões do usuário
+  // Logic to determine the next step based on the user's decisions
   const handleBeforeNext = async (currentStep: number) => {
-    // Step 2 (Produtos) → Vai para Step 3 (Tela de decisão)
+    // Step 2 (Products) → Goes to Step 3 (Decision screen)
     if (currentStep === 1) {
-      return true // Continua normalmente
+      return true // Continue normally
     }
 
-    // Step 3 (Tela de Decisão) → Usuário escolhe via botões, não por switch
-    // A navegação será controlada pelos botões customizados
+    // Step 3 (Decision screen) → User chooses via buttons, not via switch
+    // Navigation will be controlled by the custom buttons
     if (currentStep === 2) {
-      return false // Bloqueia navegação automática, botões controlam
+      return false // Blocks automatic navigation, buttons control it
     }
 
-    // Step 4 (Relatório) → Vai para Step 5 (Tela de decisão de pagamento)
+    // Step 4 (Report) → Goes to Step 5 (Payment decision screen)
     if (currentStep === 3) {
-      return true // Continua para tela de decisão de pagamento
+      return true // Continues to the payment decision screen
     }
 
-    // Step 5 (Tela de Decisão de Pagamento) → Usuário escolhe via botões
+    // Step 5 (Payment decision screen) → User chooses via buttons
     if (currentStep === 4) {
-      return false // Bloqueia navegação automática, botões controlam
+      return false // Blocks automatic navigation, buttons control it
     }
 
     return true
   }
 
   const onSubmitFinal = async (data: WorkOrderFormData) => {
-    // Evita duplo toque criando duas OS
+    // Prevents a double tap from creating two work orders
     if (isWorkOrderPending) return
 
-    // Preparação: o preço agendado vem do cadastro atual do produto
+    // Preparation: the scheduled price comes from the product's current record
     const missing = (data.products || []).filter(
       (p) => !allProducts?.some((prod) => prod.id === p.productId)
     )
@@ -205,15 +205,15 @@ export default function WorkOrderFormScreen() {
       priceSnapshot: i.priceSnapshot,
     })
 
-    // O pagamento vale o total do relatório (trocados + adicionados)
+    // The payment equals the report total (exchanged + added)
     const paymentTotal = computeResultTotal(
       data.exchangedProducts || [],
       data.addedProducts || []
     )
 
     try {
-      // Tudo numa transação só (OS + itens + relatório + pagamento): se algo
-      // falhar nada é gravado, e um novo envio não duplica a OS.
+      // Everything in a single transaction (work order + items + report + payment): if anything
+      // fails nothing is written, and a resubmit does not duplicate the work order.
       const res = await createWorkOrder({
         customerId: data.customerId,
         scheduledDate: data.scheduledDate,
@@ -245,43 +245,43 @@ export default function WorkOrderFormScreen() {
           : undefined,
       })
 
-      // Retornar para o index com o ID da work order criada
+      // Return to the index with the created work order ID
       router.replace({
         pathname: '/work-orders',
         params: { createdWorkOrderId: res.workOrder.id },
       })
     } catch (error) {
-      // o toast de erro da gravação é exibido pelo hook
+      // the save error toast is shown by the hook
       if (__DEV__) console.error('Error creating work order:', error)
     }
   }
 
   const onSubmit = form.handleSubmit(onSubmitFinal)
 
-  // Observar mudanças para condicionar visibilidade de campos
+  // Watch changes to conditionally show fields
   const installments = Number(form.watch('installments')) || 1
   const isPaid = form.watch('isPaid')
   const paymentDate = form.watch('paymentDate')
 
-  // Se marcar como pago, força parcelas = 1 e data para hoje se não houver
+  // When marked as paid, force installments = 1 and date to today if missing
   React.useEffect(() => {
     if (isPaid) {
       form.setValue('installments', '1')
-      // Se não houver data de pagamento, define como hoje
+      // If there is no payment date, set it to today
       if (!paymentDate) {
         form.setValue('paymentDate', new Date() as any)
       }
     }
   }, [isPaid, form])
 
-  // Se mudar parcelas para > 1, desmarca isPaid
+  // If installments change to > 1, uncheck isPaid
   React.useEffect(() => {
     if ((installments || 1) > 1 && isPaid) {
       form.setValue('isPaid', false)
     }
   }, [installments, isPaid, form])
 
-  // Se a data de pagamento for futura, desmarca isPaid
+  // If the payment date is in the future, uncheck isPaid
   React.useEffect(() => {
     if (paymentDate && isPaid) {
       const selectedDate =
@@ -309,8 +309,8 @@ export default function WorkOrderFormScreen() {
       submitLabel="Salvar Ordem de Serviço"
       loading={isPending}
       fields={[
-        // Campos do formulário - agora usamos apenas customRenderer nos steps
-        // Step 6: Ordem de Pagamento
+        // Form fields - we now only use customRenderer in the steps
+        // Step 6: Payment Order
         {
           name: 'method',
           label: 'Método de Pagamento',
@@ -324,7 +324,7 @@ export default function WorkOrderFormScreen() {
           icon: CircleQuestionMark,
           inputProps: { keyboardType: 'numeric' as const },
         },
-        // Só mostra "Foi pago?" se não houver parcelamento (installments = 1)
+        // Only show "Foi pago?" if there is no installment plan (installments = 1)
         ...(installments === 1
           ? [
               {
@@ -374,7 +374,7 @@ export default function WorkOrderFormScreen() {
                 error={getErrorMessage(form.formState.errors?.notes?.message)}
               />
 
-              {/* Botões de navegação customizados */}
+              {/* Custom navigation buttons */}
               <View className="flex-row justify-between w-full gap-2 mt-auto">
                 <Button
                   variant="outline"
@@ -389,7 +389,7 @@ export default function WorkOrderFormScreen() {
                 <Button
                   variant="default"
                   onPress={async () => {
-                    // Validar campos obrigatórios do step
+                    // Validate the step's required fields
                     const isValid = await form.trigger([
                       'customerId',
                       'scheduledDate',
@@ -421,7 +421,7 @@ export default function WorkOrderFormScreen() {
                 multiple={true}
               />
 
-              {/* Botões de navegação customizados */}
+              {/* Custom navigation buttons */}
               <View className="flex-row justify-between w-full gap-2 mt-auto">
                 <Button
                   variant="outline"
@@ -435,7 +435,7 @@ export default function WorkOrderFormScreen() {
                 <Button
                   variant="default"
                   onPress={async () => {
-                    // Sem validação específica aqui pois produtos são opcionais
+                    // No specific validation here because products are optional
                     formRef.current?.handleNext()
                   }}
                   className="w-2/5"
@@ -448,7 +448,7 @@ export default function WorkOrderFormScreen() {
         },
         {
           label: 'Próximos Passos',
-          fields: [], // Tela de decisão, sem validação
+          fields: [], // Decision screen, no validation
           customRenderer: () => (
             <View className="flex-1 justify-center items-center gap-4 p-6">
               <Text className="text-lg font-semibold text-center mb-4">
@@ -521,7 +521,7 @@ export default function WorkOrderFormScreen() {
                 placeholder="Produtos não trocados"
               />
 
-              {/* Botões de navegação customizados */}
+              {/* Custom navigation buttons */}
               <View className="flex-row justify-between w-full gap-2 mt-auto">
                 <Button
                   variant="outline"
@@ -535,7 +535,7 @@ export default function WorkOrderFormScreen() {
                 <Button
                   variant="default"
                   onPress={async () => {
-                    // Sem validação específica - relatório é opcional
+                    // No specific validation - report is optional
                     formRef.current?.handleNext()
                   }}
                   className="w-2/5"
@@ -548,7 +548,7 @@ export default function WorkOrderFormScreen() {
         },
         {
           label: 'Criar Pagamento?',
-          fields: [], // Tela de decisão, sem validação
+          fields: [], // Decision screen, no validation
           customRenderer: () => (
             <View className="flex-1 justify-center items-center gap-4 p-6">
               <Text className="text-lg font-semibold text-center mb-4">
@@ -585,13 +585,13 @@ export default function WorkOrderFormScreen() {
           label: 'Ordem de Pagamento',
           fields: ['method', 'installments'],
           customRenderer: () => {
-            // Calcular total baseado nos produtos do relatório
+            // Compute total based on the report products
             const exchangedProducts = form.watch('exchangedProducts') || []
             const addedProducts = form.watch('addedProducts') || []
 
-            // Total derivado do relatório (não é editável): calculado aqui só
-            // para exibição e de novo no envio. Antes fazia setValue durante o
-            // render, o que dispara re-render em cascata.
+            // Total derived from the report (not editable): computed here only
+            // for display and again on submit. It used to call setValue during
+            // render, which triggers cascading re-renders.
             const totalValue = computeResultTotal(
               exchangedProducts,
               addedProducts
@@ -604,14 +604,14 @@ export default function WorkOrderFormScreen() {
 
             return (
               <View className="flex-1 gap-4">
-                {/* Resumo do Relatório */}
+                {/* Report summary */}
                 {allProductItems.length > 0 && (
                   <View className="bg-accent/30 rounded-lg p-4 mb-2">
                     <Text className="font-semibold text-base mb-3">
                       Resumo do Relatório
                     </Text>
 
-                    {/* Lista de produtos */}
+                    {/* Product list */}
                     <View className="gap-2 mb-3">
                       {allProductItems.map((item, index) => (
                         <View
@@ -661,7 +661,7 @@ export default function WorkOrderFormScreen() {
                   </View>
                 )}
 
-                {/* Campos do pagamento */}
+                {/* Payment fields */}
                 <BaseForm.Input
                   control={form.control}
                   name="method"
@@ -691,7 +691,7 @@ export default function WorkOrderFormScreen() {
                   )}
                 />
 
-                {/* Alerta explicativo sobre pagamento */}
+                {/* Payment explanatory alert */}
                 <Alert icon={Info}>
                   <AlertTitle>Sobre o Pagamento</AlertTitle>
                   <AlertDescription>
@@ -731,7 +731,7 @@ export default function WorkOrderFormScreen() {
                   )}
                 />
 
-                {/* Botões de navegação customizados */}
+                {/* Custom navigation buttons */}
                 <View className="flex-row justify-between w-full gap-2 mt-auto">
                   <Button
                     variant="outline"
@@ -745,7 +745,7 @@ export default function WorkOrderFormScreen() {
                   <Button
                     variant="default"
                     onPress={async () => {
-                      // Validar campos obrigatórios do pagamento
+                      // Validate the payment's required fields
                       const isValid = await form.trigger(['method'])
                       if (isValid) {
                         onSubmit()

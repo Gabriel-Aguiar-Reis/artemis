@@ -38,7 +38,7 @@ type RemovedProductsComboboxProps = {
   label?: string
   placeholder?: string
   error?: string
-  // Para buscar informações completas dos produtos
+  // To fetch full product information
   availableProducts?: Array<{
     id: string
     name: string
@@ -59,32 +59,32 @@ export function RemovedProductsCombobox({
   const [open, setOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
-  // Produtos removíveis são: agendados - trocados
+  // Removable products are: scheduled - exchanged
   const removableProducts = useMemo(() => {
     return scheduledProducts
       .map((sp) => {
         const productInfo = availableProducts.find((p) => p.id === sp.productId)
         if (!productInfo) return null
 
-        // Quantidade já trocada
+        // Quantity already exchanged
         const exchangedQty =
           exchangedProducts.find((p) => p.productId === sp.productId)
             ?.quantity || 0
 
-        // Quantidade já removida
+        // Quantity already removed
         const removedQty =
           selectedRemovedProducts.find((p) => p.productId === sp.productId)
             ?.quantity || 0
 
-        // Quantidade máxima que pode ser removida = agendada - trocada - já removida
+        // Maximum quantity that can be removed = scheduled - exchanged - already removed
         const maxRemovableQty = sp.quantity - exchangedQty - removedQty
 
-        // Permite que produtos já selecionados continuem aparecendo na lista
+        // Lets already selected products keep appearing in the list
         const isSelected = selectedRemovedProducts.some(
           (p) => p.productId === sp.productId
         )
 
-        // Remove apenas se não tiver disponibilidade E não estiver selecionado
+        // Remove only if there is no availability AND it is not selected
         if (maxRemovableQty <= 0 && !isSelected) return null
 
         return {
@@ -130,7 +130,7 @@ export function RemovedProductsCombobox({
     const productInfo = removableProducts.find((p) => p.productId === productId)
     if (!productInfo) return
 
-    // Calcular o máximo real: quantidade agendada - quantidade trocada
+    // Compute the real maximum: scheduled quantity - exchanged quantity
     const exchangedQty =
       exchangedProducts.find((p) => p.productId === productId)?.quantity || 0
     const maxQuantity = productInfo.quantity - exchangedQty
@@ -140,7 +140,7 @@ export function RemovedProductsCombobox({
         selectedRemovedProducts.filter((p) => p.productId !== productId)
       )
     } else if (quantity > maxQuantity) {
-      // Não permite exceder a quantidade disponível (agendada - trocada)
+      // Do not allow exceeding the available quantity (scheduled - exchanged)
       return
     } else {
       onRemovedProductsChange(
@@ -203,7 +203,7 @@ export function RemovedProductsCombobox({
     const selected = isProductRemoved(item.productId)
     const quantity = getProductQuantity(item.productId)
 
-    // Calcular o máximo real: quantidade agendada - quantidade trocada
+    // Compute the real maximum: scheduled quantity - exchanged quantity
     const exchangedQty =
       exchangedProducts.find((p) => p.productId === item.productId)?.quantity ||
       0
@@ -213,7 +213,7 @@ export function RemovedProductsCombobox({
       <View className="min-h-[120px]">
         <Pressable
           onPress={() => {
-            // Só adiciona o produto se não estiver selecionado
+            // Only add the product if it is not selected
             if (!selected) {
               toggleProduct(item)
             }
@@ -263,7 +263,7 @@ export function RemovedProductsCombobox({
             )}
           </View>
 
-          {/* Controle de quantidade */}
+          {/* Quantity control */}
           {selected && (
             <View className="flex-row items-center gap-3 mt-3 pt-3 border-t border-border">
               <Text className="text-sm font-medium">Qte:</Text>

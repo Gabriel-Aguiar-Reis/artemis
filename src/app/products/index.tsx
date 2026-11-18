@@ -131,7 +131,7 @@ export default function ProductsScreen() {
     name: string
   } | null>(null)
 
-  // Os dados já vêm filtrados do servidor via repository
+  // Data already comes filtered from the server via repository
   const displayedProducts = products || []
 
   const hasActiveFilters =
@@ -220,7 +220,7 @@ export default function ProductsScreen() {
     try {
       await deleteProduct(productId)
     } catch {
-      // toast de erro (com mensagem amigável para FK) vem do hook
+      // error toast (with a friendly message for FK) comes from the hook
     } finally {
       setDeleteDialogOpen(false)
     }

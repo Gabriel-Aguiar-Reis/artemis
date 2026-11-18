@@ -8,15 +8,15 @@ let drizzleInstance: ReturnType<typeof drizzle> | null = null
 export function getExpoDb() {
   if (!expoDb) {
     try {
-      // enableChangeListener desligado: ninguém usa useLiveQuery e o listener
-      // custa um callback por linha alterada (pesado em importações em lote).
+      // enableChangeListener disabled: nobody uses useLiveQuery and the listener
+      // costs a callback per changed row (heavy in batch imports).
       expoDb = openDatabaseSync('artemis.db')
-      // WAL: leituras não bloqueiam escritas e cada commit faz menos fsync.
-      // synchronous=NORMAL é seguro com WAL (pode perder só o último commit
-      // numa queda de energia, nunca corrompe o banco).
+      // WAL: reads do not block writes and each commit does fewer fsyncs.
+      // synchronous=NORMAL is safe with WAL (it may lose only the last commit
+      // on a power loss, never corrupts the database).
       expoDb.execSync('PRAGMA journal_mode = WAL; PRAGMA synchronous = NORMAL;')
       if (__DEV__) console.log('Database opened successfully')
-      // NÃO habilitar foreign keys aqui - será feito APÓS migrations
+      // Do NOT enable foreign keys here - it is done AFTER migrations
     } catch (error) {
       console.error('Error opening database:', error)
       throw error
@@ -45,7 +45,7 @@ export function initDrizzleClient() {
 }
 
 export function resetDrizzleClient() {
-  // Fechar conexão se existir
+  // Close the connection if it exists
   if (expoDb) {
     try {
       expoDb.closeSync()
@@ -61,10 +61,10 @@ export function resetDrizzleClient() {
 }
 
 /**
- * Com WAL, o SQLite mantém `artemis.db-wal` e `artemis.db-shm` ao lado do
- * banco. O deleteDatabaseSync do expo-sqlite apaga só o arquivo principal; um
- * -wal que sobrar (ex.: reset após crash) poderia ser reaplicado no banco
- * novo. Remove os dois, ignorando se não existirem.
+ * With WAL, SQLite keeps `artemis.db-wal` and `artemis.db-shm` next to the
+ * database. expo-sqlite's deleteDatabaseSync only deletes the main file; a
+ * leftover -wal (e.g. reset after a crash) could be replayed onto the new
+ * database. Removes both, ignoring if they do not exist.
  */
 export async function removeWalFiles(name = 'artemis.db') {
   try {
@@ -78,20 +78,20 @@ export async function removeWalFiles(name = 'artemis.db') {
       await FS.deleteAsync(`${dir}/${name}${suffix}`, { idempotent: true })
     }
   } catch (error) {
-    if (__DEV__) console.warn('Não foi possível remover arquivos WAL:', error)
+    if (__DEV__) console.warn('Could not remove WAL files:', error)
   }
 }
 
 export function deleteDatabaseAndReset() {
   try {
-    // Resetar e fechar conexões
+    // Reset and close connections
     resetDrizzleClient()
 
-    // Pequeno delay para garantir que a conexão foi fechada
+    // Small delay to make sure the connection was closed
     return new Promise<boolean>((resolve) => {
       setTimeout(() => {
         try {
-          // Deletar o arquivo do banco
+          // Delete the database file
           const { deleteDatabaseSync } = require('expo-sqlite')
           deleteDatabaseSync('artemis.db')
           if (__DEV__) console.log('Database deleted successfully')

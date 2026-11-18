@@ -209,7 +209,7 @@ export function FloatingLabelInput(props: FloatingLabelInputProps) {
     setIsFocused(false)
     onBlur?.(e)
   }
-  // Quando for select, localizar opção selecionada para exibir o nome
+  // When it is a select, find the selected option to display its name
   const selectedOption = isSelect
     ? (selectOptions || []).find((s) => s.id === value)
     : undefined

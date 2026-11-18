@@ -52,7 +52,7 @@ export default function ItineraryFinishScreen() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [finishDialogOpen, setFinishDialogOpen] = useState(false)
 
-  // Calcular estatísticas
+  // Compute statistics
   const stats = useMemo(() => {
     if (!itineraryWorkOrders || !itinerary) {
       return {
@@ -69,19 +69,19 @@ export default function ItineraryFinishScreen() {
 
     const totalWorkOrders = itineraryWorkOrders.length
 
-    // Contar atrasadas - usar o flag isLate que já está calculado
+    // Count late ones - use the isLate flag that is already computed
     const lateWorkOrders = itineraryWorkOrders.filter(
       (iwo) => iwo.isLate
     ).length
 
-    // Calcular dias no período
+    // Compute days in the period
     const diffTime = Math.abs(
       itinerary.finalItineraryDate.getTime() -
         itinerary.initialItineraryDate.getTime()
     )
     const totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
 
-    // Calcular faturamento total
+    // Compute total revenue
     const totalRevenue = itineraryWorkOrders.reduce((acc, iwo) => {
       if (iwo.workOrder.paymentOrder) {
         return acc + iwo.workOrder.paymentOrder.totalValue
@@ -89,7 +89,7 @@ export default function ItineraryFinishScreen() {
       return acc
     }, 0)
 
-    // Contar pagas/não pagas
+    // Count paid/unpaid
     const paidOrders = itineraryWorkOrders.filter(
       (iwo) => iwo.workOrder.paymentOrder?.isPaid
     ).length
@@ -97,7 +97,7 @@ export default function ItineraryFinishScreen() {
       (iwo) => iwo.workOrder.paymentOrder && !iwo.workOrder.paymentOrder.isPaid
     ).length
 
-    // Contar com/sem resultado
+    // Count with/without result
     const ordersWithResult = itineraryWorkOrders.filter(
       (iwo) => iwo.workOrder.result
     ).length
@@ -115,8 +115,8 @@ export default function ItineraryFinishScreen() {
     }
   }, [itineraryWorkOrders, itinerary])
 
-  // Antes usava mutate() dentro de try/catch: o erro nunca caía no catch e a
-  // tela voltava como se tivesse dado certo. Agora espera o resultado.
+  // It used mutate() inside try/catch: the error never reached the catch and the
+  // screen went back as if it had succeeded. Now it awaits the result.
   const finish = async () => {
     if (!itinerary || isFinishing) return
     setIsFinishing(true)
@@ -124,15 +124,15 @@ export default function ItineraryFinishScreen() {
       await updateFinishItinerary(itinerary.id)
       router.back()
     } catch (error) {
-      // toast de erro exibido pelo hook
-      if (__DEV__) console.error('Erro ao finalizar itinerário:', error)
+      // error toast shown by the hook
+      if (__DEV__) console.error('Error finishing itinerary:', error)
     } finally {
       setIsFinishing(false)
       setFinishDialogOpen(false)
     }
   }
 
-  // Com OS ainda sem relatório, confirma antes: as atrasadas viram expiradas.
+  // With work orders still lacking a report, confirm first: the late ones become expired.
   const handleFinish = () => {
     if (stats.ordersWithoutResult > 0) setFinishDialogOpen(true)
     else finish()
@@ -149,7 +149,7 @@ export default function ItineraryFinishScreen() {
       setDeleteDialogOpen(false)
       router.replace('/itinerary')
     } catch (error) {
-      if (__DEV__) console.error('Erro ao cancelar itinerário:', error)
+      if (__DEV__) console.error('Error canceling itinerary:', error)
     }
   }
 
@@ -173,7 +173,7 @@ export default function ItineraryFinishScreen() {
       ) : (
         <ScrollView className="flex-1">
           <View className="p-4 gap-4">
-            {/* Header com informação do período */}
+            {/* Header with period info */}
             <Card>
               <CardHeader>
                 <CardTitle>Itinerário a Finalizar</CardTitle>
@@ -184,7 +184,7 @@ export default function ItineraryFinishScreen() {
               </CardHeader>
             </Card>
 
-            {/* Estatísticas */}
+            {/* Statistics */}
             <Card>
               <CardHeader>
                 <CardTitle>Resumo do Itinerário</CardTitle>
@@ -193,7 +193,7 @@ export default function ItineraryFinishScreen() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="gap-4">
-                {/* Total de ordens */}
+                {/* Total orders */}
                 <View className="flex-row items-center gap-3">
                   <View className="bg-primary/10 p-3 rounded-full">
                     <Icon
@@ -213,7 +213,7 @@ export default function ItineraryFinishScreen() {
                   </View>
                 </View>
 
-                {/* Ordens atrasadas */}
+                {/* Late orders */}
                 <View className="flex-row items-center gap-3">
                   <View
                     className={`p-3 rounded-full ${stats.lateWorkOrders > 0 ? 'bg-destructive/10' : 'bg-primary/10'}`}
@@ -246,7 +246,7 @@ export default function ItineraryFinishScreen() {
                   </View>
                 </View>
 
-                {/* Dias no período */}
+                {/* Days in period */}
                 <View className="flex-row items-center gap-3">
                   <View className="bg-primary/10 p-3 rounded-full">
                     <Icon
@@ -266,7 +266,7 @@ export default function ItineraryFinishScreen() {
                   </View>
                 </View>
 
-                {/* Faturamento total */}
+                {/* Total revenue */}
                 <View className="flex-row items-center gap-3">
                   <View className="bg-primary/10 p-3 rounded-full">
                     <Icon
@@ -290,7 +290,7 @@ export default function ItineraryFinishScreen() {
                   </View>
                 </View>
 
-                {/* Ordens com resultado */}
+                {/* Orders with result */}
                 <View className="flex-row items-center gap-3">
                   <View className="bg-primary/10 p-3 rounded-full">
                     <Icon
@@ -310,7 +310,7 @@ export default function ItineraryFinishScreen() {
                   </View>
                 </View>
 
-                {/* Pagamento */}
+                {/* Payment */}
                 <View className="flex-row items-center gap-3">
                   <View className="bg-primary/10 p-3 rounded-full">
                     <Icon
@@ -332,7 +332,7 @@ export default function ItineraryFinishScreen() {
               </CardContent>
             </Card>
 
-            {/* Alerta sobre finalização */}
+            {/* Finish alert */}
             <Card className="bg-muted/50">
               <CardContent>
                 <View className="flex-row gap-3">
@@ -353,7 +353,7 @@ export default function ItineraryFinishScreen() {
               </CardContent>
             </Card>
 
-            {/* Botões de ação */}
+            {/* Action buttons */}
             <View className="gap-3 pb-4">
               <Button onPress={handleFinish} disabled={isFinishing}>
                 {isFinishing ? (
@@ -390,7 +390,7 @@ export default function ItineraryFinishScreen() {
         </ScrollView>
       )}
 
-      {/* Dialog de confirmação de exclusão */}
+      {/* Delete confirmation dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -414,7 +414,7 @@ export default function ItineraryFinishScreen() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Confirmação quando há OS sem relatório */}
+      {/* Confirmation when there are work orders without a report */}
       <AlertDialog open={finishDialogOpen} onOpenChange={setFinishDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

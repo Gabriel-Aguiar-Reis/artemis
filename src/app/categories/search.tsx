@@ -28,10 +28,10 @@ export default function CategoriesSearchScreen() {
     'all' | 'active' | 'inactive'
   >(params.status || 'all')
 
-  // Aplicar debounce no input de texto (300ms)
+  // Debounce the text input (300ms)
   const debouncedSearch = useDebouncedValue(searchQuery, 300)
 
-  // Auto-aplicar filtros quando valores debounced mudarem
+  // Auto-apply filters when debounced values change
   React.useEffect(() => {
     const filters = {
       search: debouncedSearch || undefined,

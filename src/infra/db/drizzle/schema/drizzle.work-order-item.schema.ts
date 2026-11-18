@@ -23,7 +23,7 @@ export const workOrderItem = sqliteTable(
       .references(() => product.id, { onDelete: 'restrict' })
       .notNull(),
     quantity: integer('quantity').notNull(),
-    priceSnapshot: real('price_snapshot').notNull(), // Preço congelado no momento
+    priceSnapshot: real('price_snapshot').notNull(), // Price frozen at the time
   },
   (table) => ({
     workOrderIdIdx: index('idx_work_order_item_work_order_id').on(

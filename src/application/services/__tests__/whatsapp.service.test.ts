@@ -110,7 +110,7 @@ describe('WhatsAppService', () => {
     })
 
     it('should not duplicate country code if number already has it', () => {
-      // Simula um número que veio de planilha com código do país
+      // Simulates a number that came from a spreadsheet with the country code
       const customer = createMockCustomer({
         getMainNumber: () => ({ value: '5511987654321' }),
       })
@@ -121,9 +121,9 @@ describe('WhatsAppService', () => {
       WhatsAppService.sendWorkOrderMessage(workOrder, false)
 
       const url = (Linking.openURL as Mock).mock.calls[0][0]
-      // Deve ter exatamente 13 dígitos (55 + DDD + número)
+      // Must have exactly 13 digits (55 + area code + number)
       expect(url).toContain('wa.me/5511987654321')
-      expect(url).not.toContain('wa.me/555511987654321') // Não duplicar
+      expect(url).not.toContain('wa.me/555511987654321') // Do not duplicate
     })
 
     it('should log an error when failing to open WhatsApp', async () => {
@@ -140,7 +140,7 @@ describe('WhatsAppService', () => {
         WhatsAppService.sendWorkOrderMessage(workOrder, false)
       })
 
-      expect(consoleSpy).toHaveBeenCalledWith('Erro:', error)
+      expect(consoleSpy).toHaveBeenCalledWith('Error:', error)
 
       consoleSpy.mockRestore()
     })

@@ -41,7 +41,7 @@ export function SettingsSheet(props: SheetProps<'settings-sheet'>) {
 
   const { data: license, isLoading } = useLicense()
 
-  // Carregar preferência salva quando o sheet abre
+  // Load the saved preference when the sheet opens
   useEffect(() => {
     const loadThemePreference = async () => {
       const value = await AsyncStorage.getItem(THEME_STORAGE_KEY)
@@ -58,7 +58,7 @@ export function SettingsSheet(props: SheetProps<'settings-sheet'>) {
     await AsyncStorage.setItem(THEME_STORAGE_KEY, theme)
 
     if (theme === 'system') {
-      // Definir como undefined faz o nativewind usar o tema do sistema
+      // Setting to undefined makes nativewind use the system theme
       setColorScheme(undefined as any)
     } else {
       setColorScheme(theme)
@@ -95,7 +95,7 @@ export function SettingsSheet(props: SheetProps<'settings-sheet'>) {
         <View className="gap-6 px-4 py-6 bg-background">
           <Text variant="h3">Configurações</Text>
 
-          {/* Seção de Tema */}
+          {/* Theme section */}
           <View className="gap-3">
             <Text className="text-muted-foreground font-medium">Tema</Text>
 
@@ -132,7 +132,7 @@ export function SettingsSheet(props: SheetProps<'settings-sheet'>) {
             </View>
           </View>
 
-          {/* Seção de Licença */}
+          {/* License section */}
           <View className="gap-3">
             <Text className="text-muted-foreground font-medium">Licença</Text>
 
@@ -141,7 +141,7 @@ export function SettingsSheet(props: SheetProps<'settings-sheet'>) {
                 <ActivityIndicator />
               </View>
             ) : license?.isAdmin ? (
-              // Visualização para Admin
+              // Admin view
               <View className="gap-3">
                 <View className="border-green-600 bg-green-100 rounded-md dark:bg-green-950">
                   <Alert
@@ -224,7 +224,7 @@ export function SettingsSheet(props: SheetProps<'settings-sheet'>) {
                 </Button>
               </View>
             ) : (
-              // Visualização para Usuário Comum
+              // Regular user view
               <View className="gap-3">
                 <View className="border-blue-600 bg-blue-50 rounded-md dark:bg-blue-950">
                   <Alert

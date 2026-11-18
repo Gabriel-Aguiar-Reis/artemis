@@ -37,9 +37,9 @@ export default function WorkOrderResultCreateScreen() {
 
     try {
       setIsPending(true)
-      // Uma transação: relatório + itens + status calculado (COMPLETED,
-      // PARTIAL ou FAILED) + data da visita + atraso do itinerário.
-      // Antes gravava o status 'completed' minúsculo, fora do enum.
+      // One transaction: report + items + computed status (COMPLETED,
+      // PARTIAL or FAILED) + visit date + itinerary lateness.
+      // It used to store the lowercase 'completed' status, outside the enum.
       await saveResult({
         workOrderId: workOrder.id,
         result: {
@@ -50,8 +50,8 @@ export default function WorkOrderResultCreateScreen() {
       })
       router.back()
     } catch (error) {
-      // toast de erro exibido pelo hook
-      if (__DEV__) console.error('Erro ao criar relatório:', error)
+      // error toast shown by the hook
+      if (__DEV__) console.error('Error creating report:', error)
     } finally {
       setIsPending(false)
     }

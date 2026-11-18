@@ -120,7 +120,7 @@ export function CustomerCombobox({
   const [searchQuery, setSearchQuery] = useState('')
   const debouncedQuery = useDebouncedValue(searchQuery.trim(), 250)
 
-  // Busca leve no SQL (50 resultados, acento-insensível) só com o dialog aberto
+  // Lightweight SQL search (50 results, accent-insensitive) only while the dialog is open
   const { data: results = [], isLoading } = useQuery({
     queryKey: ['customers', 'search-light', debouncedQuery],
     queryFn: () =>
@@ -130,7 +130,7 @@ export function CustomerCombobox({
     placeholderData: keepPreviousData,
   })
 
-  // Cliente já selecionado (ex.: edição) mesmo fora dos 50 resultados
+  // Already selected customer (e.g. editing) even outside the 50 results
   const { data: selectedCustomer } = useQuery({
     queryKey: ['customers', 'byId', selectedCustomerId],
     queryFn: () => customerRepo.getCustomer(selectedCustomerId as any),

@@ -117,12 +117,12 @@ export class WorkOrder {
   }
 
   setStatus(newStatus: WorkOrderStatus): WorkOrderStatus {
-    // Permitir transições idempotentes (mesmo status) sem erro
+    // Allow idempotent transitions (same status) without error
     if (newStatus === this.status) return this.status
 
     const validTransitions: Record<WorkOrderStatus, WorkOrderStatus[]> = {
-      // Na prática a visita é registrada direto de PENDING (não há tela de
-      // "iniciar visita"), então o relatório pode encerrar a OS a partir dela.
+      // In practice the visit is recorded straight from PENDING (there is no
+      // "start visit" screen), so the report can close the work order from it.
       [WorkOrderStatus.PENDING]: [
         WorkOrderStatus.COMMITTED,
         WorkOrderStatus.IN_PROGRESS,
@@ -166,7 +166,7 @@ export class WorkOrder {
     }
 
     if (!validTransitions[this.status]) {
-      // Status atual desconhecido ou inválido (ex: dado corrompido) — recupera silenciosamente
+      // Current status unknown or invalid (e.g. corrupted data) — recover silently
       this.status = newStatus
       this.updatedAt = new Date()
       return this.status
@@ -240,8 +240,8 @@ export class WorkOrder {
         })
       : undefined
 
-    // Para ordens EXPIRED (sem resultado), usa produtos agendados
-    // Para ordens COMPLETED/PARTIAL, usa produtos do resultado (trocados + adicionados)
+    // For EXPIRED orders (without result), use scheduled products
+    // For COMPLETED/PARTIAL orders, use the result products (exchanged + added)
     const items =
       this.status === WorkOrderStatus.EXPIRED
         ? (this.products?.map((p) => p.toDTO()) ?? [])
@@ -263,12 +263,12 @@ export class WorkOrder {
   }
 
   /**
-   * Pagamento quitado não decide o status da OS: quem decide é o relatório.
-   * Antes forçava COMPLETED em qualquer caso (PARTIAL/FAILED viravam
-   * COMPLETED e uma OS já clonada voltava a poder ser clonada).
-   * - status final: mantém
-   * - em aberto com relatório: aplica o status do relatório
-   * - em aberto sem relatório: mantém (pagamento antecipado)
+   * A settled payment does not decide the work order status: the report does.
+   * It used to force COMPLETED in every case (PARTIAL/FAILED became
+   * COMPLETED and an already cloned work order could be cloned again).
+   * - final status: keep
+   * - open with report: apply the report's status
+   * - open without report: keep (advance payment)
    */
   finalizeAfterPayment(): WorkOrderStatus {
     if (!this.paymentOrder || !this.paymentOrder.isPaid)

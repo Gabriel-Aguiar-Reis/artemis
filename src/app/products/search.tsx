@@ -59,14 +59,14 @@ export default function ProductsSearchScreen() {
     params.salePriceMax || ''
   )
 
-  // Aplicar debounce nos inputs de texto (300ms)
+  // Debounce the text inputs (300ms)
   const debouncedSearch = useDebouncedValue(searchQuery, 300)
   const debouncedCategoryName = useDebouncedValue(categoryNameFilter, 300)
   const debouncedExpiration = useDebouncedValue(expirationFilter, 300)
   const debouncedMinSalePrice = useDebouncedValue(minSalePriceFilter, 300)
   const debouncedMaxSalePrice = useDebouncedValue(maxSalePriceFilter, 300)
 
-  // Helper para normalizar valores numéricos
+  // Helper to normalize numeric values
   const normalizeNumberParam = (val: string) => {
     if (!val) return undefined
     const cleaned = String(val)
@@ -78,7 +78,7 @@ export default function ProductsSearchScreen() {
     return isNaN(num) ? undefined : String(num)
   }
 
-  // Auto-aplicar filtros quando valores debounced mudarem
+  // Auto-apply filters when debounced values change
   React.useEffect(() => {
     const filters = {
       search: debouncedSearch || undefined,

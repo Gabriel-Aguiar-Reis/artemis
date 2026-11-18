@@ -48,7 +48,7 @@ export default function WorkOrderPaymentCreateScreen() {
   const isPaid = form.watch('isPaid')
   const paymentDate = form.watch('paymentDate')
 
-  // Calcular total baseado nos produtos do resultado (se existir)
+  // Compute total based on the result products (if any)
   useEffect(() => {
     if (!workOrder?.result) return
 
@@ -67,19 +67,19 @@ export default function WorkOrderPaymentCreateScreen() {
     }
   }, [workOrder])
 
-  // Se marcar como pago, força parcelas = 1, paidInstallments = 1 e data para hoje se não houver
+  // When marked as paid, force installments = 1, paidInstallments = 1 and date to today if missing
   useEffect(() => {
     if (isPaid) {
       form.setValue('installments', '1')
       form.setValue('paidInstallments', '1')
-      // Se não houver data de pagamento, define como hoje
+      // If there is no payment date, set it to today
       if (!paymentDate) {
         form.setValue('paymentDate', new Date() as any)
       }
     }
   }, [isPaid])
 
-  // Se mudar parcelas para > 1, desmarca isPaid
+  // If installments change to > 1, uncheck isPaid
   useEffect(() => {
     if ((installments || 1) > 1 && isPaid) {
       form.setValue('isPaid', false)
@@ -87,7 +87,7 @@ export default function WorkOrderPaymentCreateScreen() {
     }
   }, [installments, isPaid, form])
 
-  // Se a data de pagamento for futura, desmarca isPaid
+  // If the payment date is in the future, uncheck isPaid
   useEffect(() => {
     if (paymentDate && isPaid) {
       const selectedDate =
@@ -103,7 +103,7 @@ export default function WorkOrderPaymentCreateScreen() {
     }
   }, [paymentDate])
 
-  // Verificar se a data de pagamento é futura
+  // Check whether the payment date is in the future
   const isPaymentDateFuture = () => {
     if (!paymentDate) return false
     const selectedDate =
@@ -116,14 +116,14 @@ export default function WorkOrderPaymentCreateScreen() {
 
   const onSubmit = form.handleSubmit(async (data) => {
     try {
-      // O BaseForm envia com coma decimal, converter para ponto
+      // BaseForm sends a decimal comma, convert to dot
       const normalized = String(data.totalValue || '0').replace(',', '.')
       const totalValueNumber = Number(normalized) || 0
-      
+
       console.log('Payment create - data.totalValue:', data.totalValue)
       console.log('Payment create - totalValueNumber:', totalValueNumber)
-      
-      // 1. Criar payment order
+
+      // 1. Create the payment order
       const paymentOrderId = uuid.v4() as UUID
       await addPaymentOrder({
         id: paymentOrderId,
@@ -138,11 +138,11 @@ export default function WorkOrderPaymentCreateScreen() {
             : data.paymentDate
           : null,
       } as any)
-      // 2. Associar payment order à work order
+      // 2. Associate the payment order with the work order
       await (updateWorkOrderWithPayment as any)([params.id, paymentOrderId])
       router.back()
     } catch (error) {
-      console.error('Erro ao criar pagamento:', error)
+      console.error('Error creating payment:', error)
     }
   })
 
@@ -192,7 +192,7 @@ export default function WorkOrderPaymentCreateScreen() {
       />
       <ScrollView className="flex-1 p-4">
         <View className="gap-4">
-          {/* Resumo dos produtos (se houver relatório) */}
+          {/* Product summary (if there is a report) */}
           {allProductItems.length > 0 && (
             <View className="bg-accent/30 p-4 rounded-lg mb-2">
               <Text className="text-base font-semibold mb-3">
@@ -274,7 +274,7 @@ export default function WorkOrderPaymentCreateScreen() {
             error={getErrorMessage(form.formState.errors?.totalValue?.message)}
           />
 
-          {/* Alerta explicativo sobre pagamento */}
+          {/* Payment explanatory alert */}
           <Alert icon={Info}>
             <AlertTitle>Sobre o Pagamento</AlertTitle>
             <AlertDescription>

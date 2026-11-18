@@ -29,7 +29,7 @@ export type ItinerarySummary = {
   totalRevenue: number
 }
 
-// Só OS em aberto entram num itinerário novo.
+// Only open work orders enter a new itinerary.
 const OPEN_STATUSES = [
   WorkOrderStatus.PENDING,
   WorkOrderStatus.COMMITTED,
@@ -38,8 +38,8 @@ const OPEN_STATUSES = [
 
 export default class DrizzleItineraryRepository implements ItineraryRepository {
   /**
-   * Carrega os vínculos itinerário↔OS de um ou mais itinerários com as OS já
-   * hidratadas em lote (sem consultas por OS).
+   * Loads the itinerary↔work order links of one or more itineraries with the work orders
+   * already hydrated in batch (no per-work-order queries).
    */
   private async loadItineraryWorkOrdersFor(
     itineraryIds: string[]
@@ -105,7 +105,7 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
   async addItinerary(dto: ItineraryInsertDTO): Promise<void> {
     const id = uuid.v4() as UUID
 
-    // Verificar se já existe um itinerário ativo
+    // Check whether an active itinerary already exists
     const activeItinerary = db
       .select()
       .from(itinerary)
@@ -119,10 +119,10 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
       )
     }
 
-    // Buscar work orders no período
-    // Mesma janela da prévia (getWorkOrdersByDateRange): do início do primeiro
-    // dia ao fim do último dia, no fuso do aparelho. Antes o fim ficava em
-    // 00:00 do último dia e as OS daquele dia não entravam no itinerário.
+    // Fetch work orders in the period
+    // Same window as the preview (getWorkOrdersByDateRange): from the start of the first
+    // day to the end of the last day, in the device timezone. Before, the end was at
+    // 00:00 of the last day and that day's work orders did not enter the itinerary.
     const startDate = new Date(dto.initialItineraryDate)
     startDate.setHours(0, 0, 0, 0)
     const endDate = new Date(dto.finalItineraryDate)
@@ -143,9 +143,9 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
       )
       .orderBy(asc(workOrder.scheduledDate))
 
-    // OS que já ficaram atrasadas em algum itinerário anterior (1 consulta só;
-    // antes era 1 por OS e pegava um vínculo "anterior" aleatório, ordenado
-    // por UUID).
+    // Work orders that were already late in some previous itinerary (single query;
+    // before it was 1 per work order and picked a random "previous" link, ordered
+    // by UUID).
     const lateBefore = new Set<string>()
     const woIds = workOrdersInPeriod.map((wo) => wo.id)
     for (let i = 0; i < woIds.length; i += 500) {
@@ -163,12 +163,12 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
     const now = new Date()
 
     db.transaction((tx) => {
-      // Criar o itinerário
+      // Create the itinerary
       tx.insert(itinerary)
         .values({ ...dto, id })
         .run()
 
-      // Criar os itinerary-work-orders
+      // Create the itinerary-work-orders
       for (let i = 0; i < workOrdersInPeriod.length; i++) {
         const wo = workOrdersInPeriod[i]
 
@@ -276,7 +276,7 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
     const data = ItineraryMapper.toPersistence(itin)
 
     db.transaction((tx) => {
-      // Atualizar itinerary
+      // Update the itinerary
       tx.update(itinerary)
         .set({
           isFinished: data.isFinished,
@@ -284,8 +284,8 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
         .where(eq(itinerary.id, id))
         .run()
 
-      // Atualizar status das OS e a marcação de atraso de cada vínculo,
-      // preservando os ids dos vínculos (antes eram apagados e recriados).
+      // Update work order statuses and each link's lateness flag,
+      // preserving the link ids (before they were deleted and recreated).
       const updatedAt = new Date().toISOString()
       for (const item of itin.workOrders) {
         tx.update(workOrder)
@@ -301,9 +301,9 @@ export default class DrizzleItineraryRepository implements ItineraryRepository {
   }
 
   /**
-   * Resumo dos itinerários finalizados para o histórico, agregado no SQL.
-   * Antes o histórico hidratava todos os itinerários com todas as OS (itens,
-   * relatórios, pagamentos) só para exibir contagens e soma.
+   * Summary of finished itineraries for the history, aggregated in SQL.
+   * Before, the history hydrated all itineraries with all work orders (items,
+   * reports, payments) just to show counts and a sum.
    */
   async getFinishedItinerarySummaries(): Promise<ItinerarySummary[]> {
     const rows = await db

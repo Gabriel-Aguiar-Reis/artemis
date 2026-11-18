@@ -139,11 +139,11 @@ export async function pickDumpJson(): Promise<string | null> {
 export type DumpTableKey = keyof ArtemisDump['tables']
 
 export type ImportReport = {
-  /** Linhas novas gravadas, por tabela */
+  /** New rows written, per table */
   inserted: Record<DumpTableKey, number>
-  /** Linhas que já existiam (mesmo id) e foram mantidas como estão */
+  /** Rows that already existed (same id) and were kept as they are */
   skipped: Record<DumpTableKey, number>
-  /** Linhas recusadas (dado inválido ou referência inexistente) */
+  /** Rows rejected (invalid data or missing reference) */
   rejected: { table: DumpTableKey; id: string; reason: string }[]
 }
 
@@ -163,7 +163,7 @@ const TABLE_KEYS: DumpTableKey[] = [
   'itineraryWorkOrder',
 ]
 
-/** Valida a estrutura geral do arquivo antes de tocar no banco. */
+/** Validates the file's overall structure before touching the database. */
 export function parseDump(json: string): ArtemisDump {
   let raw: any
   try {
@@ -210,13 +210,13 @@ const isStr = (v: unknown): v is string => typeof v === 'string' && v.length > 0
 const isNum = (v: unknown) => typeof v === 'number' && Number.isFinite(v)
 
 /**
- * Restaura o backup:
- * - tudo numa transação (antes: commit por linha; uma falha no meio deixava
- *   a restauração pela metade)
- * - ordem que respeita as chaves estrangeiras
- * - linhas com referência inexistente ou campos obrigatórios faltando são
- *   recusadas e listadas no relatório, em vez de abortar tudo
- * - inserção em lote com ON CONFLICT DO NOTHING (id já existente é mantido)
+ * Restores the backup:
+ * - everything in one transaction (before: one commit per row; a failure midway left
+ *   the restore half done)
+ * - order that respects foreign keys
+ * - rows with a missing reference or missing required fields are
+ *   rejected and listed in the report, instead of aborting everything
+ * - batch insert with ON CONFLICT DO NOTHING (an existing id is kept)
  */
 function insertAllTablesInOrder(parsed: ArtemisDump): ImportReport {
   const zero = () =>
@@ -239,7 +239,7 @@ function insertAllTablesInOrder(parsed: ArtemisDump): ImportReport {
 
   const t = parsed.tables
 
-  // Ids conhecidos = já no banco + presentes no backup (validados abaixo)
+  // Known ids = already in the database + present in the backup (validated below)
   const known = {
     category: idsOf(category),
     customer: idsOf(customer),
@@ -266,7 +266,7 @@ function insertAllTablesInOrder(parsed: ArtemisDump): ImportReport {
     {
       key: 'license',
       table: license,
-      // Nunca cria uma segunda licença: getLicense lê só a primeira linha
+      // Never creates a second license: getLicense reads only the first row
       check: () => (hasLicense ? 'o aparelho já possui licença' : null),
     },
     {
@@ -307,7 +307,7 @@ function insertAllTablesInOrder(parsed: ArtemisDump): ImportReport {
     {
       key: 'workOrder',
       table: workOrder,
-      // Status de versões antigas podiam estar em minúsculas
+      // Statuses from older versions could be lowercase
       fix: (r) => ({
         ...r,
         status: String(r.status ?? 'PENDING').toUpperCase(),

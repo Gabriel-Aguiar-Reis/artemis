@@ -145,10 +145,10 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
   ): Promise<PaginatedWorkOrders> {
     const offset = (page - 1) * pageSize
 
-    // Construir condições de filtro dinamicamente
+    // Build filter conditions dynamically
     const conditions = []
 
-    // Filtro de busca por nome do cliente
+    // Customer name search filter
     if (filters?.search) {
       conditions.push(
         or(
@@ -158,7 +158,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       )
     }
 
-    // Filtro por telefone (já vem normalizado sem formatação)
+    // Phone filter (already comes normalized without formatting)
     if (filters?.phoneNumber) {
       const phoneDigits = filters.phoneNumber.replace(/\D+/g, '')
       if (phoneDigits) {
@@ -166,7 +166,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       }
     }
 
-    // Filtro por telefone fixo (já vem normalizado sem formatação)
+    // Landline filter (already comes normalized without formatting)
     if (filters?.landlineNumber) {
       const landlineDigits = filters.landlineNumber.replace(/\D+/g, '')
       if (landlineDigits) {
@@ -174,7 +174,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       }
     }
 
-    // Filtro por WhatsApp
+    // WhatsApp filter
     if (filters?.isWhatsApp && filters.isWhatsApp !== 'all') {
       const isWhatsApp = filters.isWhatsApp === 'true'
       conditions.push(
@@ -185,7 +185,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       )
     }
 
-    // Filtro por data agendada
+    // Scheduled date filter
     if (filters?.scheduledDate) {
       const filterDate = new Date(filters.scheduledDate)
       const startOfDay = new Date(filterDate)
@@ -201,7 +201,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       )
     }
 
-    // Filtro por data de visita
+    // Visit date filter
     if (filters?.visitDate) {
       const filterDate = new Date(filters.visitDate)
       const startOfDay = new Date(filterDate)
@@ -217,25 +217,25 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       )
     }
 
-    // Filtro por valor mínimo total
+    // Minimum total value filter
     if (filters?.minTotalValue) {
       const minValue = Number(filters.minTotalValue)
       conditions.push(gte(paymentOrder.totalValue, minValue))
     }
 
-    // Filtro por valor máximo total
+    // Maximum total value filter
     if (filters?.maxTotalValue) {
       const maxValue = Number(filters.maxTotalValue)
       conditions.push(lte(paymentOrder.totalValue, maxValue))
     }
 
-    // Filtro por status de pagamento (isPaid)
+    // Payment status filter (isPaid)
     if (filters?.isPaid && filters.isPaid !== 'all') {
       const isPaid = filters.isPaid === 'true'
       conditions.push(eq(paymentOrder.isPaid, isPaid))
     }
 
-    // Filtro hasPayment
+    // hasPayment filter
     if (filters?.hasPayment && filters.hasPayment !== 'all') {
       if (filters.hasPayment === 'true') {
         conditions.push(isNotNull(workOrder.paymentOrderId))
@@ -244,7 +244,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       }
     }
 
-    // Filtro hasResult
+    // hasResult filter
     if (filters?.hasResult && filters.hasResult !== 'all') {
       if (filters.hasResult === 'true') {
         conditions.push(isNotNull(workOrder.resultId))
@@ -253,7 +253,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       }
     }
 
-    // Filtro isExpired
+    // isExpired filter
     if (filters?.isExpired && filters.isExpired !== 'all') {
       if (filters.isExpired === 'true') {
         conditions.push(eq(workOrder.status, WorkOrderStatus.EXPIRED))
@@ -262,7 +262,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       }
     }
 
-    // Filtro isCopied
+    // isCopied filter
     if (filters?.isCopied && filters.isCopied !== 'all') {
       if (filters.isCopied === 'true') {
         conditions.push(eq(workOrder.status, WorkOrderStatus.COPIED))
@@ -271,10 +271,10 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       }
     }
 
-    // Aplicar WHERE com todas as condições
+    // Apply WHERE with all conditions
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined
 
-    // Busca total de registros e registros da página em paralelo
+    // Fetch the total record count and the page's records in parallel
     const [rows, totalResult] = await Promise.all([
       db
         .select({
@@ -288,12 +288,12 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
         .leftJoin(paymentOrder, eq(workOrder.paymentOrderId, paymentOrder.id))
         .leftJoin(workOrderResult, eq(workOrder.resultId, workOrderResult.id))
         .where(whereClause)
-        // Ordem estável: sem ORDER BY o OFFSET pode repetir/pular OS entre páginas
+        // Stable order: without ORDER BY the OFFSET may repeat/skip work orders between pages
         .orderBy(desc(workOrder.scheduledDate), desc(workOrder.id))
         .limit(pageSize)
         .offset(offset),
-      // Os mesmos joins da consulta principal: os filtros de valor/pago usam
-      // colunas de payment_order e quebravam o COUNT sem esse join.
+      // The same joins as the main query: the value/paid filters use
+      // payment_order columns and broke the COUNT without this join.
       db
         .select({ count: count() })
         .from(workOrder)
@@ -317,7 +317,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
   async addWorkOrder(dto: WorkOrderInsertDTO): Promise<UUID> {
     const id = uuid.v4() as UUID
 
-    // Buscar customer
+    // Fetch the customer
     const [customerRow] = await db
       .select()
       .from(customer)
@@ -344,7 +344,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
     )
 
     const data = WorkOrderMapper.toPersistence(wo)
-    // Se caller passou paymentOrderId (Opção B), utilizar
+    // If the caller passed paymentOrderId (Option B), use it
     if ((dto as any).paymentOrderId) {
       data.paymentOrderId = (dto as any).paymentOrderId as string
     }
@@ -352,7 +352,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
     db.transaction((tx) => {
       tx.insert(workOrder).values(data).onConflictDoNothing().run()
 
-      // Inserir WorkOrderItems se fornecidos
+      // Insert WorkOrderItems if provided
       const products = (dto as any).products as WorkOrderItem[] | undefined
       if (products && products.length > 0) {
         const itemsData = products.map((item) =>
@@ -371,13 +371,13 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       throw new Error('A ordem de serviço não foi encontrada.')
     }
 
-    // OS encerrada não troca de cliente nem de data: isso reescreveria o
-    // histórico de visita/pagamento. Observações continuam editáveis.
+    // A closed work order does not change customer or date: that would rewrite the
+    // visit/payment history. Notes remain editable.
     const changesCustomer =
       !!dto.customerId && dto.customerId !== wo.customer.id
     const changesDate =
       !!dto.scheduledDate &&
-      // compara o dia no fuso do aparelho (o picker pode mudar só o horário)
+      // compares the day in the device timezone (the picker may change only the time)
       new Date(dto.scheduledDate).toDateString() !==
         wo.scheduledDate.toDateString()
     if ((changesCustomer || changesDate) && !isOpenStatus(wo.status)) {
@@ -386,7 +386,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       )
     }
 
-    // Atualizar customer se mudou
+    // Update customer if changed
     if (dto.customerId && dto.customerId !== wo.customer.id) {
       const [customerRow] = await db
         .select()
@@ -400,22 +400,22 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       wo.customer = CustomerMapper.toDomain(customerRow)
     }
 
-    // Atualizar data agendada
+    // Update the scheduled date
     if (dto.scheduledDate) {
       wo.scheduledDate = new Date(dto.scheduledDate)
     }
 
-    // Atualizar data de visita
+    // Update visit date
     if (dto.visitDate) {
       wo.visitDate = new Date(dto.visitDate)
     }
 
-    // Usar setStatus()
+    // Use setStatus()
     if (dto.status && dto.status !== wo.status) {
       wo.setStatus(dto.status)
     }
 
-    // Atualizar notas (string vazia limpa a observação; antes era ignorada)
+    // Update notes (an empty string clears the note; before it was ignored)
     if (dto.notes !== undefined) {
       wo.notes = dto.notes ?? undefined
     }
@@ -462,14 +462,14 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
     status: string,
     visitDate: Date
   ): Promise<void> {
-    // Antes aceitava qualquer string ('completed' minúsculo travava o itinerário)
+    // It used to accept any string (lowercase 'completed' locked the itinerary)
     const normalized = status.toUpperCase()
     if (!isKnownStatus(normalized)) {
       throw new Error(`Status de ordem de serviço inválido: ${status}`)
     }
     status = normalized
     db.transaction((tx) => {
-      // Atualizar a work order
+      // Update the work order
       tx.update(workOrder)
         .set({
           resultId,
@@ -480,7 +480,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
         .where(eq(workOrder.id, id))
         .run()
 
-      // Limpar isLate de todas as itinerary_work_orders desta work order
+      // Clear isLate on all itinerary_work_orders of this work order
       tx.update(itineraryWorkOrder)
         .set({ isLate: false })
         .where(eq(itineraryWorkOrder.workOrderId, id))
@@ -493,7 +493,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
     paymentOrderId: UUID
   ): Promise<void> {
     db.transaction((tx) => {
-      // Vincular paymentOrder à workOrder
+      // Link paymentOrder to workOrder
       tx.update(workOrder)
         .set({
           paymentOrderId,
@@ -502,7 +502,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
         .where(eq(workOrder.id, id))
         .run()
 
-      // Verificar se a ordem de pagamento está paga
+      // Check whether the payment order is paid
       const po = tx
         .select()
         .from(paymentOrder)
@@ -511,7 +511,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
         .all()
 
       if (po.length > 0 && po[0].isPaid) {
-        // Se já está paga, finalizar a work order
+        // If already paid, finish the work order
         PaymentService.finalizePayment(tx, paymentOrderId)
       }
     })
@@ -532,13 +532,13 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
     const woData = WorkOrderMapper.toPersistence(wo)
 
     db.transaction((tx) => {
-      // Salvar resultado primeiro
+      // Save the result first
       tx.insert(workOrderResult)
         .values(WorkOrderResultMapper.toPersistence(result))
         .onConflictDoNothing()
         .run()
 
-      // Salvar items do resultado
+      // Save the result items
       if (result.exchangedProducts) {
         for (const item of result.exchangedProducts) {
           tx.insert(workOrderResultItem)
@@ -587,7 +587,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
         }
       }
 
-      // Criar ou atualizar payment order, se aplicável
+      // Create or update the payment order, if applicable
       if (wo.paymentOrder) {
         const poData = PaymentOrderMapper.toPersistence(wo.paymentOrder)
         tx.update(paymentOrder)
@@ -610,7 +610,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
         woData.paymentOrderId = newPoId
       }
 
-      // Atualizar work order
+      // Update the work order
       tx.update(workOrder)
         .set({
           status: woData.status,
@@ -631,34 +631,34 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
 
     if (woRow) {
       db.transaction((tx) => {
-        // Deletar relacionamento com itinerários
+        // Delete the relationship with itineraries
         tx.delete(itineraryWorkOrder)
           .where(eq(itineraryWorkOrder.workOrderId, id))
           .run()
 
-        // Deletar items da work order
+        // Delete the work order items
         tx.delete(workOrderItem).where(eq(workOrderItem.workOrderId, id)).run()
 
-        // Deletar result items se existir result
+        // Delete result items if a result exists
         if (woRow.resultId) {
           tx.delete(workOrderResultItem)
             .where(eq(workOrderResultItem.resultId, woRow.resultId))
             .run()
 
-          // Deletar result
+          // Delete the result
           tx.delete(workOrderResult)
             .where(eq(workOrderResult.id, woRow.resultId))
             .run()
         }
 
-        // Deletar payment order se existir
+        // Delete the payment order if it exists
         if (woRow.paymentOrderId) {
           tx.delete(paymentOrder)
             .where(eq(paymentOrder.id, woRow.paymentOrderId))
             .run()
         }
 
-        // Finalmente, deletar work order
+        // Finally, delete the work order
         tx.delete(workOrder).where(eq(workOrder.id, id)).run()
       })
     }
@@ -729,7 +729,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
   }
 
   async getWorkOrdersByDate(date: Date): Promise<WorkOrder[]> {
-    // Normalizar data para início e fim do dia
+    // Normalize date to start and end of day
     const startOfDay = new Date(date)
     startOfDay.setHours(0, 0, 0, 0)
     const endOfDay = new Date(date)
@@ -777,13 +777,13 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       )
     }
 
-    // Marcar a ordem original como COPIED (EXPIRED, COMPLETED ou PARTIAL)
+    // Mark the original order as COPIED (EXPIRED, COMPLETED or PARTIAL)
     const shouldMarkAsCopied =
       original.status === WorkOrderStatus.EXPIRED ||
       original.status === WorkOrderStatus.COMPLETED ||
       original.status === WorkOrderStatus.PARTIAL
 
-    // Criar payment order se fornecido
+    // Create the payment order if provided
     let createdId: UUID | null = null
     db.transaction((tx) => {
       let paymentOrderId: UUID | null = null
@@ -809,8 +809,8 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
       const newWo = original.createFromResult(newScheduledDate, newPaymentOrder)
 
       const newWoData = WorkOrderMapper.toPersistence(newWo)
-      // createFromResult gera outro id para o pagamento; a OS precisa apontar
-      // para o que foi realmente inserido acima (antes ficava FK quebrada).
+      // createFromResult generates another id for the payment; the work order must point
+      // to the one actually inserted above (before, the FK was left broken).
       newWoData.paymentOrderId = paymentOrderId
 
       try {
@@ -820,8 +820,8 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
         throw new Error('Falha ao criar a nova ordem de serviço.')
       }
 
-      // inserir items (antes um `return` aqui pulava a marcação COPIED
-      // da OS original quando não havia produtos)
+      // insert items (before, a `return` here skipped marking the original work order
+      // as COPIED when there were no products)
       for (const item of newWo.products ?? []) {
         try {
           tx.insert(workOrderItem)
@@ -838,7 +838,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
         }
       }
 
-      // Marcar a ordem original como COPIED
+      // Mark the original order as COPIED
       if (shouldMarkAsCopied) {
         tx.update(workOrder)
           .set({ status: WorkOrderStatus.COPIED })
@@ -856,7 +856,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
     startDate: Date,
     endDate: Date
   ): Promise<WorkOrder[]> {
-    // Normalizar datas para início e fim do dia
+    // Normalize dates to start and end of day
     const startDateNormalized = new Date(startDate)
     startDateNormalized.setHours(0, 0, 0, 0)
     const endDateNormalized = new Date(endDate)
@@ -894,11 +894,11 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
   }
 
   // ---------------------------------------------------------------------------
-  // Casos de uso transacionais
+  // Transactional use cases
   //
-  // Antes cada tela encadeava 3 a 6 mutações independentes (OS, relatório,
-  // itens, vínculo, pagamento). Uma falha no meio deixava registros órfãos e o
-  // reenvio duplicava a OS. Aqui cada fluxo é uma transação só.
+  // Before, each screen chained 3 to 6 independent mutations (work order, report,
+  // items, link, payment). A failure midway left orphan records and the
+  // resubmit duplicated the work order. Here each flow is a single transaction.
   // ---------------------------------------------------------------------------
 
   private computeResultStatus(scheduledCount: number, result: ResultInput) {
@@ -943,7 +943,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
     if (rows.length > 0) tx.insert(workOrderResultItem).values(rows).run()
   }
 
-  /** Atualiza o total de um pagamento ainda não quitado. Pago não se mexe. */
+  /** Updates the total of a payment that is not yet settled. A paid one is left alone. */
   private syncUnpaidPayment(
     tx: AppTransaction,
     paymentOrderId: string | null,
@@ -959,7 +959,7 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
   }
 
   /**
-   * Cria a OS com itens agendados e, opcionalmente, relatório e pagamento.
+   * Creates the work order with scheduled items and, optionally, report and payment.
    */
   async addWorkOrderWithDetails(input: CreateWorkOrderInput): Promise<UUID> {
     const [customerRow] = await db
@@ -1048,9 +1048,9 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
   }
 
   /**
-   * Registra o relatório de visita de uma OS em aberto: grava relatório e
-   * itens, calcula o status, marca a visita, limpa o atraso no itinerário e
-   * atualiza o total de um pagamento ainda não quitado.
+   * Records the visit report of an open work order: saves report and
+   * items, computes the status, marks the visit, clears the itinerary lateness and
+   * updates the total of a payment that is not yet settled.
    */
   async addResultToWorkOrder(
     workOrderId: UUID,
@@ -1099,9 +1099,9 @@ export default class DrizzleWorkOrderRepository implements WorkOrderRepository {
   }
 
   /**
-   * Corrige os itens de um relatório existente (substitui todos de uma vez),
-   * recalcula total e status e sincroniza o pagamento não quitado.
-   * Bloqueado se o pagamento já foi quitado ou a OS já foi clonada.
+   * Fixes the items of an existing report (replaces all at once),
+   * recalculates total and status and syncs the unsettled payment.
+   * Blocked if the payment was already settled or the work order was already cloned.
    */
   async updateWorkOrderResultItems(
     resultId: UUID,

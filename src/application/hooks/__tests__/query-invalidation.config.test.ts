@@ -15,7 +15,7 @@ describe('getQueryKeysToInvalidate', () => {
         'itineraryWorkOrders',
       ])
     )
-    // Não transitivo: cliente não precisa refazer itens/resultados de OS
+    // Not transitive: customer does not need to refetch work order items/results
     expect(keys).not.toContain('workOrderItems')
     expect(keys).not.toContain('workOrderResults')
 

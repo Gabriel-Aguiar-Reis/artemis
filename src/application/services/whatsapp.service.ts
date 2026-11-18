@@ -19,22 +19,22 @@ export class WhatsAppService {
       throw new Error('O cliente não possui um número de telefone válido.')
     }
 
-    // Normaliza o número removendo código do país caso exista
-    // Garante que temos apenas DDD + número (sem o código 55)
+    // Normalizes the number by removing the country code if present
+    // Ensures we only have area code + number (without the 55 code)
     const phoneNumber = normalizePhoneBrazil(phone.value)
 
     // Monta a mensagem
     const message = this.buildWorkOrderMessage(workOrder, notifyVisit)
 
-    // Codifica a mensagem para URL
+    // Encodes the message for the URL
     const encodedMessage = encodeURIComponent(message)
 
-    // Monta o link do WhatsApp com código do país 55
+    // Builds the WhatsApp link with country code 55
     const whatsappUrl = `https://wa.me/55${phoneNumber}?text=${encodedMessage}`
 
-    // Abre o link
+    // Opens the link
     Linking.openURL(whatsappUrl).catch((err) => {
-      console.error('Erro:', err)
+      console.error('Error:', err)
       throw new Error('Falha ao abrir o WhatsApp')
     })
   }

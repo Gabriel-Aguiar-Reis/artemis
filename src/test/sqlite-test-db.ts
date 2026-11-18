@@ -1,27 +1,27 @@
 /**
- * Banco SQLite REAL para testes de integração dos repositórios.
+ * REAL SQLite database for repository integration tests.
  *
- * Usa `node:sqlite` por baixo de um client que imita a API síncrona do
- * expo-sqlite (prepareSync/executeSync/...), e o driver drizzle
- * `drizzle-orm/expo-sqlite` de verdade. Assim os testes exercitam o mesmo
- * caminho do app, inclusive a semântica de db.transaction (BEGIN/COMMIT
- * síncronos) que os mocks escondiam.
+ * Uses `node:sqlite` under a client that mimics the synchronous API of the real
+ * expo-sqlite (prepareSync/executeSync/...), and the drizzle driver
+ * `drizzle-orm/expo-sqlite`. This way the tests exercise the same
+ * path as the app, including the semantics of db.transaction (synchronous
+ * BEGIN/COMMIT) that the mocks hid.
  *
- * Uso num teste:
+ * Usage in a test:
  *   vi.mock('@/src/infra/db/drizzle/drizzle-client', async () =>
  *     (await import('@/src/test/sqlite-test-db')).drizzleClientMock()
  *   )
  */
 import * as schema from '@/src/infra/db/drizzle/schema'
-// Caminho do arquivo de propósito: o vitest.config tem alias de
-// 'drizzle-orm/expo-sqlite' para um mock, e aqui queremos o driver real.
+// File path on purpose: vitest.config aliases
+// 'drizzle-orm/expo-sqlite' to a mock, and here we want the real driver.
 import { readdirSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 import { drizzle } from '../../node_modules/drizzle-orm/expo-sqlite/driver.js'
 
-// node:sqlite via require: o bundler do vitest não conhece o esquema `node:`
-// para esse módulo ainda experimental.
+// node:sqlite via require: the vitest bundler does not know the `node:` scheme
+// for this still-experimental module.
 const { DatabaseSync } = createRequire(import.meta.url)('node:sqlite') as {
   DatabaseSync: new (file: string) => any
 }
@@ -94,13 +94,13 @@ function createTestDb() {
 
 let current: ReturnType<typeof createTestDb> | null = null
 
-/** Instância compartilhada pelo arquivo de teste (criada sob demanda). */
+/** Shared instance per test file (created on demand). */
 export function getTestDb() {
   if (!current) current = createTestDb()
   return current
 }
 
-/** Apaga todas as linhas (mantém o schema). Chamar no beforeEach. */
+/** Deletes all rows (keeps the schema). Call in beforeEach. */
 export function resetTestDb() {
   const { raw } = getTestDb()
   raw.exec('PRAGMA foreign_keys = OFF;')
@@ -113,7 +113,7 @@ export function resetTestDb() {
   raw.exec('PRAGMA foreign_keys = ON;')
 }
 
-/** Substituto do módulo drizzle-client para vi.mock. */
+/** Replacement for the drizzle-client module for vi.mock. */
 export function drizzleClientMock() {
   const { db } = getTestDb()
   return {
@@ -126,7 +126,7 @@ export function drizzleClientMock() {
   }
 }
 
-/** Conta linhas de uma tabela (atalho para asserções). */
+/** Counts rows of a table (shortcut for assertions). */
 export function countRows(table: string): number {
   const { raw } = getTestDb()
   return Number(

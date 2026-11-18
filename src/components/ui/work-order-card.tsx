@@ -54,16 +54,16 @@ function WorkOrderCardComponent({
 }: {
   wo: WorkOrder
   onPress?: () => void
-  /** Preferir este: callback estável recebe a OS (permite memoização) */
+  /** Prefer this one: a stable callback receives the work order (enables memoization) */
   onOptions?: (wo: WorkOrder) => void
   isLate?: boolean
 }) {
-  // Verificar condições
+  // Check conditions
   const hasResultNoPay = wo.result && !wo.paymentOrder
   const isExpired = wo.status === WorkOrderStatus.EXPIRED
   const isCopied = wo.status === WorkOrderStatus.COPIED
 
-  // Ordem de prioridade: CLONADA > S/ PGTO > EXPIRADA > ATRASADO
+  // Priority order: CLONADA > S/ PGTO > EXPIRADA > ATRASADO
   const getPriorityStatus = () => {
     if (isCopied) {
       return {
@@ -280,14 +280,14 @@ function WorkOrderCardComponent({
   )
 }
 
-// Memoização com comparador customizado para evitar re-renders desnecessários
+// Memoization with a custom comparator to avoid unnecessary re-renders
 export const WorkOrderCard = React.memo(
   WorkOrderCardComponent,
   (prevProps, nextProps) => {
-    // Retorna true se props são IGUAIS (não deve re-renderizar)
-    // Retorna false se props são DIFERENTES (deve re-renderizar)
+    // Returns true if props are EQUAL (must not re-render)
+    // Returns false if props are DIFFERENT (must re-render)
 
-    // Comparação básica
+    // Basic comparison
     if (
       prevProps.wo.id !== nextProps.wo.id ||
       prevProps.wo.status !== nextProps.wo.status ||
@@ -296,7 +296,7 @@ export const WorkOrderCard = React.memo(
       return false
     }
 
-    // Comparação de datas
+    // Date comparison
     if (
       prevProps.wo.scheduledDate.getTime() !==
       nextProps.wo.scheduledDate.getTime()
@@ -310,7 +310,7 @@ export const WorkOrderCard = React.memo(
       return false
     }
 
-    // Comparação de customer
+    // Customer comparison
     if (
       prevProps.wo.customer.storeName !== nextProps.wo.customer.storeName ||
       prevProps.wo.customer.contactName !== nextProps.wo.customer.contactName
@@ -318,7 +318,7 @@ export const WorkOrderCard = React.memo(
       return false
     }
 
-    // Comparação de endereço/telefones do cliente
+    // Customer address/phones comparison
     if (
       prevProps.wo.customer.phoneNumber?.value !==
         nextProps.wo.customer.phoneNumber?.value ||
@@ -332,7 +332,7 @@ export const WorkOrderCard = React.memo(
       return false
     }
 
-    // Comparação de payment order
+    // Payment order comparison
     const prevPayment = prevProps.wo.paymentOrder
     const nextPayment = nextProps.wo.paymentOrder
     if (
@@ -345,12 +345,12 @@ export const WorkOrderCard = React.memo(
       return false
     }
 
-    // Comparação de result
+    // Result comparison
     if (Boolean(prevProps.wo.result) !== Boolean(nextProps.wo.result)) {
       return false
     }
 
-    // Comparação de callbacks (referência)
+    // Callback comparison (reference)
     if (
       prevProps.onPress !== nextProps.onPress ||
       prevProps.onOptions !== nextProps.onOptions
@@ -358,7 +358,7 @@ export const WorkOrderCard = React.memo(
       return false
     }
 
-    // Se chegou aqui, props são iguais
+    // If we got here, props are equal
     return true
   }
 )

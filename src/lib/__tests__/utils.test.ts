@@ -192,12 +192,12 @@ describe('utils', () => {
     })
 
     it('should not remove 55 if result would be invalid length', () => {
-      // 5512345 tem 7 dígitos, se remover 55 fica com 5 (inválido)
+      // 5512345 has 7 digits, if 55 is removed it is left with 5 (invalid)
       expect(normalizePhoneBrazil('5512345')).toBe('5512345')
     })
 
     it('should handle 12-digit numbers starting with 55 as country code + landline', () => {
-      // 555678901234 = 12 dígitos → 55 (país) + 5678901234 (10 dígitos de fixo)
+      // 555678901234 = 12 digits → 55 (country) + 5678901234 (10 landline digits)
       expect(normalizePhoneBrazil('555678901234')).toBe('5678901234')
     })
   })

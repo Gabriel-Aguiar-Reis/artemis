@@ -25,11 +25,11 @@ export type ImportPlan = {
   categories: CategoryRow[]
   products: Array<ProductRow & { categoryId: string }>
   customers: CustomerRow[]
-  /** Categorias novas (nome -> id) criadas por este import */
+  /** New categories (name -> id) created by this import */
   newCategoryIds: Map<string, string>
   duplicates: RowIssue[]
   rejected: RowIssue[]
-  /** Linhas lidas por aba (sem cabeçalho / linhas vazias) */
+  /** Rows read per sheet (without header / empty rows) */
   totals: Record<ImportSheet, number>
 }
 
@@ -49,7 +49,7 @@ const SHEETS: ImportSheet[] = ['categorias', 'produtos', 'clientes']
 
 const yieldToUi = () => new Promise<void>((resolve) => setTimeout(resolve, 0))
 
-/** Lê o banco uma vez e valida/deduplica todas as linhas. Não grava nada. */
+/** Reads the database once and validates/deduplicates all rows. Writes nothing. */
 export async function prepareImport(rows: SheetRows): Promise<ImportPlan> {
   const [dbCategories, dbProducts, dbCustomers] = await Promise.all([
     db.select({ id: category.id, name: category.name }).from(category),
@@ -74,12 +74,12 @@ export async function prepareImport(rows: SheetRows): Promise<ImportPlan> {
     totals: { categorias: 0, produtos: 0, clientes: 0 },
   }
 
-  // nome normalizado -> id (banco + novas)
+  // normalized name -> id (database + new)
   const categoryIds = new Map<string, string>()
   for (const c of dbCategories) categoryIds.set(nameKey(c.name), c.id)
   const seenCategoryNames = new Set(categoryIds.keys())
 
-  // --- Categorias ---
+  // --- Categories ---
   const catRows = dataRows(rows.categorias ?? [])
   plan.totals.categorias = catRows.length
   for (const { row, line } of catRows) {
@@ -104,7 +104,7 @@ export async function prepareImport(rows: SheetRows): Promise<ImportPlan> {
     plan.categories.push(v.value)
   }
 
-  // --- Produtos ---
+  // --- Products ---
   const seenProducts = new Set(dbProducts.map((p) => nameKey(p.name)))
   const prodRows = dataRows(rows.produtos ?? [])
   plan.totals.produtos = prodRows.length
@@ -136,7 +136,7 @@ export async function prepareImport(rows: SheetRows): Promise<ImportPlan> {
     plan.products.push({ ...v.value, categoryId })
   }
 
-  // --- Clientes ---
+  // --- Customers ---
   const seenCustomers = new Set<string>()
   for (const c of dbCustomers) {
     for (const k of customerDedupeKeys(c)) seenCustomers.add(k)
@@ -170,9 +170,9 @@ export function planInsertCount(plan: ImportPlan): number {
 }
 
 /**
- * Insere um bloco numa transação (síncrona: no driver expo-sqlite o callback
- * de db.transaction precisa ser síncrono para o BEGIN/COMMIT valer). Se o bloco falhar, tenta linha a linha para
- * isolar a(s) linha(s) problemática(s) e devolvê-las como rejeitadas.
+ * Inserts a chunk in a transaction (synchronous: in the expo-sqlite driver the callback
+ * of db.transaction must be synchronous for BEGIN/COMMIT to hold). If the chunk fails, retries row by row to
+ * isolate the problematic row(s) and return them as rejected.
  */
 async function insertChunk<T extends { line: number }>(
   sheet: ImportSheet,
@@ -209,7 +209,7 @@ async function insertChunk<T extends { line: number }>(
   }
 }
 
-/** Grava o plano em blocos de ~200, cedendo a thread entre eles. */
+/** Writes the plan in chunks of ~200, yielding the thread between them. */
 export async function executeImport(
   plan: ImportPlan,
   onProgress?: (
@@ -261,7 +261,7 @@ export async function executeImport(
     (tx, values) => tx.insert(category).values(values).run()
   )
 
-  // Produtos só entram se a categoria nova foi de fato gravada
+  // Products only go in if the new category was actually written
   let products = plan.products
   if (plan.newCategoryIds.size > 0) {
     const present = new Set(

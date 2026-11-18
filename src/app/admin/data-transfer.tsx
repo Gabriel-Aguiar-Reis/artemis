@@ -65,17 +65,17 @@ export default function DataTransferScreen() {
   const invalidate = useInvalidateQueries()
   const isImporting = phase !== 'idle'
 
-  // Função para copiar asset para cache e compartilhar
+  // Function to copy the asset to cache and share it
 
   const handleExport = async () => {
     setIsExporting(true)
     try {
       const asset = require('../../assets/template-app-preenchimento.xlsx')
 
-      // 1) Copia o asset para um caminho acessível (cache do app)
+      // 1) Copy the asset to an accessible path (app cache)
       const localPath = await copyAssetToCacheAsync(asset)
 
-      // 2) Compartilhar para que o usuário escolha onde salvar/abrir
+      // 2) Share so the user can choose where to save/open
       await shareFileAsync(localPath)
 
       Toast.show({
@@ -94,7 +94,7 @@ export default function DataTransferScreen() {
     }
   }
 
-  // 1) Seleciona o arquivo, lê a planilha, valida e deduplica (sem gravar)
+  // 1) Pick the file, read the spreadsheet, validate and deduplicate (without writing)
   const handleImport = async () => {
     setPhase('analyzing')
     try {
@@ -134,7 +134,7 @@ export default function DataTransferScreen() {
       setPlanSummary(plan)
 
       if (planInsertCount(plan) === 0) {
-        // Nada para inserir: mostra direto o relatório
+        // Nothing to insert: show the report directly
         setReport({
           inserted: { categorias: 0, produtos: 0, clientes: 0 },
           duplicates: plan.duplicates,
@@ -157,7 +157,7 @@ export default function DataTransferScreen() {
     }
   }
 
-  // 2) Usuário confirmou: grava em lotes com progresso
+  // 2) User confirmed: write in batches with progress
   const handleConfirmImport = async () => {
     const plan = planRef.current
     if (!plan) return
@@ -175,7 +175,7 @@ export default function DataTransferScreen() {
           total: p.overallTotal,
         })
       })
-      // Uma única invalidação ao final
+      // A single invalidation at the end
       invalidate(['categories', 'products', 'customers'])
       setReport(finalReport)
     } catch (error) {
@@ -221,7 +221,7 @@ export default function DataTransferScreen() {
             </AlertDescription>
           </Alert>
 
-          {/* Exportar Dados */}
+          {/* Export data */}
           <View className="gap-3">
             <Text variant="h4">Baixar Template</Text>
             <Text className="text-muted-foreground">
@@ -293,7 +293,7 @@ export default function DataTransferScreen() {
             </Button>
           </View>
 
-          {/* Importar Dados */}
+          {/* Import data */}
           <View className="gap-3">
             <Text variant="h4">Importar Dados</Text>
             <Text className="text-muted-foreground">
@@ -340,7 +340,7 @@ export default function DataTransferScreen() {
             </Button>
           </View>
 
-          {/* Informações Adicionais */}
+          {/* Additional information */}
           <View className="gap-2 p-3 bg-blue-50 dark:bg-blue-950 rounded-md border border-blue-200 dark:border-blue-800">
             <View className="flex-row gap-2 items-center">
               <Icon as={FileSpreadsheet} size={20} className="text-blue-600" />
@@ -366,7 +366,7 @@ export default function DataTransferScreen() {
           </View>
         </View>
       </ScrollView>
-      {/* Confirmação antes de gravar */}
+      {/* Confirmation before saving */}
       <AlertDialog
         open={phase === 'confirming'}
         onOpenChange={(open) => {
@@ -394,7 +394,7 @@ export default function DataTransferScreen() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Progresso (bloqueia a tela durante a gravação) */}
+      {/* Progress (blocks the screen while saving) */}
       <AlertDialog open={phase === 'importing'}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -411,7 +411,7 @@ export default function DataTransferScreen() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Relatório final */}
+      {/* Final report */}
       <AlertDialog
         open={report !== null}
         onOpenChange={(open) => {

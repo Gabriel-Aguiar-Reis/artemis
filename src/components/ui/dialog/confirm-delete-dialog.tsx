@@ -16,9 +16,9 @@ import { ActivityIndicator } from 'react-native'
 type ConfirmDeleteDialogProps = {
   children?: ReactNode
   title: string
-  /** Texto extra de alerta (ex.: OS já paga). */
+  /** Extra warning text (e.g. work order already paid). */
   warning?: string
-  /** Pode ser async: o botão fica desabilitado enquanto isPending. */
+  /** Can be async: the button stays disabled while isPending. */
   handleDelete: () => void | Promise<unknown>
   isPending?: boolean
   open?: boolean
@@ -38,7 +38,7 @@ export const ConfirmDeleteDialog = ({
     <AlertDialog
       open={open}
       onOpenChange={(next) => {
-        // Não permite fechar enquanto a exclusão está em andamento
+        // Do not allow closing while deletion is in progress
         if (isPending && !next) return
         onOpenChange?.(next)
       }}
@@ -56,8 +56,8 @@ export const ConfirmDeleteDialog = ({
           <AlertDialogCancel disabled={isPending}>
             <Text>Cancelar</Text>
           </AlertDialogCancel>
-          {/* Button comum (não o Action do primitive) para o dialog só fechar
-              quando o chamador decidir, após o resultado da exclusão. */}
+          {/* Plain Button (not the primitive's Action) so the dialog only closes
+              when the caller decides, after the deletion result. */}
           <Button
             variant="destructive"
             onPress={() => {

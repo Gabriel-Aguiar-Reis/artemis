@@ -5,7 +5,7 @@ const SECRET_KEY = '73616E746F73657874696E746F726573'
 const ADMIN_PASSWORD = 'sK9!vQ3#nT7@xL2%'
 
 /**
- * Gera um código único de 6 caracteres
+ * Generates a unique 6-character code
  */
 export function generateUniqueCode(): string {
   return String(uuid.v4()).replace(/-/g, '').slice(0, 6).toUpperCase()
@@ -22,7 +22,7 @@ export function formatDateForLicense(date: Date = new Date()): string {
 }
 
 /**
- * Combina código único e data no formato: CODIGO-DDMMYY
+ * Combines unique code and date in the format: CODE-DDMMYY
  */
 export function generateUserActivationCode(uniqueCode: string): string {
   const dateStr = formatDateForLicense()
@@ -30,9 +30,9 @@ export function generateUserActivationCode(uniqueCode: string): string {
 }
 
 /**
- * Gera o hash de licença baseado no código único e data de bloqueio
- * @param uniqueCode Código único do dispositivo
- * @param blockDate Data de bloqueio no formato YYYY-MM-DD
+ * Generates the license hash based on the unique code and block date
+ * @param uniqueCode Device's unique code
+ * @param blockDate Block date in YYYY-MM-DD format
  */
 export async function generateLicenseHash(
   uniqueCode: string,
@@ -47,10 +47,10 @@ export async function generateLicenseHash(
 }
 
 /**
- * Valida se um código de licença é válido
- * @param inputCode Código inserido pelo usuário
- * @param uniqueCode Código único do dispositivo
- * @param currentExpirationDate Data de expiração atual
+ * Checks whether a license code is valid
+ * @param inputCode Code entered by the user
+ * @param uniqueCode Device's unique code
+ * @param currentExpirationDate Current expiration date
  * @returns { valid: boolean, isAdmin: boolean, newExpirationDate: Date | null }
  */
 export async function validateLicenseCode(
@@ -62,9 +62,9 @@ export async function validateLicenseCode(
   isAdmin: boolean
   newExpirationDate: Date | null
 }> {
-  // Verificar se é senha de admin
+  // Check whether it is the admin password
   if (inputCode === ADMIN_PASSWORD) {
-    // Admin: licença vitalícia (até 2150)
+    // Admin: lifetime license (until 2150)
     const adminExpiration = new Date('2150-01-01')
     return {
       valid: true,
@@ -73,12 +73,12 @@ export async function validateLicenseCode(
     }
   }
 
-  // Calcular a data de bloqueio esperada (90 dias a partir da data atual de expiração)
+  // Compute the expected block date (90 days after the current expiration date)
   const newExpiration = new Date(currentExpirationDate)
   newExpiration.setDate(newExpiration.getDate() + 90)
   const blockDate = newExpiration.toISOString().split('T')[0]
 
-  // Gerar hash esperado
+  // Generate the expected hash
   const expectedHash = await generateLicenseHash(uniqueCode, blockDate)
 
   if (inputCode === expectedHash) {
@@ -97,24 +97,24 @@ export async function validateLicenseCode(
 }
 
 /**
- * Gera um código de licença para um usuário (usado pelo admin)
- * @param userUniqueCode Código único fornecido pelo usuário
- * @param userBlockDateStr Data de bloqueio do usuário no formato DDMMYY
- * @returns Código de licença para enviar ao usuário
+ * Generates a license code for a user (used by the admin)
+ * @param userUniqueCode Unique code provided by the user
+ * @param userBlockDateStr User's block date in DDMMYY format
+ * @returns License code to send to the user
  */
 export async function generateLicenseCodeForUser(
   userUniqueCode: string,
   userBlockDateStr: string
 ): Promise<string> {
-  // Converter DDMMYY para YYYY-MM-DD
+  // Convert DDMMYY to YYYY-MM-DD
   const day = userBlockDateStr.slice(0, 2)
   const month = userBlockDateStr.slice(2, 4)
   const year = '20' + userBlockDateStr.slice(4, 6)
 
-  // Data atual do usuário
+  // User's current date
   const userCurrentDate = new Date(`${year}-${month}-${day}`)
 
-  // Adicionar 90 dias
+  // Add 90 days
   const newExpiration = new Date(userCurrentDate)
   newExpiration.setDate(newExpiration.getDate() + 90)
   const blockDate = newExpiration.toISOString().split('T')[0]

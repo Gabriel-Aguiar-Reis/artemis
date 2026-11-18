@@ -1,8 +1,8 @@
 /**
- * Configuração centralizada de invalidação de queries do TanStack Query
+ * Centralized TanStack Query invalidation configuration
  *
- * Este arquivo mapeia as dependências entre entidades para garantir que
- * quando uma entidade é modificada, todas as queries relacionadas sejam invalidadas.
+ * This file maps dependencies between entities to ensure that
+ * when an entity is modified, all related queries are invalidated.
  */
 
 export type QueryKey =
@@ -20,17 +20,17 @@ export type QueryKey =
   | 'errorLogs'
 
 /**
- * Mapa de dependências DIRETAS: quando uma query key é modificada, quais
- * outras queries precisam ser invalidadas. NÃO é transitivo: cada lista já
- * contém tudo o que realmente embute os dados alterados (ver
- * docs/QUERY_INVALIDATION.md). Itinerários e ordens carregam nome do cliente,
- * itens e nomes de produto no próprio join, por isso aparecem nas listas.
+ * Map of DIRECT dependencies: when a query key is modified, which
+ * other queries must be invalidated. NOT transitive: each list already
+ * contains everything that actually embeds the changed data (see
+ * docs/QUERY_INVALIDATION.md). Itineraries and orders carry the customer name,
+ * items and product names in their own join, which is why they appear in the lists.
  */
 export const QUERY_DEPENDENCIES: Record<QueryKey, QueryKey[]> = {
-  // OS e itinerário exibem nome/endereço/telefone do cliente
+  // Work orders and itineraries show the customer's name/address/phone
   customers: ['workOrders', 'itineraries', 'itineraryWorkOrders'],
 
-  // Escrita de OS toca itinerários, itens e resultados
+  // Writing a work order touches itineraries, items and results
   workOrders: [
     'paymentOrders',
     'itineraries',
@@ -46,7 +46,7 @@ export const QUERY_DEPENDENCIES: Record<QueryKey, QueryKey[]> = {
 
   itineraryWorkOrders: ['itineraries', 'workOrders'],
 
-  // Itens de OS/resultado exibem nome do produto
+  // Work order/result items show the product name
   products: [
     'workOrders',
     'itineraries',
@@ -55,10 +55,10 @@ export const QUERY_DEPENDENCIES: Record<QueryKey, QueryKey[]> = {
     'workOrderResultItems',
   ],
 
-  // Error logs não dependem de nenhuma outra entidade
+  // Error logs do not depend on any other entity
   errorLogs: [],
 
-  // Só a lista de produtos mostra o nome da categoria
+  // Only the product list shows the category name
   categories: ['products'],
 
   paymentOrders: ['workOrders', 'itineraries'],
@@ -71,8 +71,8 @@ export const QUERY_DEPENDENCIES: Record<QueryKey, QueryKey[]> = {
 }
 
 /**
- * Retorna a própria key mais suas dependências diretas (sem fecho transitivo,
- * sem duplicatas).
+ * Returns the key itself plus its direct dependencies (no transitive closure,
+ * no duplicates).
  */
 export function getQueryKeysToInvalidate(key: QueryKey): QueryKey[] {
   return Array.from(

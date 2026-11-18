@@ -109,7 +109,7 @@ export default function RenewLicenseScreen() {
             </Text>
           </View>
 
-          {/* Status atual */}
+          {/* Current status */}
           <View className="p-4 bg-blue-50 dark:bg-blue-950 border border-blue-600 rounded-lg gap-3">
             <View className="flex-row items-center gap-2">
               <Icon as={CalendarClock} size={20} className="text-blue-600" />
@@ -127,7 +127,7 @@ export default function RenewLicenseScreen() {
             </View>
           </View>
 
-          {/* Código de ativação */}
+          {/* Activation code */}
           <View className="gap-3">
             <View className="gap-2">
               <Text className="font-semibold text-lg">
@@ -156,7 +156,7 @@ export default function RenewLicenseScreen() {
             </Text>
           </View>
 
-          {/* Campo de entrada */}
+          {/* Input field */}
           <View className="gap-3">
             <View className="gap-2">
               <Text className="font-semibold text-lg">
@@ -180,7 +180,7 @@ export default function RenewLicenseScreen() {
             {error && <Text className="text-sm text-destructive">{error}</Text>}
           </View>
 
-          {/* Botões de ação */}
+          {/* Action buttons */}
           <View className="gap-3">
             <Button
               onPress={handleActivate}
@@ -216,7 +216,7 @@ export default function RenewLicenseScreen() {
             </View>
           </View>
 
-          {/* Informações */}
+          {/* Information */}
           <View className="gap-3 p-4 bg-muted rounded-lg">
             <Text className="font-semibold">Como funciona:</Text>
             <View className="gap-2">

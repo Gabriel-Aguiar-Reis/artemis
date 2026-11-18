@@ -71,7 +71,7 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
   ): Promise<PaginatedCustomers> {
     const offset = (page - 1) * pageSize
 
-    // Construir condições de filtro dinamicamente
+    // Build filter conditions dynamically
     const conditions = []
 
     if (filters?.search) {
@@ -88,7 +88,7 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
     }
 
     if (filters?.phoneNumber) {
-      // Remove formatação antes de buscar
+      // Strip formatting before searching
       const phoneDigits = filters.phoneNumber.replace(/\D+/g, '')
       if (phoneDigits) {
         conditions.push(like(customer.phoneNumber, `%${phoneDigits}%`))
@@ -96,7 +96,7 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
     }
 
     if (filters?.landlineNumber) {
-      // Remove formatação antes de buscar
+      // Strip formatting before searching
       const landlineDigits = filters.landlineNumber.replace(/\D+/g, '')
       if (landlineDigits) {
         conditions.push(like(customer.landlineNumber, `%${landlineDigits}%`))
@@ -113,16 +113,16 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
       )
     }
 
-    // Aplicar WHERE com todas as condições
+    // Apply WHERE with all conditions
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined
 
-    // Busca total de registros e registros da página em paralelo
+    // Fetch the total record count and the page's records in parallel
     const [rows, totalResult] = await Promise.all([
       db
         .select()
         .from(customer)
         .where(whereClause)
-        // Ordem estável: sem ORDER BY o OFFSET pode repetir/pular itens
+        // Stable order: without ORDER BY the OFFSET may repeat/skip items
         .orderBy(asc(customer.storeName), asc(customer.id))
         .limit(pageSize)
         .offset(offset),

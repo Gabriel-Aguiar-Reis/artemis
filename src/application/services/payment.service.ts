@@ -21,18 +21,18 @@ export type AppTransaction = SQLiteTransaction<
 
 export class PaymentService {
   /**
-   * Chamado quando um pagamento é vinculado ou atualizado.
+   * Called when a payment is linked or updated.
    *
-   * Pagamento quitado não decide sozinho o status da OS (antes forçava
-   * COMPLETED, apagando PARTIAL/FAILED e "desclonando" OS COPIED):
-   * - OS em status final: nada muda
-   * - OS em aberto com relatório: recebe o status calculado do relatório
-   * - OS em aberto sem relatório: nada muda (pagamento antecipado)
+   * A settled payment does not decide the work order status on its own (it used to force
+   * COMPLETED, wiping PARTIAL/FAILED and "un-cloning" COPIED work orders):
+   * - work order in a final status: nothing changes
+   * - open work order with report: receives the status computed from the report
+   * - open work order without report: nothing changes (advance payment)
    *
-   * Retorna o status final da OS.
+   * Returns the work order's final status.
    */
-  // Síncrono de propósito: roda dentro de db.transaction, que no driver
-  // expo-sqlite só é atômica com chamadas síncronas (.all/.run).
+  // Synchronous on purpose: runs inside db.transaction, which in the
+  // expo-sqlite driver is only atomic with synchronous calls (.all/.run).
   static finalizePayment(
     tx: AppTransaction,
     paymentOrderId: string

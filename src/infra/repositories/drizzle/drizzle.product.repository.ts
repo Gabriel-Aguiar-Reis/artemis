@@ -36,41 +36,41 @@ export default class DrizzleProductRepository implements ProductRepository {
   async getProductsWithCategory(
     filters?: ProductFilters
   ): Promise<ProductWithCategoryDTO[]> {
-    // Construir condições de filtro dinamicamente
+    // Build filter conditions dynamically
     const conditions = []
 
-    // Filtro de busca por nome
+    // Name search filter
     if (filters?.search) {
       conditions.push(containsFolded(product.name, filters.search))
     }
 
-    // Filtro por nome da categoria
+    // Category name filter
     if (filters?.categoryName) {
       conditions.push(containsFolded(category.name, filters.categoryName))
     }
 
-    // Filtro por validade
+    // Expiration filter
     if (filters?.expiration) {
       conditions.push(like(product.expiration, `%${filters.expiration}%`))
     }
 
-    // Filtro por preço mínimo
+    // Minimum price filter
     if (filters?.salePriceMin) {
       conditions.push(gte(product.salePrice, Number(filters.salePriceMin)))
     }
 
-    // Filtro por preço máximo
+    // Maximum price filter
     if (filters?.salePriceMax) {
       conditions.push(lte(product.salePrice, Number(filters.salePriceMax)))
     }
 
-    // Filtro por status
+    // Status filter
     if (filters?.status && filters.status !== 'all') {
       const isActive = filters.status === 'active'
       conditions.push(eq(product.isActive, isActive))
     }
 
-    // Aplicar WHERE com todas as condições
+    // Apply WHERE with all conditions
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined
 
     const rows = await db

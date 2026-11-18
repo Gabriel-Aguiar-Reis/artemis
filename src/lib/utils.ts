@@ -30,32 +30,32 @@ export function getErrorMessage(err: unknown): string | undefined {
 }
 
 /**
- * Normaliza um número de telefone brasileiro removendo o código do país (55) se presente.
- * Aceita números nos formatos:
- * - Com código do país: 5512981234567 (celular) ou 551234567890 (fixo)
- * - Sem código do país: 12981234567 (celular) ou 1234567890 (fixo)
- * - Com formatação: (12) 98123-4567, +55 12 98123-4567, etc.
+ * Normalizes a Brazilian phone number by removing the country code (55) if present.
+ * Accepts numbers in the formats:
+ * - With country code: 5512981234567 (mobile) or 551234567890 (landline)
+ * - Without country code: 12981234567 (mobile) or 1234567890 (landline)
+ * - With formatting: (12) 98123-4567, +55 12 98123-4567, etc.
  *
- * @param raw - Número de telefone em qualquer formato
- * @returns Número normalizado contendo apenas DDD + número (sem código do país)
+ * @param raw - Phone number in any format
+ * @returns Normalized number containing only area code + number (without country code)
  */
 export function normalizePhoneBrazil(raw?: string): string {
   if (!raw) return ''
 
-  // Remove todos os caracteres não numéricos
+  // Remove all non-numeric characters
   const digitsOnly = raw.replace(/\D/g, '')
 
-  // Se começar com 55 e tiver 13 dígitos (celular) ou 12 dígitos (fixo), remove o código do país
+  // If it starts with 55 and has 13 digits (mobile) or 12 digits (landline), remove the country code
   if (digitsOnly.startsWith('55')) {
     const withoutCountryCode = digitsOnly.slice(2)
-    // Celular tem 11 dígitos (DDD 2 dígitos + 9 dígitos)
-    // Fixo tem 10 dígitos (DDD 2 dígitos + 8 dígitos)
+    // Mobile has 11 digits (2-digit area code + 9 digits)
+    // Landline has 10 digits (2-digit area code + 8 digits)
     if (withoutCountryCode.length === 11 || withoutCountryCode.length === 10) {
       return withoutCountryCode
     }
   }
 
-  // Retorna o número como está (apenas dígitos)
+  // Return the number as is (digits only)
   return digitsOnly
 }
 

@@ -20,8 +20,8 @@ export const workOrderHooks = {
   ),
 
   /**
-   * Hook customizado para adicionar work order
-   * Automaticamente adiciona ao itinerário ativo se a data estiver no período
+   * Custom hook to add a work order
+   * Automatically adds it to the active itinerary if the date is within the period
    */
   useAddWorkOrderWithItinerary: () => {
     const invalidateQueries = useInvalidateQueries()
@@ -29,17 +29,17 @@ export const workOrderHooks = {
 
     return useMutation({
       mutationFn: async (data: WorkOrderInsertDTO) => {
-        // Adicionar a work order
+        // Add the work order
         const id = await workOrderRepo.addWorkOrder(data)
 
-        // Buscar a work order criada para ter o objeto completo
+        // Fetch the created work order to get the full object
         const wo = await workOrderRepo.getWorkOrder(id)
 
         if (!wo) {
           throw new Error('Work order criada mas não encontrada')
         }
 
-        // Se já houver resultado, nunca adicionar ao itinerário
+        // If it already has a result, never add to the itinerary
         if (wo.result) {
           return {
             workOrder: wo,
@@ -50,7 +50,7 @@ export const workOrderHooks = {
           }
         }
 
-        // Permitir que o caller previna a adição automática ao itinerário
+        // Allow the caller to prevent the automatic addition to the itinerary
         const preventAutoAdd = (data as any).preventItineraryAutoAdd === true
         if (preventAutoAdd) {
           return {
@@ -61,18 +61,18 @@ export const workOrderHooks = {
             },
           }
         }
-        // Tentar adicionar ao itinerário automaticamente
+        // Try to add to the itinerary automatically
         const result = await autoAddToItinerary(wo)
 
         return { workOrder: wo, itineraryResult: result }
       },
       onSuccess: (data) => {
-        // Invalidar queries
+        // Invalidate queries
         invalidateQueries('workOrders')
         invalidateQueries('itineraries')
         invalidateQueries('itineraryWorkOrders')
 
-        // Mostrar toast apropriado
+        // Show the appropriate toast
         if (data.itineraryResult.added) {
           Toast.show({
             type: 'success',
@@ -96,8 +96,8 @@ export const workOrderHooks = {
   },
 
   /**
-   * Clona uma work order finalizada/partial e tenta adicionar ao itinerário ativo
-   * se a nova data estiver dentro do período.
+   * Clones a finished/partial work order and tries to add it to the active itinerary
+   * if the new date is within the period.
    */
   useCloneWorkOrderWithItinerary: () => {
     const invalidateQueries = useInvalidateQueries()
@@ -110,18 +110,18 @@ export const workOrderHooks = {
         Date,
         any?,
       ]) => {
-        // Clonar na base e obter o ID da nova ordem
+        // Clone in the database and get the new order's ID
         const newId = await workOrderRepo.addCreateFromFinished(
           originalId,
           newScheduledDate,
           newPaymentOrder
         )
 
-        // Buscar a nova work order completa
+        // Fetch the full new work order
         const newWo = await workOrderRepo.getWorkOrder(newId)
         if (!newWo) throw new Error('Nova ordem clonada não encontrada.')
 
-        // Tentar auto-adicionar ao itinerário ativo
+        // Try to auto-add to the active itinerary
         const itineraryResult = await autoAddToItinerary(newWo)
 
         return { workOrder: newWo, itineraryResult }
@@ -153,12 +153,12 @@ export const workOrderHooks = {
     })
   },
 
-  /** Leitura avulsa (fora de hook), para ações pontuais como o WhatsApp. */
+  /** Standalone read (outside a hook), for one-off actions such as WhatsApp. */
   getWorkOrderById: (id: UUID) => workOrderRepo.getWorkOrder(id),
 
   /**
-   * Cria a OS completa (itens + relatório + pagamento) numa transação só e,
-   * se ainda estiver em aberto, tenta incluí-la no itinerário ativo.
+   * Creates the full work order (items + report + payment) in a single transaction and,
+   * if it is still open, tries to include it in the active itinerary.
    */
   useCreateWorkOrderWithDetails: () => {
     const invalidateQueries = useInvalidateQueries()
@@ -197,7 +197,7 @@ export const workOrderHooks = {
     })
   },
 
-  /** Registra o relatório de visita de uma OS em aberto (transacional). */
+  /** Records the visit report of an open work order (transactional). */
   useSaveWorkOrderResult: () => {
     const invalidateQueries = useInvalidateQueries()
     return useMutation({
@@ -225,7 +225,7 @@ export const workOrderHooks = {
     })
   },
 
-  /** Corrige os itens de um relatório existente (transacional). */
+  /** Fixes the items of an existing report (transactional). */
   useUpdateWorkOrderResult: () => {
     const invalidateQueries = useInvalidateQueries()
     return useMutation({

@@ -385,7 +385,7 @@ describe('dump.service', () => {
 
   it('importDumpFromPickedFile reads disk and inserts missing rows', async () => {
     seedExistingRows()
-    // o aparelho ainda não tem licença: a do backup pode entrar
+    // the device has no license yet: the backup's can come in
     setTableRows(license, [])
     const fileUri = 'file://dump.json'
     fileContents.set(fileUri, JSON.stringify(sampleDump))

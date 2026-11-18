@@ -109,7 +109,7 @@ describe('drizzle-client', () => {
       .mockImplementation(() => undefined)
 
     const module = await import('@/src/infra/db/drizzle/drizzle-client')
-    // Abre antes de preparar o erro: a abertura também executa PRAGMAs (WAL)
+    // Opens before preparing the error: opening also runs PRAGMAs (WAL)
     module.getExpoDb()
     execSyncMock.mockImplementationOnce(() => {
       throw error
@@ -208,7 +208,7 @@ describe('drizzle-client', () => {
 
     const result = await module.deleteDatabaseAndReset()
 
-    // O require dinâmico pode falhar, verificamos que loga erro
+    // The dynamic require may fail, we check that an error is logged
     expect(consoleErrorSpy).toHaveBeenCalled()
     expect(result).toBe(false)
   })

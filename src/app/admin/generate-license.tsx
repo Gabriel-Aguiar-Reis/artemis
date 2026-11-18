@@ -23,7 +23,7 @@ export default function GenerateLicenseScreen() {
       return
     }
 
-    // Validar formato do código (XXXXXX-DDMMYY)
+    // Validate the code format (XXXXXX-DDMMYY)
     const codePattern = /^[A-Z0-9]{6}-\d{6}$/
     if (!codePattern.test(userCode.trim())) {
       setError('Formato inválido. Use: XXXXXX-DDMMYY')

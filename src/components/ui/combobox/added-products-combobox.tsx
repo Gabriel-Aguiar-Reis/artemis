@@ -123,7 +123,7 @@ export function AddedProductsCombobox({
       <View className="min-h-[140px]">
         <Pressable
           onPress={() => {
-            // Só adiciona o produto se não estiver selecionado
+            // Only add the product if it is not selected
             if (!selected) {
               toggleProduct(item)
             }
@@ -194,7 +194,7 @@ export function AddedProductsCombobox({
             )}
           </View>
 
-          {/* Controle de quantidade */}
+          {/* Quantity control */}
           {selected && (
             <View className="flex-row items-center gap-3 mt-3 pt-3 border-t border-border">
               <Text className="text-sm font-medium">Qte:</Text>

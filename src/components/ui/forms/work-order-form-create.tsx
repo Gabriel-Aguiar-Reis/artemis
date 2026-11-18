@@ -94,7 +94,7 @@ function WorkOrderFormCreateComponent<T extends FieldValues>(
     else onSubmit()
   }
 
-  // Expõe métodos para uso externo via ref
+  // Exposes methods for external use via ref
   useImperativeHandle(ref, () => ({
     goToNextStep: () => {
       if (currentStep < totalSteps - 1) setCurrentStep((s) => s + 1)
@@ -156,7 +156,7 @@ function WorkOrderFormCreateComponent<T extends FieldValues>(
           </Text>
         )}
 
-        {/* Renderização customizada se fornecida */}
+        {/* Custom rendering if provided */}
         {step?.customRenderer
           ? step.customRenderer()
           : /* Renderização padrão dos campos */
@@ -238,7 +238,7 @@ function WorkOrderFormCreateComponent<T extends FieldValues>(
   )
 }
 
-// Export com forwardRef para suportar refs
+// Export with forwardRef to support refs
 export const WorkOrderFormCreate = forwardRef(WorkOrderFormCreateComponent) as <
   T extends FieldValues,
 >(

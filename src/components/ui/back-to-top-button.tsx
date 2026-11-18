@@ -11,8 +11,8 @@ import {
 const DEFAULT_THRESHOLD = 400
 
 /**
- * Controla a visibilidade do botão "voltar ao topo" para uma lista.
- * O estado só muda quando o booleano muda (não a cada frame de rolagem).
+ * Controls the visibility of the "back to top" button for a list.
+ * The state only changes when the boolean changes (not on every scroll frame).
  */
 export function useBackToTop<T = any>(threshold = DEFAULT_THRESHOLD) {
   const listRef = useRef<T>(null)
@@ -34,7 +34,7 @@ export function useBackToTop<T = any>(threshold = DEFAULT_THRESHOLD) {
 }
 
 type BackToTopButtonProps = {
-  /** Ref de FlashList/FlatList (scrollToOffset) ou ScrollView (scrollTo) */
+  /** Ref of a FlashList/FlatList (scrollToOffset) or ScrollView (scrollTo) */
   scrollRef?: React.RefObject<any>
   onPress?: () => void
   isVisible: boolean

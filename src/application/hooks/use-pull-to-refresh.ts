@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react'
 
 /**
- * Estado de pull-to-refresh para listas. `refreshing` só fica true durante o
- * gesto do usuário (não em refetchs de fundo causados por invalidação).
+ * Pull-to-refresh state for lists. `refreshing` is only true during the
+ * user's gesture (not during background refetches caused by invalidation).
  */
 export function usePullToRefresh(refetch: () => Promise<unknown>) {
   const [refreshing, setRefreshing] = useState(false)

@@ -127,7 +127,7 @@ export function ProductCombobox({
       <View className="min-h-[140px]">
         <Pressable
           onPress={() => {
-            // Só seleciona se não estiver selecionado
+            // Only select if it is not selected
             if (!selected) toggleProduct(item)
           }}
           className={cn(
@@ -183,7 +183,7 @@ export function ProductCombobox({
               <Pressable
                 onPress={(e) => {
                   e.stopPropagation()
-                  // tira seleção ao clicar no ícone de check
+                  // deselect when clicking the check icon
                   onProductsChange(
                     selectedProducts.filter((p) => p.productId !== item.id)
                   )
@@ -199,7 +199,7 @@ export function ProductCombobox({
             )}
           </View>
 
-          {/* Controle de quantidade */}
+          {/* Quantity control */}
           {selected && (
             <View className="flex-row items-center gap-3 mt-3 pt-3 border-t border-border">
               <Text className="text-sm font-medium">Quantidade:</Text>

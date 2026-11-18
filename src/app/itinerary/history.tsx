@@ -28,9 +28,9 @@ export default function ItineraryHistoryScreen() {
   const { data: allItineraries, isLoading } =
     itineraryHooks.getFinishedItinerarySummaries()
 
-  // Filtrar apenas itinerários finalizados e ordenar por data (mais recente primeiro)
+  // Keep only finished itineraries and sort by date (most recent first)
   const finishedItineraries = useMemo(() => {
-    // Já vem só com finalizados, ordenado do mais recente (SQL)
+    // Already contains only finished ones, most recent first (SQL)
     return allItineraries ?? []
   }, [allItineraries])
 
@@ -140,7 +140,7 @@ function ItineraryCard({ itinerary, onPress }: ItineraryCardProps) {
           </View>
         </CardHeader>
         <CardContent className="gap-3">
-          {/* Faturamento */}
+          {/* Revenue */}
           <View className="flex-row items-center gap-2">
             <View className="bg-primary/10 p-2 rounded-full">
               <Icon
@@ -162,9 +162,9 @@ function ItineraryCard({ itinerary, onPress }: ItineraryCardProps) {
             </View>
           </View>
 
-          {/* Estatísticas em linha */}
+          {/* Inline statistics */}
           <View className="flex-row gap-4">
-            {/* Com Relatório */}
+            {/* With report */}
             <View className="flex-row items-center gap-2">
               <Icon
                 as={FileText}
@@ -177,7 +177,7 @@ function ItineraryCard({ itinerary, onPress }: ItineraryCardProps) {
               </Text>
             </View>
 
-            {/* Atrasadas */}
+            {/* Late */}
             {stats.lateWorkOrders > 0 && (
               <View className="flex-row items-center gap-2">
                 <Icon
@@ -192,7 +192,7 @@ function ItineraryCard({ itinerary, onPress }: ItineraryCardProps) {
               </View>
             )}
 
-            {/* Todas no prazo */}
+            {/* All on time */}
             {stats.lateWorkOrders === 0 && (
               <View className="flex-row items-center gap-2">
                 <Icon

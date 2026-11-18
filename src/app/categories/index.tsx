@@ -145,7 +145,7 @@ export default function CategoriesScreen() {
     try {
       await deleteCategory(categoryId)
     } catch {
-      // toast de erro (com mensagem amigável para FK) vem do hook
+      // error toast (with a friendly message for FK) comes from the hook
     } finally {
       setDeleteDialogOpen(false)
     }

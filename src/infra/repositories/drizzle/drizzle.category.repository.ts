@@ -19,21 +19,21 @@ export interface CategoryFilters {
 
 export default class DrizzleCategoryRepository implements CategoryRepository {
   async getCategories(filters?: CategoryFilters): Promise<Category[]> {
-    // Construir condições de filtro dinamicamente
+    // Build filter conditions dynamically
     const conditions = []
 
-    // Filtro de busca por nome
+    // Name search filter
     if (filters?.search) {
       conditions.push(containsFolded(category.name, filters.search))
     }
 
-    // Filtro por status
+    // Status filter
     if (filters?.status && filters.status !== 'all') {
       const isActive = filters.status === 'active'
       conditions.push(eq(category.isActive, isActive))
     }
 
-    // Aplicar WHERE com todas as condições
+    // Apply WHERE with all conditions
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined
 
     const rows = await db.select().from(category).where(whereClause)
@@ -57,7 +57,7 @@ export default class DrizzleCategoryRepository implements CategoryRepository {
     const cat = await this.getCategory(dto.id as UUID)
     if (!cat) throw new Error('A categoria não foi encontrada.')
 
-    // Criar nova instância para validar através do constructor
+    // Create a new instance to validate through the constructor
     const updated = new Category(
       cat.id,
       dto.name ?? cat.name,

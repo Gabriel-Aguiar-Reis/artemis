@@ -46,8 +46,8 @@ export default function CloneWorkOrderScreen() {
       return
     }
 
-    // Para ordens EXPIRED, não precisa de resultado nem pagamento
-    // Para outras, precisa de resultado e pagamento
+    // For EXPIRED orders, no result or payment is needed
+    // For others, a result and payment are required
     if (
       workOrder.status !== 'EXPIRED' &&
       (!workOrder.result || !workOrder.paymentOrder)
@@ -70,7 +70,7 @@ export default function CloneWorkOrderScreen() {
 
       router.back()
     } catch (error) {
-      console.error('Erro ao clonar ordem de serviço:', error)
+      console.error('Error cloning work order:', error)
       Toast.show({
         type: 'error',
         text1: 'Erro ao clonar',
@@ -102,7 +102,7 @@ export default function CloneWorkOrderScreen() {
     )
   }
 
-  // Validar se pode clonar (EXPIRED, COMPLETED ou PARTIAL com resultado e pagamento)
+  // Check whether it can be cloned (EXPIRED, COMPLETED or PARTIAL with result and payment)
   const canClone =
     workOrder.status === 'EXPIRED' ||
     (workOrder.status === 'COMPLETED' &&
@@ -137,7 +137,7 @@ export default function CloneWorkOrderScreen() {
       />
       <ScrollView className="flex-1">
         <View className="p-4 gap-4">
-          {/* Cliente */}
+          {/* Customer */}
           <Card>
             <CardHeader>
               <CardTitle>
@@ -190,7 +190,7 @@ export default function CloneWorkOrderScreen() {
             </CardContent>
           </Card>
 
-          {/* Nova Data Agendada */}
+          {/* New scheduled date */}
           <Card>
             <CardHeader>
               <CardTitle>
@@ -215,7 +215,7 @@ export default function CloneWorkOrderScreen() {
             </CardContent>
           </Card>
 
-          {/* Produtos a Clonar */}
+          {/* Products to clone */}
           <Card>
             <CardHeader>
               <CardTitle>
@@ -276,7 +276,7 @@ export default function CloneWorkOrderScreen() {
                     <Text className="text-lg font-bold">
                       R${' '}
                       {(() => {
-                        // Para EXPIRED, calcular dos produtos agendados
+                        // For EXPIRED, compute from the scheduled products
                         if (workOrder.status === 'EXPIRED') {
                           const total = productsToClone.reduce(
                             (sum, item) =>
@@ -287,7 +287,7 @@ export default function CloneWorkOrderScreen() {
                             minimumFractionDigits: 2,
                           })
                         }
-                        // Para outros status, usar resultado
+                        // For other statuses, use the result
                         return workOrder.result
                           ? workOrder.result.totalValue.toLocaleString(
                               'pt-BR',
@@ -304,7 +304,7 @@ export default function CloneWorkOrderScreen() {
             </CardContent>
           </Card>
 
-          {/* Botões de Ação */}
+          {/* Action buttons */}
           <View className="gap-3 pb-4">
             <Button onPress={handleClone} disabled={isCloning}>
               {isCloning ? (

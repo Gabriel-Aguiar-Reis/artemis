@@ -4,11 +4,11 @@ import { WorkOrderStatus } from '@/src/domain/entities/work-order/work-order.ent
 import { beforeEach, describe, expect, it, vitest } from 'vitest'
 
 /**
- * Transação falsa: cada consulta terminada (await em .where() ou .limit())
- * consome o próximo resultado da fila, na ordem em que o serviço consulta.
+ * Fake transaction: each finished query (await on .where() or .limit())
+ * consumes the next result in the queue, in the order the service queries.
  */
 function createMockTx(queue: any[]) {
-  // API síncrona do driver expo-sqlite: .all() / .run() executam na hora
+  // Synchronous expo-sqlite driver API: .all() / .run() execute immediately
   const next = () => (queue.length ? queue.shift() : [])
   const updates: any[] = []
   const tx: any = {
@@ -41,21 +41,21 @@ const wo = (over: Partial<Record<string, any>> = {}) => ({
 describe('PaymentService.finalizePayment', () => {
   beforeEach(() => vitest.clearAllMocks())
 
-  it('erro quando a OS vinculada não existe', async () => {
+  it('errors when the linked work order does not exist', async () => {
     const tx = createMockTx([[]])
     expect(() => PaymentService.finalizePayment(tx, 'p-1')).toThrow(
       'Ordem de serviço vinculada à ordem de pagamento não encontrada.'
     )
   })
 
-  it('erro quando o pagamento não existe', async () => {
+  it('errors when the payment does not exist', async () => {
     const tx = createMockTx([[wo()], []])
     expect(() => PaymentService.finalizePayment(tx, 'p-1')).toThrow(
       'Ordem de pagamento não encontrada para a ordem de serviço.'
     )
   })
 
-  it('não altera OS em status final (PARTIAL continua PARTIAL)', async () => {
+  it('does not change a work order in a final status (PARTIAL stays PARTIAL)', async () => {
     const tx = createMockTx([
       [wo({ status: WorkOrderStatus.PARTIAL })],
       [{ id: 'p-1', isPaid: true }],
@@ -66,7 +66,7 @@ describe('PaymentService.finalizePayment', () => {
     expect(tx.updates).toHaveLength(0)
   })
 
-  it('não "desclona" OS COPIED', async () => {
+  it('does not "un-clone" a COPIED work order', async () => {
     const tx = createMockTx([
       [wo({ status: WorkOrderStatus.COPIED })],
       [{ id: 'p-1', isPaid: true }],
@@ -77,7 +77,7 @@ describe('PaymentService.finalizePayment', () => {
     expect(tx.updates).toHaveLength(0)
   })
 
-  it('pagamento antecipado (sem relatório) não finaliza a OS', async () => {
+  it('advance payment (without report) does not finish the work order', async () => {
     const tx = createMockTx([
       [wo({ resultId: null })],
       [{ id: 'p-1', isPaid: true }],
@@ -88,7 +88,7 @@ describe('PaymentService.finalizePayment', () => {
     expect(tx.updates).toHaveLength(0)
   })
 
-  it('pagamento não quitado não altera a OS', async () => {
+  it('unsettled payment does not change the work order', async () => {
     const tx = createMockTx([[wo()], [{ id: 'p-1', isPaid: false }]])
     expect(PaymentService.finalizePayment(tx, 'p-1')).toBe(
       WorkOrderStatus.PENDING
@@ -96,7 +96,7 @@ describe('PaymentService.finalizePayment', () => {
     expect(tx.updates).toHaveLength(0)
   })
 
-  it('OS em aberto com relatório recebe o status do relatório', async () => {
+  it('open work order with report receives the report status', async () => {
     const tx = createMockTx([
       [wo()],
       [{ id: 'p-1', isPaid: true }],
@@ -112,7 +112,7 @@ describe('PaymentService.finalizePayment', () => {
     expect(tx.updates[0].status).toBe(WorkOrderStatus.PARTIAL)
   })
 
-  it('OS em aberto com relatório completo vira COMPLETED', async () => {
+  it('open work order with a complete report becomes COMPLETED', async () => {
     const tx = createMockTx([
       [wo()],
       [{ id: 'p-1', isPaid: true }],

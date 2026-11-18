@@ -3,9 +3,9 @@ import { normalizeString } from '@/src/lib/utils'
 import { useMemo } from 'react'
 
 /**
- * Busca local acento/caixa-insensível com debounce.
- * O texto de cada item é normalizado UMA vez (quando a lista muda), não a cada
- * tecla digitada.
+ * Local accent/case-insensitive search with debounce.
+ * Each item's text is normalized ONCE (when the list changes), not on every
+ * keystroke.
  */
 export function useNormalizedSearch<T>(
   items: T[],
@@ -21,7 +21,7 @@ export function useNormalizedSearch<T>(
         item,
         text: normalizeString(getText(item) ?? ''),
       })),
-    // getText é uma função inline estável por uso; reindexa só quando os itens mudam
+    // getText is a stable inline function per usage; reindexes only when the items change
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [items]
   )

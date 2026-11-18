@@ -1,6 +1,6 @@
 /**
- * Testes de integração com SQLite real (node:sqlite + driver drizzle
- * expo-sqlite). Cobrem os fluxos transacionais de OS, relatório e pagamento.
+ * Integration tests with real SQLite (node:sqlite + drizzle
+ * expo-sqlite driver). They cover the transactional work order, report and payment flows.
  */
 import { WorkOrderStatus } from '@/src/domain/entities/work-order/work-order.entity'
 import { category } from '@/src/infra/db/drizzle/schema'
@@ -51,7 +51,7 @@ function woRow(id: string) {
     .get(id) as any
 }
 
-describe('driver expo-sqlite: semântica de transação', () => {
+describe('expo-sqlite driver: transaction semantics', () => {
   beforeEach(() => {
     resetTestDb()
     seed()
@@ -59,7 +59,7 @@ describe('driver expo-sqlite: semântica de transação', () => {
 
   const NEW_CAT = '00000000-0000-4000-8000-000000000099'
 
-  it('callback síncrono: erro no meio desfaz tudo (rollback)', () => {
+  it('synchronous callback: an error midway undoes everything (rollback)', () => {
     const { db } = getTestDb()
     expect(() =>
       db.transaction((tx) => {
@@ -67,10 +67,10 @@ describe('driver expo-sqlite: semântica de transação', () => {
         throw new Error('falha no meio')
       })
     ).toThrow('falha no meio')
-    expect(countRows('category')).toBe(1) // só a do seed
+    expect(countRows('category')).toBe(1) // only the seed one
   })
 
-  it('callback async NÃO é atômico neste driver (por isso o código usa síncrono)', async () => {
+  it('async callback is NOT atomic in this driver (which is why the code uses a synchronous one)', async () => {
     const { db } = getTestDb()
     await expect(
       db.transaction(async (tx) => {
@@ -78,7 +78,7 @@ describe('driver expo-sqlite: semântica de transação', () => {
         throw new Error('falha no meio')
       })
     ).rejects.toThrow('falha no meio')
-    // o COMMIT já tinha rodado antes do await: o insert ficou gravado
+    // the COMMIT had already run before the await: the insert stayed written
     expect(countRows('category')).toBe(2)
   })
 })
@@ -89,7 +89,7 @@ describe('addWorkOrderWithDetails', () => {
     seed()
   })
 
-  it('cria OS, itens, relatório e pagamento com status e totais corretos', async () => {
+  it('creates work order, items, report and payment with correct status and totals', async () => {
     const id = await repo.addWorkOrderWithDetails({
       customerId: CUST,
       scheduledDate: new Date('2026-11-20T12:00:00Z'),
@@ -109,7 +109,7 @@ describe('addWorkOrderWithDetails', () => {
     })
 
     const wo = woRow(id)
-    // trocou 1 de 2 agendados e recolheu 1 → PARTIAL
+    // exchanged 1 of 2 scheduled and collected 1 → PARTIAL
     expect(wo.status).toBe(WorkOrderStatus.PARTIAL)
     expect(wo.visit_date).toBeTruthy()
     expect(countRows('work_order_item')).toBe(2)
@@ -118,7 +118,7 @@ describe('addWorkOrderWithDetails', () => {
     const result = getTestDb()
       .raw.prepare('SELECT total_value FROM work_order_result')
       .get() as any
-    expect(result.total_value).toBe(20.5) // 2×10,10 + 3×0,10 sem erro de float
+    expect(result.total_value).toBe(20.5) // 2×10.10 + 3×0.10 with no float error
 
     const po = getTestDb()
       .raw.prepare('SELECT * FROM payment_order')
@@ -126,7 +126,7 @@ describe('addWorkOrderWithDetails', () => {
     expect(po.is_paid).toBe(1)
     expect(po.paid_installments).toBe(3)
 
-    // hidratação em lote devolve o agregado completo
+    // batch hydration returns the complete aggregate
     const loaded = await repo.getWorkOrder(id as UUID)
     expect(loaded?.products).toHaveLength(2)
     expect(loaded?.result?.exchangedProducts).toHaveLength(1)
@@ -135,12 +135,12 @@ describe('addWorkOrderWithDetails', () => {
     expect(loaded?.customer.storeAddress.streetNumber).toBe('S/N')
   })
 
-  it('é atômica: se um item falha, nada é gravado (sem relatório/pagamento órfãos)', async () => {
+  it('is atomic: if an item fails, nothing is written (no orphan report/payment)', async () => {
     await expect(
       repo.addWorkOrderWithDetails({
         customerId: CUST,
         scheduledDate: new Date(),
-        items: [item(P1, 1, 10.1), item(MISSING, 1, 5)], // produto inexistente → FK
+        items: [item(P1, 1, 10.1), item(MISSING, 1, 5)], // nonexistent product → FK
         result: { exchanged: [item(P1, 1, 10.1)], added: [], removed: [] },
         payment: {
           method: 'PIX',
@@ -158,7 +158,7 @@ describe('addWorkOrderWithDetails', () => {
     expect(countRows('payment_order')).toBe(0)
   })
 
-  it('recusa quantidade fracionada ou zero antes de gravar', async () => {
+  it('rejects fractional or zero quantity before writing', async () => {
     await expect(
       repo.addWorkOrderWithDetails({
         customerId: CUST,
@@ -170,7 +170,7 @@ describe('addWorkOrderWithDetails', () => {
   })
 })
 
-describe('relatório de visita', () => {
+describe('visit report', () => {
   let woId: UUID
 
   beforeEach(async () => {
@@ -184,7 +184,7 @@ describe('relatório de visita', () => {
     })
   })
 
-  it('addResultToWorkOrder grava status do enum (nunca "completed" minúsculo) e sincroniza pagamento', async () => {
+  it('addResultToWorkOrder stores the enum status (never lowercase "completed") and syncs payment', async () => {
     await repo.addResultToWorkOrder(woId, {
       exchanged: [item(P1, 1, 10.1)],
       added: [],
@@ -202,7 +202,7 @@ describe('relatório de visita', () => {
     ).rejects.toThrow('já possui relatório')
   })
 
-  it('nada trocado nem adicionado vira FAILED', async () => {
+  it('nothing exchanged or added becomes FAILED', async () => {
     await repo.addResultToWorkOrder(woId, {
       exchanged: [],
       added: [],
@@ -211,14 +211,14 @@ describe('relatório de visita', () => {
     expect(woRow(woId).status).toBe(WorkOrderStatus.FAILED)
   })
 
-  it('updateWorkOrderResultItems recalcula status/total e é atômico', async () => {
+  it('updateWorkOrderResultItems recalculates status/total and is atomic', async () => {
     const resultId = await repo.addResultToWorkOrder(woId, {
       exchanged: [item(P1, 1, 10.1)],
       added: [],
       removed: [],
     })
 
-    // falha no meio (produto inexistente): itens antigos continuam lá
+    // failure midway (nonexistent product): old items are still there
     await expect(
       repo.updateWorkOrderResultItems(resultId, {
         exchanged: [item(MISSING, 1, 1)],
@@ -229,7 +229,7 @@ describe('relatório de visita', () => {
     expect(countRows('work_order_result_item')).toBe(1)
     expect(woRow(woId).status).toBe(WorkOrderStatus.COMPLETED)
 
-    // sucesso: agora recolheu → PARTIAL, total recalculado
+    // success: now it collected → PARTIAL, total recalculated
     await repo.updateWorkOrderResultItems(resultId, {
       exchanged: [item(P1, 1, 10.1)],
       added: [item(P2, 2, 0.2)],
@@ -242,7 +242,7 @@ describe('relatório de visita', () => {
     expect(r.total_value).toBe(10.5)
   })
 
-  it('não permite alterar relatório de OS já paga', async () => {
+  it('does not allow changing the report of an already paid work order', async () => {
     const resultId = await repo.addResultToWorkOrder(woId, {
       exchanged: [item(P1, 1, 10.1)],
       added: [],
@@ -261,13 +261,13 @@ describe('relatório de visita', () => {
   })
 })
 
-describe('pagamento', () => {
+describe('payment', () => {
   beforeEach(() => {
     resetTestDb()
     seed()
   })
 
-  it('quitar o pagamento não transforma PARTIAL em COMPLETED e grava a data', async () => {
+  it('settling the payment does not turn PARTIAL into COMPLETED and stores the date', async () => {
     const id = await repo.addWorkOrderWithDetails({
       customerId: CUST,
       scheduledDate: new Date(),
@@ -296,19 +296,19 @@ describe('pagamento', () => {
     const po = getTestDb()
       .raw.prepare('SELECT * FROM payment_order WHERE id = ?')
       .get(poId) as any
-    expect(po.is_paid).toBe(1) // 2 de 2 parcelas ⇒ pago
+    expect(po.is_paid).toBe(1) // 2 of 2 installments ⇒ paid
     expect(po.payment_date).toBe('2026-11-18T10:00:00.000Z')
     expect(woRow(id).status).toBe(WorkOrderStatus.PARTIAL)
   })
 })
 
-describe('listagem paginada', () => {
+describe('paginated listing', () => {
   beforeEach(() => {
     resetTestDb()
     seed()
   })
 
-  it('filtro por pago/valor não quebra o COUNT e a ordem é estável', async () => {
+  it('paid/value filter does not break the COUNT and the order is stable', async () => {
     for (let i = 0; i < 5; i++) {
       await repo.addWorkOrderWithDetails({
         customerId: CUST,
@@ -327,7 +327,7 @@ describe('listagem paginada', () => {
       isPaid: 'true',
       minTotalValue: '20',
     })
-    expect(page.totalCount).toBe(2) // valores 30 e 50 pagos
+    expect(page.totalCount).toBe(2) // values 30 and 50 paid
     expect(page.data.map((w) => w.paymentOrder?.totalValue)).toEqual([50, 30])
     expect(page.hasMore).toBe(false)
   })
@@ -339,7 +339,7 @@ describe('clone', () => {
     seed()
   })
 
-  it('cria nova OS com os produtos do relatório e marca a original como COPIED', async () => {
+  it('creates a new work order with the report products and marks the original as COPIED', async () => {
     const id = await repo.addWorkOrderWithDetails({
       customerId: CUST,
       scheduledDate: new Date(),

@@ -39,7 +39,7 @@ export default function CustomerSearchScreen() {
     (params.landlineNumber as string) || ''
   )
 
-  // Aplicar debounce nos inputs de texto (300ms)
+  // Debounce the text inputs (300ms)
   const debouncedSearch = useDebouncedValue(searchQuery, 300)
   const debouncedContactName = useDebouncedValue(contactNameFilter, 300)
   const debouncedPhoneNumber = useDebouncedValue(phoneNumberFilter, 300)
@@ -49,7 +49,7 @@ export default function CustomerSearchScreen() {
     'all' | 'true' | 'false'
   >((params.isActiveWhatsApp as any) || 'all')
 
-  // Auto-aplicar filtros quando valores debounced mudarem
+  // Auto-apply filters when debounced values change
   React.useEffect(() => {
     const filters = {
       search: debouncedSearch || undefined,
@@ -60,7 +60,7 @@ export default function CustomerSearchScreen() {
         isActiveWhatsAppFilter !== 'all' ? isActiveWhatsAppFilter : undefined,
     }
 
-    // Só aplica se houver mudança real nos filtros
+    // Only apply if the filters actually changed
     const hasChanges =
       filters.search !== params.search ||
       filters.contactName !== params.contactName ||

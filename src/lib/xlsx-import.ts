@@ -5,15 +5,15 @@ import { productInsertSchema } from '@/src/domain/validations/product.schema'
 import { normalizePhoneBrazil, normalizeString } from '@/src/lib/utils'
 
 /**
- * Funções puras de normalização, validação e deduplicação da importação .xlsx.
- * Nada aqui acessa banco: o runner (application/import) cuida da persistência.
+ * Pure functions for normalization, validation and deduplication of the .xlsx import.
+ * Nothing here touches the database: the runner (application/import) handles persistence.
  */
 
 export type ImportSheet = 'categorias' | 'produtos' | 'clientes'
 
 export type RowIssue = {
   sheet: ImportSheet
-  /** Linha na planilha (1 = cabeçalho, dados começam na 2) */
+  /** Row in the spreadsheet (1 = header, data starts at 2) */
   line: number
   reason: string
 }
@@ -49,7 +49,7 @@ export type Validated<T> =
   | { ok: true; value: T }
   | { ok: false; reason: string }
 
-// UUID v4 válido só para satisfazer o schema (o id real é gerado na inserção)
+// Valid UUID v4 only to satisfy the schema (the real id is generated on insert)
 const DUMMY_ID = '00000000-0000-4000-8000-000000000000'
 
 const cell = (row: unknown[], i: number): string => {
@@ -58,12 +58,12 @@ const cell = (row: unknown[], i: number): string => {
   return String(v).trim()
 }
 
-/** Chave canônica de nome: sem acento, minúscula, espaços colapsados. */
+/** Canonical name key: no accents, lower case, collapsed spaces. */
 export function nameKey(value: string): string {
   return normalizeString(value).replace(/\s+/g, ' ').trim()
 }
 
-/** "10,50", "R$ 10", "R$ 1.234,56", "10.5" ou número -> number (ou null). */
+/** "10,50", "R$ 10", "R$ 1.234,56", "10.5" or number -> number (or null). */
 export function normalizePrice(value: unknown): number | null {
   if (typeof value === 'number') {
     return Number.isFinite(value) && value >= 0
@@ -75,10 +75,10 @@ export function normalizePrice(value: unknown): number | null {
     .replace(/\s+/g, '')
   if (s === '') return null
   if (s.includes(',')) {
-    // formato BR: ponto = milhar, vírgula = decimal
+    // BR format: dot = thousands, comma = decimal
     s = s.replace(/\./g, '').replace(',', '.')
   } else if ((s.match(/\./g) || []).length > 1) {
-    // "1.234.567" -> milhar
+    // "1.234.567" -> thousands
     s = s.replace(/\./g, '')
   }
   if (!/^\d+(\.\d+)?$/.test(s)) return null
@@ -86,14 +86,14 @@ export function normalizePrice(value: unknown): number | null {
   return Number.isFinite(n) ? Math.round(n * 100) / 100 : null
 }
 
-/** CEP como string de 8 dígitos preservando zero à esquerda (Excel pode entregar número). */
+/** ZIP code as an 8-digit string preserving the leading zero (Excel may deliver a number). */
 export function normalizeZip(value: unknown): string {
   const digits = String(value ?? '').replace(/\D/g, '')
   if (digits === '') return ''
   return digits.length < 8 ? digits.padStart(8, '0') : digits
 }
 
-/** Telefone só com dígitos, sem DDI 55. */
+/** Phone with digits only, without the 55 country code. */
 export function normalizePhoneDigits(value: unknown): string {
   return normalizePhoneBrazil(String(value ?? ''))
 }
@@ -147,7 +147,7 @@ export function validateProductRow(
 
   let expiration = cell(row, 4)
   try {
-    // Valida o formato e normaliza singular/plural
+    // Validates the format and normalizes singular/plural
     expiration = new Expiration(expiration).toDTO()
   } catch (e) {
     return {
@@ -213,8 +213,8 @@ export function validateCustomerRow(
 }
 
 /**
- * Chaves de duplicidade de cliente: mesmo estabelecimento (nome normalizado)
- * com o mesmo telefone, OU com o mesmo CEP + número. Duas chaves possíveis.
+ * Customer duplicate keys: same establishment (normalized name)
+ * with the same phone, OR with the same ZIP code + number. Two possible keys.
  */
 export function customerDedupeKeys(c: {
   storeName: string
@@ -233,7 +233,7 @@ export function customerDedupeKeys(c: {
   return keys
 }
 
-/** Linhas de dados de uma aba (descarta cabeçalho e linhas totalmente vazias). */
+/** Data rows of a sheet (drops the header and fully empty rows). */
 export function dataRows(
   rows: unknown[][]
 ): Array<{ row: unknown[]; line: number }> {

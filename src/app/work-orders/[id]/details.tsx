@@ -113,14 +113,14 @@ export default function WorkOrderDetailsScreen() {
         }}
       />
       <ScrollView className="flex-1 p-4">
-        {/* Informações Gerais */}
+        {/* General information */}
         <Card className="mb-4">
           <CardHeader>
             <CardTitle>Informações Gerais</CardTitle>
           </CardHeader>
           <CardContent>
             <View className="gap-3">
-              {/* Cliente */}
+              {/* Customer */}
               <View className="flex-row items-center gap-2">
                 <Icon as={User} className="text-muted-foreground" size={20} />
                 <Text className="text-sm text-muted-foreground flex-1">
@@ -131,7 +131,7 @@ export default function WorkOrderDetailsScreen() {
                 </Text>
               </View>
 
-              {/* Data Agendada */}
+              {/* Scheduled date */}
               <View className="flex-row items-center gap-2">
                 <Icon
                   as={Calendar}
@@ -146,7 +146,7 @@ export default function WorkOrderDetailsScreen() {
                 </Text>
               </View>
 
-              {/* Data de Visita */}
+              {/* Visit date */}
               {workOrder.visitDate && (
                 <View className="flex-row items-center gap-2">
                   <Icon
@@ -176,7 +176,7 @@ export default function WorkOrderDetailsScreen() {
                 </Text>
               </View>
 
-              {/* Observações */}
+              {/* Notes */}
               {workOrder.notes && (
                 <View className="flex-col gap-1 mt-2">
                   <Text className="text-sm text-muted-foreground">
@@ -189,7 +189,7 @@ export default function WorkOrderDetailsScreen() {
           </CardContent>
         </Card>
 
-        {/* Produtos Agendados */}
+        {/* Scheduled products */}
         <ObjectCard.Root className="mb-4 dark:bg-input/30">
           <ObjectCard.Header>
             <View className="flex-row items-center gap-2 flex-1">
@@ -217,7 +217,7 @@ export default function WorkOrderDetailsScreen() {
           </ObjectCard.Content>
         </ObjectCard.Root>
 
-        {/* Relatório */}
+        {/* Report */}
         <ObjectCard.Root className="mb-4 dark:bg-input/30">
           <ObjectCard.Header>
             <View className="flex-row items-center gap-2 flex-1">
@@ -278,7 +278,7 @@ export default function WorkOrderDetailsScreen() {
           </ObjectCard.Content>
         </ObjectCard.Root>
 
-        {/* Pagamento */}
+        {/* Payment */}
         <ObjectCard.Root className="mb-4 dark:bg-input/30">
           <ObjectCard.Header>
             <View className="flex-row items-center gap-2 flex-1">
@@ -347,7 +347,7 @@ export default function WorkOrderDetailsScreen() {
           </ObjectCard.Content>
         </ObjectCard.Root>
 
-        {/* Ações */}
+        {/* Actions */}
         <View className="gap-3">
           {canEdit && (
             <Button

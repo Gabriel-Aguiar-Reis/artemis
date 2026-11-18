@@ -26,15 +26,15 @@ import { UUID } from '@/src/lib/utils'
 import { eq, inArray } from 'drizzle-orm'
 
 /**
- * Carregamento em lote dos agregados de OS.
+ * Batch loading of work order aggregates.
  *
- * Antes cada OS fazia 1 a 3 consultas próprias (itens, resultado, itens do
- * resultado), ou seja, N+1: 15 mil OS viravam ~45 mil consultas. Aqui são no
- * máximo 3 consultas por bloco de 500 ids, independentemente do número de OS.
+ * Before, each work order made 1 to 3 queries of its own (items, result, result
+ * items), i.e. N+1: 15k work orders became ~45k queries. Now it is at
+ * most 3 queries per block of 500 ids, regardless of the number of work orders.
  */
 
-// SQLite limita a quantidade de parâmetros por consulta (999 nas versões
-// antigas); 500 deixa folga.
+// SQLite limits the number of parameters per query (999 in the
+// older ones); 500 leaves headroom.
 const CHUNK = 500
 
 function chunk<T>(arr: T[], size = CHUNK): T[][] {
@@ -149,8 +149,8 @@ export async function loadResultsByIds(
 }
 
 /**
- * Monta as entidades WorkOrder a partir das linhas já unidas com cliente,
- * pagamento e resultado. Linhas sem cliente são descartadas (dado órfão).
+ * Builds the WorkOrder entities from rows already joined with customer,
+ * payment and result. Rows without a customer are discarded (orphan data).
  */
 export async function hydrateWorkOrders(
   rows: WorkOrderJoinedRow[]

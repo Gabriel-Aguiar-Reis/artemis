@@ -1,5 +1,5 @@
-// Só `import type`: a entidade importa este módulo, e um import de valor
-// criaria ciclo (o enum ainda estaria undefined na avaliação deste arquivo).
+// Only `import type`: the entity imports this module, and a value import
+// would create a cycle (the enum would still be undefined when this file is evaluated).
 import type { WorkOrderStatus } from '@/src/domain/entities/work-order/work-order.entity'
 
 const S = {
@@ -15,19 +15,19 @@ const S = {
 } as Record<string, WorkOrderStatus>
 
 /**
- * Regras de negócio da OS que antes estavam duplicadas (e divergentes) entre
- * telas e entidade. Funções puras: fáceis de testar e de reaproveitar nos
- * repositórios transacionais.
+ * Work order business rules that used to be duplicated (and divergent) between
+ * screens and entity. Pure functions: easy to test and to reuse in the
+ * transactional repositories.
  */
 
-/** OS que ainda podem receber relatório, entrar em itinerário e ser editadas. */
+/** Work orders that can still receive a report, enter an itinerary and be edited. */
 export const OPEN_STATUSES: readonly WorkOrderStatus[] = [
   S.PENDING,
   S.COMMITTED,
   S.IN_PROGRESS,
 ]
 
-/** Status que já encerraram a OS: pagamento ou itinerário não os alteram. */
+/** Statuses that have already closed the work order: payment or itinerary do not change them. */
 export const FINAL_STATUSES: readonly WorkOrderStatus[] = [
   S.COMPLETED,
   S.PARTIAL,
@@ -37,7 +37,7 @@ export const FINAL_STATUSES: readonly WorkOrderStatus[] = [
   S.COPIED,
 ]
 
-/** Status cujo relatório ainda pode ser corrigido (recalcula o status). */
+/** Statuses whose report can still be corrected (recalculates the status). */
 export const RESULT_EDITABLE_STATUSES: readonly WorkOrderStatus[] = [
   S.COMPLETED,
   S.PARTIAL,
@@ -57,7 +57,7 @@ export function isKnownStatus(status: string): status is WorkOrderStatus {
 }
 
 export type ResultCounts = {
-  /** Quantidade de produtos distintos agendados na OS */
+  /** Number of distinct products scheduled in the work order */
   scheduled: number
   exchanged: number
   added: number
@@ -65,10 +65,10 @@ export type ResultCounts = {
 }
 
 /**
- * Status resultante de um relatório de visita.
- * - nada trocado nem adicionado → FAILED
- * - algo recolhido, ou menos trocas que produtos agendados → PARTIAL
- * - caso contrário → COMPLETED
+ * Resulting status of a visit report.
+ * - nothing exchanged or added → FAILED
+ * - anything collected, or fewer exchanges than scheduled products → PARTIAL
+ * - otherwise → COMPLETED
  */
 export function resolveResultStatus(c: ResultCounts): WorkOrderStatus {
   if (c.exchanged === 0 && c.added === 0) return S.FAILED
@@ -77,7 +77,7 @@ export function resolveResultStatus(c: ResultCounts): WorkOrderStatus {
   return S.COMPLETED
 }
 
-/** Arredonda para centavos (evita 0.1 + 0.2 = 0.30000000000000004). */
+/** Rounds to cents (avoids 0.1 + 0.2 = 0.30000000000000004). */
 export function roundMoney(value: number): number {
   if (!Number.isFinite(value)) return 0
   return Math.round((value + Number.EPSILON) * 100) / 100
@@ -85,7 +85,7 @@ export function roundMoney(value: number): number {
 
 export type PricedItem = { quantity: number; priceSnapshot: number }
 
-/** Total do relatório: trocados + adicionados (recolhidos não somam). */
+/** Report total: exchanged + added (collected ones do not count). */
 export function computeResultTotal(
   exchanged: PricedItem[],
   added: PricedItem[]
@@ -98,9 +98,9 @@ export function computeResultTotal(
 }
 
 /**
- * Mantém isPaid e paidInstallments coerentes:
- * - todas as parcelas pagas ⇒ pago
- * - marcado como pago ⇒ todas as parcelas pagas
+ * Keeps isPaid and paidInstallments consistent:
+ * - all installments paid ⇒ paid
+ * - marked as paid ⇒ all installments paid
  */
 export function normalizePaymentState(input: {
   installments: number

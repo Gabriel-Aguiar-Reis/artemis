@@ -60,12 +60,12 @@ export class PaymentOrder {
     return this.installments - this.paidInstallments
   }
 
-  /** Valor de cada parcela, em centavos exatos (a última absorve a sobra). */
+  /** Value of each installment, in exact cents (the last one absorbs the remainder). */
   get installmentValue(): number {
     return roundMoney(this.totalValue / this.installments)
   }
 
-  /** Valor da última parcela: fecha exatamente o total (ex.: 100/3 → 33,33 + 33,33 + 33,34). */
+  /** Value of the last installment: closes the total exactly (e.g. 100/3 → 33.33 + 33.33 + 33.34). */
   get lastInstallmentValue(): number {
     return roundMoney(
       this.totalValue - this.installmentValue * (this.installments - 1)

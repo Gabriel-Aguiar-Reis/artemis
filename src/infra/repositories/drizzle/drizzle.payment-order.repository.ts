@@ -121,7 +121,7 @@ export default class DrizzlePaymentOrderRepository implements PaymentOrderReposi
           installments: data.installments,
           isPaid: data.isPaid,
           paidInstallments: data.paidInstallments,
-          // antes não era gravado: a data editada na tela se perdia
+          // it was not stored before: the date edited on screen was lost
           paymentDate: data.paymentDate,
         })
         .where(eq(paymentOrder.id, dto.id as UUID))
@@ -135,13 +135,13 @@ export default class DrizzlePaymentOrderRepository implements PaymentOrderReposi
 
   async deletePaymentOrder(id: UUID): Promise<void> {
     db.transaction((tx) => {
-      // Remover referência em work orders
+      // Remove reference in work orders
       tx.update(workOrder)
         .set({ paymentOrderId: null })
         .where(eq(workOrder.paymentOrderId, id))
         .run()
 
-      // Deletar payment order
+      // Delete the payment order
       tx.delete(paymentOrder).where(eq(paymentOrder.id, id)).run()
     })
   }

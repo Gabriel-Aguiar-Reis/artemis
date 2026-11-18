@@ -249,12 +249,12 @@ function ReorderWorkOrderCardComponent({
 export const ReorderWorkOrderCard = React.memo(
   ReorderWorkOrderCardComponent,
   (prevProps, nextProps) => {
-    // Comparação simples e eficiente
+    // Simple and efficient comparison
     if (prevProps.wo.id !== nextProps.wo.id) return false
     if (prevProps.isLate !== nextProps.isLate) return false
     if (prevProps.wo.status !== nextProps.wo.status) return false
 
-    // Se chegou aqui, não precisa re-renderizar
+    // If we got here, no re-render is needed
     return true
   }
 )

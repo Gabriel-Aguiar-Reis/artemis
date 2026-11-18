@@ -36,7 +36,7 @@ export class DrizzleItineraryWorkOrderRepository implements ItineraryWorkOrderRe
       .where(eq(itineraryWorkOrder.itineraryId, itineraryId))
       .orderBy(itineraryWorkOrder.position)
 
-    // Hidratação em lote (antes: getWorkOrder por linha, 4 consultas por OS)
+    // Batch hydration (before: getWorkOrder per row, 4 queries per work order)
     const workOrders = await hydrateWorkOrders(rows)
     const byId = new Map(workOrders.map((wo) => [wo.id as string, wo]))
 
@@ -85,7 +85,7 @@ export class DrizzleItineraryWorkOrderRepository implements ItineraryWorkOrderRe
   }
 
   async addItineraryWorkOrder(item: ItineraryWorkOrder): Promise<void> {
-    // Validação: Work orders com resultado (finalizadas) NÃO devem ser adicionadas ao itinerário
+    // Validation: Work orders with a result (finished) must NOT be added to the itinerary
     if (item.workOrder.result) {
       throw new Error(
         'Não é possível adicionar uma ordem de serviço já finalizada ao itinerário.'
@@ -107,7 +107,7 @@ export class DrizzleItineraryWorkOrderRepository implements ItineraryWorkOrderRe
   async addItineraryWorkOrders(items: ItineraryWorkOrder[]): Promise<void> {
     if (items.length === 0) return
 
-    // Validação: Filtrar work orders que já possuem resultado (finalizadas)
+    // Validation: Filter out work orders that already have a result (finished)
     const validItems = items.filter((item) => !item.workOrder.result)
 
     if (validItems.length === 0) {
@@ -159,8 +159,8 @@ export class DrizzleItineraryWorkOrderRepository implements ItineraryWorkOrderRe
   async updatePositions(
     items: { id: UUID; position: number }[]
   ): Promise<void> {
-    // Uma transação só: antes cada UPDATE era um commit (fsync) separado,
-    // e uma falha no meio deixava posições duplicadas.
+    // A single transaction: before, each UPDATE was a separate commit (fsync),
+    // and a failure midway left duplicate positions.
     db.transaction((tx) => {
       for (const item of items) {
         tx.update(itineraryWorkOrder)

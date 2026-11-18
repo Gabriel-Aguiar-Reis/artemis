@@ -5,16 +5,16 @@ import {
 import { useQueryClient } from '@tanstack/react-query'
 
 /**
- * Hook para invalidar queries manualmente quando necessário
+ * Hook to manually invalidate queries when needed
  *
  * @example
  * ```tsx
  * const invalidate = useInvalidateQueries()
  *
- * // Invalida customers e todas suas dependências (workOrders, itineraries, etc)
+ * // Invalidates customers and all their dependencies (workOrders, itineraries, etc)
  * invalidate('customers')
  *
- * // Invalida múltiplas queries
+ * // Invalidates multiple queries
  * invalidate(['customers', 'products'])
  * ```
  */
@@ -40,14 +40,14 @@ export function useInvalidateQueries() {
 }
 
 /**
- * Hook para invalidar queries específicas (sem dependências)
- * Use apenas quando tiver certeza de que não precisa invalidar dependências
+ * Hook to invalidate specific queries (without dependencies)
+ * Use only when you are sure dependencies do not need invalidating
  *
  * @example
  * ```tsx
  * const invalidateExact = useInvalidateQueriesExact()
  *
- * // Invalida apenas customers (sem dependências)
+ * // Invalidates only customers (without dependencies)
  * invalidateExact('customers')
  * ```
  */
