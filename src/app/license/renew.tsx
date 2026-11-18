@@ -101,7 +101,11 @@ export default function RenewLicenseScreen() {
           {/* Header */}
           <View className="gap-2">
             <View className="flex-row items-center gap-2">
-              <Icon as={RefreshCw} size={28} className="text-primary" />
+              <Icon
+                as={RefreshCw}
+                size={28}
+                className="text-muted-foreground"
+              />
               <Text className="font-bold text-2xl">Renovação Antecipada</Text>
             </View>
             <Text className="text-muted-foreground">
@@ -110,18 +114,18 @@ export default function RenewLicenseScreen() {
           </View>
 
           {/* Current status */}
-          <View className="p-4 bg-blue-50 dark:bg-blue-950 border border-blue-600 rounded-lg gap-3">
+          <View className="p-4 bg-info-subtle border border-info rounded-lg gap-3">
             <View className="flex-row items-center gap-2">
-              <Icon as={CalendarClock} size={20} className="text-blue-600" />
-              <Text className="font-semibold text-blue-800 dark:text-blue-200">
+              <Icon as={CalendarClock} size={20} className="text-info" />
+              <Text className="font-semibold text-info">
                 Status Atual da Licença
               </Text>
             </View>
             <View className="gap-1">
-              <Text className="text-blue-700 dark:text-blue-300">
+              <Text className="text-info">
                 Expira em {license.getDaysRemaining()} dias
               </Text>
-              <Text className="text-sm text-blue-600 dark:text-blue-400">
+              <Text className="text-sm text-info">
                 Válida até {formatDate(license.expirationDate)}
               </Text>
             </View>

@@ -167,7 +167,7 @@ export function ItineraryForm<T extends FieldValues>({
                         <Icon
                           as={FileText}
                           size={20}
-                          className="text-primary"
+                          className="text-muted-foreground"
                           strokeWidth={2}
                         />
                       </View>
@@ -187,7 +187,7 @@ export function ItineraryForm<T extends FieldValues>({
                         <Icon
                           as={Calendar}
                           size={20}
-                          className="text-primary"
+                          className="text-muted-foreground"
                           strokeWidth={2}
                         />
                       </View>
@@ -207,7 +207,7 @@ export function ItineraryForm<T extends FieldValues>({
                         <Icon
                           as={DollarSign}
                           size={20}
-                          className="text-primary"
+                          className="text-muted-foreground"
                           strokeWidth={2}
                         />
                       </View>

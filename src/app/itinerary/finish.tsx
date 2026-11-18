@@ -198,7 +198,7 @@ export default function ItineraryFinishScreen() {
                     <Icon
                       as={FileText}
                       size={20}
-                      className="text-primary"
+                      className="text-muted-foreground"
                       strokeWidth={2}
                     />
                   </View>
@@ -228,7 +228,7 @@ export default function ItineraryFinishScreen() {
                       <Icon
                         as={CheckCircle}
                         size={20}
-                        className="text-primary"
+                        className="text-muted-foreground"
                         strokeWidth={2}
                       />
                     )}
@@ -251,7 +251,7 @@ export default function ItineraryFinishScreen() {
                     <Icon
                       as={Calendar}
                       size={20}
-                      className="text-primary"
+                      className="text-muted-foreground"
                       strokeWidth={2}
                     />
                   </View>
@@ -271,7 +271,7 @@ export default function ItineraryFinishScreen() {
                     <Icon
                       as={DollarSign}
                       size={20}
-                      className="text-primary"
+                      className="text-muted-foreground"
                       strokeWidth={2}
                     />
                   </View>
@@ -295,7 +295,7 @@ export default function ItineraryFinishScreen() {
                     <Icon
                       as={FileText}
                       size={20}
-                      className="text-primary"
+                      className="text-muted-foreground"
                       strokeWidth={2}
                     />
                   </View>
@@ -315,7 +315,7 @@ export default function ItineraryFinishScreen() {
                     <Icon
                       as={DollarSign}
                       size={20}
-                      className="text-primary"
+                      className="text-muted-foreground"
                       strokeWidth={2}
                     />
                   </View>
@@ -371,18 +371,12 @@ export default function ItineraryFinishScreen() {
                 <Text>Voltar</Text>
               </Button>
               <Button
-                variant="destructive"
+                variant="destructiveSubtle"
                 onPress={() => setDeleteDialogOpen(true)}
                 disabled={isFinishing}
               >
-                <Icon
-                  as={Trash2}
-                  size={18}
-                  className="text-destructive-foreground mr-2"
-                />
-                <Text className="text-destructive-foreground">
-                  Cancelar Itinerário
-                </Text>
+                <Icon as={Trash2} size={18} className="text-destructive mr-2" />
+                <Text className="text-destructive">Cancelar Itinerário</Text>
               </Button>
             </View>
           </View>

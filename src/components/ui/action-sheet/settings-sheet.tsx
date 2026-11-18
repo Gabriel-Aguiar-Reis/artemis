@@ -106,7 +106,7 @@ export function SettingsSheet(props: SheetProps<'settings-sheet'>) {
                 variant="outline"
                 className="flex-1 gap-2"
               >
-                <Icon as={Sun} size={18} className="text-primary" />
+                <Icon as={Sun} size={18} className="text-muted-foreground" />
                 <Text>Claro</Text>
               </Toggle>
 
@@ -116,7 +116,7 @@ export function SettingsSheet(props: SheetProps<'settings-sheet'>) {
                 variant="outline"
                 className="flex-1 gap-2"
               >
-                <Icon as={Moon} size={18} className="text-primary" />
+                <Icon as={Moon} size={18} className="text-muted-foreground" />
                 <Text>Escuro</Text>
               </Toggle>
 
@@ -126,7 +126,11 @@ export function SettingsSheet(props: SheetProps<'settings-sheet'>) {
                 variant="outline"
                 className="flex-1 gap-2"
               >
-                <Icon as={Monitor} size={18} className="text-primary" />
+                <Icon
+                  as={Monitor}
+                  size={18}
+                  className="text-muted-foreground"
+                />
                 <Text>Sistema</Text>
               </Toggle>
             </View>
@@ -143,17 +147,17 @@ export function SettingsSheet(props: SheetProps<'settings-sheet'>) {
             ) : license?.isAdmin ? (
               // Admin view
               <View className="gap-3">
-                <View className="border-green-600 bg-green-100 rounded-md dark:bg-green-950">
+                <View className="border-success bg-success-subtle rounded-md">
                   <Alert
                     icon={CalendarClock}
                     variant="default"
-                    className="bg-transparent border-green-600 dark:border-green-600"
-                    iconClassName="text-green-600"
+                    className="bg-transparent border-success"
+                    iconClassName="text-success"
                   >
-                    <AlertTitle className="font-semibold text-green-800 dark:text-green-200">
+                    <AlertTitle className="font-semibold text-success">
                       Licença Vitalícia
                     </AlertTitle>
-                    <AlertDescription className="text-sm text-green-700 dark:text-green-300">
+                    <AlertDescription className="text-sm text-success">
                       Válida até {formatDate(license.expirationDate)}
                     </AlertDescription>
                   </Alert>
@@ -226,7 +230,7 @@ export function SettingsSheet(props: SheetProps<'settings-sheet'>) {
             ) : (
               // Regular user view
               <View className="gap-3">
-                <View className="border-blue-600 bg-blue-50 rounded-md dark:bg-blue-950">
+                <View className="border-info bg-info-subtle rounded-md">
                   <Alert
                     icon={
                       license && license.getDaysRemaining() < 15
@@ -241,19 +245,19 @@ export function SettingsSheet(props: SheetProps<'settings-sheet'>) {
                     className={
                       license && license.getDaysRemaining() < 15
                         ? 'bg-transparent border-destructive'
-                        : 'border-blue-600 bg-transparent'
+                        : 'border-info bg-transparent'
                     }
                     iconClassName={
                       license && license.getDaysRemaining() < 15
                         ? 'text-destructive'
-                        : 'text-blue-600 bg-transparent'
+                        : 'text-info bg-transparent'
                     }
                   >
                     <AlertTitle
                       className={
                         license && license.getDaysRemaining() < 15
                           ? 'font-semibold'
-                          : 'font-semibold text-blue-800 dark:text-blue-200'
+                          : 'font-semibold text-info'
                       }
                     >
                       Expira em {license?.getDaysRemaining() || 0} dias
@@ -262,7 +266,7 @@ export function SettingsSheet(props: SheetProps<'settings-sheet'>) {
                       className={
                         license && license.getDaysRemaining() < 15
                           ? 'text-sm'
-                          : 'text-sm text-blue-700 dark:text-blue-300'
+                          : 'text-sm text-info'
                       }
                     >
                       Válida até{' '}

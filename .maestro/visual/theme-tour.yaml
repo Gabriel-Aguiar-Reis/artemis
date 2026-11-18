@@ -1,0 +1,49 @@
+# Visual tour for theme review (screenshots only, no assertions on colors).
+# Run once with the system in light mode and once in dark mode:
+#   adb shell cmd uimode night no|yes
+appId: br.com.artemis
+tags: [visual]
+---
+- runFlow: ../subflows/open-app.yaml
+- takeScreenshot: theme-01-home
+- tapOn: Ordens de Serviço
+- extendedWaitUntil:
+    visible: ".* - SP.*"
+    timeout: 30000
+- takeScreenshot: theme-02-work-orders
+- tapOn:
+    point: 86%,21%
+- takeScreenshot: theme-03-options-sheet
+- back
+- tapOn:
+    point: 91%,8%
+- takeScreenshot: theme-04-form
+- tapOn: Próximo
+- takeScreenshot: theme-05-form-validation
+- back
+- back
+- tapOn: Itinerário
+- extendedWaitUntil:
+    visible: ".* - SP.*"
+    timeout: 30000
+- takeScreenshot: theme-06-itinerary
+- tapOn:
+    point: 91%,8%
+- extendedWaitUntil:
+    visible: Resumo do Itinerário
+    timeout: 15000
+- scrollUntilVisible:
+    element: Cancelar Itinerário
+    direction: DOWN
+- takeScreenshot: theme-07-finish
+- back
+- back
+- tapOn: Clientes
+- extendedWaitUntil:
+    visible: ".* - SP.*"
+    timeout: 30000
+- takeScreenshot: theme-08-customers
+- tapOn:
+    point: 86%,21%
+- tapOn: Excluir
+- takeScreenshot: theme-09-delete-dialog

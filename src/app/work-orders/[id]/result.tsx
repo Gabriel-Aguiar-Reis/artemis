@@ -106,11 +106,11 @@ export default function WorkOrderResultScreen() {
   const getTypeColor = (type: WorkOrderResultItemType) => {
     switch (type) {
       case WorkOrderResultItemType.EXCHANGED:
-        return 'text-blue-500'
+        return 'text-info'
       case WorkOrderResultItemType.ADDED:
-        return 'text-green-500'
+        return 'text-success'
       case WorkOrderResultItemType.REMOVED:
-        return 'text-red-500'
+        return 'text-destructive'
     }
   }
 
@@ -122,7 +122,7 @@ export default function WorkOrderResultScreen() {
         }}
       />
       <View className="flex-1 p-4">
-        <ObjectCard.Root className="mb-4 dark:bg-input/30">
+        <ObjectCard.Root className="mb-4">
           <ObjectCard.Header>
             <ObjectCard.Title>
               Resumo do Relatório
@@ -157,7 +157,7 @@ export default function WorkOrderResultScreen() {
               </View>
 
               <View className="flex-row items-center gap-2">
-                <Icon as={ArrowLeftRight} className="text-blue-500" size={20} />
+                <Icon as={ArrowLeftRight} className="text-info" size={20} />
                 <Text className="text-sm text-muted-foreground flex-1">
                   Produtos Trocados
                 </Text>
@@ -167,7 +167,7 @@ export default function WorkOrderResultScreen() {
               </View>
 
               <View className="flex-row items-center gap-2">
-                <Icon as={Plus} className="text-green-500" size={20} />
+                <Icon as={Plus} className="text-success" size={20} />
                 <Text className="text-sm text-muted-foreground flex-1">
                   Produtos Adicionados
                 </Text>
@@ -177,7 +177,7 @@ export default function WorkOrderResultScreen() {
               </View>
 
               <View className="flex-row items-center gap-2">
-                <Icon as={Minus} className="text-red-500" size={20} />
+                <Icon as={Minus} className="text-destructive" size={20} />
                 <Text className="text-sm text-muted-foreground flex-1">
                   Produtos Removidos
                 </Text>
@@ -202,7 +202,7 @@ export default function WorkOrderResultScreen() {
                 const TypeIcon = getTypeIcon(itemWithType.type)
                 const item = itemWithType.item
                 return (
-                  <ObjectCard.Root className="mb-3 dark:bg-input/30">
+                  <ObjectCard.Root className="mb-3">
                     <ObjectCard.Header>
                       <ObjectCard.Title>
                         {item.productSnapshot.productName}

@@ -1,0 +1,30 @@
+# Visual check of work order status colors on closed orders (paid, unpaid
+# report, cloned, expired, late) using a finished itinerary from the history.
+# Screenshots only.
+appId: br.com.artemis
+tags: [visual]
+---
+- runFlow: ../subflows/open-app.yaml
+- openLink: artemis://itinerary/history
+- extendedWaitUntil:
+    visible: ".* ordens"
+    timeout: 15000
+- tapOn:
+    text: ".* ordens"
+    index: 1
+- extendedWaitUntil:
+    visible: ".* - SP.*"
+    timeout: 20000
+- takeScreenshot: status-01
+- swipe:
+    direction: UP
+- takeScreenshot: status-02
+- swipe:
+    direction: UP
+- takeScreenshot: status-03
+- swipe:
+    direction: UP
+- takeScreenshot: status-04
+- swipe:
+    direction: UP
+- takeScreenshot: status-05

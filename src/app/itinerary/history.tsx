@@ -146,7 +146,7 @@ function ItineraryCard({ itinerary, onPress }: ItineraryCardProps) {
               <Icon
                 as={DollarSign}
                 size={16}
-                className="text-primary"
+                className="text-muted-foreground"
                 strokeWidth={2}
               />
             </View>
@@ -198,10 +198,10 @@ function ItineraryCard({ itinerary, onPress }: ItineraryCardProps) {
                 <Icon
                   as={CheckCircle}
                   size={16}
-                  className="text-green-600"
+                  className="text-success"
                   strokeWidth={2}
                 />
-                <Text className="text-xs text-green-600">Todas no prazo</Text>
+                <Text className="text-xs text-success">Todas no prazo</Text>
               </View>
             )}
           </View>

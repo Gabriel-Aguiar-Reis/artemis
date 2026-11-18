@@ -74,15 +74,15 @@ export default function WorkOrderDetailsScreen() {
 
   const getStatusColor = (status: WorkOrderStatus) => {
     const colors: Record<WorkOrderStatus, string> = {
-      [WorkOrderStatus.PENDING]: 'text-yellow-500',
-      [WorkOrderStatus.COMMITTED]: 'text-blue-500',
-      [WorkOrderStatus.IN_PROGRESS]: 'text-cyan-500',
-      [WorkOrderStatus.COMPLETED]: 'text-green-500',
-      [WorkOrderStatus.PARTIAL]: 'text-orange-500',
-      [WorkOrderStatus.FAILED]: 'text-red-500',
+      [WorkOrderStatus.PENDING]: 'text-warning',
+      [WorkOrderStatus.COMMITTED]: 'text-info',
+      [WorkOrderStatus.IN_PROGRESS]: 'text-success',
+      [WorkOrderStatus.COMPLETED]: 'text-success',
+      [WorkOrderStatus.PARTIAL]: 'text-warning',
+      [WorkOrderStatus.FAILED]: 'text-destructive',
       [WorkOrderStatus.CANCELLED]: 'text-gray-500',
-      [WorkOrderStatus.EXPIRED]: 'text-orange-600',
-      [WorkOrderStatus.COPIED]: 'text-cyan-600',
+      [WorkOrderStatus.EXPIRED]: 'text-warning',
+      [WorkOrderStatus.COPIED]: 'text-success',
     }
     return colors[status] || 'text-muted-foreground'
   }
@@ -190,10 +190,10 @@ export default function WorkOrderDetailsScreen() {
         </Card>
 
         {/* Scheduled products */}
-        <ObjectCard.Root className="mb-4 dark:bg-input/30">
+        <ObjectCard.Root className="mb-4">
           <ObjectCard.Header>
             <View className="flex-row items-center gap-2 flex-1">
-              <Icon as={Package} className="text-primary" size={20} />
+              <Icon as={Package} className="text-muted-foreground" size={20} />
               <ObjectCard.Title>Produtos Agendados</ObjectCard.Title>
             </View>
           </ObjectCard.Header>
@@ -218,14 +218,12 @@ export default function WorkOrderDetailsScreen() {
         </ObjectCard.Root>
 
         {/* Report */}
-        <ObjectCard.Root className="mb-4 dark:bg-input/30">
+        <ObjectCard.Root className="mb-4">
           <ObjectCard.Header>
             <View className="flex-row items-center gap-2 flex-1">
               <Icon
                 as={ReceiptText}
-                className={
-                  workOrder.result ? 'text-cyan-500' : 'text-yellow-500'
-                }
+                className={workOrder.result ? 'text-success' : 'text-warning'}
                 size={20}
               />
               <ObjectCard.Title>Relatório</ObjectCard.Title>
@@ -236,9 +234,7 @@ export default function WorkOrderDetailsScreen() {
               <View className="flex-row items-center gap-2">
                 <Icon
                   as={workOrder.result ? CheckCircle2 : XCircle}
-                  className={
-                    workOrder.result ? 'text-cyan-500' : 'text-yellow-500'
-                  }
+                  className={workOrder.result ? 'text-success' : 'text-warning'}
                   size={16}
                 />
                 <Text className="text-sm text-muted-foreground flex-1">
@@ -279,7 +275,7 @@ export default function WorkOrderDetailsScreen() {
         </ObjectCard.Root>
 
         {/* Payment */}
-        <ObjectCard.Root className="mb-4 dark:bg-input/30">
+        <ObjectCard.Root className="mb-4">
           <ObjectCard.Header>
             <View className="flex-row items-center gap-2 flex-1">
               <Icon
@@ -287,9 +283,9 @@ export default function WorkOrderDetailsScreen() {
                 className={
                   workOrder.paymentOrder
                     ? workOrder.paymentOrder.isPaid
-                      ? 'text-green-500'
-                      : 'text-orange-500'
-                    : 'text-red-500'
+                      ? 'text-success'
+                      : 'text-warning'
+                    : 'text-destructive'
                 }
                 size={20}
               />
@@ -302,7 +298,7 @@ export default function WorkOrderDetailsScreen() {
                 <Icon
                   as={workOrder.paymentOrder ? CheckCircle2 : XCircle}
                   className={
-                    workOrder.paymentOrder ? 'text-green-500' : 'text-red-500'
+                    workOrder.paymentOrder ? 'text-success' : 'text-destructive'
                   }
                   size={16}
                 />

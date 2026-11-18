@@ -32,9 +32,9 @@ const LEVEL_ICONS = {
 }
 
 const LEVEL_COLORS = {
-  error: 'text-red-600 dark:text-red-400',
-  warning: 'text-yellow-600 dark:text-yellow-400',
-  info: 'text-blue-600 dark:text-blue-400',
+  error: 'text-destructive',
+  warning: 'text-warning',
+  info: 'text-info',
 }
 
 export default function LogsViewerScreen() {
@@ -154,17 +154,13 @@ export default function LogsViewerScreen() {
             <Text variant="h4">Gerenciar Logs</Text>
 
             <Button
-              variant="destructive"
+              variant="destructiveSubtle"
               onPress={handleClearAllLogs}
               disabled={isClearing}
               className="flex-row gap-2"
             >
-              <Icon
-                as={Trash2}
-                size={20}
-                className="text-destructive-foreground"
-              />
-              <Text className="text-destructive-foreground">
+              <Icon as={Trash2} size={20} className="text-destructive" />
+              <Text className="text-destructive">
                 {isClearing ? 'Limpando...' : 'Limpar Todos os Logs'}
               </Text>
             </Button>

@@ -142,7 +142,7 @@ export default function CloneWorkOrderScreen() {
             <CardHeader>
               <CardTitle>
                 <View className="flex-row items-center gap-2">
-                  <Icon as={Copy} size={20} className="text-primary" />
+                  <Icon as={Copy} size={20} className="text-muted-foreground" />
                   <Text className="text-lg font-semibold">Cliente</Text>
                 </View>
               </CardTitle>
@@ -152,7 +152,7 @@ export default function CloneWorkOrderScreen() {
             </CardHeader>
             <CardContent className="gap-3">
               <View className="flex-row items-center gap-2">
-                <Icon as={Store} size={18} className="text-primary" />
+                <Icon as={Store} size={18} className="text-muted-foreground" />
                 <Text className="text-base font-semibold">
                   {workOrder.customer.storeName}
                 </Text>
@@ -173,7 +173,7 @@ export default function CloneWorkOrderScreen() {
                   </Text>
                 )}
                 {workOrder.customer.isActiveWhatsApp() && (
-                  <WhatsAppIcon size={16} className="text-green-600 ml-1" />
+                  <WhatsAppIcon size={16} className="text-success ml-1" />
                 )}
               </View>
 
@@ -195,7 +195,11 @@ export default function CloneWorkOrderScreen() {
             <CardHeader>
               <CardTitle>
                 <View className="flex-row items-center gap-2">
-                  <Icon as={Calendar} size={20} className="text-primary" />
+                  <Icon
+                    as={Calendar}
+                    size={20}
+                    className="text-muted-foreground"
+                  />
                   <Text className="text-lg font-semibold">
                     Nova Data Agendada
                   </Text>
@@ -220,7 +224,11 @@ export default function CloneWorkOrderScreen() {
             <CardHeader>
               <CardTitle>
                 <View className="flex-row items-center gap-2">
-                  <Icon as={Package} size={20} className="text-primary" />
+                  <Icon
+                    as={Package}
+                    size={20}
+                    className="text-muted-foreground"
+                  />
                   <Text className="text-lg font-semibold">
                     Produtos a Clonar
                   </Text>

@@ -231,14 +231,14 @@ export function RemovedProductsCombobox({
 
               <View className="flex-row items-center gap-4">
                 <View className="flex-row items-center gap-1">
-                  <Icon as={Banknote} size={16} className="text-green-600" />
+                  <Icon as={Banknote} size={16} className="text-success" />
                   <Text className="text-sm">
                     {formatBRL(item.priceSnapshot)}
                   </Text>
                 </View>
 
                 <View className="flex-row items-center gap-1">
-                  <Icon as={Package} size={16} className="text-blue-600" />
+                  <Icon as={Package} size={16} className="text-info" />
                   <Text className="text-sm">
                     Disponível: {item.maxRemovableQuantity}x
                   </Text>
@@ -346,7 +346,7 @@ export function RemovedProductsCombobox({
           numberOfLines={1}
           className={cn(
             'bg-background',
-            error ? 'text-red-500' : 'text-muted-foreground'
+            error ? 'text-destructive' : 'text-muted-foreground'
           )}
         >
           {label}
@@ -360,21 +360,24 @@ export function RemovedProductsCombobox({
               'flex-row items-center justify-between h-12 px-4 rounded-md',
               'border bg-background',
               'active:bg-accent',
-              error ? 'border-red-500' : 'border-input'
+              error ? 'border-destructive' : 'border-input'
             )}
           >
             <View className="flex-row items-center gap-2 flex-1">
               <Icon
                 as={Package}
                 size={20}
-                className={cn('text-muted-foreground', error && 'text-red-500')}
+                className={cn(
+                  'text-muted-foreground',
+                  error && 'text-destructive'
+                )}
               />
               <Text
                 className={cn(
                   'flex-1',
                   selectedRemovedProducts.length === 0 &&
                     'text-muted-foreground',
-                  error && 'text-red-500'
+                  error && 'text-destructive'
                 )}
                 numberOfLines={1}
               >
@@ -384,7 +387,10 @@ export function RemovedProductsCombobox({
             <Icon
               as={ChevronDown}
               size={20}
-              className={cn('text-muted-foreground', error && 'text-red-500')}
+              className={cn(
+                'text-muted-foreground',
+                error && 'text-destructive'
+              )}
             />
           </Pressable>
         </DialogTrigger>
@@ -485,7 +491,9 @@ export function RemovedProductsCombobox({
       )}
 
       <View className="min-h-4 justify-center">
-        {error && <Text className="ml-2 text-xs text-red-500">{error}</Text>}
+        {error && (
+          <Text className="ml-2 text-xs text-destructive">{error}</Text>
+        )}
       </View>
     </View>
   )

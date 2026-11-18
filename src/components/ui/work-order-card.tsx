@@ -3,11 +3,14 @@ import { ObjectCard } from '@/src/components/ui/object-card'
 import { Separator } from '@/src/components/ui/separator'
 import { Text } from '@/src/components/ui/text'
 import { WhatsAppIcon } from '@/src/components/ui/whatsapp-icon'
-import { Customer } from '@/src/domain/entities/customer/customer.entity'
 import {
-  WorkOrder,
-  WorkOrderStatus,
-} from '@/src/domain/entities/work-order/work-order.entity'
+  getPriorityStatus,
+  paymentTone,
+  reportTone,
+  visitTone,
+} from '@/src/components/ui/work-order-status'
+import { Customer } from '@/src/domain/entities/customer/customer.entity'
+import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
 import { formatBRL, formatDateShort } from '@/src/lib/format'
 import { cn, formatPhoneBrazil } from '@/src/lib/utils'
 import {
@@ -26,7 +29,7 @@ import { View } from 'react-native'
 const renderContactNumber = (customer: Customer) => {
   const base = (value: string) => (
     <View className="flex-row items-center gap-2">
-      <View className="items-start text-primary">
+      <View className="items-start">
         <View className="flex-row items-center">
           <Text className="ml-1 text-xs text-muted-foreground">
             {formatPhoneBrazil(value)}
@@ -58,58 +61,15 @@ function WorkOrderCardComponent({
   onOptions?: (wo: WorkOrder) => void
   isLate?: boolean
 }) {
-  // Check conditions
-  const hasResultNoPay = wo.result && !wo.paymentOrder
-  const isExpired = wo.status === WorkOrderStatus.EXPIRED
-  const isCopied = wo.status === WorkOrderStatus.COPIED
-
   // Priority order: CLONADA > S/ PGTO > EXPIRADA > ATRASADO
-  const getPriorityStatus = () => {
-    if (isCopied) {
-      return {
-        label: 'CLONADA',
-        borderClass: 'border-2 border-cyan-500',
-        badgeClass: 'bg-cyan-500/40',
-        textClass: 'text-xs font-bold text-cyan-100',
-      }
-    }
-    if (hasResultNoPay) {
-      return {
-        label: 'S/ PGTO',
-        borderClass: 'border-2 border-destructive',
-        badgeClass: 'bg-destructive/40',
-        textClass: 'text-xs font-bold text-red-100',
-      }
-    }
-    if (isExpired) {
-      return {
-        label: 'EXPIRADA',
-        borderClass: 'border-2 border-orange-500',
-        badgeClass: 'bg-orange-500/40',
-        textClass: 'text-xs font-bold text-orange-100',
-      }
-    }
-    if (isLate) {
-      return {
-        label: 'ATRASADO',
-        borderClass: 'border-2 border-warning',
-        badgeClass: 'bg-warning/40',
-        textClass: 'text-xs font-bold text-warning-foreground',
-      }
-    }
-    return null
-  }
-
-  const priorityStatus = getPriorityStatus()
+  const priorityStatus = getPriorityStatus(wo, isLate)
 
   return (
-    <ObjectCard.Root
-      className={cn('mb-4 dark:bg-input/30', priorityStatus?.borderClass)}
-    >
+    <ObjectCard.Root className={cn('mb-4', priorityStatus?.borderClass)}>
       <ObjectCard.Header>
         <ObjectCard.Title>
           <View className="flex-row items-center gap-2">
-            <Icon as={Store} size={20} className="text-primary" />
+            <Icon as={Store} size={20} className="text-muted-foreground" />
             <View className="flex-1">
               <Text
                 className="text-lg font-semibold"
@@ -148,7 +108,7 @@ function WorkOrderCardComponent({
                 {renderContactNumber(wo.customer)}
               </View>
               {wo.customer.isActiveWhatsApp() && (
-                <WhatsAppIcon size={16} className="text-green-600 ml-1" />
+                <WhatsAppIcon size={16} className="text-success ml-1" />
               )}
             </View>
             <View className="flex-row items-center">
@@ -190,24 +150,16 @@ function WorkOrderCardComponent({
 
           {wo.visitDate ? (
             <View className="flex-row items-center gap-2">
-              <Icon
-                as={CalendarCheck}
-                size={16}
-                className="text-green-500 dark:text-green-300"
-              />
+              <Icon as={CalendarCheck} size={16} className={visitTone(wo)} />
 
-              <Text className="mt-1 text-sm text-green-500 dark:text-green-300">
+              <Text className={cn('mt-1 text-sm', visitTone(wo))}>
                 {formatDateShort(wo.visitDate)}
               </Text>
             </View>
           ) : (
             <View className="flex-row items-center gap-2">
-              <Icon
-                as={CalendarCheck}
-                size={16}
-                className="text-orange-500 dark:text-orange-400"
-              />
-              <Text className="mt-1 text-sm text-orange-500 dark:text-orange-400">
+              <Icon as={CalendarCheck} size={16} className={visitTone(wo)} />
+              <Text className={cn('mt-1 text-sm', visitTone(wo))}>
                 Não visitado
               </Text>
             </View>
@@ -219,19 +171,9 @@ function WorkOrderCardComponent({
             <Icon
               as={ReceiptText}
               size={16}
-              className={cn(
-                'text-sm text-yellow-500 dark:text-yellow-200',
-                wo.result &&
-                  'text-sm font-semibold text-cyan-500 dark:text-cyan-200'
-              )}
+              className={cn('text-sm', reportTone(wo))}
             />
-            <Text
-              className={cn(
-                'text-sm text-yellow-500 dark:text-yellow-200',
-                wo.result &&
-                  'text-sm font-semibold text-cyan-500 dark:text-cyan-200'
-              )}
-            >
+            <Text className={cn('text-sm', reportTone(wo))}>
               {wo.result ? 'Relatório registrado' : 'Não registrado'}
             </Text>
           </View>
@@ -240,19 +182,9 @@ function WorkOrderCardComponent({
             <Icon
               as={Receipt}
               size={16}
-              className={cn(
-                'text-sm text-red-500 dark:text-red-200',
-                wo.paymentOrder?.isPaid &&
-                  'text-sm font-semibold text-cyan-500 dark:text-cyan-200'
-              )}
+              className={cn('text-sm', paymentTone(wo))}
             />
-            <Text
-              className={cn(
-                'text-sm text-red-500 dark:text-red-200',
-                wo.paymentOrder?.isPaid &&
-                  'text-sm font-semibold text-cyan-500 dark:text-cyan-200'
-              )}
-            >
+            <Text className={cn('text-sm', paymentTone(wo))}>
               {wo.paymentOrder ? (
                 <>
                   {wo.paymentOrder.method} -
@@ -269,7 +201,7 @@ function WorkOrderCardComponent({
 
         {wo.paymentOrder && (
           <View className="flex-row items-center mb-1">
-            <Icon as={Banknote} size={16} className="text-green-600" />
+            <Icon as={Banknote} size={16} className="text-muted-foreground" />
             <Text className="text-sm ml-1 ">
               {formatBRL(wo.paymentOrder?.totalValue)}
             </Text>

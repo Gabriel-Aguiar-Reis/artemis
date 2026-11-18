@@ -152,16 +152,12 @@ export function ProductCombobox({
 
               <View className="flex-row items-center gap-4">
                 <View className="flex-row items-center gap-1">
-                  <Icon as={Banknote} size={16} className="text-green-600" />
+                  <Icon as={Banknote} size={16} className="text-success" />
                   <Text className="text-sm">{formatBRL(item.salePrice)}</Text>
                 </View>
 
                 <View className="flex-row items-center gap-1">
-                  <Icon
-                    as={CalendarClock}
-                    size={16}
-                    className="text-orange-600"
-                  />
+                  <Icon as={CalendarClock} size={16} className="text-warning" />
                   <Text className="text-sm">{item.expiration}</Text>
                 </View>
               </View>
@@ -170,7 +166,7 @@ export function ProductCombobox({
                 <View
                   className={cn(
                     'h-2 w-2 rounded-full',
-                    item.isActive ? 'bg-green-500' : 'bg-gray-400'
+                    item.isActive ? 'bg-success' : 'bg-gray-400'
                   )}
                 />
                 <Text className="text-xs text-muted-foreground">
@@ -271,7 +267,7 @@ export function ProductCombobox({
           numberOfLines={1}
           className={cn(
             'bg-background',
-            error ? 'text-red-500' : 'text-muted-foreground'
+            error ? 'text-destructive' : 'text-muted-foreground'
           )}
         >
           {label}
@@ -285,20 +281,23 @@ export function ProductCombobox({
               'flex-row items-center justify-between h-12 px-4 rounded-md',
               'border bg-background',
               'active:bg-accent',
-              error ? 'border-red-500' : 'border-input'
+              error ? 'border-destructive' : 'border-input'
             )}
           >
             <View className="flex-row items-center gap-2 flex-1">
               <Icon
                 as={Package}
                 size={20}
-                className={cn('text-muted-foreground', error && 'text-red-500')}
+                className={cn(
+                  'text-muted-foreground',
+                  error && 'text-destructive'
+                )}
               />
               <Text
                 className={cn(
                   'flex-1',
                   selectedProducts.length === 0 && 'text-muted-foreground',
-                  error && 'text-red-500'
+                  error && 'text-destructive'
                 )}
                 numberOfLines={1}
               >
@@ -308,7 +307,10 @@ export function ProductCombobox({
             <Icon
               as={ChevronDown}
               size={20}
-              className={cn('text-muted-foreground', error && 'text-red-500')}
+              className={cn(
+                'text-muted-foreground',
+                error && 'text-destructive'
+              )}
             />
           </Pressable>
         </DialogTrigger>
@@ -414,7 +416,9 @@ export function ProductCombobox({
       )}
 
       <View className="min-h-4 justify-center">
-        {error && <Text className="ml-2 text-xs text-red-500">{error}</Text>}
+        {error && (
+          <Text className="ml-2 text-xs text-destructive">{error}</Text>
+        )}
       </View>
     </View>
   )

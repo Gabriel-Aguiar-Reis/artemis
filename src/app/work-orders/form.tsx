@@ -650,7 +650,7 @@ export default function WorkOrderFormScreen() {
                     {/* Total */}
                     <View className="flex-row justify-between items-center pt-3 border-t-2 border-border">
                       <Text className="font-bold text-lg">Valor Total:</Text>
-                      <Text className="font-bold text-xl text-primary">
+                      <Text className="font-bold text-xl text-foreground">
                         R${' '}
                         {totalValue.toLocaleString('pt-BR', {
                           minimumFractionDigits: 2,

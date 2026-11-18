@@ -42,18 +42,22 @@ const CustomerCard = React.memo(
   function CustomerCard({ customer, onOptions }: CustomerCardProps) {
     const address = customer.storeAddress.getFullAddress()
     return (
-      <ObjectCard.Root className="mb-4 dark:bg-input/30">
+      <ObjectCard.Root className="mb-4">
         <ObjectCard.Header>
           <ObjectCard.Title>
             <View className="flex-row gap-2 items-center">
-              <Icon as={Store} size={20} className="text-primary" />
+              <Icon as={Store} size={20} className="text-muted-foreground" />
               <Text className="font-bold">{customer.storeName}</Text>
             </View>
           </ObjectCard.Title>
           <ObjectCard.Description>
             <View className="flex-row gap-2 items-center">
-              <Icon as={MapPinHouse} size={20} className="text-ring" />
-              <Text className="text-sm text-ring text-wrap mr-4">
+              <Icon
+                as={MapPinHouse}
+                size={20}
+                className="text-muted-foreground"
+              />
+              <Text className="text-sm text-muted-foreground text-wrap mr-4">
                 {address}
               </Text>
             </View>
@@ -65,22 +69,26 @@ const CustomerCard = React.memo(
             <Icon as={UserSquare2} size={16} />
             <Text className="font-bold">{customer.contactName}</Text>
             {customer.isActiveWhatsApp() && (
-              <WhatsAppIcon size={16} className="text-green-600" />
+              <WhatsAppIcon size={16} className="text-success" />
             )}
           </View>
           <View className="ml-6">
             {customer.phoneNumber && (
               <View className="flex-row items-center gap-2">
-                <Icon as={Phone} size={16} className="text-ring" />
-                <Text className="text-sm text-ring">
+                <Icon as={Phone} size={16} className="text-muted-foreground" />
+                <Text className="text-sm text-muted-foreground">
                   {formatPhoneBrazil(customer.phoneNumber.value)}
                 </Text>
               </View>
             )}
             {customer.landlineNumber && (
               <View className="flex-row items-center gap-2">
-                <Icon as={UtilityPole} size={16} className="text-ring" />
-                <Text className="text-sm text-ring">
+                <Icon
+                  as={UtilityPole}
+                  size={16}
+                  className="text-muted-foreground"
+                />
+                <Text className="text-sm text-muted-foreground">
                   {formatPhoneBrazil(customer.landlineNumber.value)}
                 </Text>
               </View>

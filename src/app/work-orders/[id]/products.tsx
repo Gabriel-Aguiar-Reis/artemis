@@ -70,7 +70,7 @@ export default function WorkOrderProductsScreen() {
         </View>
       ) : (
         <View className="flex-1 p-4">
-          <ObjectCard.Root className="mb-4 dark:bg-input/30">
+          <ObjectCard.Root className="mb-4">
             <ObjectCard.Header>
               <ObjectCard.Title>Resumo</ObjectCard.Title>
               {workOrder.status !== 'EXPIRED' &&
@@ -117,7 +117,7 @@ export default function WorkOrderProductsScreen() {
           <FlashList
             data={items}
             renderItem={({ item }: { item: WorkOrderItem }) => (
-              <ObjectCard.Root className="mb-3 dark:bg-input/30">
+              <ObjectCard.Root className="mb-3">
                 <ObjectCard.Header>
                   <ObjectCard.Title>{item.productName}</ObjectCard.Title>
                 </ObjectCard.Header>

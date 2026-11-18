@@ -19,7 +19,7 @@ import {
   removeWalFiles,
 } from '@/src/infra/db/drizzle/drizzle-client'
 import migrations from '@/src/infra/db/drizzle/migrations'
-import { NAV_THEME } from '@/src/lib/theme'
+import { NAV_THEME, THEME } from '@/src/lib/theme'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { ThemeProvider } from '@react-navigation/native'
 import { PortalHost } from '@rn-primitives/portal'
@@ -244,7 +244,9 @@ export default function RootLayout() {
   useEffect(() => {
     if (Platform.OS === 'android') {
       const isDark = colorScheme === 'dark'
-      NavigationBar.setBackgroundColorAsync(isDark ? '#0a0a0a' : '#ffffff')
+      NavigationBar.setBackgroundColorAsync(
+        isDark ? THEME.dark.background : THEME.light.background
+      )
       NavigationBar.setButtonStyleAsync(isDark ? 'light' : 'dark')
     }
   }, [colorScheme])
@@ -252,7 +254,7 @@ export default function RootLayout() {
   if (error) {
     return (
       <View className="flex-1 items-center justify-center p-4 bg-background">
-        <Text className="text-red-600 font-bold text-lg mb-2 text-center">
+        <Text className="text-destructive font-bold text-lg mb-2 text-center">
           Erro de Migração do Banco de Dados
         </Text>
         <Text className="text-center mb-4 text-muted-foreground">

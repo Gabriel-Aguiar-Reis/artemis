@@ -78,7 +78,7 @@ export default function GenerateLicenseScreen() {
           {/* Header */}
           <View className="gap-2">
             <View className="flex-row items-center gap-2">
-              <Icon as={KeyRound} size={28} className="text-primary" />
+              <Icon as={KeyRound} size={28} className="text-muted-foreground" />
               <Text className="font-bold text-2xl">Gerar Licença</Text>
             </View>
             <Text className="text-muted-foreground">
@@ -131,27 +131,27 @@ export default function GenerateLicenseScreen() {
 
           {/* Generated Code Section */}
           {generatedCode && (
-            <View className="gap-3 p-4 bg-green-100 dark:bg-green-950 border border-green-600 rounded-lg">
+            <View className="gap-3 p-4 bg-success-subtle border border-success rounded-lg">
               <View className="gap-2">
-                <Text className="font-semibold text-green-800 dark:text-green-200">
+                <Text className="font-semibold text-success">
                   ✓ Código gerado com sucesso!
                 </Text>
-                <Text className="text-sm text-green-700 dark:text-green-300">
+                <Text className="text-sm text-success">
                   Copie e envie este código para o usuário:
                 </Text>
               </View>
 
               <Pressable
                 onPress={handleCopy}
-                className="flex-row items-center justify-between bg-green-50 dark:bg-green-900 p-4 rounded-lg border border-green-600 active:bg-green-200 dark:active:bg-green-800"
+                className="flex-row items-center justify-between bg-success-subtle p-4 rounded-lg border border-success active:bg-success-subtle"
               >
-                <Text className="font-mono text-base font-bold flex-1 text-green-800 dark:text-green-200">
+                <Text className="font-mono text-base font-bold flex-1 text-success">
                   {generatedCode}
                 </Text>
-                <Icon as={Copy} size={20} className="text-green-600 ml-2" />
+                <Icon as={Copy} size={20} className="text-success ml-2" />
               </Pressable>
 
-              <Text className="text-xs text-green-700 dark:text-green-400">
+              <Text className="text-xs text-success">
                 Toque no código acima para copiar
               </Text>
             </View>

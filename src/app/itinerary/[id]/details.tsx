@@ -10,7 +10,7 @@ import {
 import { Text } from '@/src/components/ui/text'
 import { WorkOrderCard } from '@/src/components/ui/work-order-card'
 import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
-import { UUID } from '@/src/lib/utils'
+import { countCalendarDays, UUID } from '@/src/lib/utils'
 import { FlashList } from '@shopify/flash-list'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
 import { Calendar, Clock, MapPin } from 'lucide-react-native'
@@ -62,86 +62,86 @@ export default function ItineraryDetailsScreen() {
         }}
       />
 
-      <View className="flex-1 p-4">
-        {/* Itinerary info card */}
-        <Card className="mb-4">
-          <CardHeader>
-            <CardTitle>
-              {itinerary.isFinished ? 'Itinerário Finalizado' : 'Itinerário'}
-            </CardTitle>
-            <CardDescription>
-              {formatDate(itinerary.initialItineraryDate)} -{' '}
-              {formatDate(itinerary.finalItineraryDate)}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="gap-3">
-            <View className="flex-row items-center gap-2">
-              <Calendar size={16} className="text-muted-foreground" />
-              <Text className="text-sm text-muted-foreground">
-                Período:{' '}
-                {Math.ceil(
-                  (new Date(itinerary.finalItineraryDate).getTime() -
-                    new Date(itinerary.initialItineraryDate).getTime()) /
-                    (1000 * 60 * 60 * 24)
-                )}{' '}
-                dia(s)
-              </Text>
-            </View>
+      {/* The summary scrolls with the list (it used to be fixed and leave
+          only half of the screen for the work orders) */}
+      <FlashList
+        data={workOrders ?? []}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={{ padding: 16 }}
+        ListHeaderComponent={
+          <>
+            <Card className="mb-4">
+              <CardHeader>
+                <CardTitle>
+                  {itinerary.isFinished
+                    ? 'Itinerário Finalizado'
+                    : 'Itinerário'}
+                </CardTitle>
+                <CardDescription>
+                  {formatDate(itinerary.initialItineraryDate)} -{' '}
+                  {formatDate(itinerary.finalItineraryDate)}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="gap-3">
+                <View className="flex-row items-center gap-2">
+                  <Calendar size={16} className="text-muted-foreground" />
+                  <Text className="text-sm text-muted-foreground">
+                    Período:{' '}
+                    {countCalendarDays(
+                      new Date(itinerary.initialItineraryDate),
+                      new Date(itinerary.finalItineraryDate)
+                    )}{' '}
+                    dia(s)
+                  </Text>
+                </View>
 
-            <View className="flex-row items-center gap-2">
-              <MapPin size={16} className="text-muted-foreground" />
-              <Text className="text-sm text-muted-foreground">
-                Ordens de serviço: {itinerary.totalOrders}
-              </Text>
-            </View>
+                <View className="flex-row items-center gap-2">
+                  <MapPin size={16} className="text-muted-foreground" />
+                  <Text className="text-sm text-muted-foreground">
+                    Ordens de serviço: {itinerary.totalOrders}
+                  </Text>
+                </View>
 
-            {itinerary.isFinished && (
-              <View className="flex-row items-center gap-2">
-                <Clock size={16} className="text-muted-foreground" />
-                <Text className="text-sm text-muted-foreground">
-                  Finalizadas: {itinerary.finishedOrders} /{' '}
-                  {itinerary.totalOrders}
-                </Text>
-              </View>
-            )}
+                {itinerary.isFinished && (
+                  <View className="flex-row items-center gap-2">
+                    <Clock size={16} className="text-muted-foreground" />
+                    <Text className="text-sm text-muted-foreground">
+                      Finalizadas: {itinerary.finishedOrders} /{' '}
+                      {itinerary.totalOrders}
+                    </Text>
+                  </View>
+                )}
 
-            {itinerary.lateOrders.length > 0 && (
-              <View className="flex-row items-center gap-2">
-                <Text className="text-sm text-destructive">
-                  Ordens atrasadas: {itinerary.lateOrders.length}
-                </Text>
-              </View>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Work order list */}
-        <View className="flex-1">
-          <Text className="text-lg font-semibold mb-3">
-            Ordens de Serviço ({workOrders?.length || 0})
-          </Text>
-
-          {!workOrders || workOrders.length === 0 ? (
-            <View className="flex-1 items-center justify-center">
-              <Text className="text-muted-foreground">
-                Nenhuma ordem de serviço neste itinerário
-              </Text>
-            </View>
-          ) : (
-            <FlashList
-              data={workOrders}
-              renderItem={({ item }) => (
-                <WorkOrderCard
-                  wo={item.workOrder}
-                  onPress={() => handleWorkOrderPress(item.workOrder)}
-                  isLate={item.isLate}
-                />
-              )}
-              ListFooterComponent={<View className="h-4" />}
-            />
-          )}
-        </View>
-      </View>
+                {itinerary.lateOrders.length > 0 && (
+                  <View className="flex-row items-center gap-2">
+                    <Text className="text-sm text-warning">
+                      Ordens atrasadas: {itinerary.lateOrders.length}
+                    </Text>
+                  </View>
+                )}
+              </CardContent>
+            </Card>
+            <Text className="text-lg font-semibold mb-3">
+              Ordens de Serviço ({workOrders?.length || 0})
+            </Text>
+          </>
+        }
+        ListEmptyComponent={
+          <View className="items-center justify-center py-12">
+            <Text className="text-muted-foreground">
+              Nenhuma ordem de serviço neste itinerário
+            </Text>
+          </View>
+        }
+        renderItem={({ item }) => (
+          <WorkOrderCard
+            wo={item.workOrder}
+            onPress={() => handleWorkOrderPress(item.workOrder)}
+            isLate={item.isLate}
+          />
+        )}
+        ListFooterComponent={<View className="h-4" />}
+      />
     </SafeAreaView>
   )
 }

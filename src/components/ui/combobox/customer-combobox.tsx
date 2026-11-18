@@ -63,7 +63,7 @@ const CustomerItem = React.memo(function CustomerItem({
       <View className="flex-row justify-between items-start w-full">
         <View className="flex-1 gap-1">
           <View className="flex-row gap-2 items-center">
-            <Icon as={Store} size={18} className="text-primary" />
+            <Icon as={Store} size={18} className="text-muted-foreground" />
             <Text className="font-semibold text-base flex-1">
               {item.storeName}
             </Text>
@@ -197,7 +197,7 @@ export function CustomerCombobox({
           numberOfLines={1}
           className={cn(
             'bg-background',
-            error ? 'text-red-500' : 'text-muted-foreground'
+            error ? 'text-destructive' : 'text-muted-foreground'
           )}
         >
           {label}
@@ -211,20 +211,23 @@ export function CustomerCombobox({
               'flex-row items-center justify-between h-12 px-4 rounded-md',
               'border bg-background',
               'active:bg-accent',
-              error ? 'border-red-500' : 'border-input'
+              error ? 'border-destructive' : 'border-input'
             )}
           >
             <View className="flex-row items-center gap-2 flex-1">
               <Icon
                 as={Store}
                 size={20}
-                className={cn('text-muted-foreground', error && 'text-red-500')}
+                className={cn(
+                  'text-muted-foreground',
+                  error && 'text-destructive'
+                )}
               />
               <Text
                 className={cn(
                   'flex-1',
                   !selectedCustomerId && 'text-muted-foreground',
-                  error && 'text-red-500'
+                  error && 'text-destructive'
                 )}
                 numberOfLines={1}
               >
@@ -234,7 +237,10 @@ export function CustomerCombobox({
             <Icon
               as={ChevronDown}
               size={20}
-              className={cn('text-muted-foreground', error && 'text-red-500')}
+              className={cn(
+                'text-muted-foreground',
+                error && 'text-destructive'
+              )}
             />
           </Pressable>
         </DialogTrigger>
@@ -307,7 +313,9 @@ export function CustomerCombobox({
       </Dialog>
 
       <View className="min-h-4 justify-center">
-        {error && <Text className="ml-2 text-xs text-red-500">{error}</Text>}
+        {error && (
+          <Text className="ml-2 text-xs text-destructive">{error}</Text>
+        )}
       </View>
     </View>
   )

@@ -65,7 +65,7 @@ export default function WorkOrderPaymentScreen() {
         }}
       />
       <View className="flex-1 p-4">
-        <ObjectCard.Root className="mb-4 dark:bg-input/30">
+        <ObjectCard.Root className="mb-4">
           <ObjectCard.Header>
             <ObjectCard.Title>Informações do Pagamento</ObjectCard.Title>
             <ObjectCard.Actions onPress={handlePaymentOptions} />
@@ -140,20 +140,16 @@ export default function WorkOrderPaymentScreen() {
 
               <View className="flex-row items-center gap-2">
                 {payment.isPaid ? (
-                  <Icon
-                    as={CheckCircle2}
-                    className="text-green-500"
-                    size={20}
-                  />
+                  <Icon as={CheckCircle2} className="text-success" size={20} />
                 ) : (
-                  <Icon as={XCircle} className="text-red-500" size={20} />
+                  <Icon as={XCircle} className="text-destructive" size={20} />
                 )}
                 <Text className="text-sm text-muted-foreground flex-1">
                   Status
                 </Text>
                 <Text
                   className={`text-sm font-semibold ${
-                    payment.isPaid ? 'text-green-500' : 'text-red-500'
+                    payment.isPaid ? 'text-success' : 'text-destructive'
                   }`}
                 >
                   {payment.isPaid ? 'Pago' : 'Pendente'}

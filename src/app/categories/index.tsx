@@ -33,7 +33,7 @@ type CategoryCardProps = {
 const CategoryCard = React.memo(
   function CategoryCard({ category, onOptions }: CategoryCardProps) {
     return (
-      <ObjectCard.Root className="mb-4 dark:bg-input/30">
+      <ObjectCard.Root className="mb-4">
         <ObjectCard.Header>
           <ObjectCard.Title>{category.name}</ObjectCard.Title>
           <ObjectCard.Actions onPress={() => onOptions(category)} />
@@ -43,7 +43,7 @@ const CategoryCard = React.memo(
             <View
               className={cn(
                 'h-2 w-2 rounded-full',
-                category.isActive ? 'bg-green-500' : 'bg-gray-400'
+                category.isActive ? 'bg-success' : 'bg-gray-400'
               )}
             />
             <Text className="text-sm text-muted-foreground">

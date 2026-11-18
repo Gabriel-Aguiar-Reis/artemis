@@ -41,13 +41,19 @@ type ProductCardProps = {
 const ProductCard = React.memo(
   function ProductCard({ product, onOptions }: ProductCardProps) {
     return (
-      <ObjectCard.Root className="mb-4 dark:bg-input/30">
+      <ObjectCard.Root className="mb-4">
         <ObjectCard.Header>
           <ObjectCard.Title>{product.name}</ObjectCard.Title>
           <ObjectCard.Description>
             <View className="flex-row items-center gap-2">
-              <Icon as={FolderTree} size={16} className="text-ring" />
-              <Text className="text-ring">{product.categoryName}</Text>
+              <Icon
+                as={FolderTree}
+                size={16}
+                className="text-muted-foreground"
+              />
+              <Text className="text-muted-foreground">
+                {product.categoryName}
+              </Text>
             </View>
           </ObjectCard.Description>
           <ObjectCard.Actions onPress={() => onOptions(product)} />
@@ -56,15 +62,11 @@ const ProductCard = React.memo(
           <View className="flex-row items-center justify-between gap-2">
             <View>
               <View className="flex-row gap-2 items-center">
-                <Icon as={Banknote} size={20} className="text-green-600" />
+                <Icon as={Banknote} size={20} className="text-success" />
                 <Text>{formatBRL(product.salePrice)}</Text>
               </View>
               <View className="flex-row gap-2 items-center">
-                <Icon
-                  as={CalendarClock}
-                  size={20}
-                  className="text-orange-600"
-                />
+                <Icon as={CalendarClock} size={20} className="text-warning" />
                 <Text>{product.expiration}</Text>
               </View>
             </View>
@@ -72,7 +74,7 @@ const ProductCard = React.memo(
               <View
                 className={cn(
                   'h-2 w-2 rounded-full',
-                  product.isActive ? 'bg-green-500' : 'bg-gray-400'
+                  product.isActive ? 'bg-success' : 'bg-gray-400'
                 )}
               />
               <Text className="text-sm text-muted-foreground">

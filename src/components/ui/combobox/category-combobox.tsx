@@ -75,14 +75,18 @@ export function CategoryCombobox({
         >
           <View className="flex-row justify-between items-center w-full">
             <View className="flex-1 flex-row items-center gap-3">
-              <Icon as={FolderTree} size={18} className="text-primary" />
+              <Icon
+                as={FolderTree}
+                size={18}
+                className="text-muted-foreground"
+              />
               <View className="flex-1">
                 <Text className="font-semibold text-base">{item.name}</Text>
                 <View className="flex-row items-center gap-2 mt-1">
                   <View
                     className={cn(
                       'h-2 w-2 rounded-full',
-                      item.isActive ? 'bg-green-500' : 'bg-gray-400'
+                      item.isActive ? 'bg-success' : 'bg-gray-400'
                     )}
                   />
                   <Text className="text-xs text-muted-foreground">
@@ -143,7 +147,7 @@ export function CategoryCombobox({
           numberOfLines={1}
           className={cn(
             'bg-background',
-            error ? 'text-red-500' : 'text-muted-foreground'
+            error ? 'text-destructive' : 'text-muted-foreground'
           )}
         >
           {label}
@@ -157,20 +161,23 @@ export function CategoryCombobox({
               'flex-row items-center justify-between h-12 px-4 rounded-md',
               'border bg-background',
               'active:bg-accent',
-              error ? 'border-red-500' : 'border-input'
+              error ? 'border-destructive' : 'border-input'
             )}
           >
             <View className="flex-row items-center gap-2 flex-1">
               <Icon
                 as={FolderTree}
                 size={20}
-                className={cn('text-muted-foreground', error && 'text-red-500')}
+                className={cn(
+                  'text-muted-foreground',
+                  error && 'text-destructive'
+                )}
               />
               <Text
                 className={cn(
                   'flex-1',
                   !selectedCategoryId && 'text-muted-foreground',
-                  error && 'text-red-500'
+                  error && 'text-destructive'
                 )}
                 numberOfLines={1}
               >
@@ -180,7 +187,10 @@ export function CategoryCombobox({
             <Icon
               as={ChevronDown}
               size={20}
-              className={cn('text-muted-foreground', error && 'text-red-500')}
+              className={cn(
+                'text-muted-foreground',
+                error && 'text-destructive'
+              )}
             />
           </Pressable>
         </DialogTrigger>
@@ -255,7 +265,9 @@ export function CategoryCombobox({
       </Dialog>
 
       <View className="min-h-4 justify-center">
-        {error && <Text className="ml-2 text-xs text-red-500">{error}</Text>}
+        {error && (
+          <Text className="ml-2 text-xs text-destructive">{error}</Text>
+        )}
       </View>
     </View>
   )

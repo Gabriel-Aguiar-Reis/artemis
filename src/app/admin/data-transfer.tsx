@@ -229,17 +229,17 @@ export default function DataTransferScreen() {
               categorias, produtos e clientes.
             </Text>
 
-            <View className="bg-red-50 dark:bg-red-950 rounded-xl">
+            <View className="bg-destructive-subtle rounded-xl">
               <Alert
                 icon={AlertCircle}
-                iconClassName="text-red-400"
+                iconClassName="text-destructive"
                 variant="destructive"
-                className="border-red-200 dark:border-red-800 bg-transparent"
+                className="border-destructive/30 bg-transparent"
               >
-                <AlertTitle className="font-medium text-red-800 dark:text-red-200">
+                <AlertTitle className="font-medium text-destructive">
                   Aviso!
                 </AlertTitle>
-                <AlertDescription className="text-xs text-red-700 dark:text-red-300">
+                <AlertDescription className="text-xs text-destructive">
                   Todas as tabelas possuem a primeira linha preenchida como
                   exemplo de uso. Remova essa linha antes de importar seus
                   dados.
@@ -247,27 +247,27 @@ export default function DataTransferScreen() {
               </Alert>
             </View>
 
-            <View className="gap-2 p-3 bg-blue-50 dark:bg-blue-950 rounded-md border border-blue-200 dark:border-blue-800">
+            <View className="gap-2 p-3 bg-info-subtle rounded-md border border-info/30">
               <View className="flex-row gap-2 items-center">
-                <Icon as={ListChecks} size={20} className="text-blue-600" />
-                <Text className="font-medium text-blue-800 dark:text-blue-200">
+                <Icon as={ListChecks} size={20} className="text-info" />
+                <Text className="font-medium text-info">
                   Formato da Validade (Produtos)
                 </Text>
               </View>
               <View className="gap-1">
-                <Text className="text-xs text-blue-700 dark:text-blue-300">
+                <Text className="text-xs text-info">
                   O campo "validade" aceita os seguintes formatos:
                 </Text>
-                <Text className="text-xs text-blue-700 dark:text-blue-300">
+                <Text className="text-xs text-info">
                   • Com espaço: "30 dias", "1 mês", "2 semanas", "1 ano"
                 </Text>
-                <Text className="text-xs text-blue-700 dark:text-blue-300">
+                <Text className="text-xs text-info">
                   • Sem espaço: "30dias", "1mês", "2semanas"
                 </Text>
-                <Text className="text-xs text-blue-700 dark:text-blue-300">
+                <Text className="text-xs text-info">
                   • Abreviado: "30 d", "2 s", "1 m", "1 a"
                 </Text>
-                <Text className="text-xs text-blue-700 dark:text-blue-300">
+                <Text className="text-xs text-info">
                   • Aceita maiúsculas/minúsculas e com/sem acento
                 </Text>
               </View>
@@ -341,24 +341,24 @@ export default function DataTransferScreen() {
           </View>
 
           {/* Additional information */}
-          <View className="gap-2 p-3 bg-blue-50 dark:bg-blue-950 rounded-md border border-blue-200 dark:border-blue-800">
+          <View className="gap-2 p-3 bg-info-subtle rounded-md border border-info/30">
             <View className="flex-row gap-2 items-center">
-              <Icon as={FileSpreadsheet} size={20} className="text-blue-600" />
-              <Text className="font-medium text-blue-800 dark:text-blue-200">
+              <Icon as={FileSpreadsheet} size={20} className="text-info" />
+              <Text className="font-medium text-info">
                 Dicas para importação
               </Text>
             </View>
             <View className="gap-1">
-              <Text className="text-xs text-blue-700 dark:text-blue-300">
+              <Text className="text-xs text-info">
                 • Use 1 para ativo/whatsapp e 0 para inativo/sem whatsapp
               </Text>
-              <Text className="text-xs text-blue-700 dark:text-blue-300">
+              <Text className="text-xs text-info">
                 • Formato de validade: "30 dias", "2 meses", etc.
               </Text>
-              <Text className="text-xs text-blue-700 dark:text-blue-300">
+              <Text className="text-xs text-info">
                 • CEP deve estar no formato: 01234-567
               </Text>
-              <Text className="text-xs text-blue-700 dark:text-blue-300">
+              <Text className="text-xs text-info">
                 • A categoria em Produtos deve corresponder a uma categoria
                 existente
               </Text>

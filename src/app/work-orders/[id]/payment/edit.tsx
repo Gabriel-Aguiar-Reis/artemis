@@ -203,7 +203,7 @@ export default function PaymentEditScreen() {
               ))}
               <View className="flex-row justify-between items-center pt-2 mt-2 border-t border-border">
                 <Text className="font-semibold">Total:</Text>
-                <Text className="font-bold text-lg text-primary">
+                <Text className="font-bold text-lg text-foreground">
                   R${' '}
                   {workOrder.result.totalValue.toLocaleString('pt-BR', {
                     minimumFractionDigits: 2,
