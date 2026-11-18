@@ -1,0 +1,23 @@
+# Opens the dev build through the Expo dev client (Metro on the host at 8081)
+# and waits for the bottom tab bar (the app reopens the last tab). Dismisses the dev-client onboarding/menu, which
+# shows up on the first launch after clearing app data.
+appId: br.com.artemis
+---
+- stopApp
+- openLink: artemis://expo-development-client/?url=http%3A%2F%2F10.0.2.2%3A8081
+- extendedWaitUntil:
+    visible: "Categorias|Continue|Connected to:"
+    timeout: 60000
+- runFlow:
+    when:
+      visible: Continue
+    commands:
+      - tapOn: Continue
+- runFlow:
+    when:
+      visible: "Connected to:"
+    commands:
+      - back
+- extendedWaitUntil:
+    visible: Categorias
+    timeout: 60000

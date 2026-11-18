@@ -8,7 +8,8 @@ import {
 } from '@/src/components/ui/card'
 import { Icon } from '@/src/components/ui/icon'
 import { Text } from '@/src/components/ui/text'
-import { Itinerary } from '@/src/domain/entities/itinerary/itinerary.entity'
+import type { ItinerarySummary } from '@/src/infra/repositories/drizzle/drizzle.itinerary.repository'
+import { countCalendarDays } from '@/src/lib/utils'
 import { FlashList } from '@shopify/flash-list'
 import { Stack, useRouter } from 'expo-router'
 import {
@@ -25,25 +26,21 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function ItineraryHistoryScreen() {
   const router = useRouter()
-  const { data: allItineraries, isLoading } = itineraryHooks.getItineraries()
+  const { data: allItineraries, isLoading } =
+    itineraryHooks.getFinishedItinerarySummaries()
 
-  // Filtrar apenas itinerários finalizados e ordenar por data (mais recente primeiro)
+  // Keep only finished itineraries and sort by date (most recent first)
   const finishedItineraries = useMemo(() => {
-    if (!allItineraries) return []
-    return allItineraries
-      .filter((it) => it.isFinished)
-      .sort(
-        (a, b) =>
-          b.finalItineraryDate.getTime() - a.finalItineraryDate.getTime()
-      )
+    // Already contains only finished ones, most recent first (SQL)
+    return allItineraries ?? []
   }, [allItineraries])
 
-  const handleItineraryPress = (itinerary: Itinerary) => {
+  const handleItineraryPress = (itinerary: ItinerarySummary) => {
     router.push(`/itinerary/${itinerary.id}/details`)
   }
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView edges={['left', 'right']} className="flex-1">
       <Stack.Screen options={{ title: 'Histórico de Itinerários' }} />
 
       {isLoading ? (
@@ -87,31 +84,19 @@ export default function ItineraryHistoryScreen() {
 }
 
 type ItineraryCardProps = {
-  itinerary: Itinerary
+  itinerary: ItinerarySummary
   onPress: () => void
 }
 
 function ItineraryCard({ itinerary, onPress }: ItineraryCardProps) {
   const stats = useMemo(() => {
-    const totalWorkOrders = itinerary.workOrders.length
-    const lateWorkOrders = itinerary.lateOrders.length
+    const { totalWorkOrders, lateWorkOrders, totalRevenue, ordersWithResult } =
+      itinerary
 
-    const totalRevenue = itinerary.workOrders.reduce((acc, iwo) => {
-      if (iwo.workOrder.paymentOrder) {
-        return acc + iwo.workOrder.paymentOrder.totalValue
-      }
-      return acc
-    }, 0)
-
-    const ordersWithResult = itinerary.workOrders.filter(
-      (iwo) => iwo.workOrder.result
-    ).length
-
-    const diffTime = Math.abs(
-      itinerary.finalItineraryDate.getTime() -
-        itinerary.initialItineraryDate.getTime()
+    const totalDays = countCalendarDays(
+      itinerary.initialItineraryDate,
+      itinerary.finalItineraryDate
     )
-    const totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
 
     return {
       totalWorkOrders,
@@ -155,13 +140,13 @@ function ItineraryCard({ itinerary, onPress }: ItineraryCardProps) {
           </View>
         </CardHeader>
         <CardContent className="gap-3">
-          {/* Faturamento */}
+          {/* Revenue */}
           <View className="flex-row items-center gap-2">
             <View className="bg-primary/10 p-2 rounded-full">
               <Icon
                 as={DollarSign}
                 size={16}
-                className="text-primary"
+                className="text-muted-foreground"
                 strokeWidth={2}
               />
             </View>
@@ -177,9 +162,9 @@ function ItineraryCard({ itinerary, onPress }: ItineraryCardProps) {
             </View>
           </View>
 
-          {/* Estatísticas em linha */}
+          {/* Inline statistics */}
           <View className="flex-row gap-4">
-            {/* Com Relatório */}
+            {/* With report */}
             <View className="flex-row items-center gap-2">
               <Icon
                 as={FileText}
@@ -192,7 +177,7 @@ function ItineraryCard({ itinerary, onPress }: ItineraryCardProps) {
               </Text>
             </View>
 
-            {/* Atrasadas */}
+            {/* Late */}
             {stats.lateWorkOrders > 0 && (
               <View className="flex-row items-center gap-2">
                 <Icon
@@ -207,16 +192,16 @@ function ItineraryCard({ itinerary, onPress }: ItineraryCardProps) {
               </View>
             )}
 
-            {/* Todas no prazo */}
+            {/* All on time */}
             {stats.lateWorkOrders === 0 && (
               <View className="flex-row items-center gap-2">
                 <Icon
                   as={CheckCircle}
                   size={16}
-                  className="text-green-600"
+                  className="text-success"
                   strokeWidth={2}
                 />
-                <Text className="text-xs text-green-600">Todas no prazo</Text>
+                <Text className="text-xs text-success">Todas no prazo</Text>
               </View>
             )}
           </View>

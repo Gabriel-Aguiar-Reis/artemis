@@ -44,26 +44,26 @@ export default function PaymentEditScreen() {
   const paidInstallments = Number(form.watch('paidInstallments')) || 0
   const paymentDate = form.watch('paymentDate')
 
-  // Se marcar como pago, força parcelas = 1, paidInstallments = 1 e data para hoje se não houver
+  // When marked as paid, force installments = 1, paidInstallments = 1 and date to today if missing
   useEffect(() => {
     if (isPaid) {
       form.setValue('installments', '1')
       form.setValue('paidInstallments', '1')
-      // Se não houver data de pagamento, define como hoje
+      // If there is no payment date, set it to today
       if (!paymentDate) {
         form.setValue('paymentDate', new Date() as any)
       }
     }
   }, [isPaid])
 
-  // Se mudar parcelas para > 1, desmarca isPaid
+  // If installments change to > 1, uncheck isPaid
   useEffect(() => {
     if ((installments || 1) > 1 && isPaid) {
       form.setValue('isPaid', false)
     }
   }, [installments, isPaid, form])
 
-  // Se a data de pagamento for futura, desmarca isPaid
+  // If the payment date is in the future, uncheck isPaid
   useEffect(() => {
     if (paymentDate && isPaid) {
       const selectedDate =
@@ -79,7 +79,7 @@ export default function PaymentEditScreen() {
     }
   }, [paymentDate])
 
-  // Verificar se a data de pagamento é futura
+  // Check whether the payment date is in the future
   const isPaymentDateFuture = () => {
     if (!paymentDate) return false
     const selectedDate =
@@ -94,7 +94,7 @@ export default function PaymentEditScreen() {
     if (!workOrder?.paymentOrder) return
 
     try {
-      // O BaseForm envia com coma decimal, converter para ponto
+      // BaseForm sends a decimal comma, convert to dot
       const normalized = String(data.totalValue || '0').replace(',', '.')
       const totalValueNumber = Number(normalized) || 0
 
@@ -113,7 +113,7 @@ export default function PaymentEditScreen() {
       } as any)
       router.back()
     } catch (error) {
-      console.error('Erro ao atualizar pagamento:', error)
+      console.error('Error updating payment:', error)
     }
   })
 
@@ -136,7 +136,10 @@ export default function PaymentEditScreen() {
 
   if (isLoadingWorkOrder) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Carregando pagamento...</Text>
       </SafeAreaView>
     )
@@ -144,14 +147,17 @@ export default function PaymentEditScreen() {
 
   if (!workOrder || !workOrder.paymentOrder) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Pagamento não encontrado.</Text>
       </SafeAreaView>
     )
   }
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView edges={['left', 'right', 'bottom']} className="flex-1">
       <Stack.Screen
         options={{
           title: 'Editar Pagamento',
@@ -159,7 +165,7 @@ export default function PaymentEditScreen() {
       />
       <ScrollView className="flex-1 p-4">
         <View className="gap-4">
-          {/* Resumo dos produtos do resultado (se existir) */}
+          {/* Result product summary (if any) */}
           {workOrder.result && (
             <View className="bg-accent/30 p-4 rounded-lg mb-2">
               <Text className="text-sm font-semibold mb-2">
@@ -203,7 +209,7 @@ export default function PaymentEditScreen() {
               ))}
               <View className="flex-row justify-between items-center pt-2 mt-2 border-t border-border">
                 <Text className="font-semibold">Total:</Text>
-                <Text className="font-bold text-lg text-primary">
+                <Text className="font-bold text-lg text-foreground">
                   R${' '}
                   {workOrder.result.totalValue.toLocaleString('pt-BR', {
                     minimumFractionDigits: 2,
@@ -245,7 +251,7 @@ export default function PaymentEditScreen() {
             error={getErrorMessage(form.formState.errors?.totalValue?.message)}
           />
 
-          {/* Alerta explicativo sobre pagamento */}
+          {/* Payment explanatory alert */}
           <Alert icon={Info}>
             <AlertTitle>Sobre o Pagamento</AlertTitle>
             <AlertDescription>

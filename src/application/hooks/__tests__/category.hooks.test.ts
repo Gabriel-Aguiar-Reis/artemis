@@ -4,7 +4,7 @@ import { renderHook } from '@testing-library/react'
 import React, { ReactNode } from 'react'
 import { beforeEach, describe, expect, it, vitest } from 'vitest'
 
-// Mock do repositório
+// Repository mock
 vitest.mock('@/src/infra/repositories/drizzle/drizzle.category.repository')
 
 const createWrapper = () => {

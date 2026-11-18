@@ -2,17 +2,16 @@ import { Icon } from '@/src/components/ui/icon'
 import { ObjectCard } from '@/src/components/ui/object-card'
 import { Separator } from '@/src/components/ui/separator'
 import { Text } from '@/src/components/ui/text'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/src/components/ui/tooltip'
 import { WhatsAppIcon } from '@/src/components/ui/whatsapp-icon'
-import { Customer } from '@/src/domain/entities/customer/customer.entity'
 import {
-  WorkOrder,
-  WorkOrderStatus,
-} from '@/src/domain/entities/work-order/work-order.entity'
+  getPriorityStatus,
+  paymentTone,
+  reportTone,
+  visitTone,
+} from '@/src/components/ui/work-order-status'
+import { Customer } from '@/src/domain/entities/customer/customer.entity'
+import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
+import { formatBRL, formatDateShort } from '@/src/lib/format'
 import { cn, formatPhoneBrazil } from '@/src/lib/utils'
 import {
   Banknote,
@@ -30,7 +29,7 @@ import { View } from 'react-native'
 const renderContactNumber = (customer: Customer) => {
   const base = (value: string) => (
     <View className="flex-row items-center gap-2">
-      <View className="items-start text-primary">
+      <View className="items-start">
         <View className="flex-row items-center">
           <Text className="ml-1 text-xs text-muted-foreground">
             {formatPhoneBrazil(value)}
@@ -53,65 +52,24 @@ const renderContactNumber = (customer: Customer) => {
 function WorkOrderCardComponent({
   wo,
   onPress,
+  onOptions,
   isLate = false,
 }: {
   wo: WorkOrder
   onPress?: () => void
+  /** Prefer this one: a stable callback receives the work order (enables memoization) */
+  onOptions?: (wo: WorkOrder) => void
   isLate?: boolean
 }) {
-  // Verificar condições
-  const hasResultNoPay = wo.result && !wo.paymentOrder
-  const isExpired = wo.status === WorkOrderStatus.EXPIRED
-  const isCopied = wo.status === WorkOrderStatus.COPIED
-
-  // Ordem de prioridade: CLONADA > S/ PGTO > EXPIRADA > ATRASADO
-  const getPriorityStatus = () => {
-    if (isCopied) {
-      return {
-        label: 'CLONADA',
-        borderClass: 'border-2 border-cyan-500',
-        badgeClass: 'bg-cyan-500/40',
-        textClass: 'text-xs font-bold text-cyan-100',
-      }
-    }
-    if (hasResultNoPay) {
-      return {
-        label: 'S/ PGTO',
-        borderClass: 'border-2 border-destructive',
-        badgeClass: 'bg-destructive/40',
-        textClass: 'text-xs font-bold text-red-100',
-      }
-    }
-    if (isExpired) {
-      return {
-        label: 'EXPIRADA',
-        borderClass: 'border-2 border-orange-500',
-        badgeClass: 'bg-orange-500/40',
-        textClass: 'text-xs font-bold text-orange-100',
-      }
-    }
-    if (isLate) {
-      return {
-        label: 'ATRASADO',
-        borderClass: 'border-2 border-warning',
-        badgeClass: 'bg-warning/40',
-        textClass: 'text-xs font-bold text-warning-foreground',
-      }
-    }
-    return null
-  }
-
-  const priorityStatus = getPriorityStatus()
+  // Priority order: CLONADA > S/ PGTO > EXPIRADA > ATRASADO
+  const priorityStatus = getPriorityStatus(wo, isLate)
 
   return (
-    <ObjectCard.Root
-      key={wo.id}
-      className={cn('mb-4 dark:bg-input/30', priorityStatus?.borderClass)}
-    >
+    <ObjectCard.Root className={cn('mb-4', priorityStatus?.borderClass)}>
       <ObjectCard.Header>
         <ObjectCard.Title>
           <View className="flex-row items-center gap-2">
-            <Icon as={Store} size={20} className="text-primary" />
+            <Icon as={Store} size={20} className="text-muted-foreground" />
             <View className="flex-1">
               <Text
                 className="text-lg font-semibold"
@@ -150,7 +108,7 @@ function WorkOrderCardComponent({
                 {renderContactNumber(wo.customer)}
               </View>
               {wo.customer.isActiveWhatsApp() && (
-                <WhatsAppIcon size={16} className="text-green-600 ml-1" />
+                <WhatsAppIcon size={16} className="text-success ml-1" />
               )}
             </View>
             <View className="flex-row items-center">
@@ -170,169 +128,98 @@ function WorkOrderCardComponent({
             </View>
           </View>
         </ObjectCard.Description>
-        {onPress && <ObjectCard.Actions onPress={onPress} />}
+        {(onOptions || onPress) && (
+          <ObjectCard.Actions
+            onPress={onOptions ? () => onOptions(wo) : onPress!}
+          />
+        )}
       </ObjectCard.Header>
       <ObjectCard.Content>
         <Separator className="mb-2" orientation="horizontal" />
         <View className="flex-row items-center gap-2">
-          <Tooltip>
-            <TooltipTrigger>
-              <View className="flex-row items-center gap-2">
-                <Icon
-                  as={CalendarSync}
-                  size={16}
-                  className="text-muted-foreground"
-                />
-                <Text className="mt-1 text-sm text-muted-foreground">
-                  {wo.scheduledDate.toLocaleString('pt-BR', {
-                    weekday: 'short',
-                    day: '2-digit',
-                    month: 'numeric',
-                    year: '2-digit',
-                  })}
-                </Text>
-              </View>
-            </TooltipTrigger>
-            <TooltipContent>
-              <Text>Data agendada para visita</Text>
-            </TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger>
-              {wo.visitDate ? (
-                <View className="flex-row items-center gap-2">
-                  <Icon
-                    as={CalendarCheck}
-                    size={16}
-                    className="text-green-500 dark:text-green-300"
-                  />
+          <View className="flex-row items-center gap-2">
+            <Icon
+              as={CalendarSync}
+              size={16}
+              className="text-muted-foreground"
+            />
+            <Text className="mt-1 text-sm text-muted-foreground">
+              {formatDateShort(wo.scheduledDate)}
+            </Text>
+          </View>
 
-                  <Text className="mt-1 text-sm text-green-500 dark:text-green-300">
-                    {wo.visitDate?.toLocaleString('pt-BR', {
-                      weekday: 'short',
-                      day: '2-digit',
-                      month: 'numeric',
-                      year: '2-digit',
-                    })}
-                  </Text>
-                </View>
-              ) : (
-                <View className="flex-row items-center gap-2">
-                  <Icon
-                    as={CalendarCheck}
-                    size={16}
-                    className="text-orange-500 dark:text-orange-400"
-                  />
-                  <Text className="mt-1 text-sm text-orange-500 dark:text-orange-400">
-                    Não visitado
-                  </Text>
-                </View>
-              )}
-            </TooltipTrigger>
-            <TooltipContent>
-              <Text>Data da visita realizada</Text>
-            </TooltipContent>
-          </Tooltip>
+          {wo.visitDate ? (
+            <View className="flex-row items-center gap-2">
+              <Icon as={CalendarCheck} size={16} className={visitTone(wo)} />
+
+              <Text className={cn('mt-1 text-sm', visitTone(wo))}>
+                {formatDateShort(wo.visitDate)}
+              </Text>
+            </View>
+          ) : (
+            <View className="flex-row items-center gap-2">
+              <Icon as={CalendarCheck} size={16} className={visitTone(wo)} />
+              <Text className={cn('mt-1 text-sm', visitTone(wo))}>
+                Não visitado
+              </Text>
+            </View>
+          )}
         </View>
 
         <View className="flex-row items-center gap-2 flex-wrap">
-          <Tooltip>
-            <TooltipTrigger>
-              <View className="flex-row items-center mb-1 gap-2">
-                <Icon
-                  as={ReceiptText}
-                  size={16}
-                  className={cn(
-                    'text-sm text-yellow-500 dark:text-yellow-200',
-                    wo.result &&
-                      'text-sm font-semibold text-cyan-500 dark:text-cyan-200'
-                  )}
-                />
-                <Text
-                  className={cn(
-                    'text-sm text-yellow-500 dark:text-yellow-200',
-                    wo.result &&
-                      'text-sm font-semibold text-cyan-500 dark:text-cyan-200'
-                  )}
-                >
-                  {wo.result ? 'Relatório registrado' : 'Não registrado'}
-                </Text>
-              </View>
-            </TooltipTrigger>
-            <TooltipContent>
-              <Text>Relatório registrado na ordem de serviço</Text>
-            </TooltipContent>
-          </Tooltip>
+          <View className="flex-row items-center mb-1 gap-2">
+            <Icon
+              as={ReceiptText}
+              size={16}
+              className={cn('text-sm', reportTone(wo))}
+            />
+            <Text className={cn('text-sm', reportTone(wo))}>
+              {wo.result ? 'Relatório registrado' : 'Não registrado'}
+            </Text>
+          </View>
 
-          <Tooltip>
-            <TooltipTrigger>
-              <View className="flex-row items-center mb-1 gap-2 flex-wrap">
-                <Icon
-                  as={Receipt}
-                  size={16}
-                  className={cn(
-                    'text-sm text-red-500 dark:text-red-200',
-                    wo.paymentOrder?.isPaid &&
-                      'text-sm font-semibold text-cyan-500 dark:text-cyan-200'
-                  )}
-                />
-                <Text
-                  className={cn(
-                    'text-sm text-red-500 dark:text-red-200',
-                    wo.paymentOrder?.isPaid &&
-                      'text-sm font-semibold text-cyan-500 dark:text-cyan-200'
-                  )}
-                >
-                  {wo.paymentOrder ? (
-                    <>
-                      {wo.paymentOrder.method} -
-                      {wo.paymentOrder.isPaid
-                        ? ' Pago'
-                        : ` ${wo.paymentOrder.paidInstallments}/${wo.paymentOrder.installments} parcelas`}
-                    </>
-                  ) : (
-                    'Não registrado'
-                  )}
-                </Text>
-              </View>
-            </TooltipTrigger>
-            <TooltipContent>
-              <Text>Pagamento registrado na ordem de serviço</Text>
-            </TooltipContent>
-          </Tooltip>
+          <View className="flex-row items-center mb-1 gap-2 flex-wrap">
+            <Icon
+              as={Receipt}
+              size={16}
+              className={cn('text-sm', paymentTone(wo))}
+            />
+            <Text className={cn('text-sm', paymentTone(wo))}>
+              {wo.paymentOrder ? (
+                <>
+                  {wo.paymentOrder.method} -
+                  {wo.paymentOrder.isPaid
+                    ? ' Pago'
+                    : ` ${wo.paymentOrder.paidInstallments}/${wo.paymentOrder.installments} parcelas`}
+                </>
+              ) : (
+                'Não registrado'
+              )}
+            </Text>
+          </View>
         </View>
 
         {wo.paymentOrder && (
-          <Tooltip>
-            <TooltipTrigger>
-              <View className="flex-row items-center mb-1">
-                <Icon as={Banknote} size={16} className="text-green-600" />
-                <Text className="text-sm ml-1 ">
-                  R${' '}
-                  {wo.paymentOrder?.totalValue.toLocaleString('pt-BR', {
-                    minimumFractionDigits: 2,
-                  })}
-                </Text>
-              </View>
-            </TooltipTrigger>
-            <TooltipContent>
-              <Text>Total do valor dos produtos na ordem de serviço</Text>
-            </TooltipContent>
-          </Tooltip>
+          <View className="flex-row items-center mb-1">
+            <Icon as={Banknote} size={16} className="text-muted-foreground" />
+            <Text className="text-sm ml-1 ">
+              {formatBRL(wo.paymentOrder?.totalValue)}
+            </Text>
+          </View>
         )}
       </ObjectCard.Content>
     </ObjectCard.Root>
   )
 }
 
-// Memoização com comparador customizado para evitar re-renders desnecessários
+// Memoization with a custom comparator to avoid unnecessary re-renders
 export const WorkOrderCard = React.memo(
   WorkOrderCardComponent,
   (prevProps, nextProps) => {
-    // Retorna true se props são IGUAIS (não deve re-renderizar)
-    // Retorna false se props são DIFERENTES (deve re-renderizar)
+    // Returns true if props are EQUAL (must not re-render)
+    // Returns false if props are DIFFERENT (must re-render)
 
-    // Comparação básica
+    // Basic comparison
     if (
       prevProps.wo.id !== nextProps.wo.id ||
       prevProps.wo.status !== nextProps.wo.status ||
@@ -341,7 +228,7 @@ export const WorkOrderCard = React.memo(
       return false
     }
 
-    // Comparação de datas
+    // Date comparison
     if (
       prevProps.wo.scheduledDate.getTime() !==
       nextProps.wo.scheduledDate.getTime()
@@ -355,7 +242,7 @@ export const WorkOrderCard = React.memo(
       return false
     }
 
-    // Comparação de customer
+    // Customer comparison
     if (
       prevProps.wo.customer.storeName !== nextProps.wo.customer.storeName ||
       prevProps.wo.customer.contactName !== nextProps.wo.customer.contactName
@@ -363,28 +250,47 @@ export const WorkOrderCard = React.memo(
       return false
     }
 
-    // Comparação de payment order
+    // Customer address/phones comparison
+    if (
+      prevProps.wo.customer.phoneNumber?.value !==
+        nextProps.wo.customer.phoneNumber?.value ||
+      prevProps.wo.customer.landlineNumber?.value !==
+        nextProps.wo.customer.landlineNumber?.value ||
+      prevProps.wo.customer.isActiveWhatsApp() !==
+        nextProps.wo.customer.isActiveWhatsApp() ||
+      prevProps.wo.customer.storeAddress.getFullAddress() !==
+        nextProps.wo.customer.storeAddress.getFullAddress()
+    ) {
+      return false
+    }
+
+    // Payment order comparison
     const prevPayment = prevProps.wo.paymentOrder
     const nextPayment = nextProps.wo.paymentOrder
     if (
       prevPayment?.isPaid !== nextPayment?.isPaid ||
       prevPayment?.method !== nextPayment?.method ||
-      prevPayment?.totalValue !== nextPayment?.totalValue
+      prevPayment?.totalValue !== nextPayment?.totalValue ||
+      prevPayment?.paidInstallments !== nextPayment?.paidInstallments ||
+      prevPayment?.installments !== nextPayment?.installments
     ) {
       return false
     }
 
-    // Comparação de result
+    // Result comparison
     if (Boolean(prevProps.wo.result) !== Boolean(nextProps.wo.result)) {
       return false
     }
 
-    // Comparação de onPress (referência)
-    if (prevProps.onPress !== nextProps.onPress) {
+    // Callback comparison (reference)
+    if (
+      prevProps.onPress !== nextProps.onPress ||
+      prevProps.onOptions !== nextProps.onOptions
+    ) {
       return false
     }
 
-    // Se chegou aqui, props são iguais
+    // If we got here, props are equal
     return true
   }
 )

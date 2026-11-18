@@ -5,20 +5,20 @@ import {
 } from '@/src/application/services/error-logging.service'
 
 /**
- * Wrapper para console.log que também persiste logs no banco de dados.
+ * Wrapper around console.log that also persists logs to the database.
  *
- * Uso:
+ * Usage:
  * ```ts
  * import logger from '@/src/lib/logger'
  *
- * logger.log('Mensagem informativa', 'Contexto')
- * logger.warn('Aviso importante', 'Contexto')
- * logger.error('Erro crítico', error, 'Contexto')
+ * logger.log('Informational message', 'Context')
+ * logger.warn('Important warning', 'Context')
+ * logger.error('Critical error', error, 'Context')
  * ```
  */
 const logger = {
   /**
-   * Registra mensagem de informação
+   * Logs an info message
    */
   log: (message: string, context?: string, metadata?: Record<string, any>) => {
     console.log(message)
@@ -28,7 +28,7 @@ const logger = {
   },
 
   /**
-   * Registra mensagem de aviso
+   * Logs a warning message
    */
   warn: (message: string, context?: string, metadata?: Record<string, any>) => {
     console.warn(message)
@@ -38,7 +38,7 @@ const logger = {
   },
 
   /**
-   * Registra mensagem de erro
+   * Logs an error message
    */
   error: (
     message: string,

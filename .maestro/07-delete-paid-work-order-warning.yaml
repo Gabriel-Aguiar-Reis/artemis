@@ -1,0 +1,38 @@
+# Searching work orders by customer (no accents) AND "paid" used to break the
+# paginated COUNT query. Deleting a paid work order must warn that the
+# received payment will be deleted too. The flow cancels the deletion.
+# Requires the paid work order created by 02-create-work-order-full.
+appId: br.com.artemis
+tags: [qa]
+---
+- runFlow: subflows/open-app.yaml
+- runFlow: subflows/reset-filters.yaml
+- tapOn: OS
+- extendedWaitUntil:
+    visible: Encontre uma ordem de serviço
+    timeout: 30000
+- tapOn:
+    point: 79%,8%
+- tapOn: Pesquisar por cliente...
+- eraseText: 40
+- inputText: acai bay
+- hideKeyboard
+- scrollUntilVisible:
+    element: Pago
+    direction: DOWN
+- tapOn: Pago
+- tapOn: Aplicar Filtros
+- extendedWaitUntil:
+    visible: "Pago: Sim"
+    timeout: 15000
+- assertVisible: PIX - Pago
+- tapOn:
+    text: Mais opções
+    index: 0
+- tapOn: Excluir
+- extendedWaitUntil:
+    visible: ".*já foi paga: o pagamento recebido também será apagado.*"
+    timeout: 5000
+- takeScreenshot: 07-delete-warning
+- tapOn: Cancelar
+- assertVisible: PIX - Pago

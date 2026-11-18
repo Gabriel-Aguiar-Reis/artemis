@@ -1,24 +1,18 @@
 import { productHooks } from '@/src/application/hooks/product.hooks'
-import { workOrderResultItemHooks } from '@/src/application/hooks/work-order-result-item.hooks'
 import { workOrderResultHooks } from '@/src/application/hooks/work-order-result.hooks'
+import { workOrderHooks } from '@/src/application/hooks/work-order.hooks'
 import { Alert, AlertDescription, AlertTitle } from '@/src/components/ui/alert'
 import { Button } from '@/src/components/ui/button'
 import { AddedProductsCombobox } from '@/src/components/ui/combobox/added-products-combobox'
 import { ExchangedProductsCombobox } from '@/src/components/ui/combobox/exchanged-products-combobox'
 import { RemovedProductsCombobox } from '@/src/components/ui/combobox/removed-products-combobox'
 import { Text } from '@/src/components/ui/text'
-import { ProductSnapshot } from '@/src/domain/entities/work-order-item/value-objects/product-snapshot.vo'
-import {
-  WorkOrderResultItem,
-  WorkOrderResultItemType,
-} from '@/src/domain/entities/work-order-result-item/work-order-result-item.entity'
 import { UUID } from '@/src/lib/utils'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
 import { Info } from 'lucide-react-native'
 import { useEffect, useState } from 'react'
 import { ScrollView, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import uuid from 'react-native-uuid'
 
 type ResultItemInput = {
   productId: string
@@ -33,12 +27,8 @@ export default function WorkOrderResultEditByIdScreen() {
     params.id
   )
   const { data: allProducts } = productHooks.getProductsWithCategory()
-  const { mutateAsync: updateWorkOrderResult } =
-    workOrderResultHooks.updateWorkOrderResult()
-  const { mutateAsync: deleteWorkOrderResultItem } =
-    workOrderResultItemHooks.deleteWorkOrderResultItem()
-  const { mutateAsync: addWorkOrderResultItems } =
-    workOrderResultItemHooks.addWorkOrderResultItems()
+  const { mutateAsync: updateResult } =
+    workOrderHooks.useUpdateWorkOrderResult()
 
   const [exchangedProducts, setExchangedProducts] = useState<ResultItemInput[]>(
     []
@@ -79,89 +69,24 @@ export default function WorkOrderResultEditByIdScreen() {
   }, [result])
 
   const handleSubmit = async () => {
-    if (!result) return
+    if (!result || isPending) return
 
     try {
       setIsPending(true)
-
-      // 1. Deletar todos os items existentes
-      const allExistingItems = [
-        ...(result.exchangedProducts || []),
-        ...(result.addedProducts || []),
-        ...(result.removedProducts || []),
-      ]
-
-      for (const item of allExistingItems) {
-        await deleteWorkOrderResultItem(item.id)
-      }
-
-      // 2. Calcular novo total value
-      const totalValue =
-        exchangedProducts.reduce(
-          (sum, p) => sum + p.priceSnapshot * p.quantity,
-          0
-        ) +
-        addedProducts.reduce((sum, p) => sum + p.priceSnapshot * p.quantity, 0)
-
-      // 3. Atualizar WorkOrderResult com novo totalValue
-      await updateWorkOrderResult({
-        id: result.id,
-        totalValue,
+      // One transaction: replaces the items, recalculates the work order total and status, and
+      // adjusts the unpaid payment. It used to delete item by item and
+      // only then reinsert: a failure midway left the report incomplete.
+      await updateResult({
+        resultId: result.id,
+        result: {
+          exchanged: exchangedProducts,
+          added: addedProducts,
+          removed: removedProducts,
+        },
       })
-
-      // 4. Criar novos WorkOrderResultItems
-      const allResultItems = [
-        ...exchangedProducts.map((p) =>
-          WorkOrderResultItem.fromProductSnapshot(
-            uuid.v4() as UUID,
-            ProductSnapshot.fromDTO({
-              productId: p.productId as UUID,
-              productName: p.productName,
-              salePrice: p.priceSnapshot,
-            }),
-            result.id,
-            p.quantity,
-            WorkOrderResultItemType.EXCHANGED,
-            p.priceSnapshot
-          )
-        ),
-        ...addedProducts.map((p) =>
-          WorkOrderResultItem.fromProductSnapshot(
-            uuid.v4() as UUID,
-            ProductSnapshot.fromDTO({
-              productId: p.productId as UUID,
-              productName: p.productName,
-              salePrice: p.priceSnapshot,
-            }),
-            result.id,
-            p.quantity,
-            WorkOrderResultItemType.ADDED,
-            p.priceSnapshot
-          )
-        ),
-        ...removedProducts.map((p) =>
-          WorkOrderResultItem.fromProductSnapshot(
-            uuid.v4() as UUID,
-            ProductSnapshot.fromDTO({
-              productId: p.productId as UUID,
-              productName: p.productName,
-              salePrice: p.priceSnapshot,
-            }),
-            result.id,
-            p.quantity,
-            WorkOrderResultItemType.REMOVED,
-            p.priceSnapshot
-          )
-        ),
-      ]
-
-      if (allResultItems.length > 0) {
-        await (addWorkOrderResultItems as any)([allResultItems])
-      }
-
       router.back()
     } catch (error) {
-      console.error('Erro ao atualizar relatório:', error)
+      if (__DEV__) console.error('Error updating report:', error)
     } finally {
       setIsPending(false)
     }
@@ -169,7 +94,10 @@ export default function WorkOrderResultEditByIdScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Carregando relatório...</Text>
       </SafeAreaView>
     )
@@ -177,14 +105,17 @@ export default function WorkOrderResultEditByIdScreen() {
 
   if (!result) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Relatório não encontrado.</Text>
       </SafeAreaView>
     )
   }
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView edges={['left', 'right', 'bottom']} className="flex-1">
       <Stack.Screen
         options={{
           title: 'Editar Relatório',
@@ -234,7 +165,7 @@ export default function WorkOrderResultEditByIdScreen() {
             </Text>
             <View className="flex-row justify-between items-center pt-2 border-t border-border">
               <Text className="font-bold text-lg">Novo Valor Total:</Text>
-              <Text className="font-bold text-xl text-primary">
+              <Text className="font-bold text-xl text-foreground">
                 R${' '}
                 {(
                   exchangedProducts.reduce(

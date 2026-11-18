@@ -11,6 +11,7 @@ import { Icon } from '@/src/components/ui/icon'
 import { Text } from '@/src/components/ui/text'
 import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
 import DrizzleWorkOrderRepository from '@/src/infra/repositories/drizzle/drizzle.work-order.repository'
+import { countCalendarDays } from '@/src/lib/utils'
 import { Stack } from 'expo-router'
 import { Calendar, DollarSign, FileText } from 'lucide-react-native'
 import React, { BaseSyntheticEvent, useEffect, useMemo, useState } from 'react'
@@ -56,7 +57,7 @@ export function ItineraryForm<T extends FieldValues>({
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([])
   const [loadingWorkOrders, setLoadingWorkOrders] = useState(false)
 
-  // Buscar work orders quando o range mudar
+  // Fetch work orders when the range changes
   useEffect(() => {
     if (selectedRange.startDate && selectedRange.endDate) {
       setLoadingWorkOrders(true)
@@ -69,7 +70,7 @@ export function ItineraryForm<T extends FieldValues>({
           setWorkOrders(data || [])
         })
         .catch((error) => {
-          console.error('Erro ao buscar ordens de serviço:', error)
+          console.error('Error fetching work orders:', error)
           setWorkOrders([])
         })
         .finally(() => {
@@ -80,7 +81,7 @@ export function ItineraryForm<T extends FieldValues>({
     }
   }, [selectedRange.startDate, selectedRange.endDate])
 
-  // Calcular estatísticas
+  // Compute statistics
   const stats = useMemo(() => {
     if (!selectedRange.startDate || !selectedRange.endDate) {
       return {
@@ -92,15 +93,15 @@ export function ItineraryForm<T extends FieldValues>({
 
     const totalWorkOrders = workOrders.length
 
-    // Calcular dias no intervalo
-    const diffTime = Math.abs(
-      selectedRange.endDate.getTime() - selectedRange.startDate.getTime()
+    // Compute days in the range
+    const totalDays = countCalendarDays(
+      selectedRange.startDate,
+      selectedRange.endDate
     )
-    const totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
 
-    // Calcular faturamento estimado baseado nos produtos agendados
+    // Compute estimated revenue based on the scheduled products
     const estimatedRevenue = workOrders.reduce((acc, wo) => {
-      // Prioriza o valor do pagamento se existir, senão usa o total dos produtos
+      // Prioritize the payment value if it exists, otherwise use the products total
       if (wo.paymentOrder) {
         return acc + wo.paymentOrder.totalValue
       }
@@ -115,11 +116,11 @@ export function ItineraryForm<T extends FieldValues>({
   }, [workOrders, selectedRange])
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView edges={['left', 'right', 'bottom']} className="flex-1">
       <Stack.Screen options={{ title }} />
       <ScrollView className="flex-1">
         <View className="p-4 gap-4">
-          {/* Campo de seleção de período */}
+          {/* Period selection field */}
           <Controller
             control={control}
             name={dateRangeName}
@@ -141,7 +142,7 @@ export function ItineraryForm<T extends FieldValues>({
             )}
           />
 
-          {/* Card de resumo */}
+          {/* Summary card */}
           {selectedRange.startDate && selectedRange.endDate && (
             <Card>
               <CardHeader>
@@ -160,13 +161,13 @@ export function ItineraryForm<T extends FieldValues>({
                   </View>
                 ) : (
                   <>
-                    {/* Quantidade de ordens de serviço */}
+                    {/* Number of work orders */}
                     <View className="flex-row items-center gap-3">
                       <View className="bg-primary/10 p-3 rounded-full">
                         <Icon
                           as={FileText}
                           size={20}
-                          className="text-primary"
+                          className="text-muted-foreground"
                           strokeWidth={2}
                         />
                       </View>
@@ -180,13 +181,13 @@ export function ItineraryForm<T extends FieldValues>({
                       </View>
                     </View>
 
-                    {/* Dias no período */}
+                    {/* Days in period */}
                     <View className="flex-row items-center gap-3">
                       <View className="bg-primary/10 p-3 rounded-full">
                         <Icon
                           as={Calendar}
                           size={20}
-                          className="text-primary"
+                          className="text-muted-foreground"
                           strokeWidth={2}
                         />
                       </View>
@@ -200,13 +201,13 @@ export function ItineraryForm<T extends FieldValues>({
                       </View>
                     </View>
 
-                    {/* Faturamento estimado */}
+                    {/* Estimated revenue */}
                     <View className="flex-row items-center gap-3">
                       <View className="bg-primary/10 p-3 rounded-full">
                         <Icon
                           as={DollarSign}
                           size={20}
-                          className="text-primary"
+                          className="text-muted-foreground"
                           strokeWidth={2}
                         />
                       </View>
@@ -237,7 +238,7 @@ export function ItineraryForm<T extends FieldValues>({
             </Card>
           )}
 
-          {/* Botão de submit */}
+          {/* Submit button */}
           <Button
             onPress={onSubmit}
             disabled={

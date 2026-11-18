@@ -7,5 +7,11 @@ type ButtonNewProps = {
 }
 
 export const ButtonNew = ({ href }: ButtonNewProps) => {
-  return <NavigationButton href={href} icon={Plus} />
+  return (
+    <NavigationButton
+      href={href}
+      icon={Plus}
+      accessibilityLabel="Adicionar novo"
+    />
+  )
 }

@@ -6,8 +6,13 @@ import z from 'zod'
 const workOrderResultItemSchemaWithoutId = {
   resultId: () => z.uuid('UUID inválido'),
   productId: () => z.uuid('UUID inválido'),
-  quantity: () => z.number().int('Quantidade inválida'),
-  priceSnapshot: () => z.number('Preço inválido'),
+  quantity: () =>
+    z
+      .number()
+      .int('Quantidade inválida')
+      .min(1, 'A quantidade deve ser maior que zero'),
+  priceSnapshot: () =>
+    z.number('Preço inválido').min(0, 'O preço não pode ser negativo'),
   type: () => z.enum(WorkOrderResultItemType, 'Tipo inválido'),
   observation: () => z.string().max(255, 'Observação muito longa'),
 }

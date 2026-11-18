@@ -1,0 +1,63 @@
+# Creates a work order with scheduled products, a visit report and a paid
+# payment in one go (single DB transaction). Also covers accent-insensitive
+# search in the customer and product comboboxes.
+appId: br.com.artemis
+tags: [qa]
+---
+- runFlow: subflows/open-app.yaml
+- runFlow: subflows/reset-filters.yaml
+- tapOn: OS
+- extendedWaitUntil:
+    visible: Encontre uma ordem de serviço
+    timeout: 30000
+- tapOn:
+    point: 91%,8%
+
+# Step 1: customer (search without accents) and date
+- tapOn: Selecione o cliente
+- tapOn: Pesquisar...
+- inputText: acai bay
+- hideKeyboard
+- extendedWaitUntil:
+    visible: Açai Bay
+    timeout: 10000
+- tapOn: Açai Bay
+- tapOn: Próximo
+
+# Step 2: scheduled products (search without accents), quantity 2
+- tapOn: Selecione os produtos
+- tapOn: Pesquisar por nome...
+- inputText: agua pressurizada 10 lt
+- hideKeyboard
+- extendedWaitUntil:
+    visible: Ext. De água pressurizada 10 LT
+    timeout: 5000
+- tapOn: Ext. De água pressurizada 10 LT
+- tapOn:
+    point: 65%,46%
+- tapOn: Confirmar
+- tapOn: Próximo
+
+# Steps 3-4: visit report, everything exchanged
+- tapOn: Criar Relatório Final
+- tapOn: Selecione dos produtos agendados
+- tapOn: Marcar Todos Como Trocados
+- tapOn: Próximo
+
+# Steps 5-6: payment paid in cash, total derived from the report
+- tapOn: Registrar Pagamento
+- assertVisible: R\$ 100,00
+- tapOn: "Ex: Dinheiro, PIX, Débito, Cartão de Crédito"
+- inputText: PIX
+- hideKeyboard
+- tapOn: Pagamento à Vista Realizado
+- scrollUntilVisible:
+    element: Salvar.*
+    direction: DOWN
+- tapOn: Salvar.*
+- extendedWaitUntil:
+    visible: Ordem de serviço criada!
+    timeout: 15000
+- assertVisible: Enviar resumo ao cliente?
+- takeScreenshot: 02-work-order-created
+- tapOn: Cancelar

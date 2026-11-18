@@ -1,0 +1,37 @@
+# Finishing an itinerary with orders still missing a report must ask for
+# confirmation; after finishing, it shows up in the history (aggregated in SQL).
+appId: br.com.artemis
+tags: [qa]
+---
+- runFlow: subflows/open-app.yaml
+- tapOn: Itinerário
+- extendedWaitUntil:
+    visible: ATRASADO
+    timeout: 30000
+- tapOn:
+    point: 91%,8%
+- extendedWaitUntil:
+    visible: Finalizar Itinerário
+    timeout: 15000
+- takeScreenshot: 04-finish-summary
+- scrollUntilVisible:
+    element: Cancelar Itinerário
+    direction: DOWN
+# index 1: the screen title has the same text as the button
+- tapOn:
+    text: Finalizar Itinerário
+    index: 1
+- extendedWaitUntil:
+    visible: Há ordens sem relatório
+    timeout: 5000
+- takeScreenshot: 04-finish-confirm
+- tapOn: Revisar
+- assertNotVisible: Há ordens sem relatório
+- tapOn:
+    text: Finalizar Itinerário
+    index: 1
+- tapOn: Finalizar mesmo assim
+- extendedWaitUntil:
+    notVisible: Finalizar mesmo assim
+    timeout: 30000
+- takeScreenshot: 04-after-finish

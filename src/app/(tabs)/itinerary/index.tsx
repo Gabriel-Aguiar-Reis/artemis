@@ -1,8 +1,13 @@
 import { itineraryWorkOrderHooks } from '@/src/application/hooks/itinerary-work-order.hooks'
 import { itineraryHooks } from '@/src/application/hooks/itinerary.hooks'
+import { usePersistedTabFilters } from '@/src/application/hooks/use-persisted-tab-filters'
+import { usePullToRefresh } from '@/src/application/hooks/use-pull-to-refresh'
 import { WhatsAppService } from '@/src/application/services/whatsapp.service'
 import { ActiveFiltersBanner } from '@/src/components/ui/active-filters-banner'
-import { BackToTopButton } from '@/src/components/ui/back-to-top-button'
+import {
+  BackToTopButton,
+  useBackToTop,
+} from '@/src/components/ui/back-to-top-button'
 import { ButtonFilter } from '@/src/components/ui/button-filter'
 import { ButtonFinish } from '@/src/components/ui/button-finish'
 import { ButtonHistory } from '@/src/components/ui/button-history'
@@ -10,11 +15,13 @@ import { ButtonNew } from '@/src/components/ui/button-new'
 import { ButtonReorder } from '@/src/components/ui/button-reorder'
 import { NotesDialog } from '@/src/components/ui/dialog/notes-dialog'
 import { Icon } from '@/src/components/ui/icon'
+import { ErrorState, LoadingState } from '@/src/components/ui/list-states'
 import { Text } from '@/src/components/ui/text'
 import { WorkOrderCard } from '@/src/components/ui/work-order-card'
+import { ItineraryWorkOrder } from '@/src/domain/entities/itinerary-work-order/itinerary-work-order.entity'
 import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
 import { smartSearch, UUID } from '@/src/lib/utils'
-import { FlashList } from '@shopify/flash-list'
+import { FlashList, FlashListRef } from '@shopify/flash-list'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import {
   Clock,
@@ -26,14 +33,13 @@ import {
   Receipt,
   ReceiptText,
 } from 'lucide-react-native'
-import React, { useMemo, useRef, useState } from 'react'
-import { NativeScrollEvent, NativeSyntheticEvent, View } from 'react-native'
+import React, { useCallback, useMemo, useState } from 'react'
+import { View } from 'react-native'
 import { SheetManager } from 'react-native-actions-sheet'
-import {
-  GestureHandlerRootView,
-  ScrollView,
-} from 'react-native-gesture-handler'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaView } from 'react-native-safe-area-context'
+
+const keyExtractor = (item: ItineraryWorkOrder) => item.id
 
 export default function ItineraryScreen() {
   const router = useRouter()
@@ -43,165 +49,176 @@ export default function ItineraryScreen() {
   } | null>(null)
   const [notesDialogOpen, setNotesDialogOpen] = useState(false)
 
-  const { data: itinerary, isLoading } = itineraryHooks.getActiveItinerary()
-  const { data: workOrders } =
-    itineraryWorkOrderHooks.getItineraryWorkOrdersByItineraryId(
-      itinerary?.id || ('' as UUID)
-    )
+  const {
+    data: itinerary,
+    isLoading,
+    isError,
+    refetch: refetchItinerary,
+  } = itineraryHooks.getActiveItinerary()
+  const {
+    data: workOrders,
+    isLoading: isLoadingWorkOrders,
+    isError: isErrorWorkOrders,
+    refetch: refetchWorkOrders,
+  } = itineraryWorkOrderHooks.getItineraryWorkOrdersByItineraryId(
+    itinerary?.id || ('' as UUID)
+  )
 
-  const flatListRef = useRef<ScrollView>(null)
-  const [showScrollBtn, setShowScrollBtn] = useState(false)
+  const refetchAll = useCallback(
+    () => Promise.all([refetchItinerary(), refetchWorkOrders()]),
+    [refetchItinerary, refetchWorkOrders]
+  )
+  const { refreshing, onRefresh } = usePullToRefresh(refetchAll)
+  const {
+    listRef,
+    isVisible: showScrollBtn,
+    onScroll,
+  } = useBackToTop<FlashListRef<ItineraryWorkOrder>>()
 
-  const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const offsetY = e.nativeEvent.contentOffset.y
-    setShowScrollBtn(offsetY > 0)
-  }
+  const handleWorkOrderOptions = useCallback(
+    async (workOrder: WorkOrder) => {
+      const customerName = workOrder.customer.storeName
+      const date = workOrder.scheduledDate || workOrder.visitDate
 
-  const scrollToTop = () => {
-    flatListRef.current?.scrollTo({ y: 0, animated: true })
-  }
+      const options: {
+        label: string
+        icon?: LucideIcon
+        onPress: () => void
+        destructive?: boolean
+        isWhatsApp?: boolean
+      }[] = []
 
-  const handleWorkOrderOptions = async (workOrder: WorkOrder) => {
-    const customerName = workOrder.customer.storeName
-    const date = workOrder.scheduledDate || workOrder.visitDate
+      options.push({
+        label: 'Ver Observações',
+        icon: ReceiptText,
+        onPress: () => {
+          setSelectedNotes({
+            title: `${customerName} - ${date?.toLocaleDateString('pt-BR', {
+              day: '2-digit',
+              month: '2-digit',
+              year: '2-digit',
+            })}`,
+            notes: workOrder.notes,
+          })
+          setNotesDialogOpen(true)
+        },
+      })
+      // Group: Work Order
+      options.push({
+        label: 'Editar Cabeçalho da Ordem',
+        icon: Edit,
+        onPress: () => {
+          router.push(`/work-orders/${workOrder.id}/edit`)
+        },
+      })
 
-    const options: {
-      label: string
-      icon?: LucideIcon
-      onPress: () => void
-      destructive?: boolean
-      isWhatsApp?: boolean
-    }[] = []
+      options.push({
+        label: 'Acessar Produtos Agendados',
+        icon: Package,
+        onPress: () => {
+          router.push(`/work-orders/${workOrder.id}/products`)
+        },
+      })
 
-    options.push({
-      label: 'Ver Observações',
-      icon: ReceiptText,
-      onPress: () => {
-        setSelectedNotes({
+      // Group: Result
+      if (workOrder.result) {
+        options.push({
+          label: 'Acessar Relatório',
+          icon: ReceiptText,
+          onPress: () => {
+            router.push(`/work-orders/${workOrder.id}/result`)
+          },
+        })
+      } else if (
+        workOrder.status !== 'EXPIRED' &&
+        workOrder.status !== 'COPIED'
+      ) {
+        options.push({
+          label: 'Criar Relatório',
+          icon: Plus,
+          onPress: () => {
+            router.push(`/work-orders/${workOrder.id}/result/create`)
+          },
+        })
+      }
+
+      // Group: Payment
+      if (workOrder.paymentOrder) {
+        options.push({
+          label: 'Acessar Pagamento',
+          icon: Receipt,
+          onPress: () => {
+            router.push(`/work-orders/${workOrder.id}/payment`)
+          },
+        })
+      } else if (
+        workOrder.result &&
+        workOrder.status !== 'EXPIRED' &&
+        workOrder.status !== 'COPIED'
+      ) {
+        options.push({
+          label: 'Criar Pagamento',
+          icon: Plus,
+          onPress: () => {
+            router.push(`/work-orders/${workOrder.id}/payment/create`)
+          },
+        })
+      }
+
+      // WhatsApp
+      if (workOrder.customer.isActiveWhatsApp()) {
+        options.push({
+          label: 'Avisar cliente da visita',
+          onPress: () => {
+            try {
+              WhatsAppService.sendWorkOrderMessage(workOrder, true)
+            } catch (error) {
+              console.error('Error sending WhatsApp message:', error)
+            }
+          },
+          isWhatsApp: true,
+        })
+
+        options.push({
+          label: 'Enviar resumo ao cliente',
+          onPress: () => {
+            try {
+              WhatsAppService.sendWorkOrderMessage(workOrder, false)
+            } catch (error) {
+              console.error('Error sending WhatsApp message:', error)
+            }
+          },
+          isWhatsApp: true,
+        })
+      }
+
+      // Clone (if it has result and payment OR is EXPIRED)
+      if (
+        (workOrder.result && workOrder.paymentOrder) ||
+        workOrder.status === 'EXPIRED'
+      ) {
+        options.push({
+          label: 'Clonar Ordem de Serviço',
+          icon: Copy,
+          onPress: () => {
+            router.push(`/work-orders/${workOrder.id}/clone` as any)
+          },
+        })
+      }
+
+      await SheetManager.show('options-sheet', {
+        payload: {
           title: `${customerName} - ${date?.toLocaleDateString('pt-BR', {
             day: '2-digit',
             month: '2-digit',
             year: '2-digit',
           })}`,
-          notes: workOrder.notes,
-        })
-        setNotesDialogOpen(true)
-      },
-    })
-    // Grupo: Ordem de Serviço
-    options.push({
-      label: 'Editar Cabeçalho da Ordem',
-      icon: Edit,
-      onPress: () => {
-        router.push(`/work-orders/${workOrder.id}/edit`)
-      },
-    })
-
-    options.push({
-      label: 'Acessar Produtos Agendados',
-      icon: Package,
-      onPress: () => {
-        router.push(`/work-orders/${workOrder.id}/products`)
-      },
-    })
-
-    // Grupo: Resultado
-    if (workOrder.result) {
-      options.push({
-        label: 'Acessar Relatório',
-        icon: ReceiptText,
-        onPress: () => {
-          router.push(`/work-orders/${workOrder.id}/result`)
+          options,
         },
       })
-    } else if (
-      workOrder.status !== 'EXPIRED' &&
-      workOrder.status !== 'COPIED'
-    ) {
-      options.push({
-        label: 'Criar Relatório',
-        icon: Plus,
-        onPress: () => {
-          router.push(`/work-orders/${workOrder.id}/result/create`)
-        },
-      })
-    }
-
-    // Grupo: Pagamento
-    if (workOrder.paymentOrder) {
-      options.push({
-        label: 'Acessar Pagamento',
-        icon: Receipt,
-        onPress: () => {
-          router.push(`/work-orders/${workOrder.id}/payment`)
-        },
-      })
-    } else if (
-      workOrder.result &&
-      workOrder.status !== 'EXPIRED' &&
-      workOrder.status !== 'COPIED'
-    ) {
-      options.push({
-        label: 'Criar Pagamento',
-        icon: Plus,
-        onPress: () => {
-          router.push(`/work-orders/${workOrder.id}/payment/create`)
-        },
-      })
-    }
-
-    // WhatsApp
-    if (workOrder.customer.isActiveWhatsApp()) {
-      options.push({
-        label: 'Avisar cliente da visita',
-        onPress: () => {
-          try {
-            WhatsAppService.sendWorkOrderMessage(workOrder, true)
-          } catch (error) {
-            console.error('Erro ao enviar WhatsApp:', error)
-          }
-        },
-        isWhatsApp: true,
-      })
-
-      options.push({
-        label: 'Enviar resumo ao cliente',
-        onPress: () => {
-          try {
-            WhatsAppService.sendWorkOrderMessage(workOrder, false)
-          } catch (error) {
-            console.error('Erro ao enviar WhatsApp:', error)
-          }
-        },
-        isWhatsApp: true,
-      })
-    }
-
-    // Clonar (se tiver resultado e pagamento OU se for EXPIRED)
-    if (
-      (workOrder.result && workOrder.paymentOrder) ||
-      workOrder.status === 'EXPIRED'
-    ) {
-      options.push({
-        label: 'Clonar Ordem de Serviço',
-        icon: Copy,
-        onPress: () => {
-          router.push(`/work-orders/${workOrder.id}/clone` as any)
-        },
-      })
-    }
-
-    await SheetManager.show('options-sheet', {
-      payload: {
-        title: `${customerName} - ${date?.toLocaleDateString('pt-BR', {
-          day: '2-digit',
-          month: '2-digit',
-          year: '2-digit',
-        })}`,
-        options,
-      },
-    })
-  }
+    },
+    [router]
+  )
 
   const params = useLocalSearchParams<{
     search?: string
@@ -216,6 +233,8 @@ export default function ItineraryScreen() {
     hasPayment?: string
     hasResult?: string
   }>()
+  // Filters survive closing the app
+  usePersistedTabFilters('itinerary', params)
 
   // Helper to compare if two dates are the same day (ignoring time)
   const isSameDay = (date1: Date, date2: Date): boolean => {
@@ -231,7 +250,8 @@ export default function ItineraryScreen() {
     return workOrders.filter((iwo) => {
       const wo = iwo.workOrder
       const matchesSearch = params.search
-        ? smartSearch(wo.customer.storeName, params.search)
+        ? smartSearch(wo.customer.storeName, params.search) ||
+          smartSearch(wo.customer.contactName, params.search)
         : true
 
       const matchesPhoneNumber = (() => {
@@ -374,9 +394,20 @@ export default function ItineraryScreen() {
     params.hasResult,
   ])
 
+  const renderItem = useCallback(
+    ({ item }: { item: ItineraryWorkOrder }) => (
+      <WorkOrderCard
+        wo={item.workOrder}
+        isLate={item.isLate}
+        onOptions={handleWorkOrderOptions}
+      />
+    ),
+    [handleWorkOrderOptions]
+  )
+
   return (
     <GestureHandlerRootView className="flex-1">
-      <SafeAreaView className="flex-1">
+      <SafeAreaView edges={['left', 'right']} className="flex-1">
         <Stack.Screen
           options={{
             headerTitle: 'Itinerário',
@@ -409,11 +440,12 @@ export default function ItineraryScreen() {
           }}
         />
         {isLoading ? (
-          <View className="flex-1 items-center justify-center px-4">
-            <Text className="text-center text-muted-foreground">
-              Carregando itinerário...
-            </Text>
-          </View>
+          <LoadingState label="Carregando itinerário..." />
+        ) : isError ? (
+          <ErrorState
+            message="Não foi possível carregar o itinerário."
+            onRetry={() => refetchItinerary()}
+          />
         ) : !itinerary ? (
           <View className="flex-1 items-center justify-center px-4">
             <Text className="text-center text-muted-foreground">
@@ -423,52 +455,56 @@ export default function ItineraryScreen() {
           </View>
         ) : (
           <>
-            <View className="flex-row items-center justify-center gap-2 pb-2 border-b border-border">
-              <Icon as={Clock} size={20} className="text-primary" />
+            <View className="flex-row items-center justify-center gap-2 py-3 bg-card border-b border-border">
+              <Icon as={Clock} size={20} className="text-muted-foreground" />
               <Text className="font-bold text-center">
                 {itinerary.initialItineraryDate.toLocaleDateString('pt-BR')} -{' '}
                 {itinerary.finalItineraryDate.toLocaleDateString('pt-BR')}
               </Text>
             </View>
 
-            <ScrollView
-              ref={flatListRef}
-              onScroll={handleScroll}
-              scrollEventThrottle={16}
-            >
-              {!filteredWorkOrders || filteredWorkOrders.length === 0 ? (
-                <View className="flex-1 items-center justify-center px-4">
-                  <Text className="text-center text-muted-foreground">
-                    Há algo errado!{'\n'}
-                    Nenhuma ordem de serviço encontrada{'\n'}
-                    no período escolhido.
-                  </Text>
-                </View>
-              ) : (
-                <View className="flex-1">
-                  <ActiveFiltersBanner
-                    filters={activeFilters}
-                    clearFiltersHref="/itinerary"
-                  />
-                  <FlashList
-                    data={filteredWorkOrders}
-                    renderItem={({ item }) => (
-                      <View key={item.id} className="px-4">
-                        <WorkOrderCard
-                          wo={item.workOrder}
-                          isLate={item.isLate}
-                          onPress={() => handleWorkOrderOptions(item.workOrder)}
-                        />
-                      </View>
-                    )}
-                    ListHeaderComponent={<View className="h-4" />}
-                    ListFooterComponent={<View className="h-16" />}
-                  />
-                </View>
-              )}
-            </ScrollView>
-            {/* Botão de voltar ao topo */}
-            <BackToTopButton isVisible={showScrollBtn} onPress={scrollToTop} />
+            {isLoadingWorkOrders ? (
+              <LoadingState label="Carregando ordens de serviço..." />
+            ) : isErrorWorkOrders && !workOrders ? (
+              <ErrorState
+                message="Não foi possível carregar as ordens do itinerário."
+                onRetry={() => refetchWorkOrders()}
+              />
+            ) : (
+              <FlashList
+                ref={listRef}
+                data={filteredWorkOrders}
+                renderItem={renderItem}
+                keyExtractor={keyExtractor}
+                onScroll={onScroll}
+                scrollEventThrottle={16}
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                contentContainerStyle={{
+                  paddingHorizontal: 16,
+                  paddingTop: 16,
+                  paddingBottom: 64,
+                }}
+                ListHeaderComponent={
+                  <View className="-mx-4">
+                    <ActiveFiltersBanner
+                      filters={activeFilters}
+                      clearFiltersHref="/itinerary"
+                    />
+                  </View>
+                }
+                ListEmptyComponent={
+                  <View className="items-center justify-center px-4 py-12">
+                    <Text className="text-center text-muted-foreground">
+                      {hasActiveFilters
+                        ? 'Nenhuma ordem de serviço encontrada com os filtros aplicados.'
+                        : 'Nenhuma OS neste itinerário'}
+                    </Text>
+                  </View>
+                }
+              />
+            )}
+            <BackToTopButton isVisible={showScrollBtn} scrollRef={listRef} />
 
             {selectedNotes && (
               <NotesDialog

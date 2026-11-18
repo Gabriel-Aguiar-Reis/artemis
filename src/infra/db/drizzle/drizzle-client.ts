@@ -8,9 +8,15 @@ let drizzleInstance: ReturnType<typeof drizzle> | null = null
 export function getExpoDb() {
   if (!expoDb) {
     try {
-      expoDb = openDatabaseSync('artemis.db', { enableChangeListener: true })
-      console.log('Database opened successfully')
-      // NÃO habilitar foreign keys aqui - será feito APÓS migrations
+      // enableChangeListener disabled: nobody uses useLiveQuery and the listener
+      // costs a callback per changed row (heavy in batch imports).
+      expoDb = openDatabaseSync('artemis.db')
+      // WAL: reads do not block writes and each commit does fewer fsyncs.
+      // synchronous=NORMAL is safe with WAL (it may lose only the last commit
+      // on a power loss, never corrupts the database).
+      expoDb.execSync('PRAGMA journal_mode = WAL; PRAGMA synchronous = NORMAL;')
+      if (__DEV__) console.log('Database opened successfully')
+      // Do NOT enable foreign keys here - it is done AFTER migrations
     } catch (error) {
       console.error('Error opening database:', error)
       throw error
@@ -19,13 +25,19 @@ export function getExpoDb() {
   return expoDb
 }
 
-export function enableForeignKeys() {
+/**
+ * Turns on FK enforcement. Returns false on failure (logged): the app must not
+ * run without it, since cascades/restrictions protect the data.
+ */
+export function enableForeignKeys(): boolean {
   const db = getExpoDb()
   try {
     db.execSync('PRAGMA foreign_keys = ON;')
-    console.log('Foreign keys enabled')
+    if (__DEV__) console.log('Foreign keys enabled')
+    return true
   } catch (error) {
     console.error('Error enabling foreign keys:', error)
+    return false
   }
 }
 
@@ -39,7 +51,7 @@ export function initDrizzleClient() {
 }
 
 export function resetDrizzleClient() {
-  // Fechar conexão se existir
+  // Close the connection if it exists
   if (expoDb) {
     try {
       expoDb.closeSync()
@@ -54,20 +66,42 @@ export function resetDrizzleClient() {
   console.log('Drizzle client reset')
 }
 
+/**
+ * With WAL, SQLite keeps `artemis.db-wal` and `artemis.db-shm` next to the
+ * database. expo-sqlite's deleteDatabaseSync only deletes the main file; a
+ * leftover -wal (e.g. reset after a crash) could be replayed onto the new
+ * database. Removes both, ignoring if they do not exist.
+ */
+export async function removeWalFiles(name = 'artemis.db') {
+  try {
+    const { defaultDatabaseDirectory } = require('expo-sqlite')
+    const FS = require('expo-file-system/legacy')
+    if (!defaultDatabaseDirectory) return
+    const dir = String(defaultDatabaseDirectory).startsWith('file://')
+      ? String(defaultDatabaseDirectory)
+      : `file://${defaultDatabaseDirectory}`
+    for (const suffix of ['-wal', '-shm']) {
+      await FS.deleteAsync(`${dir}/${name}${suffix}`, { idempotent: true })
+    }
+  } catch (error) {
+    if (__DEV__) console.warn('Could not remove WAL files:', error)
+  }
+}
+
 export function deleteDatabaseAndReset() {
   try {
-    // Resetar e fechar conexões
+    // Reset and close connections
     resetDrizzleClient()
 
-    // Pequeno delay para garantir que a conexão foi fechada
+    // Small delay to make sure the connection was closed
     return new Promise<boolean>((resolve) => {
       setTimeout(() => {
         try {
-          // Deletar o arquivo do banco
+          // Delete the database file
           const { deleteDatabaseSync } = require('expo-sqlite')
           deleteDatabaseSync('artemis.db')
-          console.log('Database deleted successfully')
-          resolve(true)
+          if (__DEV__) console.log('Database deleted successfully')
+          removeWalFiles().finally(() => resolve(true))
         } catch (error) {
           console.error('Error deleting database:', error)
           resolve(false)

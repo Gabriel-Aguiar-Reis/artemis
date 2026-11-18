@@ -162,7 +162,7 @@ describe('license-crypto', () => {
       expect(result.isAdmin).toBe(false)
       expect(result.newExpirationDate).not.toBeNull()
 
-      // Deve adicionar 90 dias
+      // Should add 90 days
       const expectedDate = new Date(currentExpiration)
       expectedDate.setDate(expectedDate.getDate() + 90)
       expect(result.newExpirationDate).toEqual(expectedDate)
@@ -223,10 +223,10 @@ describe('license-crypto', () => {
 
       await generateLicenseCodeForUser('TEST', '150324')
 
-      // Verificar se a data foi convertida corretamente e somada 90 dias
+      // Check that the date was converted correctly and 90 days were added
       expect(Crypto.digestStringAsync).toHaveBeenCalledWith(
         expect.anything(),
-        expect.stringContaining('TEST-2024-06-13-') // 15/03/24 + 90 dias = 13/06/24
+        expect.stringContaining('TEST-2024-06-13-') // 15/03/24 + 90 days = 13/06/24
       )
     })
 
@@ -237,7 +237,7 @@ describe('license-crypto', () => {
 
       await generateLicenseCodeForUser('CODE', '010124') // 01/01/24
 
-      // 01/01/24 + 90 dias = 31/03/24
+      // 01/01/24 + 90 days = 31/03/24
       expect(Crypto.digestStringAsync).toHaveBeenCalledWith(
         expect.anything(),
         expect.stringContaining('2024-03-31')

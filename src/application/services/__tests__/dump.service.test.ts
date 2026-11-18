@@ -22,24 +22,35 @@ function ensureStore(table: any) {
   return tableStores.get(table)!
 }
 
-const dbMock = {
-  select: vi.fn(() => ({
+const insertInto = (table: any, value: any) => {
+  const store = ensureStore(table)
+  const rows = Array.isArray(value) ? value : [value]
+  let changes = 0
+  for (const row of rows) {
+    if (store.rows.some((r) => r.id === row.id)) continue // ON CONFLICT DO NOTHING
+    store.inserted.push(JSON.parse(JSON.stringify(row)))
+    store.rows.push(JSON.parse(JSON.stringify(row)))
+    changes++
+  }
+  return { changes }
+}
+
+const dbMock: any = {
+  select: vi.fn((fields?: any) => ({
     from(table: any) {
       return {
         all() {
           const rows = ensureStore(table).rows
+          if (fields) return rows.map((row) => ({ id: row.id }))
           return rows.map((row) => JSON.parse(JSON.stringify(row)))
         },
-        where(condition: any) {
+        // only used to find active itineraries (isFinished = false)
+        where() {
           return {
-            limit() {
-              return {
-                get() {
-                  const value = condition?.value ?? condition
-                  return ensureStore(table).rows.find((row) => row.id === value)
-                },
-              }
-            },
+            all: () =>
+              ensureStore(table)
+                .rows.filter((row) => !row.isFinished)
+                .map((row) => ({ id: row.id })),
           }
         },
       }
@@ -48,15 +59,14 @@ const dbMock = {
   insert: vi.fn((table: any) => ({
     values(value: any) {
       return {
-        run() {
-          const store = ensureStore(table)
-          store.inserted.push(JSON.parse(JSON.stringify(value)))
-          store.rows.push(JSON.parse(JSON.stringify(value)))
-          return { changes: 1 }
+        onConflictDoNothing() {
+          return { run: () => insertInto(table, value) }
         },
+        run: () => insertInto(table, value),
       }
     },
   })),
+  transaction: vi.fn((fn: any) => fn(dbMock)),
 }
 
 vi.mock('@/src/infra/db/drizzle/drizzle-client', () => ({
@@ -163,16 +173,29 @@ const sampleDump = {
       { id: 'cat-new', name: 'New Category' },
     ],
     product: [
-      { id: 'prod-existing', sku: 'EXIST', categoryId: 'cat-existing' },
-      { id: 'prod-new', sku: 'NEW', categoryId: 'cat-existing' },
+      {
+        id: 'prod-existing',
+        name: 'Existing',
+        salePrice: 10,
+        categoryId: 'cat-existing',
+      },
+      { id: 'prod-new', name: 'New', salePrice: 12, categoryId: 'cat-new' },
     ],
     customer: [
       { id: 'cust-existing', storeName: 'Store A' },
       { id: 'cust-new', storeName: 'Store B' },
     ],
     itinerary: [
-      { id: 'it-existing', name: 'Route A' },
-      { id: 'it-new', name: 'Route B' },
+      {
+        id: 'it-existing',
+        initialItineraryDate: '2025-01-01',
+        finalItineraryDate: '2025-01-05',
+      },
+      {
+        id: 'it-new',
+        initialItineraryDate: '2025-02-01',
+        finalItineraryDate: '2025-02-05',
+      },
     ],
     itineraryWorkOrder: [
       {
@@ -371,17 +394,22 @@ describe('dump.service', () => {
 
   it('importDumpFromPickedFile reads disk and inserts missing rows', async () => {
     seedExistingRows()
+    // the device has no license yet: the backup's can come in
+    setTableRows(license, [])
     const fileUri = 'file://dump.json'
     fileContents.set(fileUri, JSON.stringify(sampleDump))
 
     const result = await importDumpFromPickedFile(fileUri)
 
     expect(result.tables.category[1].id).toBe('cat-new')
+    expect(result.report.rejected).toEqual([])
     for (const { key, table } of tableMap) {
+      if (key === 'license') continue
       const store = ensureStore(table)
       const [, newRecord] = sampleDump.tables[key]
       expect(store.inserted.some((row) => row.id === newRecord.id)).toBe(true)
     }
+    expect(dbMock.transaction).toHaveBeenCalled()
   })
 
   it('importDumpFromJsonString skips inserts when rows already exist', async () => {
@@ -394,5 +422,57 @@ describe('dump.service', () => {
       const store = ensureStore(table)
       expect(store.inserted).toHaveLength(0)
     }
+    expect(result.report.skipped.workOrder).toBe(2)
+  })
+
+  it('never creates a second license', async () => {
+    seedExistingRows()
+    const result = await importDumpFromJsonString(JSON.stringify(sampleDump))
+    expect(ensureStore(license).inserted).toHaveLength(0)
+    expect(result.report.rejected).toContainEqual({
+      table: 'license',
+      id: 'lic-new',
+      reason: 'o aparelho já possui licença',
+    })
+  })
+
+  it('rejects rows pointing to missing references instead of aborting', async () => {
+    tableStores.clear()
+    const dump = JSON.parse(JSON.stringify(sampleDump))
+    dump.tables.workOrderItem.push({
+      id: 'woi-orphan',
+      workOrderId: 'wo-missing',
+      productId: 'prod-new',
+      quantity: 1,
+    })
+    const result = await importDumpFromJsonString(JSON.stringify(dump))
+    expect(result.report.rejected).toContainEqual({
+      table: 'workOrderItem',
+      id: 'woi-orphan',
+      reason: 'OS inexistente',
+    })
+    expect(
+      ensureStore(workOrderItem).inserted.some((r) => r.id === 'woi-new')
+    ).toBe(true)
+  })
+
+  it('normalizes legacy lowercase statuses', async () => {
+    tableStores.clear()
+    const dump = JSON.parse(JSON.stringify(sampleDump))
+    dump.tables.workOrder[0].status = 'completed'
+    await importDumpFromJsonString(JSON.stringify(dump))
+    const row = ensureStore(workOrder).inserted.find(
+      (r) => r.id === 'wo-existing'
+    )
+    expect(row.status).toBe('COMPLETED')
+  })
+
+  it('rejects files that are not a backup', async () => {
+    await expect(importDumpFromJsonString('not json')).rejects.toThrow(
+      'O arquivo não é um JSON válido.'
+    )
+    await expect(importDumpFromJsonString('{"foo":1}')).rejects.toThrow(
+      'O arquivo não é um backup do aplicativo.'
+    )
   })
 })

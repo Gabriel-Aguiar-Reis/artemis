@@ -1,6 +1,6 @@
 export type ExpirationSerializableDTO = string
 
-// Aceita formatos como: "30 dias", "30dias", "1 mês", "2 semanas", etc.
+// Accepts formats such as: "30 dias", "30dias", "1 mês", "2 semanas", etc.
 export const EXPIRATION_REGEX = /^(\d+)\s*(.+)$/i
 
 export class Expiration {
@@ -29,7 +29,7 @@ export class Expiration {
       )
     }
 
-    // Normaliza acentos e converte para lower
+    // Normalize accents and convert to lower case
     const unit = String(unitRaw)
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
@@ -38,7 +38,7 @@ export class Expiration {
 
     let ms: number | undefined
 
-    // Aceita variações comuns (plural, singular, abreviações)
+    // Accept common variations (plural, singular, abbreviations)
     if (/^dias?$/.test(unit) || /^d$/.test(unit)) {
       ms = 24 * 60 * 60 * 1000
     } else if (
@@ -67,7 +67,7 @@ export class Expiration {
   }
 
   toDTO(): ExpirationSerializableDTO {
-    // Normaliza para salvar: quando a quantidade é 1, usa a forma singular
+    // Normalize for saving: when the quantity is 1, use the singular form
     const raw = String(this.value).trim()
     const match = raw.match(EXPIRATION_REGEX)
     if (!match) return raw
@@ -76,14 +76,14 @@ export class Expiration {
     const qty = Number(qtyStr)
     if (Number.isNaN(qty)) return this.value
 
-    // Normaliza acentos e converte para lower
+    // Normalize accents and convert to lower case
     const unit = String(unitRaw)
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .toLowerCase()
       .trim()
 
-    // Determina a forma padrão da unidade
+    // Determine the default form of the unit
     let unitName = unit
     if (/^dias?$/.test(unit) || /^d$/.test(unit)) {
       unitName = qty === 1 ? 'dia' : 'dias'

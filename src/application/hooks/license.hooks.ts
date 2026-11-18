@@ -11,7 +11,7 @@ const licenseRepository = new DrizzleLicenseRepository()
 const LICENSE_QUERY_KEY = ['license']
 
 /**
- * Hook para obter a licença atual
+ * Hook to get the current license
  */
 export function useLicense() {
   return useQuery({
@@ -19,12 +19,12 @@ export function useLicense() {
     queryFn: async () => {
       return await licenseRepository.getLicense()
     },
-    staleTime: 1000 * 60 * 5, // 5 minutos
+    staleTime: 1000 * 60 * 5, // 5 minutes
   })
 }
 
 /**
- * Hook para criar licença inicial
+ * Hook to create the initial license
  */
 export function useCreateInitialLicense() {
   const queryClient = useQueryClient()
@@ -32,7 +32,7 @@ export function useCreateInitialLicense() {
   return useMutation({
     mutationFn: async () => {
       const uniqueCode = generateUniqueCode()
-      const expirationDate = new Date() // Expirado desde o início
+      const expirationDate = new Date() // Expired since the start
       const isAdmin = false
 
       return await licenseRepository.createLicense(
@@ -42,14 +42,14 @@ export function useCreateInitialLicense() {
       )
     },
     onSuccess: () => {
-      // Invalida o cache para forçar refetch imediato
+      // Invalidate the cache to force an immediate refetch
       queryClient.invalidateQueries({ queryKey: LICENSE_QUERY_KEY })
     },
   })
 }
 
 /**
- * Hook para validar e atualizar licença com código
+ * Hook to validate and update the license with a code
  */
 export function useActivateLicense() {
   const queryClient = useQueryClient()
@@ -81,14 +81,14 @@ export function useActivateLicense() {
       return validation
     },
     onSuccess: () => {
-      // Invalida o cache para atualizar a licença
+      // Invalidate the cache to update the license
       queryClient.invalidateQueries({ queryKey: LICENSE_QUERY_KEY })
     },
   })
 }
 
 /**
- * Hook para renovar antecipadamente a licença
+ * Hook to renew the license in advance
  */
 export function useRenewLicense() {
   const queryClient = useQueryClient()
@@ -119,7 +119,7 @@ export function useRenewLicense() {
       return validation
     },
     onSuccess: () => {
-      // Invalida o cache para atualizar a licença
+      // Invalidate the cache to update the license
       queryClient.invalidateQueries({ queryKey: LICENSE_QUERY_KEY })
     },
   })

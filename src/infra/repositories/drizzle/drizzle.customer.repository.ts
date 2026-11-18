@@ -4,6 +4,7 @@ import { Address } from '@/src/domain/entities/customer/value-objects/address.vo
 import { LandlinePhoneNumber } from '@/src/domain/entities/customer/value-objects/landline-phone-number.vo'
 import { SmartphoneNumber } from '@/src/domain/entities/customer/value-objects/smartphone-number.vo'
 import {
+  CustomerLight,
   CustomerRepository,
   PaginatedCustomers,
 } from '@/src/domain/repositories/customer/customer.repository'
@@ -13,8 +14,9 @@ import {
 } from '@/src/domain/validations/customer.schema'
 import { db } from '@/src/infra/db/drizzle/drizzle-client'
 import { customer } from '@/src/infra/db/drizzle/schema/drizzle.customer.schema'
+import { containsFolded, foldedSql } from '@/src/infra/db/drizzle/sql-search'
 import { normalizePhoneBrazil, UUID } from '@/src/lib/utils'
-import { and, count, eq, like, or } from 'drizzle-orm'
+import { and, asc, count, eq, like, or } from 'drizzle-orm'
 import uuid from 'react-native-uuid'
 
 export interface CustomerFilters {
@@ -34,6 +36,34 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
     return rows.map(CustomerMapper.toDomain)
   }
 
+  /**
+   * Lightweight search for comboboxes: only the columns needed, ordered and
+   * limited. Accent- and case-insensitive (see sql-search.ts).
+   */
+  async searchCustomersLight(
+    term: string,
+    limit = 50
+  ): Promise<CustomerLight[]> {
+    const cols = {
+      id: customer.id,
+      storeName: customer.storeName,
+      contactName: customer.contactName,
+      city: customer.addressCity,
+      phone: customer.phoneNumber,
+    }
+    const match = or(
+      containsFolded(customer.storeName, term),
+      containsFolded(customer.contactName, term)
+    )
+
+    return (await db
+      .select(cols)
+      .from(customer)
+      .where(match)
+      .orderBy(foldedSql(customer.storeName), asc(customer.id))
+      .limit(limit)) as CustomerLight[]
+  }
+
   async getCustomersPaginated(
     page: number,
     pageSize: number,
@@ -41,24 +71,24 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
   ): Promise<PaginatedCustomers> {
     const offset = (page - 1) * pageSize
 
-    // Construir condições de filtro dinamicamente
+    // Build filter conditions dynamically
     const conditions = []
 
     if (filters?.search) {
       conditions.push(
         or(
-          like(customer.storeName, `%${filters.search}%`),
-          like(customer.contactName, `%${filters.search}%`)
+          containsFolded(customer.storeName, filters.search),
+          containsFolded(customer.contactName, filters.search)
         )
       )
     }
 
     if (filters?.contactName) {
-      conditions.push(like(customer.contactName, `%${filters.contactName}%`))
+      conditions.push(containsFolded(customer.contactName, filters.contactName))
     }
 
     if (filters?.phoneNumber) {
-      // Remove formatação antes de buscar
+      // Strip formatting before searching
       const phoneDigits = filters.phoneNumber.replace(/\D+/g, '')
       if (phoneDigits) {
         conditions.push(like(customer.phoneNumber, `%${phoneDigits}%`))
@@ -66,7 +96,7 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
     }
 
     if (filters?.landlineNumber) {
-      // Remove formatação antes de buscar
+      // Strip formatting before searching
       const landlineDigits = filters.landlineNumber.replace(/\D+/g, '')
       if (landlineDigits) {
         conditions.push(like(customer.landlineNumber, `%${landlineDigits}%`))
@@ -83,15 +113,17 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
       )
     }
 
-    // Aplicar WHERE com todas as condições
+    // Apply WHERE with all conditions
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined
 
-    // Busca total de registros e registros da página em paralelo
+    // Fetch the total record count and the page's records in parallel
     const [rows, totalResult] = await Promise.all([
       db
         .select()
         .from(customer)
         .where(whereClause)
+        // Stable order: without ORDER BY the OFFSET may repeat/skip items
+        .orderBy(foldedSql(customer.storeName), asc(customer.id))
         .limit(pageSize)
         .offset(offset),
       db.select({ count: count() }).from(customer).where(whereClause),
@@ -121,7 +153,7 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
     ) {
       address = Address.fromDTO({
         streetName: dto.addressStreetName,
-        streetNumber: Number(dto.addressStreetNumber),
+        streetNumber: String(dto.addressStreetNumber ?? '').trim(),
         neighborhood: dto.addressNeighborhood,
         city: dto.addressCity,
         state: dto.addressState,
@@ -180,7 +212,7 @@ export default class DrizzleCustomerRepository implements CustomerRepository {
     ) {
       address = Address.fromDTO({
         streetName: dto.addressStreetName,
-        streetNumber: Number(dto.addressStreetNumber),
+        streetNumber: String(dto.addressStreetNumber ?? '').trim(),
         neighborhood: dto.addressNeighborhood,
         city: dto.addressCity,
         state: dto.addressState,

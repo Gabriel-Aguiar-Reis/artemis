@@ -27,7 +27,7 @@ export default function ItineraryFormScreen() {
     mode: 'onChange',
   })
 
-  // Verificar se já existe itinerário ativo
+  // Check whether an active itinerary already exists
   useEffect(() => {
     if (activeItinerary) {
       Toast.show({
@@ -61,7 +61,7 @@ export default function ItineraryFormScreen() {
     router.back()
   })
 
-  // Não renderizar o form se já houver itinerário ativo
+  // Do not render the form if there is already an active itinerary
   if (activeItinerary) {
     return null
   }

@@ -1,6 +1,6 @@
-import { cn } from '@/src/lib/utils';
-import * as LabelPrimitive from '@rn-primitives/label';
-import { Platform } from 'react-native';
+import { cn } from '@/src/lib/utils'
+import * as LabelPrimitive from '@rn-primitives/label'
+import { Platform } from 'react-native'
 
 function Label({
   className,
@@ -24,7 +24,8 @@ function Label({
       onLongPress={onLongPress}
       onPressIn={onPressIn}
       onPressOut={onPressOut}
-      disabled={disabled}>
+      disabled={disabled}
+    >
       <LabelPrimitive.Text
         className={cn(
           'text-foreground text-sm font-medium',
@@ -34,7 +35,7 @@ function Label({
         {...props}
       />
     </LabelPrimitive.Root>
-  );
+  )
 }
 
-export { Label };
+export { Label }

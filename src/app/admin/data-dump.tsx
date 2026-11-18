@@ -2,6 +2,7 @@ import {
   buildDumpJsonString,
   importDumpFromJsonString,
   importDumpFromPickedFile,
+  ImportReport,
   pickDumpJson,
   saveDumpJsonToTempAndShare,
 } from '@/src/application/services/dump.service'
@@ -21,6 +22,28 @@ import { useState } from 'react'
 import { ActivityIndicator, ScrollView, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
+
+function showImportReport(report: ImportReport) {
+  const sum = (r: Record<string, number>) =>
+    Object.values(r).reduce((a, b) => a + b, 0)
+  const inserted = sum(report.inserted)
+  const skipped = sum(report.skipped)
+  const rejected = report.rejected.length
+  if (rejected > 0 && __DEV__)
+    console.warn('Linhas recusadas:', report.rejected)
+  const note = report.notes[0]
+  Toast.show({
+    type: rejected > 0 || note ? 'info' : 'success',
+    text1: 'Importação concluída',
+    text2:
+      `${inserted} novos • ${skipped} já existiam` +
+      (rejected > 0
+        ? ` • ${rejected} recusados (ex.: ${report.rejected[0].table}: ${report.rejected[0].reason})`
+        : '') +
+      (note ? ` • ${note}` : ''),
+    visibilityTime: rejected > 0 || note ? 8000 : 4000,
+  })
+}
 
 export default function DataDumpScreen() {
   const [isExporting, setIsExporting] = useState(false)
@@ -81,11 +104,7 @@ export default function DataDumpScreen() {
         return
       }
       const result = await importDumpFromPickedFile(uri)
-      Toast.show({
-        type: 'success',
-        text1: 'Importação concluída',
-        text2: `Versão ${result.version} • ${new Date(result.createdAt).toLocaleString()}`,
-      })
+      showImportReport(result.report)
     } catch (error) {
       Toast.show({
         type: 'error',
@@ -109,11 +128,7 @@ export default function DataDumpScreen() {
         throw new Error('A área de transferência está vazia')
       }
       const result = await importDumpFromJsonString(text)
-      Toast.show({
-        type: 'success',
-        text1: 'Importação concluída',
-        text2: `Versão ${result.version} • ${new Date(result.createdAt).toLocaleString()}`,
-      })
+      showImportReport(result.report)
     } catch (error) {
       Toast.show({
         type: 'error',
@@ -129,7 +144,10 @@ export default function DataDumpScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView
+      edges={['left', 'right', 'bottom']}
+      className="flex-1 bg-background"
+    >
       <Stack.Screen options={{ title: 'Dump de Dados', headerShown: true }} />
       <ScrollView className="flex-1">
         <View className="gap-6 p-4">

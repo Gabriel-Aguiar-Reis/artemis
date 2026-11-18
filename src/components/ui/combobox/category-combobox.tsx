@@ -1,4 +1,5 @@
 import { categoryHooks } from '@/src/application/hooks/category.hooks'
+import { useNormalizedSearch } from '@/src/application/hooks/use-normalized-search'
 import { Button } from '@/src/components/ui/button'
 import {
   Dialog,
@@ -9,6 +10,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/src/components/ui/dialog'
+import {
+  FIELD_LABEL_FLOAT_TOP,
+  FIELD_MESSAGE_CLASS,
+  FIELD_TOP_RESERVE,
+} from '@/src/components/ui/field-metrics'
 import { Icon } from '@/src/components/ui/icon'
 import { Input } from '@/src/components/ui/input'
 import { Text } from '@/src/components/ui/text'
@@ -39,12 +45,11 @@ export function CategoryCombobox({
   const [open, setOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
-  const filteredCategories = useMemo(() => {
-    if (!searchQuery) return categories
-    return categories.filter((c) =>
-      c.name.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  }, [categories, searchQuery])
+  const filteredCategories = useNormalizedSearch(
+    categories,
+    (c) => c.name,
+    searchQuery
+  )
 
   const isSelected = (categoryId: string) => {
     return selectedCategoryId === categoryId
@@ -75,14 +80,18 @@ export function CategoryCombobox({
         >
           <View className="flex-row justify-between items-center w-full">
             <View className="flex-1 flex-row items-center gap-3">
-              <Icon as={FolderTree} size={18} className="text-primary" />
+              <Icon
+                as={FolderTree}
+                size={18}
+                className="text-muted-foreground"
+              />
               <View className="flex-1">
                 <Text className="font-semibold text-base">{item.name}</Text>
                 <View className="flex-row items-center gap-2 mt-1">
                   <View
                     className={cn(
                       'h-2 w-2 rounded-full',
-                      item.isActive ? 'bg-green-500' : 'bg-gray-400'
+                      item.isActive ? 'bg-success' : 'bg-gray-400'
                     )}
                   />
                   <Text className="text-xs text-muted-foreground">
@@ -127,7 +136,7 @@ export function CategoryCombobox({
     zIndex: 10,
     top: animated.interpolate({
       inputRange: [0, 1],
-      outputRange: [-8, -8],
+      outputRange: [FIELD_LABEL_FLOAT_TOP, FIELD_LABEL_FLOAT_TOP],
     }),
     fontSize: animated.interpolate({
       inputRange: [0, 1],
@@ -136,14 +145,14 @@ export function CategoryCombobox({
   }
 
   return (
-    <View className="relative">
+    <View className="relative" style={{ paddingTop: FIELD_TOP_RESERVE }}>
       {label && (
         <Animated.Text
           style={labelStyle}
           numberOfLines={1}
           className={cn(
             'bg-background',
-            error ? 'text-red-500' : 'text-muted-foreground'
+            error ? 'text-destructive' : 'text-muted-foreground'
           )}
         >
           {label}
@@ -157,20 +166,23 @@ export function CategoryCombobox({
               'flex-row items-center justify-between h-12 px-4 rounded-md',
               'border bg-background',
               'active:bg-accent',
-              error ? 'border-red-500' : 'border-input'
+              error ? 'border-destructive' : 'border-input'
             )}
           >
             <View className="flex-row items-center gap-2 flex-1">
               <Icon
                 as={FolderTree}
                 size={20}
-                className={cn('text-muted-foreground', error && 'text-red-500')}
+                className={cn(
+                  'text-muted-foreground',
+                  error && 'text-destructive'
+                )}
               />
               <Text
                 className={cn(
                   'flex-1',
                   !selectedCategoryId && 'text-muted-foreground',
-                  error && 'text-red-500'
+                  error && 'text-destructive'
                 )}
                 numberOfLines={1}
               >
@@ -180,7 +192,10 @@ export function CategoryCombobox({
             <Icon
               as={ChevronDown}
               size={20}
-              className={cn('text-muted-foreground', error && 'text-red-500')}
+              className={cn(
+                'text-muted-foreground',
+                error && 'text-destructive'
+              )}
             />
           </Pressable>
         </DialogTrigger>
@@ -231,6 +246,8 @@ export function CategoryCombobox({
               <View className="flex-1 w-full">
                 <FlashList
                   data={filteredCategories}
+                  keyExtractor={(item) => item.id}
+                  keyboardShouldPersistTaps="handled"
                   renderItem={renderCategoryItem}
                 />
               </View>
@@ -252,8 +269,10 @@ export function CategoryCombobox({
         </DialogContent>
       </Dialog>
 
-      <View className="min-h-4 justify-center">
-        {error && <Text className="ml-2 text-xs text-red-500">{error}</Text>}
+      <View className={FIELD_MESSAGE_CLASS}>
+        {error && (
+          <Text className="ml-2 text-xs text-destructive">{error}</Text>
+        )}
       </View>
     </View>
   )

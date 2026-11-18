@@ -8,7 +8,13 @@ import { Stack } from 'expo-router'
 import { LucideIcon } from 'lucide-react-native'
 import React, { BaseSyntheticEvent, ReactNode } from 'react'
 import { Control, Controller, FieldValues, Path } from 'react-hook-form'
-import { ScrollView, View } from 'react-native'
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  View,
+} from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 export type FormFieldProps<T extends FieldValues> = {
@@ -40,16 +46,22 @@ type RootProps = {
 }
 function Root({ title, children, footer }: RootProps) {
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView edges={['left', 'right', 'bottom']} className="flex-1">
       <Stack.Screen options={{ title }} />
-      <ScrollView className="flex-1">
-        <View className="p-4 gap-2">{children}</View>
-      </ScrollView>
-      {footer && (
-        <View className="p-4 bg-background border-t border-border">
-          {footer}
-        </View>
-      )}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={80}
+      >
+        <ScrollView className="flex-1" keyboardShouldPersistTaps="handled">
+          <View className="p-4 gap-4">{children}</View>
+        </ScrollView>
+        {footer && (
+          <View className="p-4 bg-background border-t border-border">
+            {footer}
+          </View>
+        )}
+      </KeyboardAvoidingView>
     </SafeAreaView>
   )
 }
@@ -125,7 +137,7 @@ function Input<T extends FieldValues>({
           onBlur: () => {
             if (isCurrency) {
               let clean = (localCurrency || '').replace(/[^\d,.-]/g, '')
-              // Remove separadores de milhar (pontos) antes de substituir a vírgula decimal
+              // Remove thousand separators (dots) before replacing the decimal comma
               const withoutThousandsSeparator = clean.replace(/\./g, '')
               const normalized = withoutThousandsSeparator.replace(',', '.')
               const num = Number(normalized)
@@ -269,17 +281,27 @@ function CheckboxField<T extends FieldValues>({
   name,
   label,
 }: CheckboxProps<T>) {
+  // The whole row (box + label) toggles the value: a bare checkbox is a tiny
+  // touch target on phones, and tapping the label used to do nothing.
   return (
-    <View className="flex-row items-center gap-2">
-      <Controller
-        control={control}
-        name={name}
-        render={({ field: { onChange, value } }) => (
+    <Controller
+      control={control}
+      name={name}
+      render={({ field: { onChange, value } }) => (
+        <Pressable
+          className="flex-row items-center gap-2 py-2"
+          onPress={() => onChange(!value)}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: !!value }}
+          accessibilityLabel={label}
+        >
           <Checkbox checked={!!value} onCheckedChange={onChange} />
-        )}
-      />
-      <Label className="ml-2">{label}</Label>
-    </View>
+          <Label className="ml-2" onPress={() => onChange(!value)}>
+            {label}
+          </Label>
+        </Pressable>
+      )}
+    />
   )
 }
 
@@ -296,7 +318,7 @@ function SubmitButton({ onPress, loading, children }: SubmitButtonProps) {
   )
 }
 
-// Subcomponentes para Input
+// Subcomponents for Input
 function CurrencyInput<T extends FieldValues>(
   props: Omit<InputProps<T>, 'isCurrency' | 'isNumber'>
 ) {

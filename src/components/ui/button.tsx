@@ -19,13 +19,20 @@ const buttonVariants = cva(
           Platform.select({ web: 'hover:bg-primary/90' })
         ),
         destructive: cn(
-          'bg-destructive shadow-sm shadow-black/5 active:bg-destructive/90 dark:bg-destructive/60',
+          'bg-destructive shadow-sm shadow-black/5 active:bg-destructive/90',
           Platform.select({
             web: 'hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40',
           })
         ),
+        // Destructive but not the main action of the screen (e.g. "Cancelar
+        // itinerário"): neutral surface with red border/text, so solid red
+        // stays reserved for confirmations
+        destructiveSubtle: cn(
+          'border border-destructive/50 bg-card active:bg-destructive/10',
+          Platform.select({ web: 'hover:bg-destructive/10' })
+        ),
         outline: cn(
-          'border border-border bg-background shadow-sm shadow-black/5 active:bg-accent dark:border-input dark:bg-input/30 dark:active:bg-input/50',
+          'border border-border bg-card shadow-sm shadow-black/5 active:bg-accent dark:border-input dark:active:bg-input/50',
           Platform.select({
             web: 'hover:bg-accent dark:hover:bg-input/50',
           })
@@ -72,7 +79,8 @@ const buttonTextVariants = cva(
     variants: {
       variant: {
         default: 'text-primary-foreground',
-        destructive: 'text-white',
+        destructive: 'text-destructive-foreground',
+        destructiveSubtle: 'text-destructive',
         outline: cn(
           'group-active:text-accent-foreground',
           Platform.select({ web: 'group-hover:text-accent-foreground' })

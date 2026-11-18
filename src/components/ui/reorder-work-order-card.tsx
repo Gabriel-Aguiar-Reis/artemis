@@ -1,10 +1,13 @@
 import { Icon } from '@/src/components/ui/icon'
 import { Text } from '@/src/components/ui/text'
-import { Customer } from '@/src/domain/entities/customer/customer.entity'
 import {
-  WorkOrder,
-  WorkOrderStatus,
-} from '@/src/domain/entities/work-order/work-order.entity'
+  getPriorityStatus,
+  paymentTone,
+  reportTone,
+  visitTone,
+} from '@/src/components/ui/work-order-status'
+import { Customer } from '@/src/domain/entities/customer/customer.entity'
+import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
 import { cn, formatPhoneBrazil } from '@/src/lib/utils'
 import {
   Banknote,
@@ -46,59 +49,19 @@ function ReorderWorkOrderCardComponent({
   wo,
   isLate = false,
 }: ReorderWorkOrderCardProps) {
-  const hasResultNoPay = wo.result && !wo.paymentOrder
-  const isExpired = wo.status === WorkOrderStatus.EXPIRED
-  const isCopied = wo.status === WorkOrderStatus.COPIED
-
-  const getPriorityStatus = () => {
-    if (isCopied) {
-      return {
-        label: 'CLONADA',
-        borderClass: 'border-2 border-cyan-500',
-        badgeClass: 'bg-cyan-500/40',
-        textClass: 'text-xs font-bold text-cyan-100',
-      }
-    }
-    if (hasResultNoPay) {
-      return {
-        label: 'S/ PGTO',
-        borderClass: 'border-2 border-destructive',
-        badgeClass: 'bg-destructive/40',
-        textClass: 'text-xs font-bold text-red-100',
-      }
-    }
-    if (isExpired) {
-      return {
-        label: 'EXPIRADA',
-        borderClass: 'border-2 border-orange-500',
-        badgeClass: 'bg-orange-500/40',
-        textClass: 'text-xs font-bold text-orange-100',
-      }
-    }
-    if (isLate) {
-      return {
-        label: 'ATRASADO',
-        borderClass: 'border-2 border-warning',
-        badgeClass: 'bg-warning/40',
-        textClass: 'text-xs font-bold text-warning-foreground',
-      }
-    }
-    return null
-  }
-
-  const priorityStatus = getPriorityStatus()
+  const priorityStatus = getPriorityStatus(wo, isLate)
 
   return (
     <View
       className={cn(
-        'bg-card border border-border rounded-lg p-4 mb-4 dark:bg-input/30',
+        'bg-card border border-border rounded-lg p-4 mb-4',
         priorityStatus?.borderClass
       )}
     >
       {/* Header */}
       <View className="mb-3">
         <View className="flex-row items-center gap-2 mb-2">
-          <Icon as={Store} size={20} className="text-primary" />
+          <Icon as={Store} size={20} className="text-muted-foreground" />
           <View className="flex-1">
             <Text className="text-lg font-semibold" numberOfLines={2}>
               {wo.customer.storeName}
@@ -159,12 +122,8 @@ function ReorderWorkOrderCardComponent({
 
         {wo.visitDate ? (
           <View className="flex-row items-center gap-1">
-            <Icon
-              as={CalendarCheck}
-              size={16}
-              className="text-green-500 dark:text-green-300"
-            />
-            <Text className="text-sm text-green-500 dark:text-green-300">
+            <Icon as={CalendarCheck} size={16} className={visitTone(wo)} />
+            <Text className={cn('text-sm', visitTone(wo))}>
               {wo.visitDate.toLocaleString('pt-BR', {
                 day: '2-digit',
                 month: '2-digit',
@@ -173,14 +132,8 @@ function ReorderWorkOrderCardComponent({
           </View>
         ) : (
           <View className="flex-row items-center gap-1">
-            <Icon
-              as={CalendarCheck}
-              size={16}
-              className="text-orange-500 dark:text-orange-400"
-            />
-            <Text className="text-sm text-orange-500 dark:text-orange-400">
-              Não visitado
-            </Text>
+            <Icon as={CalendarCheck} size={16} className={visitTone(wo)} />
+            <Text className={cn('text-sm', visitTone(wo))}>Não visitado</Text>
           </View>
         )}
       </View>
@@ -188,40 +141,15 @@ function ReorderWorkOrderCardComponent({
       {/* Status Info */}
       <View className="flex-row items-center gap-3 flex-wrap">
         <View className="flex-row items-center gap-1">
-          <Icon
-            as={ReceiptText}
-            size={16}
-            className={cn(
-              'text-yellow-500 dark:text-yellow-200',
-              wo.result && 'text-cyan-500 dark:text-cyan-200'
-            )}
-          />
-          <Text
-            className={cn(
-              'text-sm text-yellow-500 dark:text-yellow-200',
-              wo.result && 'text-cyan-500 dark:text-cyan-200'
-            )}
-          >
+          <Icon as={ReceiptText} size={16} className={reportTone(wo)} />
+          <Text className={cn('text-sm', reportTone(wo))}>
             {wo.result ? 'Relatório' : 'Sem relatório'}
           </Text>
         </View>
 
         <View className="flex-row items-center gap-1">
-          <Icon
-            as={Receipt}
-            size={16}
-            className={cn(
-              'text-red-500 dark:text-red-200',
-              wo.paymentOrder?.isPaid && 'text-cyan-500 dark:text-cyan-200'
-            )}
-          />
-          <Text
-            className={cn(
-              'text-sm text-red-500 dark:text-red-200',
-              wo.paymentOrder?.isPaid && 'text-cyan-500 dark:text-cyan-200'
-            )}
-            numberOfLines={1}
-          >
+          <Icon as={Receipt} size={16} className={paymentTone(wo)} />
+          <Text className={cn('text-sm', paymentTone(wo))} numberOfLines={1}>
             {wo.paymentOrder
               ? wo.paymentOrder.isPaid
                 ? `${wo.paymentOrder.method} - Pago`
@@ -233,7 +161,11 @@ function ReorderWorkOrderCardComponent({
 
       {wo.paymentOrder && (
         <View className="flex-row items-center mt-2">
-          <Icon as={Banknote} size={16} className="text-green-600 mr-1" />
+          <Icon
+            as={Banknote}
+            size={16}
+            className="text-muted-foreground mr-1"
+          />
           <Text className="text-sm">
             R${' '}
             {wo.paymentOrder.totalValue.toLocaleString('pt-BR', {
@@ -249,12 +181,12 @@ function ReorderWorkOrderCardComponent({
 export const ReorderWorkOrderCard = React.memo(
   ReorderWorkOrderCardComponent,
   (prevProps, nextProps) => {
-    // Comparação simples e eficiente
+    // Simple and efficient comparison
     if (prevProps.wo.id !== nextProps.wo.id) return false
     if (prevProps.isLate !== nextProps.isLate) return false
     if (prevProps.wo.status !== nextProps.wo.status) return false
 
-    // Se chegou aqui, não precisa re-renderizar
+    // If we got here, no re-render is needed
     return true
   }
 )

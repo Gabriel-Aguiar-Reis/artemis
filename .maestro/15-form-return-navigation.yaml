@@ -1,0 +1,74 @@
+# Forms live in the root stack above the tabs. Returning from them must reuse
+# the existing tab navigator (no duplicated tabs): after creating a work order,
+# Back goes to the itinerary and then exits the app. Same after cancelling the
+# itinerary from the finish screen. Destructive: deletes the active itinerary,
+# so run it last.
+appId: br.com.artemis
+tags: [qa]
+---
+- runFlow: subflows/open-app.yaml
+- runFlow: subflows/reset-filters.yaml
+
+# Create a minimal work order from the OS tab
+- tapOn: OS
+- extendedWaitUntil:
+    visible: Encontre uma ordem de serviço
+    timeout: 30000
+- tapOn:
+    point: 91%,8%
+- tapOn: Selecione o cliente
+- tapOn: Pesquisar...
+- inputText: acai bay
+- hideKeyboard
+- extendedWaitUntil:
+    visible: Açai Bay
+    timeout: 10000
+- tapOn: Açai Bay
+- tapOn: Próximo
+- tapOn: Selecione os produtos
+- tapOn: Pesquisar por nome...
+- inputText: agua pressurizada 10 lt
+- hideKeyboard
+- tapOn: Ext. De água pressurizada 10 LT
+- tapOn: Confirmar
+- tapOn: Próximo
+- tapOn: Finalizar Sem Relatório
+- extendedWaitUntil:
+    visible: Ordem de serviço criada!|Enviar resumo ao cliente\?
+    timeout: 15000
+- tapOn: Cancelar
+# Back on the OS tab, inside the same tab navigator
+- assertVisible: Ordens de Serviço
+- back
+- extendedWaitUntil:
+    visible: ".* - SP.*"
+    timeout: 15000
+- assertVisible:
+    text: Itinerário
+    index: 1 # header title: Back went to the itinerary tab, not another OS
+- back
+# Leaving the app: nothing of it on screen
+- extendedWaitUntil:
+    notVisible: Categorias
+    timeout: 10000
+
+# Cancel the itinerary from the finish screen
+- runFlow: subflows/open-app.yaml
+- tapOn: Itinerário
+- extendedWaitUntil:
+    visible: ".* - SP.*"
+    timeout: 30000
+- tapOn:
+    point: 91%,8%
+- scrollUntilVisible:
+    element: Cancelar Itinerário
+    direction: DOWN
+- tapOn: Cancelar Itinerário
+- tapOn: Sim, Cancelar
+- extendedWaitUntil:
+    visible: Nenhum Itinerário sendo utilizado.*
+    timeout: 15000
+- back
+- extendedWaitUntil:
+    notVisible: Categorias
+    timeout: 10000

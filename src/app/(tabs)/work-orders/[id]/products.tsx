@@ -34,7 +34,10 @@ export default function WorkOrderProductsScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Carregando produtos...</Text>
       </SafeAreaView>
     )
@@ -42,7 +45,10 @@ export default function WorkOrderProductsScreen() {
 
   if (!workOrder) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Ordem de serviço não encontrada.</Text>
       </SafeAreaView>
     )
@@ -56,7 +62,7 @@ export default function WorkOrderProductsScreen() {
   )
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView edges={['left', 'right']} className="flex-1">
       <Stack.Screen
         options={{
           title: 'Produtos Agendados',
@@ -70,7 +76,7 @@ export default function WorkOrderProductsScreen() {
         </View>
       ) : (
         <View className="flex-1 p-4">
-          <ObjectCard.Root className="mb-4 dark:bg-input/30">
+          <ObjectCard.Root className="mb-4">
             <ObjectCard.Header>
               <ObjectCard.Title>Resumo</ObjectCard.Title>
               {workOrder.status !== 'EXPIRED' &&
@@ -117,7 +123,7 @@ export default function WorkOrderProductsScreen() {
           <FlashList
             data={items}
             renderItem={({ item }: { item: WorkOrderItem }) => (
-              <ObjectCard.Root className="mb-3 dark:bg-input/30">
+              <ObjectCard.Root className="mb-3">
                 <ObjectCard.Header>
                   <ObjectCard.Title>{item.productName}</ObjectCard.Title>
                 </ObjectCard.Header>

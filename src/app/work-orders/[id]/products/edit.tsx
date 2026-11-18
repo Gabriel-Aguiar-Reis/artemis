@@ -29,7 +29,7 @@ export default function WorkOrderProductsEditScreen() {
   const [selectedProducts, setSelectedProducts] = useState<ProductInput[]>([])
   const [isPending, setIsPending] = useState(false)
 
-  // Carregar produtos agendados existentes
+  // Load existing scheduled products
   useEffect(() => {
     if (!workOrder || !workOrder.products) return
 
@@ -47,10 +47,10 @@ export default function WorkOrderProductsEditScreen() {
     try {
       setIsPending(true)
 
-      // 1. Deletar todos os produtos agendados existentes
+      // 1. Delete all existing scheduled products
       await deleteWorkOrderItemsByWorkOrderId(params.id)
 
-      // 2. Se houver produtos selecionados, adicionar os novos
+      // 2. If there are selected products, add the new ones
       if (selectedProducts.length > 0) {
         if (!allProducts) {
           throw new Error('Produtos não encontrados')
@@ -71,7 +71,7 @@ export default function WorkOrderProductsEditScreen() {
           }
         })
 
-        // Adicionar os novos items
+        // Add the new items
         await (addWorkOrderItems as any)([itemsDTO, params.id])
       }
 
@@ -82,7 +82,7 @@ export default function WorkOrderProductsEditScreen() {
 
       router.back()
     } catch (error) {
-      console.error('Erro ao atualizar produtos:', error)
+      console.error('Error updating products:', error)
       Toast.show({
         type: 'error',
         text1: 'Erro ao atualizar produtos',
@@ -95,7 +95,10 @@ export default function WorkOrderProductsEditScreen() {
 
   if (isLoadingWorkOrder) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Carregando ordem de serviço...</Text>
       </SafeAreaView>
     )
@@ -103,7 +106,10 @@ export default function WorkOrderProductsEditScreen() {
 
   if (!workOrder) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Ordem de serviço não encontrada.</Text>
       </SafeAreaView>
     )
@@ -111,7 +117,10 @@ export default function WorkOrderProductsEditScreen() {
 
   if (workOrder.result) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center px-4">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center px-4"
+      >
         <View className="items-center gap-4">
           <Text className="text-center text-lg font-semibold text-destructive">
             Edição Bloqueada
@@ -133,7 +142,7 @@ export default function WorkOrderProductsEditScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView edges={['left', 'right', 'bottom']} className="flex-1">
       <Stack.Screen
         options={{
           title: 'Editar Produtos Agendados',

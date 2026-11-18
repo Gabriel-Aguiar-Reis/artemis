@@ -16,7 +16,7 @@ export class WorkOrderItem extends WorkOrderItemBase {
     public id: UUID,
     public productSnapshot: ProductSnapshot,
     public quantity: number,
-    public priceSnapshot: number // Preço congelado no momento da venda
+    public priceSnapshot: number // Price frozen at the time of sale
   ) {
     super(
       productSnapshot.productId,

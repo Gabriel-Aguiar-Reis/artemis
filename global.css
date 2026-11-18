@@ -2,28 +2,47 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Design tokens (HSL triplets). Keep in sync with src/lib/theme.ts — a unit
+ * test fails if they diverge. Every text/background pair meets WCAG AA.
+ * Dark mode is not pure black: surfaces get lighter as they get closer to the
+ * user, so cards and sheets read as layers without relying on borders.
+ */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
+    /* Surfaces, by elevation: background (canvas) < card (raised) < popover (overlay) */
+    --background: 220 20% 97%;
+    --foreground: 222 22% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
+    --card-foreground: 222 22% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --warning: 38 92% 50%;
+    --popover-foreground: 222 22% 12%;
+    --muted: 220 16% 93%;
+    --muted-foreground: 220 10% 40%;
+    /* Actions: primary (one main action per screen) > secondary (neutral fill) > outline/ghost */
+    --primary: 221 83% 47%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 16% 91%;
+    --secondary-foreground: 222 22% 12%;
+    --accent: 217 90% 95%;
+    --accent-foreground: 221 80% 32%;
+    /* Semantic status: DEFAULT is safe for text/icons on surfaces, -foreground is text on a solid fill, -subtle is a tinted background */
+    --destructive: 0 72% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --destructive-subtle: 0 86% 96%;
+    --success: 145 70% 28%;
+    --success-foreground: 0 0% 100%;
+    --success-subtle: 140 60% 94%;
+    --warning: 28 95% 34%;
     --warning-foreground: 0 0% 100%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 63%;
+    --warning-subtle: 40 95% 93%;
+    --info: 212 90% 40%;
+    --info-foreground: 0 0% 100%;
+    --info-subtle: 212 90% 95%;
+    /* Lines and focus */
+    --border: 220 14% 86%;
+    --input: 220 13% 80%;
+    --ring: 221 83% 47%;
     --radius: 0.625rem;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
@@ -33,26 +52,39 @@
   }
 
   .dark:root {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 70.9% 59.4%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 300 0% 45%;
+    /* Surfaces, by elevation: background (canvas) < card (raised) < popover (overlay) */
+    --background: 222 18% 7%;
+    --foreground: 220 15% 92%;
+    --card: 222 15% 11%;
+    --card-foreground: 220 15% 92%;
+    --popover: 222 14% 15%;
+    --popover-foreground: 220 15% 92%;
+    --muted: 222 13% 17%;
+    --muted-foreground: 220 10% 66%;
+    /* Actions: primary (one main action per screen) > secondary (neutral fill) > outline/ghost */
+    --primary: 214 95% 67%;
+    --primary-foreground: 222 40% 10%;
+    --secondary: 222 12% 21%;
+    --secondary-foreground: 220 15% 92%;
+    --accent: 216 45% 21%;
+    --accent-foreground: 214 95% 80%;
+    /* Semantic status: DEFAULT is safe for text/icons on surfaces, -foreground is text on a solid fill, -subtle is a tinted background */
+    --destructive: 3 90% 68%;
+    --destructive-foreground: 222 40% 10%;
+    --destructive-subtle: 0 45% 16%;
+    --success: 142 55% 55%;
+    --success-foreground: 222 40% 10%;
+    --success-subtle: 145 40% 14%;
+    --warning: 38 92% 60%;
+    --warning-foreground: 222 40% 10%;
+    --warning-subtle: 35 55% 15%;
+    --info: 210 90% 68%;
+    --info-foreground: 222 40% 10%;
+    --info-subtle: 214 45% 17%;
+    /* Lines and focus */
+    --border: 222 12% 22%;
+    --input: 222 11% 28%;
+    --ring: 214 95% 67%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;

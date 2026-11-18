@@ -1,6 +1,10 @@
 import { PaymentService } from '@/src/application/services/payment.service'
 import { PaymentOrderMapper } from '@/src/domain/entities/payment-order/mapper/payment-order.mapper'
 import { PaymentOrder } from '@/src/domain/entities/payment-order/payment-order.entity'
+import {
+  normalizePaymentState,
+  roundMoney,
+} from '@/src/domain/entities/work-order/work-order-rules'
 import { PaymentOrderRepository } from '@/src/domain/repositories/payment-order/payment-order.repository'
 import {
   PaymentOrderInsertDTO,
@@ -25,19 +29,29 @@ export default class DrizzlePaymentOrderRepository implements PaymentOrderReposi
   async addPaymentOrder(dto: PaymentOrderInsertDTO): Promise<UUID> {
     const id = (dto.id as UUID) || (uuid.v4() as UUID)
 
+    const state = normalizePaymentState({
+      installments:
+        dto.installments !== undefined && dto.installments !== null
+          ? Number(dto.installments)
+          : 1,
+      paidInstallments:
+        dto.paidInstallments !== undefined && dto.paidInstallments !== null
+          ? Number(dto.paidInstallments)
+          : 0,
+      isPaid: dto.isPaid ?? false,
+    })
+
     const po = new PaymentOrder(
       id,
       dto.method,
-      dto.totalValue !== undefined && dto.totalValue !== null
-        ? Number(dto.totalValue)
-        : 0,
-      dto.installments !== undefined && dto.installments !== null
-        ? Number(dto.installments)
-        : 1,
-      dto.isPaid ?? false,
-      dto.paidInstallments !== undefined && dto.paidInstallments !== null
-        ? Number(dto.paidInstallments)
-        : 0,
+      roundMoney(
+        dto.totalValue !== undefined && dto.totalValue !== null
+          ? Number(dto.totalValue)
+          : 0
+      ),
+      state.installments,
+      state.isPaid,
+      state.paidInstallments,
       dto.paymentDate instanceof Date
         ? dto.paymentDate
         : dto.paymentDate
@@ -47,8 +61,8 @@ export default class DrizzlePaymentOrderRepository implements PaymentOrderReposi
 
     const data = PaymentOrderMapper.toPersistence(po)
 
-    await db.transaction(async (tx) => {
-      await tx.insert(paymentOrder).values(data).onConflictDoNothing()
+    db.transaction((tx) => {
+      tx.insert(paymentOrder).values(data).onConflictDoNothing().run()
     })
 
     return id
@@ -66,58 +80,69 @@ export default class DrizzlePaymentOrderRepository implements PaymentOrderReposi
       throw new Error('A ordem de pagamento não foi encontrada.')
     }
 
-    const po = PaymentOrder.fromDTO({
-      id: dto.id as UUID,
-      method: dto.method,
-      totalValue:
-        dto.totalValue !== undefined && dto.totalValue !== null
-          ? Number(dto.totalValue)
-          : existing.totalValue,
+    const state = normalizePaymentState({
       installments:
         dto.installments !== undefined && dto.installments !== null
           ? Number(dto.installments)
           : existing.installments,
-      isPaid: dto.isPaid ?? existing.isPaid,
       paidInstallments:
         dto.paidInstallments !== undefined && dto.paidInstallments !== null
           ? Number(dto.paidInstallments)
           : existing.paidInstallments,
+      isPaid: dto.isPaid ?? existing.isPaid,
+    })
+
+    const po = PaymentOrder.fromDTO({
+      id: dto.id as UUID,
+      method: dto.method ?? existing.method,
+      totalValue: roundMoney(
+        dto.totalValue !== undefined && dto.totalValue !== null
+          ? Number(dto.totalValue)
+          : existing.totalValue
+      ),
+      installments: state.installments,
+      isPaid: state.isPaid,
+      paidInstallments: state.paidInstallments,
       paymentDate:
-        dto.paymentDate instanceof Date
-          ? dto.paymentDate.toISOString()
-          : dto.paymentDate,
+        dto.paymentDate === undefined
+          ? existing.paymentDate?.toISOString?.()
+          : dto.paymentDate instanceof Date
+            ? dto.paymentDate.toISOString()
+            : dto.paymentDate,
     })
 
     const data = PaymentOrderMapper.toPersistence(po)
 
-    await db.transaction(async (tx) => {
-      await tx
-        .update(paymentOrder)
+    db.transaction((tx) => {
+      tx.update(paymentOrder)
         .set({
           method: data.method,
           totalValue: data.totalValue,
           installments: data.installments,
           isPaid: data.isPaid,
           paidInstallments: data.paidInstallments,
+          // it was not stored before: the date edited on screen was lost
+          paymentDate: data.paymentDate,
         })
         .where(eq(paymentOrder.id, dto.id as UUID))
+        .run()
 
       if (data.isPaid) {
-        await PaymentService.finalizePayment(tx, dto.id as UUID)
+        PaymentService.finalizePayment(tx, dto.id as UUID)
       }
     })
   }
 
   async deletePaymentOrder(id: UUID): Promise<void> {
-    await db.transaction(async (tx) => {
-      // Remover referência em work orders
-      await tx
-        .update(workOrder)
+    db.transaction((tx) => {
+      // Remove reference in work orders
+      tx.update(workOrder)
         .set({ paymentOrderId: null })
         .where(eq(workOrder.paymentOrderId, id))
+        .run()
 
-      // Deletar payment order
-      await tx.delete(paymentOrder).where(eq(paymentOrder.id, id))
+      // Delete the payment order
+      tx.delete(paymentOrder).where(eq(paymentOrder.id, id)).run()
     })
   }
 

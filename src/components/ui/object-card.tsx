@@ -102,7 +102,12 @@ function ObjectCardDescription({ children }: ObjectCardDescriptionProps) {
 
 function ObjectCardActions({ onPress }: ObjectCardActionsProps) {
   return (
-    <Pressable onPress={onPress} className="rounded-md p-2 active:bg-accent">
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel="Mais opções"
+      className="rounded-md p-2 active:bg-accent"
+    >
       <Icon as={MoreVerticalIcon} className="text-muted-foreground" />
     </Pressable>
   )

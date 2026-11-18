@@ -11,7 +11,13 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import { Search, X } from 'lucide-react-native'
 import * as React from 'react'
 import { useState } from 'react'
-import { KeyboardAvoidingView, Platform, Pressable, View } from 'react-native'
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  View,
+} from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function ProductsSearchScreen() {
@@ -53,14 +59,14 @@ export default function ProductsSearchScreen() {
     params.salePriceMax || ''
   )
 
-  // Aplicar debounce nos inputs de texto (300ms)
+  // Debounce the text inputs (300ms)
   const debouncedSearch = useDebouncedValue(searchQuery, 300)
   const debouncedCategoryName = useDebouncedValue(categoryNameFilter, 300)
   const debouncedExpiration = useDebouncedValue(expirationFilter, 300)
   const debouncedMinSalePrice = useDebouncedValue(minSalePriceFilter, 300)
   const debouncedMaxSalePrice = useDebouncedValue(maxSalePriceFilter, 300)
 
-  // Helper para normalizar valores numéricos
+  // Helper to normalize numeric values
   const normalizeNumberParam = (val: string) => {
     if (!val) return undefined
     const cleaned = String(val)
@@ -72,7 +78,7 @@ export default function ProductsSearchScreen() {
     return isNaN(num) ? undefined : String(num)
   }
 
-  // Auto-aplicar filtros quando valores debounced mudarem
+  // Auto-apply filters when debounced values change
   React.useEffect(() => {
     const filters = {
       search: debouncedSearch || undefined,
@@ -139,7 +145,7 @@ export default function ProductsSearchScreen() {
     maxSalePriceFilter !== ''
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView edges={['left', 'right', 'bottom']} className="flex-1">
       <Stack.Screen options={{ title: 'Filtrar Produtos' }} />
 
       <KeyboardAvoidingView
@@ -147,7 +153,7 @@ export default function ProductsSearchScreen() {
         style={{ flex: 1 }}
         keyboardVerticalOffset={80}
       >
-        <View style={{ flex: 1 }}>
+        <ScrollView style={{ flex: 1 }} keyboardShouldPersistTaps="handled">
           <View className="gap-4 p-4 flex-1">
             <View className="relative">
               <Icon
@@ -282,7 +288,7 @@ export default function ProductsSearchScreen() {
               </Button>
             )}
           </View>
-        </View>
+        </ScrollView>
         <View className="gap-2 px-4 pb-4 bg-background">
           <Button onPress={applyFilters}>
             <Text className="text-primary-foreground font-medium">

@@ -1,3 +1,4 @@
+import { roundMoney } from '@/src/domain/entities/work-order/work-order-rules'
 import { UUID } from '@/src/lib/utils'
 
 export type PaymentOrderSerializableDTO = {
@@ -59,8 +60,16 @@ export class PaymentOrder {
     return this.installments - this.paidInstallments
   }
 
+  /** Value of each installment, in exact cents (the last one absorbs the remainder). */
   get installmentValue(): number {
-    return this.totalValue / this.installments
+    return roundMoney(this.totalValue / this.installments)
+  }
+
+  /** Value of the last installment: closes the total exactly (e.g. 100/3 → 33.33 + 33.33 + 33.34). */
+  get lastInstallmentValue(): number {
+    return roundMoney(
+      this.totalValue - this.installmentValue * (this.installments - 1)
+    )
   }
 
   toDTO(): PaymentOrderSerializableDTO {
@@ -88,10 +97,12 @@ export class PaymentOrder {
   }
 
   get paidValue(): number {
-    return this.installmentValue * this.paidInstallments
+    if (this.isPaid || this.paidInstallments >= this.installments)
+      return roundMoney(this.totalValue)
+    return roundMoney(this.installmentValue * this.paidInstallments)
   }
 
   get remainingValue(): number {
-    return this.totalValue - this.paidValue
+    return roundMoney(this.totalValue - this.paidValue)
   }
 }

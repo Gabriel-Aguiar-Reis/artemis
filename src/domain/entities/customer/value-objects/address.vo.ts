@@ -1,6 +1,6 @@
 export type AddressSerializableDTO = {
   streetName: string
-  streetNumber: number
+  streetNumber: string
   neighborhood: string
   city: string
   state: string
@@ -10,7 +10,7 @@ export type AddressSerializableDTO = {
 export class Address {
   constructor(
     public streetName: string,
-    public streetNumber: number,
+    public streetNumber: string,
     public neighborhood: string,
     public city: string,
     public state: string,
@@ -18,7 +18,11 @@ export class Address {
   ) {}
 
   getFullAddress(): string {
-    return `${this.streetName}, ${this.streetNumber} - ${this.neighborhood}, ${this.city} - ${this.state}, ${this.zipCode.slice(0, 5)}-${this.zipCode.slice(5)}`
+    // Zip codes may be stored formatted ("01234-567") or as digits only
+    const zip = this.zipCode.replace(/\D/g, '')
+    const formattedZip =
+      zip.length === 8 ? `${zip.slice(0, 5)}-${zip.slice(5)}` : this.zipCode
+    return `${this.streetName}, ${this.streetNumber} - ${this.neighborhood}, ${this.city} - ${this.state}, ${formattedZip}`
   }
 
   toDTO(): AddressSerializableDTO {

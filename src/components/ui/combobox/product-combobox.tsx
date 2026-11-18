@@ -1,4 +1,5 @@
 import { productHooks } from '@/src/application/hooks/product.hooks'
+import { useNormalizedSearch } from '@/src/application/hooks/use-normalized-search'
 import { Button } from '@/src/components/ui/button'
 import {
   Dialog,
@@ -9,10 +10,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/src/components/ui/dialog'
+import {
+  FIELD_LABEL_FLOAT_TOP,
+  FIELD_MESSAGE_CLASS,
+  FIELD_TOP_RESERVE,
+} from '@/src/components/ui/field-metrics'
 import { Icon } from '@/src/components/ui/icon'
 import { Input } from '@/src/components/ui/input'
 import { Text } from '@/src/components/ui/text'
 import { ProductWithCategoryDTO } from '@/src/domain/repositories/product/dtos/product-with-category.dto'
+import { formatBRL } from '@/src/lib/format'
 import { cn } from '@/src/lib/utils'
 import { FlashList } from '@shopify/flash-list'
 import {
@@ -55,12 +62,11 @@ export function ProductCombobox({
   const [open, setOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
-  const filteredProducts = useMemo(() => {
-    if (!searchQuery) return products
-    return products.filter((p) =>
-      p.name.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  }, [products, searchQuery])
+  const filteredProducts = useNormalizedSearch(
+    products,
+    (p) => p.name,
+    searchQuery
+  )
 
   const isProductSelected = (productId: string) => {
     return selectedProducts.some((p) => p.productId === productId)
@@ -126,7 +132,7 @@ export function ProductCombobox({
       <View className="min-h-[140px]">
         <Pressable
           onPress={() => {
-            // Só seleciona se não estiver selecionado
+            // Only select if it is not selected
             if (!selected) toggleProduct(item)
           }}
           className={cn(
@@ -151,21 +157,12 @@ export function ProductCombobox({
 
               <View className="flex-row items-center gap-4">
                 <View className="flex-row items-center gap-1">
-                  <Icon as={Banknote} size={16} className="text-green-600" />
-                  <Text className="text-sm">
-                    R${' '}
-                    {item.salePrice.toLocaleString('pt-BR', {
-                      minimumFractionDigits: 2,
-                    })}
-                  </Text>
+                  <Icon as={Banknote} size={16} className="text-success" />
+                  <Text className="text-sm">{formatBRL(item.salePrice)}</Text>
                 </View>
 
                 <View className="flex-row items-center gap-1">
-                  <Icon
-                    as={CalendarClock}
-                    size={16}
-                    className="text-orange-600"
-                  />
+                  <Icon as={CalendarClock} size={16} className="text-warning" />
                   <Text className="text-sm">{item.expiration}</Text>
                 </View>
               </View>
@@ -174,7 +171,7 @@ export function ProductCombobox({
                 <View
                   className={cn(
                     'h-2 w-2 rounded-full',
-                    item.isActive ? 'bg-green-500' : 'bg-gray-400'
+                    item.isActive ? 'bg-success' : 'bg-gray-400'
                   )}
                 />
                 <Text className="text-xs text-muted-foreground">
@@ -187,7 +184,7 @@ export function ProductCombobox({
               <Pressable
                 onPress={(e) => {
                   e.stopPropagation()
-                  // tira seleção ao clicar no ícone de check
+                  // deselect when clicking the check icon
                   onProductsChange(
                     selectedProducts.filter((p) => p.productId !== item.id)
                   )
@@ -203,7 +200,7 @@ export function ProductCombobox({
             )}
           </View>
 
-          {/* Controle de quantidade */}
+          {/* Quantity control */}
           {selected && (
             <View className="flex-row items-center gap-3 mt-3 pt-3 border-t border-border">
               <Text className="text-sm font-medium">Quantidade:</Text>
@@ -259,7 +256,7 @@ export function ProductCombobox({
     zIndex: 10,
     top: animated.interpolate({
       inputRange: [0, 1],
-      outputRange: [-8, -8],
+      outputRange: [FIELD_LABEL_FLOAT_TOP, FIELD_LABEL_FLOAT_TOP],
     }),
     fontSize: animated.interpolate({
       inputRange: [0, 1],
@@ -268,14 +265,14 @@ export function ProductCombobox({
   }
 
   return (
-    <View className="relative">
+    <View className="relative" style={{ paddingTop: FIELD_TOP_RESERVE }}>
       {label && (
         <Animated.Text
           style={labelStyle}
           numberOfLines={1}
           className={cn(
             'bg-background',
-            error ? 'text-red-500' : 'text-muted-foreground'
+            error ? 'text-destructive' : 'text-muted-foreground'
           )}
         >
           {label}
@@ -289,20 +286,23 @@ export function ProductCombobox({
               'flex-row items-center justify-between h-12 px-4 rounded-md',
               'border bg-background',
               'active:bg-accent',
-              error ? 'border-red-500' : 'border-input'
+              error ? 'border-destructive' : 'border-input'
             )}
           >
             <View className="flex-row items-center gap-2 flex-1">
               <Icon
                 as={Package}
                 size={20}
-                className={cn('text-muted-foreground', error && 'text-red-500')}
+                className={cn(
+                  'text-muted-foreground',
+                  error && 'text-destructive'
+                )}
               />
               <Text
                 className={cn(
                   'flex-1',
                   selectedProducts.length === 0 && 'text-muted-foreground',
-                  error && 'text-red-500'
+                  error && 'text-destructive'
                 )}
                 numberOfLines={1}
               >
@@ -312,7 +312,10 @@ export function ProductCombobox({
             <Icon
               as={ChevronDown}
               size={20}
-              className={cn('text-muted-foreground', error && 'text-red-500')}
+              className={cn(
+                'text-muted-foreground',
+                error && 'text-destructive'
+              )}
             />
           </Pressable>
         </DialogTrigger>
@@ -363,6 +366,8 @@ export function ProductCombobox({
               <View className="flex-1">
                 <FlashList
                   data={filteredProducts}
+                  keyExtractor={(item) => item.id}
+                  keyboardShouldPersistTaps="handled"
                   renderItem={renderProductItem}
                 />
               </View>
@@ -415,8 +420,10 @@ export function ProductCombobox({
         </View>
       )}
 
-      <View className="min-h-4 justify-center">
-        {error && <Text className="ml-2 text-xs text-red-500">{error}</Text>}
+      <View className={FIELD_MESSAGE_CLASS}>
+        {error && (
+          <Text className="ml-2 text-xs text-destructive">{error}</Text>
+        )}
       </View>
     </View>
   )

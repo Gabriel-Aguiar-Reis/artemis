@@ -128,20 +128,20 @@ export default class DrizzleWorkOrderResultRepository implements WorkOrderResult
     if (!existing)
       throw new Error('Relatório final da ordem de serviço não encontrado.')
 
-    await db.transaction(async (tx) => {
-      // Deletar items do resultado primeiro
-      await tx
-        .delete(workOrderResultItem)
+    db.transaction((tx) => {
+      // Delete the result items first
+      tx.delete(workOrderResultItem)
         .where(eq(workOrderResultItem.resultId, resultId))
+        .run()
 
-      // Remover referência em work orders
-      await tx
-        .update(workOrder)
+      // Remove reference in work orders
+      tx.update(workOrder)
         .set({ resultId: null })
         .where(eq(workOrder.resultId, resultId))
+        .run()
 
-      // Deletar resultado
-      await tx.delete(workOrderResult).where(eq(workOrderResult.id, resultId))
+      // Delete the result
+      tx.delete(workOrderResult).where(eq(workOrderResult.id, resultId)).run()
     })
   }
 }

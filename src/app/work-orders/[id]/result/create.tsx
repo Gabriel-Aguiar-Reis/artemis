@@ -1,23 +1,15 @@
 import { productHooks } from '@/src/application/hooks/product.hooks'
-import { workOrderResultItemHooks } from '@/src/application/hooks/work-order-result-item.hooks'
-import { workOrderResultHooks } from '@/src/application/hooks/work-order-result.hooks'
 import { workOrderHooks } from '@/src/application/hooks/work-order.hooks'
 import { Button } from '@/src/components/ui/button'
 import { AddedProductsCombobox } from '@/src/components/ui/combobox/added-products-combobox'
 import { ExchangedProductsCombobox } from '@/src/components/ui/combobox/exchanged-products-combobox'
 import { RemovedProductsCombobox } from '@/src/components/ui/combobox/removed-products-combobox'
 import { Text } from '@/src/components/ui/text'
-import { ProductSnapshot } from '@/src/domain/entities/work-order-item/value-objects/product-snapshot.vo'
-import {
-  WorkOrderResultItem,
-  WorkOrderResultItemType,
-} from '@/src/domain/entities/work-order-result-item/work-order-result-item.entity'
 import { UUID } from '@/src/lib/utils'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
 import { useState } from 'react'
 import { ScrollView, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import uuid from 'react-native-uuid'
 
 type ResultItemInput = {
   productId: string
@@ -31,12 +23,7 @@ export default function WorkOrderResultCreateScreen() {
   const { data: workOrder, isLoading: isLoadingWorkOrder } =
     workOrderHooks.getWorkOrder(params.id)
   const { data: allProducts } = productHooks.getProductsWithCategory()
-  const { mutateAsync: addWorkOrderResult } =
-    workOrderResultHooks.addWorkOrderResult()
-  const { mutateAsync: addWorkOrderResultItems } =
-    workOrderResultItemHooks.addWorkOrderResultItems()
-  const { mutateAsync: updateWorkOrderWithResult } =
-    workOrderHooks.updateWorkOrderWithResult()
+  const { mutateAsync: saveResult } = workOrderHooks.useSaveWorkOrderResult()
 
   const [exchangedProducts, setExchangedProducts] = useState<ResultItemInput[]>(
     []
@@ -46,86 +33,25 @@ export default function WorkOrderResultCreateScreen() {
   const [isPending, setIsPending] = useState(false)
 
   const handleSubmit = async () => {
-    if (!workOrder) return
+    if (!workOrder || isPending) return
 
     try {
       setIsPending(true)
-
-      // Calcular total value
-      const totalValue =
-        exchangedProducts.reduce(
-          (sum, p) => sum + p.priceSnapshot * p.quantity,
-          0
-        ) +
-        addedProducts.reduce((sum, p) => sum + p.priceSnapshot * p.quantity, 0)
-
-      // 1. Criar WorkOrderResult
-      const resultId = uuid.v4() as UUID
-      await addWorkOrderResult({
-        id: resultId,
-        totalValue,
+      // One transaction: report + items + computed status (COMPLETED,
+      // PARTIAL or FAILED) + visit date + itinerary lateness.
+      // It used to store the lowercase 'completed' status, outside the enum.
+      await saveResult({
+        workOrderId: workOrder.id,
+        result: {
+          exchanged: exchangedProducts,
+          added: addedProducts,
+          removed: removedProducts,
+        },
       })
-
-      // 2. Criar WorkOrderResultItems
-      const allResultItems = [
-        ...exchangedProducts.map((p) =>
-          WorkOrderResultItem.fromProductSnapshot(
-            uuid.v4() as UUID,
-            ProductSnapshot.fromDTO({
-              productId: p.productId as UUID,
-              productName: p.productName,
-              salePrice: p.priceSnapshot,
-            }),
-            resultId,
-            p.quantity,
-            WorkOrderResultItemType.EXCHANGED,
-            p.priceSnapshot
-          )
-        ),
-        ...addedProducts.map((p) =>
-          WorkOrderResultItem.fromProductSnapshot(
-            uuid.v4() as UUID,
-            ProductSnapshot.fromDTO({
-              productId: p.productId as UUID,
-              productName: p.productName,
-              salePrice: p.priceSnapshot,
-            }),
-            resultId,
-            p.quantity,
-            WorkOrderResultItemType.ADDED,
-            p.priceSnapshot
-          )
-        ),
-        ...removedProducts.map((p) =>
-          WorkOrderResultItem.fromProductSnapshot(
-            uuid.v4() as UUID,
-            ProductSnapshot.fromDTO({
-              productId: p.productId as UUID,
-              productName: p.productName,
-              salePrice: p.priceSnapshot,
-            }),
-            resultId,
-            p.quantity,
-            WorkOrderResultItemType.REMOVED,
-            p.priceSnapshot
-          )
-        ),
-      ]
-
-      if (allResultItems.length > 0) {
-        await (addWorkOrderResultItems as any)([allResultItems])
-      }
-
-      // 3. Associar result à work order
-      await updateWorkOrderWithResult([
-        workOrder.id,
-        resultId,
-        'completed',
-        new Date(),
-      ])
       router.back()
     } catch (error) {
-      console.error('Erro ao criar relatório:', error)
+      // error toast shown by the hook
+      if (__DEV__) console.error('Error creating report:', error)
     } finally {
       setIsPending(false)
     }
@@ -133,7 +59,10 @@ export default function WorkOrderResultCreateScreen() {
 
   if (isLoadingWorkOrder) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Carregando ordem de serviço...</Text>
       </SafeAreaView>
     )
@@ -141,7 +70,10 @@ export default function WorkOrderResultCreateScreen() {
 
   if (!workOrder) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Ordem de serviço não encontrada.</Text>
       </SafeAreaView>
     )
@@ -149,7 +81,10 @@ export default function WorkOrderResultCreateScreen() {
 
   if (workOrder.result) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        className="flex-1 items-center justify-center"
+      >
         <Text>Esta ordem de serviço já possui um relatório registrado.</Text>
       </SafeAreaView>
     )
@@ -158,7 +93,7 @@ export default function WorkOrderResultCreateScreen() {
   const scheduledProducts = workOrder.products || []
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView edges={['left', 'right', 'bottom']} className="flex-1">
       <Stack.Screen
         options={{
           title: 'Criar Relatório',
