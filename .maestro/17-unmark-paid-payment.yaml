@@ -1,0 +1,40 @@
+# Unchecking "Pagamento à Vista Realizado" must really undo the payment: it
+# used to keep 1 of 1 installment paid, so it was saved as paid again and the
+# WhatsApp summary still said "Pago".
+appId: br.com.artemis
+tags: [qa]
+---
+- runFlow: subflows/open-app.yaml
+- runFlow: subflows/reset-filters.yaml
+- openLink: artemis://work-orders?isPaid=true
+- extendedWaitUntil:
+    visible: "Pago: Sim"
+    timeout: 15000
+- extendedWaitUntil:
+    visible: ".* - SP.*"
+    timeout: 15000
+- tapOn:
+    text: Mais opções
+    index: 0
+- tapOn: Acessar Pagamento
+- extendedWaitUntil:
+    visible: Informações do Pagamento
+    timeout: 10000
+- assertVisible: Pago
+- tapOn:
+    text: Mais opções
+    index: 0
+- tapOn: Editar Pagamento
+- extendedWaitUntil:
+    visible: Pagamento à Vista Realizado
+    timeout: 10000
+- tapOn: Pagamento à Vista Realizado
+- scrollUntilVisible:
+    element: Salvar Pagamento
+    direction: DOWN
+- tapOn: Salvar Pagamento
+- extendedWaitUntil:
+    visible: Pendente
+    timeout: 10000
+- assertVisible: 0 / 1
+- takeScreenshot: 17-unpaid

@@ -27,6 +27,6 @@ tags: [qa]
     timeout: 10000
 - tapOn: Agendadas hoje
 - extendedWaitUntil:
-    visible: "Data Agendada: .*"
+    visible: "Período: Hoje"
     timeout: 10000
 - takeScreenshot: 11-today

@@ -8,6 +8,7 @@ import {
   BackToTopButton,
   useBackToTop,
 } from '@/src/components/ui/back-to-top-button'
+import { Button } from '@/src/components/ui/button'
 import { ButtonFilter } from '@/src/components/ui/button-filter'
 import { ButtonFinish } from '@/src/components/ui/button-finish'
 import { ButtonHistory } from '@/src/components/ui/button-history'
@@ -15,6 +16,7 @@ import { ButtonNew } from '@/src/components/ui/button-new'
 import { ButtonReorder } from '@/src/components/ui/button-reorder'
 import { NotesDialog } from '@/src/components/ui/dialog/notes-dialog'
 import { Icon } from '@/src/components/ui/icon'
+import { InlineSearchBar } from '@/src/components/ui/inline-search-bar'
 import { ErrorState, LoadingState } from '@/src/components/ui/list-states'
 import { Text } from '@/src/components/ui/text'
 import { WorkOrderCard } from '@/src/components/ui/work-order-card'
@@ -394,6 +396,26 @@ export default function ItineraryScreen() {
     params.hasResult,
   ])
 
+  // A new filter shows its results from the top (with the filters banner)
+  const filterKey = JSON.stringify(activeFilters)
+  React.useEffect(() => {
+    listRef.current?.scrollToOffset({ offset: 0, animated: false })
+  }, [filterKey, listRef])
+
+  // Quick lookup without opening the filter screen: by customer, and
+  // toggles for visited (with report) / still to visit
+  const handleInlineSearch = useCallback(
+    (term: string) => router.setParams({ search: term || undefined }),
+    [router]
+  )
+  const toggleVisited = useCallback(
+    (value: 'true' | 'false') =>
+      router.setParams({
+        hasResult: params.hasResult === value ? undefined : value,
+      }),
+    [router, params.hasResult]
+  )
+
   const renderItem = useCallback(
     ({ item }: { item: ItineraryWorkOrder }) => (
       <WorkOrderCard
@@ -461,6 +483,30 @@ export default function ItineraryScreen() {
                 {itinerary.initialItineraryDate.toLocaleDateString('pt-BR')} -{' '}
                 {itinerary.finalItineraryDate.toLocaleDateString('pt-BR')}
               </Text>
+            </View>
+
+            <View className="px-4 pt-4 gap-3">
+              <InlineSearchBar
+                value={params.search ?? ''}
+                onSearch={handleInlineSearch}
+                placeholder="Pesquisar cliente no itinerário..."
+              />
+              <View className="flex-row gap-2">
+                <Button
+                  size="sm"
+                  variant={params.hasResult === 'false' ? 'default' : 'secondary'}
+                  onPress={() => toggleVisited('false')}
+                >
+                  <Text>A visitar</Text>
+                </Button>
+                <Button
+                  size="sm"
+                  variant={params.hasResult === 'true' ? 'default' : 'secondary'}
+                  onPress={() => toggleVisited('true')}
+                >
+                  <Text>Visitadas</Text>
+                </Button>
+              </View>
             </View>
 
             {isLoadingWorkOrders ? (

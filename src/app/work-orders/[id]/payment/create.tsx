@@ -13,7 +13,7 @@ import { getErrorMessage, UUID } from '@/src/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
 import { CircleQuestionMark, CreditCard, Info } from 'lucide-react-native'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { ScrollView, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -61,6 +61,7 @@ export default function WorkOrderPaymentCreateScreen() {
     }
   }, [workOrder])
 
+  const wasPaid = useRef(false)
   // When marked as paid, force installments = 1, paidInstallments = 1 and date to today if missing
   useEffect(() => {
     if (isPaid) {
@@ -70,7 +71,13 @@ export default function WorkOrderPaymentCreateScreen() {
       if (!paymentDate) {
         form.setValue('paymentDate', new Date() as any)
       }
+    } else if (wasPaid.current) {
+      // Unchecking "paid" must also undo the paid installment it set:
+      // with 1 of 1 paid the payment is still settled (and saved as paid),
+      // so the WhatsApp summary kept saying it was paid.
+      form.setValue('paidInstallments', '0')
     }
+    wasPaid.current = !!isPaid
   }, [isPaid])
 
   // If installments change to > 1, uncheck isPaid

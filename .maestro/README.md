@@ -43,6 +43,9 @@ maestro test .maestro/01-customer-search-accents.yaml \
   .maestro/12-itinerary-details-search.yaml \
   .maestro/13-last-tab-restored.yaml \
   .maestro/14-filters-survive-cold-start.yaml \
+  .maestro/16-work-orders-by-month.yaml \
+  .maestro/17-unmark-paid-payment.yaml \
+  .maestro/18-itinerary-inline-search.yaml \
   .maestro/15-form-return-navigation.yaml
 ```
 
@@ -67,3 +70,6 @@ Roteiros só de prints (sem asserções) ficam em `.maestro/visual/`: tema claro
 | 13 | A última aba aberta volta após fechar o app (padrão: Itinerário) |
 | 14 | Os filtros de cada aba voltam após fechar o app; limpar também persiste |
 | 15 | Voltar de formulários reaproveita as abas existentes (sem pilha duplicada); cancela o itinerário, então roda por último |
+| 16 | OS mês a mês: atalhos "Expiradas" e "Este mês", cabeçalho por mês com contagem, período em "Mais filtros" |
+| 17 | Desmarcar "pago à vista" desfaz o pagamento (antes continuava pago e o resumo do WhatsApp dizia "Pago") |
+| 18 | Busca e atalhos "A visitar"/"Visitadas" direto no itinerário ativo |
