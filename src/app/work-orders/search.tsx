@@ -481,8 +481,8 @@ export default function WorkOrdersSearch() {
                   {(
                     [
                       ['all', 'Todas'],
-                      ['true', 'Com próxima visita'],
-                      ['false', 'Sem'],
+                      ['true', 'Com data'],
+                      ['false', 'Sem data'],
                     ] as const
                   ).map(([value, label]) => (
                     <Button
