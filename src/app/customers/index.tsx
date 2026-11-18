@@ -40,7 +40,7 @@ type CustomerCardProps = {
 
 const CustomerCard = React.memo(
   function CustomerCard({ customer, onOptions }: CustomerCardProps) {
-    const address = `${customer.storeAddress.streetName}, ${customer.storeAddress.streetNumber}, ${customer.storeAddress.zipCode}, ${customer.storeAddress.city} - ${customer.storeAddress.state}`
+    const address = customer.storeAddress.getFullAddress()
     return (
       <ObjectCard.Root className="mb-4 dark:bg-input/30">
         <ObjectCard.Header>

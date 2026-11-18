@@ -13,6 +13,7 @@ vi.mock('libphonenumber-js', async () => {
 
 import {
   cn,
+  countCalendarDays,
   formatPhoneBrazil,
   getErrorMessage,
   normalizePhoneBrazil,
@@ -237,6 +238,26 @@ describe('utils', () => {
       expect(anos?.range).toHaveLength(20)
       expect(anos?.range[0]).toBe(1)
       expect(anos?.range[19]).toBe(20)
+    })
+  })
+
+  describe('countCalendarDays', () => {
+    it('counts calendar days inclusively, ignoring the time of day', () => {
+      expect(
+        countCalendarDays(
+          new Date(2026, 10, 18, 0, 0),
+          new Date(2026, 10, 21, 23, 59)
+        )
+      ).toBe(4)
+      expect(
+        countCalendarDays(new Date(2026, 10, 18, 15), new Date(2026, 10, 18, 9))
+      ).toBe(1)
+    })
+
+    it('does not depend on argument order', () => {
+      expect(
+        countCalendarDays(new Date(2026, 10, 21), new Date(2026, 10, 15))
+      ).toBe(7)
     })
   })
 })

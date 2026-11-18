@@ -77,3 +77,14 @@ export const PERIODS = [
   { nome: 'meses', range: Array.from({ length: 100 }, (_, i) => i + 1) },
   { nome: 'anos', range: Array.from({ length: 20 }, (_, i) => i + 1) },
 ]
+
+/**
+ * Number of calendar days covered by [start, end], inclusive, in the device
+ * time zone. Times of day are ignored (18 at 00:00 → 21 at 23:59 is 4 days).
+ */
+export function countCalendarDays(start: Date, end: Date): number {
+  const a = new Date(start.getFullYear(), start.getMonth(), start.getDate())
+  const b = new Date(end.getFullYear(), end.getMonth(), end.getDate())
+  // Math.round absorbs DST shifts (23h/25h days)
+  return Math.abs(Math.round((b.getTime() - a.getTime()) / 86_400_000)) + 1
+}

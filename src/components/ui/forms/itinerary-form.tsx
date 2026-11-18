@@ -11,6 +11,7 @@ import { Icon } from '@/src/components/ui/icon'
 import { Text } from '@/src/components/ui/text'
 import { WorkOrder } from '@/src/domain/entities/work-order/work-order.entity'
 import DrizzleWorkOrderRepository from '@/src/infra/repositories/drizzle/drizzle.work-order.repository'
+import { countCalendarDays } from '@/src/lib/utils'
 import { Stack } from 'expo-router'
 import { Calendar, DollarSign, FileText } from 'lucide-react-native'
 import React, { BaseSyntheticEvent, useEffect, useMemo, useState } from 'react'
@@ -93,10 +94,10 @@ export function ItineraryForm<T extends FieldValues>({
     const totalWorkOrders = workOrders.length
 
     // Compute days in the range
-    const diffTime = Math.abs(
-      selectedRange.endDate.getTime() - selectedRange.startDate.getTime()
+    const totalDays = countCalendarDays(
+      selectedRange.startDate,
+      selectedRange.endDate
     )
-    const totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
 
     // Compute estimated revenue based on the scheduled products
     const estimatedRevenue = workOrders.reduce((acc, wo) => {

@@ -9,6 +9,7 @@ import {
 import { Icon } from '@/src/components/ui/icon'
 import { Text } from '@/src/components/ui/text'
 import type { ItinerarySummary } from '@/src/infra/repositories/drizzle/drizzle.itinerary.repository'
+import { countCalendarDays } from '@/src/lib/utils'
 import { FlashList } from '@shopify/flash-list'
 import { Stack, useRouter } from 'expo-router'
 import {
@@ -92,11 +93,10 @@ function ItineraryCard({ itinerary, onPress }: ItineraryCardProps) {
     const { totalWorkOrders, lateWorkOrders, totalRevenue, ordersWithResult } =
       itinerary
 
-    const diffTime = Math.abs(
-      itinerary.finalItineraryDate.getTime() -
-        itinerary.initialItineraryDate.getTime()
+    const totalDays = countCalendarDays(
+      itinerary.initialItineraryDate,
+      itinerary.finalItineraryDate
     )
-    const totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
 
     return {
       totalWorkOrders,

@@ -20,7 +20,7 @@ import {
 } from '@/src/components/ui/card'
 import { Icon } from '@/src/components/ui/icon'
 import { Text } from '@/src/components/ui/text'
-import { UUID } from '@/src/lib/utils'
+import { UUID, countCalendarDays } from '@/src/lib/utils'
 import { Stack, useRouter } from 'expo-router'
 import {
   AlertCircle,
@@ -75,11 +75,10 @@ export default function ItineraryFinishScreen() {
     ).length
 
     // Compute days in the period
-    const diffTime = Math.abs(
-      itinerary.finalItineraryDate.getTime() -
-        itinerary.initialItineraryDate.getTime()
+    const totalDays = countCalendarDays(
+      itinerary.initialItineraryDate,
+      itinerary.finalItineraryDate
     )
-    const totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
 
     // Compute total revenue
     const totalRevenue = itineraryWorkOrders.reduce((acc, iwo) => {
