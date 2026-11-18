@@ -164,7 +164,7 @@ export default function ItinerarySearchScreen() {
         style={{ flex: 1 }}
         keyboardVerticalOffset={80}
       >
-        <ScrollView>
+        <ScrollView keyboardShouldPersistTaps="handled">
           <View style={{ flex: 1 }}>
             <View className="gap-4 p-4 flex-1">
               <View className="relative">

@@ -8,7 +8,7 @@ import { Stack } from 'expo-router'
 import { LucideIcon } from 'lucide-react-native'
 import React, { BaseSyntheticEvent, ReactNode } from 'react'
 import { Control, Controller, FieldValues, Path } from 'react-hook-form'
-import { ScrollView, View } from 'react-native'
+import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 export type FormFieldProps<T extends FieldValues> = {
@@ -42,14 +42,20 @@ function Root({ title, children, footer }: RootProps) {
   return (
     <SafeAreaView className="flex-1">
       <Stack.Screen options={{ title }} />
-      <ScrollView className="flex-1">
-        <View className="p-4 gap-2">{children}</View>
-      </ScrollView>
-      {footer && (
-        <View className="p-4 bg-background border-t border-border">
-          {footer}
-        </View>
-      )}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={80}
+      >
+        <ScrollView className="flex-1" keyboardShouldPersistTaps="handled">
+          <View className="p-4 gap-2">{children}</View>
+        </ScrollView>
+        {footer && (
+          <View className="p-4 bg-background border-t border-border">
+            {footer}
+          </View>
+        )}
+      </KeyboardAvoidingView>
     </SafeAreaView>
   )
 }
