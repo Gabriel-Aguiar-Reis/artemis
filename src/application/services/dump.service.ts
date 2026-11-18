@@ -43,7 +43,6 @@ import {
   workOrder,
   WorkOrderTable,
 } from '@/src/infra/db/drizzle/schema/drizzle.work-order.schema'
-import { eq } from 'drizzle-orm'
 import * as DocumentPicker from 'expo-document-picker'
 import { File } from 'expo-file-system'
 import * as FS from 'expo-file-system/legacy'
@@ -137,130 +136,257 @@ export async function pickDumpJson(): Promise<string | null> {
   return asset.uri
 }
 
+export type DumpTableKey = keyof ArtemisDump['tables']
+
+export type ImportReport = {
+  /** Linhas novas gravadas, por tabela */
+  inserted: Record<DumpTableKey, number>
+  /** Linhas que já existiam (mesmo id) e foram mantidas como estão */
+  skipped: Record<DumpTableKey, number>
+  /** Linhas recusadas (dado inválido ou referência inexistente) */
+  rejected: { table: DumpTableKey; id: string; reason: string }[]
+}
+
+export type ImportResult = ArtemisDump & { report: ImportReport }
+
+const TABLE_KEYS: DumpTableKey[] = [
+  'category',
+  'license',
+  'customer',
+  'product',
+  'itinerary',
+  'paymentOrder',
+  'workOrderResult',
+  'workOrder',
+  'workOrderItem',
+  'workOrderResultItem',
+  'itineraryWorkOrder',
+]
+
+/** Valida a estrutura geral do arquivo antes de tocar no banco. */
+export function parseDump(json: string): ArtemisDump {
+  let raw: any
+  try {
+    raw = JSON.parse(json)
+  } catch {
+    throw new Error('O arquivo não é um JSON válido.')
+  }
+  if (!raw || typeof raw !== 'object' || !raw.tables)
+    throw new Error('O arquivo não é um backup do aplicativo.')
+  if (raw.version !== undefined && Number(raw.version) > 1)
+    throw new Error(
+      `Backup gerado por uma versão mais nova do aplicativo (v${raw.version}). Atualize o app antes de importar.`
+    )
+  for (const key of TABLE_KEYS) {
+    const value = raw.tables[key]
+    if (value === undefined) raw.tables[key] = []
+    else if (!Array.isArray(value))
+      throw new Error(`Backup inválido: a tabela "${key}" não é uma lista.`)
+  }
+  return raw as ArtemisDump
+}
+
 export async function importDumpFromPickedFile(
   fileUri: string
-): Promise<ArtemisDump> {
+): Promise<ImportResult> {
   const file = new File(fileUri)
   const text = await file.text()
-  const parsed = JSON.parse(text) as ArtemisDump
-
-  insertAllTablesInOrder(parsed)
-  return parsed
+  const parsed = parseDump(text)
+  const report = insertAllTablesInOrder(parsed)
+  return { ...parsed, report }
 }
 
 export async function importDumpFromJsonString(
   json: string
-): Promise<ArtemisDump> {
-  const parsed = JSON.parse(json) as ArtemisDump
-  insertAllTablesInOrder(parsed)
-  return parsed
+): Promise<ImportResult> {
+  const parsed = parseDump(json)
+  const report = insertAllTablesInOrder(parsed)
+  return { ...parsed, report }
 }
 
-function insertAllTablesInOrder(parsed: ArtemisDump) {
-  // Base tables first
-  for (const c of parsed.tables.category) {
-    const exists = db
-      .select()
-      .from(category)
-      .where(eq(category.id, c.id))
-      .limit(1)
-      .get()
-    if (!exists) db.insert(category).values(c).run()
+const INSERT_CHUNK = 200
+
+const isStr = (v: unknown): v is string => typeof v === 'string' && v.length > 0
+const isNum = (v: unknown) => typeof v === 'number' && Number.isFinite(v)
+
+/**
+ * Restaura o backup:
+ * - tudo numa transação (antes: commit por linha; uma falha no meio deixava
+ *   a restauração pela metade)
+ * - ordem que respeita as chaves estrangeiras
+ * - linhas com referência inexistente ou campos obrigatórios faltando são
+ *   recusadas e listadas no relatório, em vez de abortar tudo
+ * - inserção em lote com ON CONFLICT DO NOTHING (id já existente é mantido)
+ */
+function insertAllTablesInOrder(parsed: ArtemisDump): ImportReport {
+  const zero = () =>
+    Object.fromEntries(TABLE_KEYS.map((k) => [k, 0])) as Record<
+      DumpTableKey,
+      number
+    >
+  const report: ImportReport = {
+    inserted: zero(),
+    skipped: zero(),
+    rejected: [],
   }
-  for (const li of parsed.tables.license) {
-    const exists = db
-      .select()
-      .from(license)
-      .where(eq(license.id, li.id))
-      .limit(1)
-      .get()
-    if (!exists) db.insert(license).values(li).run()
+
+  const idsOf = (table: any): Set<string> =>
+    new Set(
+      (db.select({ id: table.id }).from(table).all() as { id: string }[]).map(
+        (r) => r.id
+      )
+    )
+
+  const t = parsed.tables
+
+  // Ids conhecidos = já no banco + presentes no backup (validados abaixo)
+  const known = {
+    category: idsOf(category),
+    customer: idsOf(customer),
+    product: idsOf(product),
+    itinerary: idsOf(itinerary),
+    paymentOrder: idsOf(paymentOrder),
+    workOrderResult: idsOf(workOrderResult),
+    workOrder: idsOf(workOrder),
   }
-  for (const cu of parsed.tables.customer) {
-    const exists = db
-      .select()
-      .from(customer)
-      .where(eq(customer.id, cu.id))
-      .limit(1)
-      .get()
-    if (!exists) db.insert(customer).values(cu).run()
-  }
-  // Product depends on category
-  for (const p of parsed.tables.product) {
-    const exists = db
-      .select()
-      .from(product)
-      .where(eq(product.id, p.id))
-      .limit(1)
-      .get()
-    if (!exists) db.insert(product).values(p).run()
-  }
-  // Independent tables: itinerary, paymentOrder, workOrderResult
-  for (const it of parsed.tables.itinerary) {
-    const exists = db
-      .select()
-      .from(itinerary)
-      .where(eq(itinerary.id, it.id))
-      .limit(1)
-      .get()
-    if (!exists) db.insert(itinerary).values(it).run()
-  }
-  for (const po of parsed.tables.paymentOrder) {
-    const exists = db
-      .select()
-      .from(paymentOrder)
-      .where(eq(paymentOrder.id, po.id))
-      .limit(1)
-      .get()
-    if (!exists) db.insert(paymentOrder).values(po).run()
-  }
-  for (const wor of parsed.tables.workOrderResult) {
-    const exists = db
-      .select()
-      .from(workOrderResult)
-      .where(eq(workOrderResult.id, wor.id))
-      .limit(1)
-      .get()
-    if (!exists) db.insert(workOrderResult).values(wor).run()
-  }
-  // WorkOrder depends on customer, paymentOrder, and workOrderResult
-  for (const wo of parsed.tables.workOrder) {
-    const exists = db
-      .select()
-      .from(workOrder)
-      .where(eq(workOrder.id, wo.id))
-      .limit(1)
-      .get()
-    if (!exists) db.insert(workOrder).values(wo).run()
-  }
-  // WorkOrderItem depends on workOrder and product
-  for (const woi of parsed.tables.workOrderItem) {
-    const exists = db
-      .select()
-      .from(workOrderItem)
-      .where(eq(workOrderItem.id, woi.id))
-      .limit(1)
-      .get()
-    if (!exists) db.insert(workOrderItem).values(woi).run()
-  }
-  // WorkOrderResultItem depends on workOrderResult and product
-  for (const wori of parsed.tables.workOrderResultItem) {
-    const exists = db
-      .select()
-      .from(workOrderResultItem)
-      .where(eq(workOrderResultItem.id, wori.id))
-      .limit(1)
-      .get()
-    if (!exists) db.insert(workOrderResultItem).values(wori).run()
-  }
-  // Link table after both itinerary and workOrder
-  for (const iwo of parsed.tables.itineraryWorkOrder) {
-    const exists = db
-      .select()
-      .from(itineraryWorkOrder)
-      .where(eq(itineraryWorkOrder.id, iwo.id))
-      .limit(1)
-      .get()
-    if (!exists) db.insert(itineraryWorkOrder).values(iwo).run()
-  }
+  const hasLicense = idsOf(license).size > 0
+
+  type Check = (row: any) => string | null
+  const plan: {
+    key: DumpTableKey
+    table: any
+    check: Check
+    fix?: (row: any) => any
+  }[] = [
+    {
+      key: 'category',
+      table: category,
+      check: (r) => (isStr(r.name) ? null : 'sem nome'),
+    },
+    {
+      key: 'license',
+      table: license,
+      // Nunca cria uma segunda licença: getLicense lê só a primeira linha
+      check: () => (hasLicense ? 'o aparelho já possui licença' : null),
+    },
+    {
+      key: 'customer',
+      table: customer,
+      check: (r) => (isStr(r.storeName) ? null : 'sem nome da loja'),
+    },
+    {
+      key: 'product',
+      table: product,
+      check: (r) =>
+        !isStr(r.name)
+          ? 'sem nome'
+          : !isNum(r.salePrice)
+            ? 'preço inválido'
+            : !known.category.has(r.categoryId)
+              ? 'categoria inexistente'
+              : null,
+    },
+    {
+      key: 'itinerary',
+      table: itinerary,
+      check: (r) =>
+        isStr(r.initialItineraryDate) && isStr(r.finalItineraryDate)
+          ? null
+          : 'datas ausentes',
+    },
+    {
+      key: 'paymentOrder',
+      table: paymentOrder,
+      check: (r) => (isNum(r.totalValue) ? null : 'valor inválido'),
+    },
+    {
+      key: 'workOrderResult',
+      table: workOrderResult,
+      check: (r) => (isNum(r.totalValue) ? null : 'valor inválido'),
+    },
+    {
+      key: 'workOrder',
+      table: workOrder,
+      // Status de versões antigas podiam estar em minúsculas
+      fix: (r) => ({
+        ...r,
+        status: String(r.status ?? 'PENDING').toUpperCase(),
+      }),
+      check: (r) =>
+        !known.customer.has(r.customerId)
+          ? 'cliente inexistente'
+          : !isStr(r.scheduledDate)
+            ? 'sem data agendada'
+            : r.paymentOrderId && !known.paymentOrder.has(r.paymentOrderId)
+              ? 'pagamento inexistente'
+              : r.resultId && !known.workOrderResult.has(r.resultId)
+                ? 'relatório inexistente'
+                : null,
+    },
+    {
+      key: 'workOrderItem',
+      table: workOrderItem,
+      check: (r) =>
+        !known.workOrder.has(r.workOrderId)
+          ? 'OS inexistente'
+          : !known.product.has(r.productId)
+            ? 'produto inexistente'
+            : null,
+    },
+    {
+      key: 'workOrderResultItem',
+      table: workOrderResultItem,
+      check: (r) =>
+        !known.workOrderResult.has(r.resultId)
+          ? 'relatório inexistente'
+          : !known.product.has(r.productId)
+            ? 'produto inexistente'
+            : null,
+    },
+    {
+      key: 'itineraryWorkOrder',
+      table: itineraryWorkOrder,
+      check: (r) =>
+        !known.itinerary.has(r.itineraryId)
+          ? 'itinerário inexistente'
+          : !known.workOrder.has(r.workOrderId)
+            ? 'OS inexistente'
+            : null,
+    },
+  ]
+
+  db.transaction((tx: any) => {
+    for (const { key, table, check, fix } of plan) {
+      const existing = idsOf(table)
+      const toInsert: any[] = []
+      for (const original of t[key] as any[]) {
+        const row = fix ? fix(original) : original
+        if (!isStr(row?.id)) {
+          report.rejected.push({ table: key, id: '?', reason: 'sem id' })
+          continue
+        }
+        if (existing.has(row.id)) {
+          report.skipped[key]++
+          continue
+        }
+        const reason = check(row)
+        if (reason) {
+          report.rejected.push({ table: key, id: row.id, reason })
+          continue
+        }
+        existing.add(row.id)
+        if (key in known) (known as any)[key].add(row.id)
+        toInsert.push(row)
+      }
+      for (let i = 0; i < toInsert.length; i += INSERT_CHUNK) {
+        tx.insert(table)
+          .values(toInsert.slice(i, i + INSERT_CHUNK))
+          .onConflictDoNothing()
+          .run()
+      }
+      report.inserted[key] += toInsert.length
+    }
+  })
+
+  return report
 }
